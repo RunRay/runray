@@ -39,7 +39,7 @@ export function InsightsStrip({
       {...tourAttr('insights-strip')}
       role="toolbar"
       aria-label="Findings"
-      className="flex items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
+      className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
     >
       {run.insights.map((insight) => {
         const active = insight.id === activeId;

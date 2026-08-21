@@ -172,27 +172,27 @@ export function App() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-bg text-text font-sans antialiased">
+    <div className="flex h-screen overflow-hidden bg-bg text-text font-sans antialiased">
       <SideNavBar />
-      <div className="ml-60 flex-1 flex flex-col min-h-screen relative overflow-hidden bg-bg">
+      <div className="ml-60 flex-1 flex flex-col h-screen min-h-0 relative overflow-hidden bg-bg">
         {data.status === 'ready' && !data.live && (
           <ProvenanceStrip traceFile={data.traceFile} />
         )}
         <TopBar />
-        <div className="flex-1 flex min-h-0 relative">
+        <div className="flex-1 flex min-h-0 relative overflow-hidden">
           {data.status === 'loading' && (
-            <main className="flex-1">
+            <main className="flex-1 h-full min-h-0">
               <LoadingScreen />
             </main>
           )}
           {data.status === 'error' && (
-            <main className="flex-1">
+            <main className="flex-1 h-full min-h-0">
               <ErrorScreen message={data.message} />
             </main>
           )}
           {data.status === 'ready' &&
             (data.traceFile.runs.length === 0 ? (
-              <main className="flex-1">
+              <main className="flex-1 h-full min-h-0">
                 <EmptyScreen />
               </main>
             ) : route.view === 'dashboard' ? (
@@ -239,7 +239,7 @@ export function App() {
             ) : (
               <>
                 <SessionsPane runs={visibleRuns} />
-                <main className="min-w-0 flex-1">
+                <main className="min-w-0 flex-1 flex flex-col min-h-0 overflow-hidden">
                   {activeRun !== undefined ? (
                     <RunView run={activeRun} view={route.view} />
                   ) : (

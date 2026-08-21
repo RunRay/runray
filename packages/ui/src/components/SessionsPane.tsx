@@ -14,9 +14,9 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
   return (
     <nav
       aria-label="Sessions"
-      className="flex w-[280px] shrink-0 flex-col border-r border-border bg-surface"
+      className="flex w-[280px] shrink-0 h-full flex-col border-r border-border bg-surface min-h-0"
     >
-      <p className="flex items-baseline justify-between border-b border-border px-3 py-2">
+      <p className="shrink-0 flex items-baseline justify-between border-b border-border px-3 py-2">
         <span className="micro-label text-text-faint">Sessions</span>
         <span className="font-mono text-label text-text-faint">
           {runs.length}

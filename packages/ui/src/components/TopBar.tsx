@@ -28,7 +28,7 @@ export function TopBar(props: TopBarProps = {}) {
   const isLive = propLive ?? (data.status === 'ready' && data.live);
 
   return (
-    <header className="bg-surface text-text font-sans sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4 transition-all duration-200">
+    <header className="bg-surface text-text font-sans shrink-0 sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4 transition-all duration-200">
       <div className="flex items-center gap-6">
         <FilterBar />
       </div>
