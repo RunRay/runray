@@ -21,6 +21,7 @@ import {
   flattenVisible,
   matchingSpanIds,
   type SubtreeRollup,
+  spanEndMs,
   spanStartMs,
   subagentSpanIds,
   subtreeRollups,
@@ -147,26 +148,84 @@ export function Waterfall({ run }: { run: Run }) {
   const allSubagentsCollapsed =
     subagents.length > 0 && subagents.every((id) => collapsed.has(id));
 
-  // Where the top of the viewport sits in run time, for the spine marker.
-  const firstVisible = rows[virtualizer.getVirtualItems()[0]?.index ?? 0];
-  const positionFraction =
-    firstVisible === undefined
-      ? 0
-      : (spanStartMs(firstVisible.span) - range.start) /
-        (range.end - range.start);
+  // Compute visible spans in the viewport for the spine marker & viewport band.
+  const scrollOffset = virtualizer.scrollOffset ?? 0;
+  const viewportHeight = scrollRef.current?.clientHeight ?? 0;
+  const virtualItems = virtualizer.getVirtualItems();
 
-  // Spine click → the visible row whose start is nearest that moment.
+  const visibleItems = virtualItems.filter(
+    (item) =>
+      item.end > scrollOffset &&
+      (viewportHeight === 0 || item.start < scrollOffset + viewportHeight),
+  );
+
+  const topItem = visibleItems[0] ?? virtualItems[0];
+  const firstVisible = topItem !== undefined ? rows[topItem.index] : undefined;
+  const nextVisible =
+    topItem !== undefined ? rows[topItem.index + 1] : undefined;
+
+  let timeAtTop =
+    firstVisible !== undefined ? spanStartMs(firstVisible.span) : range.start;
+  if (firstVisible !== undefined && topItem !== undefined) {
+    const itemScrollOffset = Math.max(0, scrollOffset - topItem.start);
+    const rowProgress =
+      topItem.size > 0 ? Math.min(1, itemScrollOffset / topItem.size) : 0;
+    const t0 = spanStartMs(firstVisible.span);
+    const t1 =
+      nextVisible !== undefined
+        ? spanStartMs(nextVisible.span)
+        : spanEndMs(firstVisible.span);
+    if (t1 >= t0) {
+      timeAtTop = t0 + rowProgress * (t1 - t0);
+    }
+  }
+
+  const totalTime = Math.max(1, range.end - range.start);
+  const positionFraction = Math.max(
+    0,
+    Math.min(1, (timeAtTop - range.start) / totalTime),
+  );
+
+  let minVisibleMs = range.end;
+  let maxVisibleMs = range.start;
+  for (const item of visibleItems) {
+    const row = rows[item.index];
+    if (row !== undefined) {
+      const s0 = spanStartMs(row.span);
+      const s1 = spanEndMs(row.span);
+      if (s0 < minVisibleMs) minVisibleMs = s0;
+      if (s1 > maxVisibleMs) maxVisibleMs = s1;
+    }
+  }
+
+  const viewportFraction = {
+    f0:
+      minVisibleMs <= maxVisibleMs
+        ? Math.max(0, Math.min(1, (minVisibleMs - range.start) / totalTime))
+        : positionFraction,
+    f1:
+      minVisibleMs <= maxVisibleMs
+        ? Math.max(0, Math.min(1, (maxVisibleMs - range.start) / totalTime))
+        : positionFraction,
+  };
+
+  // Spine click → the visible row whose start or duration is nearest that moment.
   const scrollToTime = (timeMs: number) => {
     let best = 0;
     let bestDist = Number.POSITIVE_INFINITY;
     rows.forEach((row, i) => {
-      const dist = Math.abs(spanStartMs(row.span) - timeMs);
+      const start = spanStartMs(row.span);
+      const end = spanEndMs(row.span);
+      const dist =
+        timeMs >= start && timeMs <= end
+          ? 0
+          : Math.min(Math.abs(start - timeMs), Math.abs(end - timeMs));
       if (dist < bestDist) {
         bestDist = dist;
         best = i;
       }
     });
-    virtualizer.scrollToIndex(best, { align: 'center' });
+    virtualizer.scrollToIndex(best, { align: 'start' });
   };
 
   return (
@@ -221,6 +280,7 @@ export function Waterfall({ run }: { run: Run }) {
           run={run}
           range={range}
           positionFraction={positionFraction}
+          viewportFraction={viewportFraction}
           onNavigate={scrollToTime}
         />
         <div

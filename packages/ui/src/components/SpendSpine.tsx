@@ -28,16 +28,24 @@ const X_MIN = 3;
 const X_MAX = 21;
 const VIEW_H = 1000;
 
+export interface ViewportFraction {
+  f0: number;
+  f1: number;
+}
+
 export function SpendSpine({
   run,
   range,
   positionFraction,
+  viewportFraction,
   onNavigate,
 }: {
   run: Run;
   range: TimeRange;
   /** Fraction of run time currently at the top of the waterfall viewport. */
   positionFraction: number;
+  /** Visible time range fraction in the viewport. */
+  viewportFraction?: ViewportFraction;
   onNavigate: (timeMs: number) => void;
 }) {
   const series = useMemo(() => buildCostSeries(run.spans), [run.spans]);
@@ -107,6 +115,20 @@ export function SpendSpine({
               vectorEffect="non-scaling-stroke"
             />
           ))}
+          {/* visible viewport range indicator */}
+          {viewportFraction !== undefined && (
+            <rect
+              x={0}
+              y={Math.min(viewportFraction.f0, viewportFraction.f1) * VIEW_H}
+              width={24}
+              height={Math.max(
+                3,
+                Math.abs(viewportFraction.f1 - viewportFraction.f0) * VIEW_H,
+              )}
+              fill="var(--color-brand)"
+              fillOpacity={0.15}
+            />
+          )}
           {/* current waterfall position */}
           <line
             x1={0}
@@ -114,7 +136,8 @@ export function SpendSpine({
             x2={24}
             y2={positionFraction * VIEW_H}
             stroke="var(--color-brand)"
-            strokeOpacity={0.7}
+            strokeWidth={2}
+            strokeOpacity={0.95}
             vectorEffect="non-scaling-stroke"
           />
         </svg>
