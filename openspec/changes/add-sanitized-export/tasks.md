@@ -43,15 +43,15 @@ run under the `/frontend-design` skill per CLAUDE.md.
 
 ## 2. Invariants, fixtures, goldens
 
-- [ ] 2.1 A Redaction-parity test over every fixture: `sanitize(parse(f,
+- [x] 2.1 A Redaction-parity test over every fixture: `sanitize(parse(f,
       {redact:false})) ≡ sanitize(parse(f, {redact:true}))` for both sanitizing
       profiles, deep equality, failure message naming the diverging field (D4)
-- [ ] 2.2 A Totality test over the **serialized** output of both sanitizing
+- [x] 2.2 A Totality test over the **serialized** output of both sanitizing
       profiles for every fixture: no path-shape match (1.4) and no occurrence of
       the fixture's known project basenames. A match fails the test (D3)
-- [ ] 2.3 A Schema conformance test: `full`, `sanitized`, and `metadata-only`
+- [x] 2.3 A Schema conformance test: `full`, `sanitized`, and `metadata-only`
       output each validated against `schema/runray.schema.json`
-- [ ] 2.4 A New goldens for `sanitized` and `metadata-only` per source via the
+- [x] 2.4 A New goldens for `sanitized` and `metadata-only` per source via the
       regen script, in a **dedicated commit** with justification; the existing
       `full` goldens must not move — if one moves, stop and reopen the design
 

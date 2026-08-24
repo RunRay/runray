@@ -1,0 +1,89 @@
+{
+  "id": "run_bafd09b34c74a874",
+  "source": {
+    "tool": "opencode",
+    "format": "opencode-sqlite",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1"
+  },
+  "startedAt": "2026-02-26T18:07:34.728Z",
+  "endedAt": "2026-02-26T18:27:21.210Z",
+  "durationMs": 1186482,
+  "spans": [
+    {
+      "id": "ses_364dd82b7ffeCnD1sehFyl2vjn",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-02-26T18:07:34.728Z",
+      "endedAt": "2026-02-26T18:27:21.210Z",
+      "durationMs": 1186482,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ses_364dd82b7ffeCnD1sehFyl2vjn"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "ses_364dd82b7ffeCnD1sehFyl2vjn"
+      }
+    },
+    {
+      "id": "ses_364d62d1bffe0Urvi3LCZqVsai",
+      "parentId": "ses_364dd82b7ffeCnD1sehFyl2vjn",
+      "kind": "subagent",
+      "name": "subagent:general",
+      "status": "ok",
+      "startedAt": "2026-02-26T18:15:35.394Z",
+      "endedAt": "2026-02-26T18:16:47.544Z",
+      "durationMs": 72150,
+      "depth": 3,
+      "agent": {
+        "name": "general",
+        "sessionId": "ses_364d62d1bffe0Urvi3LCZqVsai"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "prt_c9b29c5710018wQRn405UJxLJ1"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 312670,
+      "output": 39626,
+      "cacheRead": 8643712,
+      "cacheWrite": 0,
+      "reasoning": 7986,
+      "total": 9003994
+    },
+    "costUSD": {
+      "total": 1.947436,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5.3-codex": 1.947436
+      }
+    },
+    "counts": {
+      "llmCalls": 87,
+      "toolCalls": 175,
+      "toolErrors": 1,
+      "subagents": 1,
+      "maxDepth": 5
+    },
+    "cache": {
+      "hitRate": 0.9651
+    }
+  },
+  "insights": []
+}
