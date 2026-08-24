@@ -7,36 +7,36 @@ run under the `/frontend-design` skill per CLAUDE.md.
 
 ## 1. Core sanitizer
 
-- [ ] 1.1 A Profile contract in `packages/core/src/sanitize/`: the
+- [x] 1.1 A Profile contract in `packages/core/src/sanitize/`: the
       `SanitizeProfile` union (`full` | `sanitized` | `metadata-only`) and a pure
       resolver from the three independent intents (strip text, scrub identity,
       prune spans) to exactly one profile; `full` is a no-op returning its input.
       Unit tests for every intent combination including redundant ones (D7,
       trace-sanitization "Three named sanitization profiles")
-- [ ] 1.2 A `scrubIdentity()`: one mapping table per build, shared across every
+- [x] 1.2 A `scrubIdentity()`: one mapping table per build, shared across every
       run, ordinals assigned over the lexicographically sorted distinct values in
       three independent namespaces (`project-N`, `transcript-N`, `branch-N`).
       Covers `project.path`/`name`/`gitBranch`, `source.files[]`,
       `provenance.file`, `warnings[].file`, `run.title`, and both `runray.target`
       and legacy `tracepulse.target`. **Pure** — input observably unchanged.
       Unit tests including discovery-order independence (D2)
-- [ ] 1.3 A Attribute allowlist inside `scrubIdentity`: retain reserved
+- [x] 1.3 A Attribute allowlist inside `scrubIdentity`: retain reserved
       `runray.*` counters, `gen_ai.*`, and legacy `tracepulse.*` internal metadata
       keys (excluding deleted display `tracepulse.target`), drop every other key
       without inspecting its value; test with an OTLP span carrying a path inside
       a vendor attribute (D2, trace-sanitization "Attribute allowlist")
-- [ ] 1.4 A Path-shape net: case-insensitive matcher for `/Users/…`, `/home/…`,
+- [x] 1.4 A Path-shape net: case-insensitive matcher for `/Users/…`, `/home/…`,
       `C:\Users\…`, UNC and `\\?\` forms, and `file://` URLs, exported for use as
       an assertion. It reports matches; it never rewrites them (D3)
-- [ ] 1.5 A `pruneToMetadata()`: keep `session` and `subagent` spans, drop
+- [x] 1.5 A `pruneToMetadata()`: keep `session` and `subagent` spans, drop
       `llm_call`/`tool_call`/`mcp_call`/`hook`, re-anchor every
       `Insight.spanIds` entry and surviving container `span.parentId` to its
       nearest surviving ancestor and dedupe, empty array when no ancestor
       survives. `run.totals` byte-identical to the unpruned run. Unit test
       asserting no unresolvable span reference (D5)
-- [ ] 1.6 A Manifest producer: `{profile, textRedacted, pathsScrubbed,
+- [x] 1.6 A Manifest producer: `{profile, textRedacted, pathsScrubbed,
       spansPruned}`, carrying no filesystem path, outside `TraceFile` (D6)
-- [ ] 1.7 A Pipeline wiring in `packages/cli/src/discover.ts`: `scrubIdentity`
+- [x] 1.7 A Pipeline wiring in `packages/cli/src/discover.ts`: `scrubIdentity`
       between `normalize` and `applyInsights`, `pruneToMetadata` after; the
       mapping table created once per `buildTraceFile` call; a text-stripping
       profile also passes `redact: true` into `adapter.parse` (D1, D4)
