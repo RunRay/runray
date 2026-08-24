@@ -1,0 +1,731 @@
+{
+  "id": "run_48ffffed533a13a0",
+  "source": {
+    "tool": "claude-code",
+    "format": "claude-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-07-04T22:10:06.861Z",
+  "endedAt": "2026-07-05T03:31:39.985Z",
+  "durationMs": 19293124,
+  "spans": [
+    {
+      "id": "055e1023-9744-4675-a703-df3c948974da",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:06.861Z",
+      "endedAt": "2026-07-05T03:31:39.985Z",
+      "durationMs": 19293124,
+      "depth": 0,
+      "agent": {
+        "sessionId": "055e1023-9744-4675-a703-df3c948974da"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 1
+      }
+    },
+    {
+      "id": "msg_01GL76wDhRm7Lz2cA5iZqrkZ",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:28.048Z",
+      "endedAt": "2026-07-04T22:10:30.119Z",
+      "durationMs": 2071,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 9368,
+          "output": 1365,
+          "cacheRead": 29554,
+          "cacheWrite": 9910
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.194842
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 9910
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 12
+      }
+    },
+    {
+      "id": "toolu_01HCdpB71FnxLP5YhPievKXf",
+      "parentId": "msg_01GL76wDhRm7Lz2cA5iZqrkZ",
+      "kind": "tool_call",
+      "name": "Read",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:29.539Z",
+      "endedAt": "2026-07-04T22:10:29.816Z",
+      "durationMs": 277,
+      "depth": 2,
+      "tool": {
+        "name": "Read",
+        "isError": false,
+        "outputBytes": 39907
+      },
+      "attributes": {
+        "runray.targetKey": "ba25fdc698c71009",
+        "runray.targetKind": "file-read"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 14
+      }
+    },
+    {
+      "id": "toolu_0168iQFt39yVozf44qRouUQY",
+      "parentId": "msg_01GL76wDhRm7Lz2cA5iZqrkZ",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:30.048Z",
+      "endedAt": "2026-07-04T22:10:30.556Z",
+      "durationMs": 508,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 1159
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 16
+      }
+    },
+    {
+      "id": "toolu_01SMiu3vvyCMpoAUnnqR2Njq",
+      "parentId": "msg_01GL76wDhRm7Lz2cA5iZqrkZ",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:30.119Z",
+      "endedAt": "2026-07-04T22:10:30.622Z",
+      "durationMs": 503,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 826
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 17
+      }
+    },
+    {
+      "id": "msg_01CmoqbkRHV42YCnnTWQJhGM",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:37.121Z",
+      "endedAt": "2026-07-04T22:10:39.520Z",
+      "durationMs": 2399,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 2,
+          "output": 447,
+          "cacheRead": 39464,
+          "cacheWrite": 31875
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.349667
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 31875
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 22
+      }
+    },
+    {
+      "id": "toolu_0187ALLeyERfpCSga9L1MchQ",
+      "parentId": "msg_01CmoqbkRHV42YCnnTWQJhGM",
+      "kind": "tool_call",
+      "name": "Read",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:38.510Z",
+      "endedAt": "2026-07-04T22:10:38.740Z",
+      "durationMs": 230,
+      "depth": 2,
+      "tool": {
+        "name": "Read",
+        "isError": false,
+        "outputBytes": 47811
+      },
+      "attributes": {
+        "runray.targetKey": "ba25fdc698c71009",
+        "runray.targetKind": "file-read"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 24
+      }
+    },
+    {
+      "id": "toolu_014KZgSNRh8S648iYQD8EyBP",
+      "parentId": "msg_01CmoqbkRHV42YCnnTWQJhGM",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:39.506Z",
+      "endedAt": "2026-07-04T22:10:40.037Z",
+      "durationMs": 531,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 14
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 26
+      }
+    },
+    {
+      "id": "toolu_01XvuJsHtEmRuSnxQ3hx3Wp4",
+      "parentId": "msg_01CmoqbkRHV42YCnnTWQJhGM",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:39.520Z",
+      "endedAt": "2026-07-04T22:10:40.069Z",
+      "durationMs": 549,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 5190
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 27
+      }
+    },
+    {
+      "id": "msg_012oWa7b6c9KVaicef19s4QA",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:45.487Z",
+      "endedAt": "2026-07-04T22:10:47.595Z",
+      "durationMs": 2108,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 538,
+          "output": 495,
+          "cacheRead": 71339,
+          "cacheWrite": 27835
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.329085
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 27835
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 34
+      }
+    },
+    {
+      "id": "toolu_01FtqgWxvNmqJHwxf3DnJyER",
+      "parentId": "msg_012oWa7b6c9KVaicef19s4QA",
+      "kind": "tool_call",
+      "name": "Read",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:46.495Z",
+      "endedAt": "2026-07-04T22:10:46.527Z",
+      "durationMs": 32,
+      "depth": 2,
+      "tool": {
+        "name": "Read",
+        "isError": false,
+        "outputBytes": 10661
+      },
+      "attributes": {
+        "runray.targetKey": "e4d2e41a6bcb7c6a",
+        "runray.targetKind": "file-read"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 36
+      }
+    },
+    {
+      "id": "toolu_01HA3aTKLVg9ndrn8hN6gB3k",
+      "parentId": "msg_012oWa7b6c9KVaicef19s4QA",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:47.003Z",
+      "endedAt": "2026-07-04T22:10:47.623Z",
+      "durationMs": 620,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 14
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 38
+      }
+    },
+    {
+      "id": "toolu_017PDz2etviA5AnEXrwdUcSy",
+      "parentId": "msg_012oWa7b6c9KVaicef19s4QA",
+      "kind": "tool_call",
+      "name": "Glob",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:10:47.595Z",
+      "endedAt": "2026-07-04T22:10:48.063Z",
+      "durationMs": 468,
+      "depth": 2,
+      "tool": {
+        "name": "Glob",
+        "isError": false,
+        "outputBytes": 14
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 39
+      }
+    },
+    {
+      "id": "msg_01VXDy4dhvdTQKV1xvNU2bwK",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:14:50.487Z",
+      "endedAt": "2026-07-04T22:14:54.388Z",
+      "durationMs": 3901,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 131,
+          "output": 17738,
+          "cacheRead": 99174,
+          "cacheWrite": 6787
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.561562
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 6787
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 45
+      }
+    },
+    {
+      "id": "toolu_018cwbuDBSPiNZ1rVTxqrVCy",
+      "parentId": "msg_01VXDy4dhvdTQKV1xvNU2bwK",
+      "kind": "mcp_call",
+      "name": "mcp__ccd_session__mark_chapter",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:14:54.388Z",
+      "endedAt": "2026-07-04T22:14:54.426Z",
+      "durationMs": 38,
+      "depth": 2,
+      "tool": {
+        "name": "mcp__ccd_session__mark_chapter",
+        "isError": false,
+        "mcpServer": "ccd_session",
+        "outputBytes": 74
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 47
+      }
+    },
+    {
+      "id": "msg_01SMkpdEgt2Fgvx3hGpb5cFe",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:15:00.212Z",
+      "endedAt": "2026-07-04T22:17:56.496Z",
+      "durationMs": 176284,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 2,
+          "output": 14614,
+          "cacheRead": 105961,
+          "cacheWrite": 17902
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.597361
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 17902
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 51
+      }
+    },
+    {
+      "id": "toolu_01TsgVSxFJoo4kjjkvHUBqCQ",
+      "parentId": "msg_01SMkpdEgt2Fgvx3hGpb5cFe",
+      "kind": "tool_call",
+      "name": "Write",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:17:56.496Z",
+      "endedAt": "2026-07-04T22:17:56.889Z",
+      "durationMs": 393,
+      "depth": 2,
+      "tool": {
+        "name": "Write",
+        "isError": false,
+        "outputBytes": 224,
+        "linesAdded": 487
+      },
+      "attributes": {
+        "runray.targetKey": "c72f014d1244dbb8",
+        "runray.targetKind": "file-write"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 53
+      }
+    },
+    {
+      "id": "msg_015SVztbMdquBXFhKmNGY4GY",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:17:59.502Z",
+      "endedAt": "2026-07-04T22:18:02.170Z",
+      "durationMs": 2668,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 2,
+          "output": 267,
+          "cacheRead": 123863,
+          "cacheWrite": 14804
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.216657
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 14804
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 61
+      }
+    },
+    {
+      "id": "toolu_01RcV6CMXoJdjttNmE7hDHep",
+      "parentId": "msg_015SVztbMdquBXFhKmNGY4GY",
+      "kind": "tool_call",
+      "name": "Workflow",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:18:02.170Z",
+      "endedAt": "2026-07-04T22:18:02.325Z",
+      "durationMs": 155,
+      "depth": 2,
+      "tool": {
+        "name": "Workflow",
+        "isError": false,
+        "outputBytes": 1146
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 63
+      }
+    },
+    {
+      "id": "msg_01Cp85XzbaL1kGHa3frFMXWK",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-04T22:18:08.564Z",
+      "endedAt": "2026-07-04T22:18:24.397Z",
+      "durationMs": 15833,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 2,
+          "output": 1110,
+          "cacheRead": 138667,
+          "cacheWrite": 827
+        },
+        "costSource": "computed",
+        "stopReason": "end_turn",
+        "costUSD": 0.105364
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 827
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 65
+      }
+    },
+    {
+      "id": "ed87bc7f-376a-4847-9460-14649965231a",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "<synthetic>",
+      "status": "error",
+      "startedAt": "2026-07-04T22:35:53.940Z",
+      "endedAt": "2026-07-04T22:35:53.940Z",
+      "durationMs": 0,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "<synthetic>",
+        "tokens": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "costSource": "unknown",
+        "stopReason": "stop_sequence"
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 73
+      }
+    },
+    {
+      "id": "msg_01KBECaM8FMJw9ipQAV6D2iS",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-05T03:31:20.103Z",
+      "endedAt": "2026-07-05T03:31:28.117Z",
+      "durationMs": 8014,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 2,
+          "output": 2380,
+          "cacheRead": 29554,
+          "cacheWrite": 124284
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 1.317127
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 124284
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 77
+      }
+    },
+    {
+      "id": "toolu_01AfJrLhhUpR1dTGzoskqDLW",
+      "parentId": "msg_01KBECaM8FMJw9ipQAV6D2iS",
+      "kind": "tool_call",
+      "name": "Workflow",
+      "status": "ok",
+      "startedAt": "2026-07-05T03:31:28.117Z",
+      "endedAt": "2026-07-05T03:31:28.291Z",
+      "durationMs": 174,
+      "depth": 2,
+      "tool": {
+        "name": "Workflow",
+        "isError": false,
+        "outputBytes": 1146
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 79
+      }
+    },
+    {
+      "id": "msg_01RJPtfyY1X3DU6vBzsyg89T",
+      "parentId": "055e1023-9744-4675-a703-df3c948974da",
+      "kind": "llm_call",
+      "name": "claude-opus-4-8",
+      "status": "ok",
+      "startedAt": "2026-07-05T03:31:31.779Z",
+      "endedAt": "2026-07-05T03:31:39.985Z",
+      "durationMs": 8206,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8",
+        "tokens": {
+          "input": 131,
+          "output": 558,
+          "cacheRead": 153838,
+          "cacheWrite": 2938
+        },
+        "costSource": "computed",
+        "stopReason": "end_turn",
+        "costUSD": 0.120904
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 2938
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 82
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 10178,
+      "output": 38974,
+      "cacheRead": 791414,
+      "cacheWrite": 237162,
+      "reasoning": 0,
+      "total": 1077728
+    },
+    "costUSD": {
+      "total": 3.792569,
+      "wastedEstimate": 1.180698,
+      "byModel": {
+        "claude-opus-4-8": 3.792569
+      }
+    },
+    "counts": {
+      "llmCalls": 10,
+      "toolCalls": 13,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.9873
+    },
+    "codeChanges": {
+      "linesAdded": 487,
+      "linesRemoved": 0
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "idle-cache-expiry",
+      "severity": "info",
+      "title": "Idle gap of 313m expired the cache",
+      "detail": "After 313 minutes of inactivity the provider cache TTL lapsed; the next claude-opus-4-8 call re-wrote 124.3k tokens of prefix that had been cached before the gap.",
+      "spanIds": [
+        "msg_01Cp85XzbaL1kGHa3frFMXWK",
+        "msg_01KBECaM8FMJw9ipQAV6D2iS"
+      ],
+      "estimatedWasteUSD": 1.180698,
+      "suggestion": "Batch prompts or close the session instead of leaving it idle past the cache TTL."
+    },
+    {
+      "id": "i2",
+      "ruleId": "fixed-context-overhead",
+      "severity": "info",
+      "title": "Session starts with a 48.8k-token context footprint",
+      "detail": "The first model call already carried 48.8k input-class tokens (tool definitions, project instructions, attachments); 28.8k tokens above the 20.0k floor were written once and re-read on each of the 9 later calls.",
+      "spanIds": [
+        "msg_01GL76wDhRm7Lz2cA5iZqrkZ"
+      ],
+      "estimatedWasteUSD": 0.418064,
+      "suggestion": "Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session."
+    }
+  ]
+}

@@ -9,15 +9,38 @@ import { pruneToMetadata } from './prune.js';
 
 function redactRunText(run: Run): Run {
   const { title: _title, ...rest } = run;
+  const tool = run.source?.tool;
   const spans: Span[] = run.spans.map((span) => {
-    if (!span.content) return span;
-    const nullContent: Record<string, null> = {};
-    for (const k of Object.keys(span.content)) {
-      nullContent[k] = null;
+    let content: Span['content'];
+    if (
+      span.kind === 'llm_call' &&
+      (tool === 'claude-code' || tool === 'opencode')
+    ) {
+      content = {
+        promptPreview: null,
+        outputPreview: null,
+      };
+    } else if (
+      span.kind === 'subagent' &&
+      (tool === 'claude-code' || tool === 'opencode')
+    ) {
+      content = {
+        delegationReason: null,
+      };
+    } else if (span.kind === 'turn' && tool === 'otlp') {
+      content = {
+        promptPreview: null,
+      };
+    } else if (span.content !== undefined) {
+      const nullContent: Record<string, null> = {};
+      for (const k of Object.keys(span.content)) {
+        nullContent[k] = null;
+      }
+      content = nullContent;
     }
     return {
       ...span,
-      content: nullContent,
+      ...(content !== undefined ? { content } : {}),
     };
   });
   return {

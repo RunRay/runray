@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import ajv2020 from 'ajv/dist/2020.js';
 import ajvFormats from 'ajv-formats';
 import { describe, expect, it } from 'vitest';
@@ -46,5 +46,42 @@ describe('generated schema validates instances', () => {
     const example = JSON.parse(readFileSync(exampleUrl, 'utf8'));
     example.runs[0].spans[0].kind = 'not-a-kind';
     expect(validate(example)).toBe(false);
+  });
+
+  it('validates every golden across full, sanitized, and metadata-only profiles', () => {
+    const profileDirs = ['normalized', 'sanitized', 'metadata-only'];
+    let validated = 0;
+
+    for (const profileDir of profileDirs) {
+      const pUrl = new URL(`../../../fixtures/${profileDir}`, import.meta.url);
+      for (const adapterDir of readdirSync(pUrl)) {
+        const aUrl = new URL(
+          `../../../fixtures/${profileDir}/${adapterDir}`,
+          import.meta.url,
+        );
+        for (const file of readdirSync(aUrl)) {
+          if (!file.endsWith('.json')) continue;
+          const fUrl = new URL(
+            `../../../fixtures/${profileDir}/${adapterDir}/${file}`,
+            import.meta.url,
+          );
+          const run = JSON.parse(readFileSync(fUrl, 'utf8'));
+          const traceFile = {
+            schemaVersion: '0.1.0',
+            generator: { name: 'runray', version: '0.1.0-test' },
+            generatedAt: new Date().toISOString(),
+            runs: [run],
+          };
+          const valid = validate(traceFile);
+          expect(
+            validate.errors ?? [],
+            `Schema validation failed for ${profileDir}/${adapterDir}/${file}`,
+          ).toEqual([]);
+          expect(valid).toBe(true);
+          validated++;
+        }
+      }
+    }
+    expect(validated).toBe(27);
   });
 });
