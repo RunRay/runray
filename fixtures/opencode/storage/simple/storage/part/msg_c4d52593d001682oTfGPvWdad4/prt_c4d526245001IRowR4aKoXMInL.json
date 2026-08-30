@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d526245001IRowR4aKoXMInL",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d52593d001682oTfGPvWdad4",
+  "type": "reasoning",
+  "text": "consectetur dolor aliquip aliquip aliqua veniam ipsum aliq",
+  "metadata": {
+    "openai": {
+      "itemId": "nostrud amet amet incididunt minim elit enim lorem te",
+      "reasoningEncryptedContent": "lorem tempor tempor incididunt sed aliquip minim amet ipsum sed aliquip sed dolor ipsum ipsum tempor consectetur labore quis minim tempor minim amet labore aliquip labore consectetur minim amet sed aliquip enim dolor consectetur veniam enim sed magna sit tempor nostrud adipiscing magna elit amet aliqua aliqua lorem dolor nostrud sit aliquip tempor sed aliqua aliquip sit ipsum elit amet labore minim enim lorem dolor magna veniam veniam ipsum ipsum aliqua dolor elit aliqua incididunt sit sed tempor incididunt ipsum enim aliqua amet labore quis magna dolor ipsum sit aliquip quis ipsum elit sit sed tempor dolor elit amet dolor consectetur sed incididunt aliqua ipsum incididunt dolor aliqua incididunt nostrud sit aliqua minim magna sed ipsum consectetur labore elit labore sit nostrud elit ipsum ipsum veniam elit incididunt nostrud magna veniam dolor veniam dolor labore minim enim ipsum nostrud quis consectetur amet aliquip minim nostrud quis quis magna tempor sit lorem amet consectetur sed lorem tempor incididunt incididunt labore aliquip adipiscing sed dolor dolor quis aliqua incididunt nostrud aliqua sed sed sed aliquip adipiscing incididunt aliqua sed quis lorem enim aliqua adipiscing consectetur tempor consectetur quis tempor lorem adipiscing consectetur nostrud quis minim adipiscing nostrud nostrud enim consectetur labore dolor veniam elit lorem magna nostrud adipiscing veniam sit ipsum sit ipsum quis sit amet veniam aliquip quis dolor aliquip quis tempor labore sed quis adipiscing sed tempor magna minim enim magna ipsum magna consectetur dolor labore dolor lorem aliquip magna nostrud aliquip sit adipiscing veniam labore consectetur lorem aliquip nostrud minim elit sit aliquip amet dolor sed aliqua adipiscing labore ipsum aliquip magn"
+    }
+  },
+  "time": {
+    "start": 1770823770693,
+    "end": 1770823773672
+  }
+}

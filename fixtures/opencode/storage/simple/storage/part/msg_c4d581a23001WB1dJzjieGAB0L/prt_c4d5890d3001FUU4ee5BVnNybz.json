@@ -1,0 +1,50 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d5890d3001FUU4ee5BVnNybz",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d581a23001WB1dJzjieGAB0L",
+  "type": "tool",
+  "callID": "call_lPCQ4qUo2NV9415sZ8hyCzaL",
+  "tool": "apply_patch",
+  "state": {
+    "status": "completed",
+    "input": {
+      "patchText": "aliqua amet lab\nadipiscing labore aliquip mag\nqu\nipsum minim quis ipsum incididunt cons\ndolor nostrud consectetur magna labor\nqu\naliqua magna quis veni\nnostrud incididunt n\ninci\ndo\nelit tempor s"
+    },
+    "output": "aliqua veniam lorem minim sit minim s\nlorem amet tempor ipsum magna labore sit minim",
+    "title": "aliqua veniam lorem minim sit minim s\nlorem amet tempor ipsum magna labore sit minim",
+    "metadata": {
+      "diff": "quis adipiscing aliqua aliquip dolor ipsum lorem en\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nveniam dolor sit lorem sed incididunt dolor aliq\nveniam sed sed lorem amet aliquip consectetur mi\nminim elit aliquip \nenim \nmagna sed quis lorem ma\naliqua magna elit amet ipsum inc\nincididunt sit elit sed labore aliq\nipsum minim quis ipsum incididunt cons\ndolor nostrud consectetur magna labor\nminim sed quis ipsum tempor labo\nenim sit enim elit consect\nincididunt minim aliquip adipi\nmagna minim elit sed sed inc\naliqua magna quis veni\nnostrud incididunt n\ninci\ndo\n\n",
+      "files": [
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/aliquax.json",
+          "relativePath": "lorem adipiscing lorem amet magna adipiscing",
+          "type": "update",
+          "diff": "quis adipiscing aliqua aliquip dolor ipsum lorem en\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nveniam dolor sit lorem sed incididunt dolor aliq\nveniam sed sed lorem amet aliquip consectetur mi\nminim elit aliquip \nenim \nmagna sed quis lorem ma\naliqua magna elit amet ipsum inc\nincididunt sit elit sed labore aliq\nipsum minim quis ipsum incididunt cons\ndolor nostrud consectetur magna labor\nminim sed quis ipsum tempor labo\nenim sit enim elit consect\nincididunt minim aliquip adipi\nmagna minim elit sed sed inc\naliqua magna quis veni\nnostrud incididunt n\ninci\ndo\n",
+          "before": "v\nsed lorem enim elit venia\nsed amet minim ame\nipsum incididunt sit \nipsum enim aliquip \nadipiscing con\nsit minim enim mag\nconsectetur enim consectetur minim m\nenim tempor quis magna consec\nveni\ntempor ipsum elit l\nconsectetur dolor elit adipisc\nlabore consectetur labore sed adip\naliquip magna veniam incididunt ame\naliquip consectetur mi\nconsectetur amet magna veniam c\ndolor sed labore dolor \nsed amet nostrud enim adipi\ntempor sit amet tempor enim sed s\nveni\nlorem veniam ipsum adi\namet ipsum incididunt sit quis \nminim minim sit amet amet dolor te\namet elit quis veniam elit amet incid\nipsum sed amet elit quis veniam\nlabore lorem adipiscing t\nadipiscing adipiscing enim do\ntempor sed adipiscing labor\nincididunt elit aliqu\nips\ne\n",
+          "after": "v\nsed lorem enim elit venia\nsed amet minim ame\nipsum incididunt sit \nipsum enim aliquip \nadipiscing con\nsit minim enim mag\nconsectetur enim consectetur minim m\nenim tempor quis magna consec\nveni\ntempor ipsum elit l\nconsectetur dolor elit adipisc\nlabore consectetur labore sed adip\naliquip magna veniam incididunt ame\naliquip consectetur mi\nconsectetur amet magna veniam c\ndolor sed labore dolor \nsed amet nostrud enim adipi\ntempor sit amet tempor enim sed s\nveni\nlorem veniam ipsum adi\namet ipsum incididunt sit quis \nminim minim sit amet amet dolor te\nelit incididunt aliqua consectetur s\nipsum sed amet elit quis veniam\nlabore lorem adipiscing t\nadipiscing adipiscing enim do\ntempor sed adipiscing labor\nnostrud tempor quis\nips\ne\n",
+          "additions": 2,
+          "deletions": 2
+        }
+      ],
+      "diagnostics": {},
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824185939,
+      "end": 1770824185954
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "minim sed veniam tempor dolor sed veniam incididunt d"
+    }
+  }
+}

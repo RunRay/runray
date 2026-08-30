@@ -1,0 +1,40 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d5316dc001yTmZPi50ng3Jm4",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d53119e001XJNj2pdjybI7zW",
+  "type": "tool",
+  "callID": "call_vGvdhT5DcAnHqS9ybux107v8",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "veniam d",
+      "description": "ipsum dolor sit consectetur elit "
+    },
+    "output": "aliquip nostrud aliquip sit labore dolor\n",
+    "title": "ipsum dolor sit consectetur elit ",
+    "metadata": {
+      "output": "aliquip nostrud aliquip sit labore dolor\n",
+      "exit": 2,
+      "description": "ipsum dolor sit consectetur elit ",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770823817336,
+      "end": 1770823817406
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "sed sit magna sit sit sed sed lorem nostrud aliquip e"
+    }
+  }
+}

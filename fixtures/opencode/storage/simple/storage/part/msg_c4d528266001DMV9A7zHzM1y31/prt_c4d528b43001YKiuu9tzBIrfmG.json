@@ -1,0 +1,40 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d528b43001YKiuu9tzBIrfmG",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d528266001DMV9A7zHzM1y31",
+  "type": "tool",
+  "callID": "call_vWfIlNvvCdWD0I04WcgJ6XkE",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "ip",
+      "description": "enim elit consectetur aliqu"
+    },
+    "output": "lorem incididunt ali\n",
+    "title": "enim elit consectetur aliqu",
+    "metadata": {
+      "output": "lorem incididunt ali\n",
+      "exit": 0,
+      "description": "enim elit consectetur aliqu",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770823781443,
+      "end": 1770823781865
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "quis lorem adipiscing elit dolor magna aliquip labore"
+    }
+  }
+}

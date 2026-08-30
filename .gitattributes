@@ -1,0 +1,6 @@
+# Normalize line endings
+* text=auto eol=lf
+
+# Golden fixtures are byte-stable — flag accidental CRLF/whitespace churn
+fixtures/normalized/** -text
+schema/*.json text eol=lf

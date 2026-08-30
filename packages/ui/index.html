@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RunRay</title>
+
+    <!--
+      No-flash theme boot (add-dashboard-extensions D5): stamp the persisted
+      "paper" choice before first paint so a reader who chose paper never sees
+      a flash of ink. Runs synchronously during parse, ahead of the deferred
+      app module. Inlined into both the served shell and the single-file export
+      template. Key must match THEME_STORAGE_KEY in src/lib/theme.ts.
+    -->
+    <script>
+      try {
+        const theme = localStorage.getItem("runray.theme") || localStorage.getItem("tracepulse.theme");
+        if (theme === "paper") {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      } catch {
+        /* file:// or locked-down storage — fall back to the ink default */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

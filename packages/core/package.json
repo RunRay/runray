@@ -1,0 +1,38 @@
+{
+  "name": "@runray/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./pricing": {
+      "types": "./dist/pricing/engine.d.ts",
+      "import": "./dist/pricing/engine.js"
+    },
+    "./insights-meta": {
+      "types": "./dist/insights/meta.d.ts",
+      "import": "./dist/insights/meta.js"
+    },
+    "./diff": {
+      "types": "./dist/diff/index.d.ts",
+      "import": "./dist/diff/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build"
+  },
+  "dependencies": {
+    "@runray/schema": "workspace:*",
+    "better-sqlite3": "^12.11.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13"
+  }
+}

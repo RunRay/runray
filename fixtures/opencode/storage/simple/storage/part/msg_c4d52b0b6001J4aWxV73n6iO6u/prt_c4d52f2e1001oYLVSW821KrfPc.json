@@ -1,0 +1,26 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d52f2e1001oYLVSW821KrfPc",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d52b0b6001J4aWxV73n6iO6u",
+  "type": "step-finish",
+  "reason": "nostrud do",
+  "cost": 0,
+  "tokens": {
+    "total": 14775,
+    "input": 1011,
+    "output": 964,
+    "reasoning": 543,
+    "cache": {
+      "read": 12800,
+      "write": 0
+    }
+  }
+}

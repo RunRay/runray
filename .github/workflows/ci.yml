@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      # build BEFORE test: the view e2e serves the built ui dist (task 5.1)
+      - run: pnpm build
+      # the packaging guard in packages/cli/src/packaging.test.ts inspects the
+      # real esbuild output and skips itself when it is absent — `build` is
+      # tsc only, so without this the strongest publish check never runs
+      - run: pnpm --filter runray bundle
+      - run: pnpm test
+      # Gates that run inside `pnpm test`:
+      # - schema drift: committed schema/runray.schema.json == zod-generated output
+      # - goldens: every fixture reproduces its committed fixtures/normalized/* byte-for-byte,
+      #   each golden validates against the frozen schema
+      # - view e2e: server serves the embedded ui dist + subagents fixture
+      # - offline network-guard: view/list/export/demo attempt zero outbound
+      #   connections (net/tls factories throw for non-loopback, task 5.4)
+      # informational bench (task 2.7): budgets per 05-ARCHITECTURE §5; the
+      # large fixture is synthesized in CI (scripts/synth-large.ts). Never
+      # fails the build — 2× regression gating is a later, baseline-driven stage.
+      - run: pnpm bench
+        continue-on-error: true

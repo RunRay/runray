@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RunRay - Trace Viewer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#0d0d15",
+                      "surface-container-high": "#292932",
+                      "inverse-surface": "#e4e1ed",
+                      "on-primary-container": "#0d0096",
+                      "on-primary-fixed": "#07006c",
+                      "surface-variant": "#34343d",
+                      "background": "#13131b",
+                      "secondary-fixed": "#dae2fd",
+                      "outline-variant": "#464554",
+                      "surface-bright": "#393841",
+                      "error": "#ffb4ab",
+                      "success-emerald": "#10b981",
+                      "on-error-container": "#ffdad6",
+                      "outline": "#908fa0",
+                      "tertiary-fixed-dim": "#bcc7de",
+                      "on-secondary-fixed": "#131b2e",
+                      "surface-dim": "#13131b",
+                      "on-primary": "#1000a9",
+                      "error-container": "#93000a",
+                      "surface-container-low": "#1b1b23",
+                      "inverse-on-surface": "#303038",
+                      "on-tertiary": "#263143",
+                      "primary": "#c0c1ff",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "on-tertiary-container": "#1f2a3c",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "surface-tint": "#c0c1ff",
+                      "on-surface-variant": "#c7c4d7",
+                      "border-slate": "#334155",
+                      "secondary-container": "#3f465c",
+                      "inverse-primary": "#494bd6",
+                      "bg-deep-gray": "#020617",
+                      "surface-container-highest": "#34343d",
+                      "secondary": "#bec6e0",
+                      "tertiary-fixed": "#d8e3fb",
+                      "on-background": "#e4e1ed",
+                      "primary-fixed": "#e1e0ff",
+                      "error-rose": "#f43f5e",
+                      "on-secondary": "#283044",
+                      "surface-container": "#1f1f27",
+                      "surface": "#13131b",
+                      "primary-container": "#8083ff",
+                      "data-indigo": "#818cf8",
+                      "on-tertiary-fixed": "#111c2d",
+                      "on-primary-fixed-variant": "#2f2ebe",
+                      "warning-amber": "#f59e0b",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary": "#bcc7de",
+                      "on-tertiary-fixed-variant": "#3c475a",
+                      "on-surface": "#e4e1ed",
+                      "tertiary-container": "#8691a7",
+                      "on-secondary-container": "#adb4ce"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "trace-row-height": "32px",
+                      "margin-page": "24px",
+                      "panel-padding": "12px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "label-caps": ["JetBrains Mono"],
+                      "data-mono-bold": ["JetBrains Mono"],
+                      "body-base": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "body-sm": ["Geist"],
+                      "data-mono": ["JetBrains Mono"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "label-caps": ["11px", {"lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "data-mono-bold": ["13px", {"lineHeight": "18px", "fontWeight": "600"}],
+                      "body-base": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest text-primary font-body-base text-body-base fixed h-full w-60 left-0 top-0 border-r border-outline-variant flex flex-col gap-4 p-panel-padding h-screen z-50">
+<div class="mb-6 mt-2 px-2">
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">RunRay</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Observability Engine</p>
+</div>
+<button class="bg-primary text-on-primary w-full py-2 rounded font-data-mono-bold text-data-mono-bold mb-4 hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> New Analysis
+        </button>
+<ul class="flex-1 flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-secondary-container text-on-secondary-container font-semibold hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">history</span>
+                    Sessions
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">dns</span>
+                    Infrastructure
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">terminal</span>
+                    Live Logs
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                    Metrics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<div class="mt-auto pt-4 border-t border-outline-variant flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A small, stylized profile avatar for a corporate dashboard, dark mode, high contrast minimalist geometric shapes representing a user." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHn_thTLTBRHfSOEN3pvtgJN-11Dhi3h6_YC2eZgMGu6c9JC4KPQb2uif3CRLzybtW0VN8x8_ifh8or2xOuB-8p3PbOX4PcSZMVqKCZxZn7fx-1xIrcw8A_RmBcrLK1bI7U8HEpkC17kKNWa-aHosP1dKMg6eixlz8BcsI-eLxe5bnApbU7UVCG_7YsMvChUYWGcCtkpY2V2P5zc_isytO385SJRsGz9kz6JgQx5rZdLG8IAtYAQGu"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">Admin</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="ml-60 flex flex-col h-screen mr-96">
+<!-- TopNavBar -->
+<header class="bg-surface-dim text-primary font-data-mono text-data-mono sticky top-0 w-full z-40 border-b border-outline-variant flex justify-between items-center h-trace-row-height px-margin-page py-4 transition-all duration-200">
+<div class="flex items-center gap-6">
+<!-- Branding is in sidebar usually, but JSON specified a logo style here, omitting to avoid duplicate branding, just tabs -->
+<nav class="flex gap-4 h-full items-end">
+<a class="text-primary border-b-2 border-primary pb-1 hover:text-on-surface transition-colors" href="#">Explorer</a>
+<a class="text-on-surface-variant hover:text-on-surface pb-1 transition-colors" href="#">Alerts</a>
+<a class="text-on-surface-variant hover:text-on-surface pb-1 transition-colors" href="#">Budgets</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-on-surface transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:text-on-surface transition-colors"><span class="material-symbols-outlined">help_outline</span></button>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 overflow-auto bg-bg-deep-gray p-margin-page flex flex-col gap-4">
+<!-- Session Header -->
+<div class="flex justify-between items-end mb-2">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2 h-2 rounded-full bg-success-emerald"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Agent.ResolveIntent</h2>
+</div>
+<div class="flex gap-4 font-data-mono text-data-mono text-on-surface-variant">
+<span>ID: <span class="text-primary">trc-98a7b6f5</span></span>
+<span>Start: 2023-10-27 14:32:01.045</span>
+</div>
+</div>
+<div class="flex gap-2">
+<div class="border border-border-slate bg-surface-container rounded px-3 py-1 flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">DURATION</span>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">1,240ms</span>
+</div>
+<div class="border border-border-slate bg-surface-container rounded px-3 py-1 flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">COST</span>
+<span class="font-data-mono-bold text-data-mono-bold text-data-indigo">$0.0042</span>
+</div>
+</div>
+</div>
+<!-- Waterfall Chart Container -->
+<div class="border border-border-slate rounded bg-surface overflow-hidden flex flex-col flex-1">
+<!-- Timeline Header -->
+<div class="flex h-8 border-b border-border-slate bg-surface-container-lowest items-center px-4 font-label-caps text-label-caps text-outline">
+<div class="w-64 shrink-0 border-r border-border-slate mr-4 h-full flex items-center">SPAN NAME</div>
+<div class="flex-1 relative h-full flex items-center">
+<div class="absolute left-0">0ms</div>
+<div class="absolute left-1/4">310ms</div>
+<div class="absolute left-2/4">620ms</div>
+<div class="absolute left-3/4">930ms</div>
+<div class="absolute right-0">1.24s</div>
+</div>
+</div>
+<!-- Waterfall Rows -->
+<div class="flex-1 overflow-y-auto font-data-mono text-data-mono">
+<!-- Row 1: Root Agent -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant transition-colors group cursor-pointer">
+<div class="w-64 shrink-0 border-r border-border-slate flex items-center px-2 gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary text-[16px]">smart_toy</span>
+<span class="truncate">Agent.ResolveIntent</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<!-- Duration Bar -->
+<div class="absolute h-4 bg-primary/20 border border-primary/50 rounded-sm left-0 w-full top-1/2 -translate-y-1/2 flex items-center px-1">
+<span class="font-label-caps text-label-caps text-primary mix-blend-screen">1.24s</span>
+</div>
+</div>
+</div>
+<!-- Row 2: DB Query -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant transition-colors group cursor-pointer bg-surface-container-lowest">
+<div class="w-64 shrink-0 border-r border-border-slate flex items-center px-2 gap-2 text-on-surface-variant">
+<div class="w-4 border-l border-b border-outline-variant h-full -mt-4 ml-2 mr-1"></div>
+<span class="material-symbols-outlined text-tertiary text-[16px]">database</span>
+<span class="truncate">FetchUserContext</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<div class="absolute h-4 bg-tertiary/20 border border-tertiary/50 rounded-sm left-[2%] w-[15%] top-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+<!-- Row 3: LLM Call -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant transition-colors group cursor-pointer bg-[#1e293b]">
+<!-- Active row styling via background tint -->
+<div class="absolute left-0 w-0.5 h-trace-row-height bg-data-indigo"></div>
+<div class="w-64 shrink-0 border-r border-border-slate flex items-center px-2 gap-2 text-on-surface">
+<div class="w-4 border-l border-b border-outline-variant h-full -mt-4 ml-2 mr-1"></div>
+<span class="material-symbols-outlined text-data-indigo text-[16px]" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span class="truncate font-data-mono-bold">OpenAI.GPT-4</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<div class="absolute h-4 bg-data-indigo/30 border border-data-indigo rounded-sm left-[18%] w-[50%] top-1/2 -translate-y-1/2 flex items-center justify-end px-1 shadow-[0_0_8px_rgba(129,140,248,0.2)]">
+<span class="font-label-caps text-label-caps text-data-indigo mr-1">$0.004</span>
+</div>
+</div>
+</div>
+<!-- Row 4: Tool Call (Child of LLM) -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant transition-colors group cursor-pointer bg-surface-container-lowest">
+<div class="w-64 shrink-0 border-r border-border-slate flex items-center px-2 gap-2 text-on-surface-variant">
+<div class="w-4 border-l border-outline-variant h-full -mt-8 ml-2"></div>
+<div class="w-4 border-l border-b border-outline-variant h-full -mt-4 ml-1 mr-1"></div>
+<span class="material-symbols-outlined text-secondary text-[16px]">build</span>
+<span class="truncate">SearchAPI</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<div class="absolute h-4 bg-secondary/20 border border-secondary/50 rounded-sm left-[30%] w-[10%] top-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+<!-- Row 5: Error Span -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-error-rose/10 transition-colors group cursor-pointer bg-error-rose/5">
+<div class="w-64 shrink-0 border-r border-error-rose/30 flex items-center px-2 gap-2 text-error-rose">
+<div class="w-4 border-l border-outline-variant h-full -mt-4 ml-2 mr-1 border-error-rose/30"></div>
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="truncate">ParseResponse</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<div class="absolute h-4 bg-error-rose/40 border border-error-rose rounded-sm left-[70%] w-[5%] top-1/2 -translate-y-1/2 flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-error-container">close</span>
+</div>
+</div>
+</div>
+<!-- Row 6: Final LLM parsing -->
+<div class="flex h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant transition-colors group cursor-pointer bg-surface-container-lowest">
+<div class="w-64 shrink-0 border-r border-border-slate flex items-center px-2 gap-2 text-on-surface-variant">
+<div class="w-4 border-l border-b border-outline-variant h-full -mt-4 ml-2 mr-1"></div>
+<span class="material-symbols-outlined text-data-indigo text-[16px]">memory</span>
+<span class="truncate">FormatOutput</span>
+</div>
+<div class="flex-1 relative flex items-center px-4">
+<div class="absolute h-4 bg-data-indigo/20 border border-data-indigo/50 rounded-sm left-[78%] w-[20%] top-1/2 -translate-y-1/2"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- NavigationDrawer (Right Sidebar for Details) -->
+<aside class="bg-surface-container-high text-primary font-data-mono text-data-mono fixed right-0 top-0 h-full w-96 border-l border-outline-variant shadow-md flex flex-col h-full z-50 shadow-2xl transition-transform duration-300 ease-in-out">
+<div class="p-4 border-b border-outline-variant bg-surface-container-highest">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Trace Attributes</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant">OpenTelemetry Metadata</p>
+</div>
+<div class="flex border-b border-outline-variant">
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-primary border-b border-primary hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">info</span>
+<span class="font-label-caps text-label-caps">Attributes</span>
+</button>
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">list</span>
+<span class="font-label-caps text-label-caps">Events</span>
+</button>
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">description</span>
+<span class="font-label-caps text-label-caps">Logs</span>
+</button>
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-on-surface-variant hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">code</span>
+<span class="font-label-caps text-label-caps">JSON</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SPAN.NAME</span>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface break-all bg-surface px-2 py-1 rounded border border-border-slate">OpenAI.GPT-4</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SPAN.KIND</span>
+<span class="font-data-mono text-data-mono text-secondary break-all bg-surface px-2 py-1 rounded border border-border-slate">CLIENT</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LLM.MODEL_NAME</span>
+<span class="font-data-mono text-data-mono text-success-emerald break-all bg-surface px-2 py-1 rounded border border-border-slate">gpt-4-0613</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LLM.USAGE.TOTAL_TOKENS</span>
+<span class="font-data-mono text-data-mono text-warning-amber break-all bg-surface px-2 py-1 rounded border border-border-slate">142</span>
+</div>
+<div class="flex flex-col gap-1 mt-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant mb-1">PROMPT PREVIEW (TRUNCATED)</span>
+<div class="bg-black text-on-surface p-3 rounded border border-border-slate font-data-mono text-data-mono overflow-x-auto text-xs leading-relaxed">
+<span class="text-secondary">system:</span> You are a helpful assistant.<br/>
+<span class="text-data-indigo">user:</span> Extract the primary entities from the following text and return them as a JSON array...
+                </div>
+</div>
+</div>
+</aside>
+</body></html>

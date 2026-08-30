@@ -1,0 +1,40 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d530f49001qXCJ4gAX4Xr2G0",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d53074c001TrKnQrgVELgQrJ",
+  "type": "tool",
+  "callID": "call_sInwbTGeBqTmXAE2iWFWeO9X",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "magna ",
+      "description": "aliqua dolor enim tempor sed labore v"
+    },
+    "output": "i\n",
+    "title": "aliqua dolor enim tempor sed labore v",
+    "metadata": {
+      "output": "i\n",
+      "exit": 0,
+      "description": "aliqua dolor enim tempor sed labore v",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770823815311,
+      "end": 1770823815489
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "consectetur sit sed quis labore sit aliquip sit enim "
+    }
+  }
+}

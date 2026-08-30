@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "slug": "labore inci",
+  "version": "1.1.58",
+  "projectID": "global",
+  "directory": "/home/user/project/sedxmagn/consec/temporxaliqu",
+  "title": "magna sit ipsum ipsum tempor lorem lorem minim aliquip s",
+  "time": {
+    "created": 1770823768327,
+    "updated": 1770824247477
+  },
+  "summary": {
+    "additions": 0,
+    "deletions": 0,
+    "files": 0
+  }
+}

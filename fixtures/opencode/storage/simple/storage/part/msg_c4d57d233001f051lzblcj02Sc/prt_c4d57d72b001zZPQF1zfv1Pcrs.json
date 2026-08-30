@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d57d72b001zZPQF1zfv1Pcrs",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d57d233001f051lzblcj02Sc",
+  "type": "reasoning",
+  "text": "magna labore minim consectetur aliquip i",
+  "metadata": {
+    "openai": {
+      "itemId": "magna nostrud minim nostrud magna minim consectetur a",
+      "reasoningEncryptedContent": "enim magna consectetur dolor consectetur magna elit magna amet magna dolor sed veniam labore magna minim sed enim incididunt sed adipiscing sit veniam veniam dolor magna aliquip enim nostrud sit consectetur veniam sed lorem veniam adipiscing labore nostrud consectetur ipsum veniam incididunt quis labore adipiscing amet labore quis labore quis sed dolor adipiscing minim enim ipsum aliquip adipiscing aliqua labore tempor labore enim adipiscing labore quis minim aliqua nostrud quis aliqua incididunt incididunt incididunt veniam dolor lorem magna minim ipsum quis nostrud veniam ipsum sit tempor nostrud incididunt nostrud amet elit ipsum labore sit nostrud elit nostrud magna aliqua aliquip lorem incididunt elit amet labore adipiscing quis quis amet labore magna lorem sit labore minim magna magna ipsum quis nostrud ipsum tempor sed tempor minim sit sed dolor ipsum magna veniam tempor lorem minim elit incididunt veniam veniam enim aliquip nostrud lorem quis sit labore veniam magna aliqua minim adipiscing dolor enim incididunt enim elit veniam incididunt labore aliquip amet sit elit quis incididunt enim elit aliqua adipiscing elit incididunt ipsum veniam nostrud adipiscing veniam tempor lorem enim ipsum sit sed sed veniam labore elit labore incididunt minim elit elit consectetur sit magna incididunt labore veniam elit minim amet consectetur d"
+    }
+  },
+  "time": {
+    "start": 1770824128299,
+    "end": 1770824130347
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d529114001GFWH7J38le3zjk",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d528e11001WbuIzmhtIlLAoi",
+  "type": "reasoning",
+  "text": "consectetur tempor adipiscing adipis",
+  "metadata": {
+    "openai": {
+      "itemId": "tempor nostrud aliquip nostrud aliqua lorem labore ve",
+      "reasoningEncryptedContent": "minim ipsum quis aliqua incididunt nostrud incididunt lorem sed sed nostrud lorem quis tempor sed minim magna aliqua lorem minim dolor adipiscing sit nostrud sit minim veniam sed elit amet incididunt consectetur minim sit sit veniam adipiscing amet consectetur magna elit adipiscing incididunt labore aliqua incididunt labore aliqua tempor sit tempor magna dolor tempor tempor adipiscing labore tempor enim veniam aliqua tempor dolor lorem aliqua adipiscing quis aliquip lorem quis ipsum minim aliqua labore consectetur veniam adipiscing magna consectetur elit lorem adipiscing veniam amet veniam dolor elit lorem magna minim sit aliqua enim enim sed elit consectetur minim enim sit amet aliquip veniam lorem nostrud ipsum enim enim aliquip sit labore aliqua nostrud sed ipsum incididunt sit incididunt adipiscing enim veniam consectetur sit dolor amet adipiscing incididunt adipiscing sed incididunt minim minim sit veniam consectetur tempor aliqua adipiscing amet lorem adipiscing tempor veniam sit minim lorem consectetur sit elit tempor aliqua labore veniam minim quis tempor consectetur adipiscing dolor consectetur adipiscing enim adipiscing enim quis tempor incididunt sit magna elit aliquip sit incididunt elit dolor aliquip tempor adipiscing labore quis magna veniam tempor minim minim aliqua incididunt aliquip quis enim magna ipsum quis tempor aliquip minim enim aliquip quis enim labore tempor magna nostrud quis ipsum minim magna lorem magna dolor ipsum incididunt aliquip nostrud veniam aliqua consectetur amet adipiscing consectetur aliquip incididunt incididunt lorem sit amet adipiscing tempor sit veniam minim tempor lorem aliquip magna tempor elit elit magna ipsum aliqua enim dolor elit minim lorem lorem adipiscing ipsum elit quis labore minim enim aliqua lorem amet sit aliqua tempor consectetur labore quis veniam dolor lorem incididunt sit ipsum enim veniam sed aliquip sit sed adipiscing lorem dolor ipsum aliqua lorem consectetur quis veniam aliqua minim sed consectetur aliquip magna aliquip consectetur minim eli"
+    }
+  },
+  "time": {
+    "start": 1770823782677,
+    "end": 1770823786335
+  }
+}

@@ -1,0 +1,1619 @@
+{
+  "id": "run_8d8c9f888153d7fe",
+  "source": {
+    "tool": "opencode",
+    "format": "opencode-export",
+    "files": [
+      "fixtures/opencode/export-json/simple.json"
+    ]
+  },
+  "title": "sit incididunt aliquip labore tempor sed quis lorem aliqu",
+  "project": {
+    "name": "temporxaliqu",
+    "path": "/home/user/project/sedxmagn/consec/temporxaliqu"
+  },
+  "startedAt": "2026-02-11T15:29:28.327Z",
+  "endedAt": "2026-02-11T15:37:27.477Z",
+  "durationMs": 479150,
+  "spans": [
+    {
+      "id": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:28.327Z",
+      "endedAt": "2026-02-11T15:37:27.477Z",
+      "durationMs": 479150,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ses_3b2ada6f9ffe39UZtceZsbPc4e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "ses_3b2ada6f9ffe39UZtceZsbPc4e"
+      }
+    },
+    {
+      "id": "msg_c4d52593d001682oTfGPvWdad4",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:28.381Z",
+      "endedAt": "2026-02-11T15:29:33.890Z",
+      "durationMs": 5509,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 8582,
+          "output": 160,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 139
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.013718
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d52593d001682oTfGPvWdad4"
+      }
+    },
+    {
+      "id": "prt_c4d526df8001A6VoKktmeNeEQw",
+      "parentId": "msg_c4d52593d001682oTfGPvWdad4",
+      "kind": "tool_call",
+      "name": "glob",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:33.832Z",
+      "endedAt": "2026-02-11T15:29:33.852Z",
+      "durationMs": 20,
+      "depth": 2,
+      "tool": {
+        "name": "glob",
+        "isError": false,
+        "outputBytes": 52
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d526df8001A6VoKktmeNeEQw"
+      }
+    },
+    {
+      "id": "msg_c4d526ed2001EpnxDiYu8BEgo9",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:33.906Z",
+      "endedAt": "2026-02-11T15:29:35.951Z",
+      "durationMs": 2045,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 192,
+          "output": 43,
+          "cacheRead": 8576,
+          "cacheWrite": 0,
+          "reasoning": 8
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.001822
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d526ed2001EpnxDiYu8BEgo9"
+      }
+    },
+    {
+      "id": "prt_c4d5275f0001y7RtcAlHStOcdW",
+      "parentId": "msg_c4d526ed2001EpnxDiYu8BEgo9",
+      "kind": "tool_call",
+      "name": "read",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:35.911Z",
+      "endedAt": "2026-02-11T15:29:35.930Z",
+      "durationMs": 19,
+      "depth": 2,
+      "tool": {
+        "name": "read",
+        "isError": false,
+        "outputBytes": 13275
+      },
+      "attributes": {
+        "runray.targetKey": "d075932f137751b3",
+        "runray.targetKind": "file-read",
+        "runray.target": "loremxincididuntx.md"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5275f0001y7RtcAlHStOcdW"
+      }
+    },
+    {
+      "id": "msg_c4d5276e2001PHvjFeI8TevnpK",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:35.970Z",
+      "endedAt": "2026-02-11T15:29:38.898Z",
+      "durationMs": 2928,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 4682,
+          "output": 115,
+          "cacheRead": 8576,
+          "cacheWrite": 0,
+          "reasoning": 52
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.008595
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d5276e2001PHvjFeI8TevnpK"
+      }
+    },
+    {
+      "id": "prt_c4d5281c7001JJ36WO2Dpio2Zz",
+      "parentId": "msg_c4d5276e2001PHvjFeI8TevnpK",
+      "kind": "tool_call",
+      "name": "glob",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:38.799Z",
+      "endedAt": "2026-02-11T15:29:38.832Z",
+      "durationMs": 33,
+      "depth": 2,
+      "tool": {
+        "name": "glob",
+        "isError": false,
+        "outputBytes": 52
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5281c7001JJ36WO2Dpio2Zz"
+      }
+    },
+    {
+      "id": "prt_c4d528204001C1RH2tHPqq4AUa",
+      "parentId": "msg_c4d5276e2001PHvjFeI8TevnpK",
+      "kind": "tool_call",
+      "name": "glob",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:38.821Z",
+      "endedAt": "2026-02-11T15:29:38.833Z",
+      "durationMs": 12,
+      "depth": 2,
+      "tool": {
+        "name": "glob",
+        "isError": false,
+        "outputBytes": 14
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d528204001C1RH2tHPqq4AUa"
+      }
+    },
+    {
+      "id": "msg_c4d528266001DMV9A7zHzM1y31",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:38.918Z",
+      "endedAt": "2026-02-11T15:29:41.883Z",
+      "durationMs": 2965,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 226,
+          "output": 94,
+          "cacheRead": 13184,
+          "cacheWrite": 0,
+          "reasoning": 66
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.003531
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d528266001DMV9A7zHzM1y31"
+      }
+    },
+    {
+      "id": "prt_c4d528b43001YKiuu9tzBIrfmG",
+      "parentId": "msg_c4d528266001DMV9A7zHzM1y31",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:41.443Z",
+      "endedAt": "2026-02-11T15:29:41.865Z",
+      "durationMs": 422,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 21
+      },
+      "attributes": {
+        "runray.targetKey": "4b388a5c87d1660a",
+        "runray.targetKind": "command",
+        "runray.target": "ip"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d528b43001YKiuu9tzBIrfmG"
+      }
+    },
+    {
+      "id": "msg_c4d528e11001WbuIzmhtIlLAoi",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:41.905Z",
+      "endedAt": "2026-02-11T15:29:50.750Z",
+      "durationMs": 8845,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 209,
+          "output": 256,
+          "cacheRead": 13312,
+          "cacheWrite": 0,
+          "reasoning": 193
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.006415
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d528e11001WbuIzmhtIlLAoi"
+      }
+    },
+    {
+      "id": "prt_c4d529f680013C1UmRn2HfEKto",
+      "parentId": "msg_c4d528e11001WbuIzmhtIlLAoi",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:46.924Z",
+      "endedAt": "2026-02-11T15:29:50.735Z",
+      "durationMs": 3811,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 46
+      },
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command",
+        "runray.target": "labore"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d529f680013C1UmRn2HfEKto"
+      }
+    },
+    {
+      "id": "msg_c4d52b0b6001J4aWxV73n6iO6u",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:50.774Z",
+      "endedAt": "2026-02-11T15:30:07.745Z",
+      "durationMs": 16971,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 1011,
+          "output": 964,
+          "cacheRead": 12800,
+          "cacheWrite": 0,
+          "reasoning": 543
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.017934
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d52b0b6001J4aWxV73n6iO6u"
+      }
+    },
+    {
+      "id": "prt_c4d52e077001WDM525SUtOqZHm",
+      "parentId": "msg_c4d52b0b6001J4aWxV73n6iO6u",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:07.655Z",
+      "endedAt": "2026-02-11T15:30:07.709Z",
+      "durationMs": 54,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 73
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d52e077001WDM525SUtOqZHm"
+      }
+    },
+    {
+      "id": "msg_c4d52f329001njFpVZ0fR2wJRy",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:07.785Z",
+      "endedAt": "2026-02-11T15:30:10.495Z",
+      "durationMs": 2710,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 14806,
+          "output": 49,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 29
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.019288
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d52f329001njFpVZ0fR2wJRy"
+      }
+    },
+    {
+      "id": "prt_c4d52fd16001nDFRPZPKYk7NjL",
+      "parentId": "msg_c4d52f329001njFpVZ0fR2wJRy",
+      "kind": "tool_call",
+      "name": "glob",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:10.459Z",
+      "endedAt": "2026-02-11T15:30:10.479Z",
+      "durationMs": 20,
+      "depth": 2,
+      "tool": {
+        "name": "glob",
+        "isError": false,
+        "outputBytes": 86
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d52fd16001nDFRPZPKYk7NjL"
+      }
+    },
+    {
+      "id": "msg_c4d52fddc001iRiSZqDrmdvI1y",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:10.524Z",
+      "endedAt": "2026-02-11T15:30:12.909Z",
+      "durationMs": 2385,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 174,
+          "output": 73,
+          "cacheRead": 14720,
+          "cacheWrite": 0,
+          "reasoning": 53
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.003318
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d52fddc001iRiSZqDrmdvI1y"
+      }
+    },
+    {
+      "id": "prt_c4d530618001Se7xzRnSO8q0fu",
+      "parentId": "msg_c4d52fddc001iRiSZqDrmdvI1y",
+      "kind": "tool_call",
+      "name": "glob",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:12.868Z",
+      "endedAt": "2026-02-11T15:30:12.885Z",
+      "durationMs": 17,
+      "depth": 2,
+      "tool": {
+        "name": "glob",
+        "isError": false,
+        "outputBytes": 14
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d530618001Se7xzRnSO8q0fu"
+      }
+    },
+    {
+      "id": "msg_c4d53074c001TrKnQrgVELgQrJ",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:12.940Z",
+      "endedAt": "2026-02-11T15:30:15.531Z",
+      "durationMs": 2591,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 14980,
+          "output": 76,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 45
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.019935
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d53074c001TrKnQrgVELgQrJ"
+      }
+    },
+    {
+      "id": "prt_c4d530f49001qXCJ4gAX4Xr2G0",
+      "parentId": "msg_c4d53074c001TrKnQrgVELgQrJ",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:15.311Z",
+      "endedAt": "2026-02-11T15:30:15.489Z",
+      "durationMs": 178,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 2
+      },
+      "attributes": {
+        "runray.targetKey": "f6e2f31d10ac27e4",
+        "runray.targetKind": "command",
+        "runray.target": "magna"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d530f49001qXCJ4gAX4Xr2G0"
+      }
+    },
+    {
+      "id": "msg_c4d53119e001XJNj2pdjybI7zW",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:15.582Z",
+      "endedAt": "2026-02-11T15:30:17.424Z",
+      "durationMs": 1842,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 93,
+          "output": 49,
+          "cacheRead": 14976,
+          "cacheWrite": 0,
+          "reasoning": 18
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.002658
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d53119e001XJNj2pdjybI7zW"
+      }
+    },
+    {
+      "id": "prt_c4d5316dc001yTmZPi50ng3Jm4",
+      "parentId": "msg_c4d53119e001XJNj2pdjybI7zW",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:17.336Z",
+      "endedAt": "2026-02-11T15:30:17.406Z",
+      "durationMs": 70,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 41
+      },
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5316dc001yTmZPi50ng3Jm4"
+      }
+    },
+    {
+      "id": "msg_c4d5318ef001Q7h8g7NghKo52a",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:17.455Z",
+      "endedAt": "2026-02-11T15:30:19.916Z",
+      "durationMs": 2461,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 165,
+          "output": 53,
+          "cacheRead": 14976,
+          "cacheWrite": 0,
+          "reasoning": 24
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.002848
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d5318ef001Q7h8g7NghKo52a"
+      }
+    },
+    {
+      "id": "prt_c4d5320ad001zKxYrEuc3P5r4K",
+      "parentId": "msg_c4d5318ef001Q7h8g7NghKo52a",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:19.771Z",
+      "endedAt": "2026-02-11T15:30:19.891Z",
+      "durationMs": 120,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 122
+      },
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5320ad001zKxYrEuc3P5r4K"
+      }
+    },
+    {
+      "id": "msg_c4d5322ae00180QXJw4N2NfCJJ",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:19.950Z",
+      "endedAt": "2026-02-11T15:30:29.053Z",
+      "durationMs": 9103,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 415,
+          "output": 453,
+          "cacheRead": 14848,
+          "cacheWrite": 0,
+          "reasoning": 36
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.007265
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d5322ae00180QXJw4N2NfCJJ"
+      }
+    },
+    {
+      "id": "prt_c4d532ea20011s784cnId0Lka3",
+      "parentId": "msg_c4d5322ae00180QXJw4N2NfCJJ",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:28.951Z",
+      "endedAt": "2026-02-11T15:30:28.973Z",
+      "durationMs": 22,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 120
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d532ea20011s784cnId0Lka3"
+      }
+    },
+    {
+      "id": "msg_c4d534660001FrYj9s0RDtaZl5",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:29.088Z",
+      "endedAt": "2026-02-11T15:30:52.804Z",
+      "durationMs": 23716,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 146,
+          "output": 1589,
+          "cacheRead": 15616,
+          "cacheWrite": 0,
+          "reasoning": 31
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.018335
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d534660001FrYj9s0RDtaZl5"
+      }
+    },
+    {
+      "id": "prt_c4d534d43001UoAKApsBur7INT",
+      "parentId": "msg_c4d534660001FrYj9s0RDtaZl5",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:52.704Z",
+      "endedAt": "2026-02-11T15:30:52.779Z",
+      "durationMs": 75,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 537
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d534d43001UoAKApsBur7INT"
+      }
+    },
+    {
+      "id": "msg_c4d53a34d001c4paSio83FqKZX",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:30:52.877Z",
+      "endedAt": "2026-02-11T15:31:30.263Z",
+      "durationMs": 37386,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 2689,
+          "output": 2601,
+          "cacheRead": 14848,
+          "cacheWrite": 0,
+          "reasoning": 18
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.031407
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d53a34d001c4paSio83FqKZX"
+      }
+    },
+    {
+      "id": "prt_c4d53a958001ILkpG2VxA36HZ9",
+      "parentId": "msg_c4d53a34d001c4paSio83FqKZX",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:31:30.155Z",
+      "endedAt": "2026-02-11T15:31:30.243Z",
+      "durationMs": 88,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 456
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d53a958001ILkpG2VxA36HZ9"
+      }
+    },
+    {
+      "id": "msg_c4d543589001APpV7tTP8lh3Jk",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:31:30.313Z",
+      "endedAt": "2026-02-11T15:32:08.411Z",
+      "durationMs": 38098,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 3393,
+          "output": 2641,
+          "cacheRead": 16896,
+          "cacheWrite": 0,
+          "reasoning": 7
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.032833
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d543589001APpV7tTP8lh3Jk"
+      }
+    },
+    {
+      "id": "prt_c4d543a26001WBn1vnsfakEJgE",
+      "parentId": "msg_c4d543589001APpV7tTP8lh3Jk",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:32:08.339Z",
+      "endedAt": "2026-02-11T15:32:08.387Z",
+      "durationMs": 48,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 216
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d543a26001WBn1vnsfakEJgE"
+      }
+    },
+    {
+      "id": "msg_c4d54cab4001qXiMdTVIRYpIsN",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:32:08.500Z",
+      "endedAt": "2026-02-11T15:32:32.349Z",
+      "durationMs": 23849,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 224,
+          "output": 1562,
+          "cacheRead": 22784,
+          "cacheWrite": 0,
+          "reasoning": 69
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.019438
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d54cab4001qXiMdTVIRYpIsN"
+      }
+    },
+    {
+      "id": "prt_c4d54d4b7001KVkPJAKFHrKiF2",
+      "parentId": "msg_c4d54cab4001qXiMdTVIRYpIsN",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:32:32.193Z",
+      "endedAt": "2026-02-11T15:32:32.329Z",
+      "durationMs": 136,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 424
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d54d4b7001KVkPJAKFHrKiF2"
+      }
+    },
+    {
+      "id": "msg_c4d552821001HZ6BpyLf52RAc5",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:32:32.417Z",
+      "endedAt": "2026-02-11T15:33:03.622Z",
+      "durationMs": 31205,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 9872,
+          "output": 2133,
+          "cacheRead": 14848,
+          "cacheWrite": 0,
+          "reasoning": 8
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.035606
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d552821001HZ6BpyLf52RAc5"
+      }
+    },
+    {
+      "id": "prt_c4d552e53001Bz91WKr1xyXdn1",
+      "parentId": "msg_c4d552821001HZ6BpyLf52RAc5",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:33:03.542Z",
+      "endedAt": "2026-02-11T15:33:03.602Z",
+      "durationMs": 60,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 320
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d552e53001Bz91WKr1xyXdn1"
+      }
+    },
+    {
+      "id": "msg_c4d55a23f001iUNX4oh3qfO3lw",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:33:03.679Z",
+      "endedAt": "2026-02-11T15:34:34.060Z",
+      "durationMs": 90381,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 210,
+          "output": 6185,
+          "cacheRead": 26752,
+          "cacheWrite": 0,
+          "reasoning": 12
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.065577
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d55a23f001iUNX4oh3qfO3lw"
+      }
+    },
+    {
+      "id": "prt_c4d55b149001D4DM68PR87Wd4X",
+      "parentId": "msg_c4d55a23f001iUNX4oh3qfO3lw",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:34:33.897Z",
+      "endedAt": "2026-02-11T15:34:34.041Z",
+      "durationMs": 144,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 800
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d55b149001D4DM68PR87Wd4X"
+      }
+    },
+    {
+      "id": "msg_c4d570389001xqS2gKPyzoDkuY",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:34:34.121Z",
+      "endedAt": "2026-02-11T15:35:17.344Z",
+      "durationMs": 43223,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 370,
+          "output": 2916,
+          "cacheRead": 33024,
+          "cacheWrite": 0,
+          "reasoning": 9
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.033841
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d570389001xqS2gKPyzoDkuY"
+      }
+    },
+    {
+      "id": "prt_c4d570804001TmY1AUIosgYbAm",
+      "parentId": "msg_c4d570389001xqS2gKPyzoDkuY",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:17.261Z",
+      "endedAt": "2026-02-11T15:35:17.328Z",
+      "durationMs": 67,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 396
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d570804001TmY1AUIosgYbAm"
+      }
+    },
+    {
+      "id": "msg_c4d57ac9a001THOLXUSa0m5BmS",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:17.402Z",
+      "endedAt": "2026-02-11T15:35:23.983Z",
+      "durationMs": 6581,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 228,
+          "output": 359,
+          "cacheRead": 36224,
+          "cacheWrite": 0,
+          "reasoning": 45
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.008853
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d57ac9a001THOLXUSa0m5BmS"
+      }
+    },
+    {
+      "id": "prt_c4d57b6450013JUEa512ROXjU5",
+      "parentId": "msg_c4d57ac9a001THOLXUSa0m5BmS",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:23.937Z",
+      "endedAt": "2026-02-11T15:35:23.953Z",
+      "durationMs": 16,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 111
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d57b6450013JUEa512ROXjU5"
+      }
+    },
+    {
+      "id": "msg_c4d57c683001H1PGKAgcJxh1i3",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:24.035Z",
+      "endedAt": "2026-02-11T15:35:26.968Z",
+      "durationMs": 2933,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 243,
+          "output": 141,
+          "cacheRead": 36608,
+          "cacheWrite": 0,
+          "reasoning": 13
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.00642
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d57c683001H1PGKAgcJxh1i3"
+      }
+    },
+    {
+      "id": "prt_c4d57cbef001QIIuIYxu0mxS04",
+      "parentId": "msg_c4d57c683001H1PGKAgcJxh1i3",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:26.930Z",
+      "endedAt": "2026-02-11T15:35:26.953Z",
+      "durationMs": 23,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 102
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d57cbef001QIIuIYxu0mxS04"
+      }
+    },
+    {
+      "id": "msg_c4d57d233001f051lzblcj02Sc",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:27.027Z",
+      "endedAt": "2026-02-11T15:35:45.390Z",
+      "durationMs": 18363,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 167,
+          "output": 124,
+          "cacheRead": 36864,
+          "cacheWrite": 0,
+          "reasoning": 77
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.006827
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d57d233001f051lzblcj02Sc"
+      }
+    },
+    {
+      "id": "prt_c4d57df46001KuNVLTucghYpas",
+      "parentId": "msg_c4d57d233001f051lzblcj02Sc",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:30.574Z",
+      "endedAt": "2026-02-11T15:35:45.374Z",
+      "durationMs": 14800,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 995
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d57df46001KuNVLTucghYpas"
+      }
+    },
+    {
+      "id": "msg_c4d581a23001WB1dJzjieGAB0L",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:35:45.443Z",
+      "endedAt": "2026-02-11T15:36:25.984Z",
+      "durationMs": 40541,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 493,
+          "output": 294,
+          "cacheRead": 36992,
+          "cacheWrite": 0,
+          "reasoning": 187
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.01005
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d581a23001WB1dJzjieGAB0L"
+      }
+    },
+    {
+      "id": "prt_c4d5890d3001FUU4ee5BVnNybz",
+      "parentId": "msg_c4d581a23001WB1dJzjieGAB0L",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:25.939Z",
+      "endedAt": "2026-02-11T15:36:25.954Z",
+      "durationMs": 15,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 84
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5890d3001FUU4ee5BVnNybz"
+      }
+    },
+    {
+      "id": "msg_c4d58b8bd001NURvK2lwhuigSH",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:26.045Z",
+      "endedAt": "2026-02-11T15:36:48.671Z",
+      "durationMs": 22626,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 179,
+          "output": 68,
+          "cacheRead": 37632,
+          "cacheWrite": 0,
+          "reasoning": 16
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.005768
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d58b8bd001NURvK2lwhuigSH"
+      }
+    },
+    {
+      "id": "prt_c4d58e3d0001dkk4vPr9wP7VJ1",
+      "parentId": "msg_c4d58b8bd001NURvK2lwhuigSH",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:44.868Z",
+      "endedAt": "2026-02-11T15:36:48.657Z",
+      "durationMs": 3789,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 498
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d58e3d0001dkk4vPr9wP7VJ1"
+      }
+    },
+    {
+      "id": "msg_c4d591158001Er3vDB412EUyPV",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:48.728Z",
+      "endedAt": "2026-02-11T15:36:51.421Z",
+      "durationMs": 2693,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 273,
+          "output": 126,
+          "cacheRead": 37760,
+          "cacheWrite": 0,
+          "reasoning": 58
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.006901
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d591158001Er3vDB412EUyPV"
+      }
+    },
+    {
+      "id": "prt_c4d5919c3001rCr7467dgXGH2f",
+      "parentId": "msg_c4d591158001Er3vDB412EUyPV",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:51.374Z",
+      "endedAt": "2026-02-11T15:36:51.385Z",
+      "durationMs": 11,
+      "depth": 2,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "outputBytes": 84
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5919c3001rCr7467dgXGH2f"
+      }
+    },
+    {
+      "id": "msg_c4d591c1f0013vt4pAUaFye2dM",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:51.487Z",
+      "endedAt": "2026-02-11T15:36:56.993Z",
+      "durationMs": 5506,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 175,
+          "output": 50,
+          "cacheRead": 38016,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.005471
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d591c1f0013vt4pAUaFye2dM"
+      }
+    },
+    {
+      "id": "prt_c4d591f76001NeRKno0W6K75rS",
+      "parentId": "msg_c4d591c1f0013vt4pAUaFye2dM",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:53.716Z",
+      "endedAt": "2026-02-11T15:36:56.980Z",
+      "durationMs": 3264,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 256
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d591f76001NeRKno0W6K75rS"
+      }
+    },
+    {
+      "id": "msg_c4d5931d9001KMGvDASHZ9s3b5",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:36:57.049Z",
+      "endedAt": "2026-02-11T15:37:16.708Z",
+      "durationMs": 19659,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 172,
+          "output": 63,
+          "cacheRead": 38144,
+          "cacheWrite": 0,
+          "reasoning": 12
+        },
+        "costSource": "computed",
+        "stopReason": "tool-calls",
+        "costUSD": 0.005733
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d5931d9001KMGvDASHZ9s3b5"
+      }
+    },
+    {
+      "id": "prt_c4d5945420015e62TN518npakk",
+      "parentId": "msg_c4d5931d9001KMGvDASHZ9s3b5",
+      "kind": "tool_call",
+      "name": "bash",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:37:02.603Z",
+      "endedAt": "2026-02-11T15:37:16.694Z",
+      "durationMs": 14091,
+      "depth": 2,
+      "tool": {
+        "name": "bash",
+        "isError": false,
+        "outputBytes": 575
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "prt_c4d5945420015e62TN518npakk"
+      }
+    },
+    {
+      "id": "msg_c4d597ede001W6PDeUFQzZWM7C",
+      "parentId": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "kind": "llm_call",
+      "name": "gpt-5.3-codex",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:37:16.766Z",
+      "endedAt": "2026-02-11T15:37:27.413Z",
+      "durationMs": 10647,
+      "depth": 1,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.3-codex",
+        "tokens": {
+          "input": 429,
+          "output": 639,
+          "cacheRead": 38272,
+          "cacheWrite": 0,
+          "reasoning": 138
+        },
+        "costSource": "computed",
+        "stopReason": "stop",
+        "costUSD": 0.01309
+      },
+      "content": {
+        "promptPreview": "magna sed ipsum amet enim adipiscing amet aliquip magna amet veniam ",
+        "outputPreview": "quis dolor minim aliqua amet aliqua quis veniam consectetur adipiscing sed minim minim adipiscing labore tempor amet lorem nostrud quis nostrud magna dolor adipisc\n\nadipiscing elit aliqua sit sed veni"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/opencode/export-json/simple.json",
+        "recordId": "msg_c4d597ede001W6PDeUFQzZWM7C"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 64798,
+      "output": 23876,
+      "cacheRead": 597248,
+      "cacheWrite": 0,
+      "reasoning": 1906,
+      "total": 687828
+    },
+    "costUSD": {
+      "total": 0.413477,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5.3-codex": 0.413477
+      }
+    },
+    "counts": {
+      "llmCalls": 28,
+      "toolCalls": 28,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.9021
+    }
+  },
+  "insights": []
+}

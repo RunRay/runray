@@ -1,0 +1,140 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d534d43001UoAKApsBur7INT",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d534660001FrYj9s0RDtaZl5",
+  "type": "tool",
+  "callID": "call_c8n0Fdtv8YIATj9JYEtYiGwU",
+  "tool": "apply_patch",
+  "state": {
+    "status": "completed",
+    "input": {
+      "patchText": "aliqua amet lab\namet veniam minim amet a\naliqua quis mini\nsit nostrud sit e\naliqua co\nlorem veniam lorem tempor inc\nlorem amet amet amet sit amet ipsum aliquip nostrud tempor labore minim incid\nconsectetur dolor aliqua tempor \nlorem cons\nsed lorem amet magna sit tempor\nconsectetur magna magna ip\nadipiscing tempor sed amet consectetur nostrud dolor mag\naliqua inc\ntempor m\nlorem sit aliquip aliqua ad\nal\nadipiscing temp\nnostrud ipsum mini\nlorem magna magna tempor incididunt eli\nquis sit lorem incididunt elit aliquip \nadip\nsi\naliquip elit nostrud tempor lor\nal\nincididunt incididunt c\nconsectetur ipsum sed te\nipsum aliqua quis incididunt dolor ve\nincididunt aliquip dolor dolor dolor elit mini\nelit sed quis quis minim\nminim adipiscing sit magna\nnostrud amet sit sit consectetur ad\naliquip lorem incididunt sed sed labore a\nnostrud elit aliquip elit elit \nenim tempor veniam ipsum nost\naliquip dolor elit a\naliquip incididunt elit \nveniam sed dolor ali\naliquip dolor dolor aliqua v\nlorem quis consectetur elit sit \nmagna aliquip tempor enim aliqua aliquip\nveniam consectetur enim quis \nmagna\nelit enim enim aliqua\nsi\ndolor aliqua minim elit lorem te\nal\nincididunt incididunt c\nsed amet aliqua tempor \nminim adipiscing sit magna\nelit sed quis quis minim\nnostrud amet sit sit consectetur ad\namet aliquip aliquip sed incididunt elit \nmagna\nnostrud lorem tempor amet amet s\nsi\nquis elit tempor lorem dolor\nlabore consectetur aliquip adipiscing\nipsum consectetur elit aliquip consectetur\na\nlorem enim aliquip labore temp\nenim quis ipsum veniam\nveni\ndolor minim quis dolor incididu\nminim amet veniam\nadipiscing in\nadipiscing nostrud in\namet incididunt consec\nmagna\nadi\nlabore sed aliquip incididunt al\nincididunt amet aliqua tempor magna tempor l\nminim amet veniam\nenim consectetur amet sit incididunt amet labore dolor cons\ntempor sed \naliqua sit ali\nminim magna quis\nelit enim lorem ali\nadipiscing tempor incidid\nsit minim amet sit labore \nsit aliquip aliquip labore\ndolor incididunt enim aliq\nadipiscing dolor sit aliqu\nipsum tempor consectetur m\nminim consectetur ipsum al\nconsectetur sit magna enim\nsed minim enim veniam labo\nquis aliquip magna consec\nveniam aliq\nelit enim aliqui\nmagna nostrud quis tempor\namet elit incididunt quis \nadipiscing lorem veniam te\nipsum aliqua enim tempor q\nadipiscing aliqua incididu\nminim incididunt labore te\nnostrud veniam adipiscing \nconsectetur tempor consect\nsit sed labore nostrud qui\nmagna aliqua aliquip quis\nnostrud ip\nlabore am\nipsum dolor sit quis\nelit sed sit sit tempor sit adipiscing quis consectetur aliq\nconsectetur elit sit adipiscing aliqua enim veniam adip\nlabore am\naliquip enim magna \nconsectetur lorem sed nostrud tempor minim sit sed \nipsum la\nveniam \nmagna\naliqua tempor e\nadi\nnostrud consectetur quis amet v\naliquip aliqua lorem enim nostrud cons\nincididunt minim elit temp\nnostrud consectetur ipsum a\nquis incididunt aliquip veniam magna lore\ndolor minim magna incididunt dolor magna aliquip i\nelit labore quis quis tem\nsed adipiscing aliqua q\na\nconsectetur nostrud magna enim magna sed nostrud tempor lorem \nconsectetur quis adip\nsed quis adipiscing \nsit sit adipis\namet dolor minim enim\nlabore amet nostrud inc\nsed\nmagna minim sed consectetur \nsit tempor incididunt labore nostrud sit ipsum magna consectetur ipsum dolor ipsum ipsum enim magna elit consectetur labore consectetu\na\nsit consectetur \nenim dolor labore aliq\nlabore sed consectetu\na\namet ips\nlorem ipsum nostru\nveniam consectetur quis\nsi\na\nipsum a\nadipiscing elit amet enim aliquip amet amet elit aliqua dolor tempor tempor elit ipsum amet minim amet temp\nsi\na\nnostrud \nlabore veniam minim adi\nsi\na\nsed labo\nsit lorem consectetur ipsum labore incididunt enim veniam tempor aliqua sit sed incidi\nsi\na\nlabore do\nnostrud magna elit sit nostrud aliquip dolor labore veniam enim amet sit veniam tempor enim consectetur amet labore magna \nsi\na\nminim se\naliquip dolor amet tempor elit sit incididunt tempor consectetur amet enim amet tempor ipsum lorem quis quis dolor amet tempor sed nostrud \nsi\nelit tempor s"
+    },
+    "output": "aliqua veniam lorem minim sit minim s\nnostrud elit aliquip amet ipsum labore aliqu\naliquip consectetur sit quis incididunt sit adi\namet sit incididunt magna magna amet sit aliquip ad\nincididunt aliqua enim dolor lorem adipiscing adipis\nlabore magna quis elit tempor minim adipiscing e\nveniam enim quis enim adipiscing magna aliquip aliq\nconsectetur labore amet dolor adipiscing ipsum tempo\naliquip ipsum aliquip consectetur tempor veniam eli\ndolor minim minim minim nostrud magna ipsum ip\nminim aliquip lorem labore tempor consectetur in",
+    "title": "aliqua veniam lorem minim sit minim s\nnostrud elit aliquip amet ipsum labore aliqu\naliquip consectetur sit quis incididunt sit adi\namet sit incididunt magna magna amet sit aliquip ad\nincididunt aliqua enim dolor lorem adipiscing adipis\nlabore magna quis elit tempor minim adipiscing e\nveniam enim quis enim adipiscing magna aliquip aliq\nconsectetur labore amet dolor adipiscing ipsum tempo\naliquip ipsum aliquip consectetur tempor veniam eli\ndolor minim minim minim nostrud magna ipsum ip\nminim aliquip lorem labore tempor consectetur in",
+    "metadata": {
+      "diff": "quis tempor aliquip dolor incididunt dolor tempor\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\naliquip veniam sit ipsum elit quis amet enim i\nminim incididunt quis elit adipiscing elit min\nquis lorem elit \naliqua quis mini\nsit nostrud sit e\naliqua co\nlorem veniam lorem tempor inc\nlorem amet amet amet sit amet ipsum aliquip nostrud tempor labore minim incid\nconsectetur dolor aliqua tempor \nlorem cons\nsed lorem amet magna sit tempor\nconsectetur magna magna ip\nadipiscing tempor sed amet consectetur nostrud dolor mag\naliqua inc\ntempor m\n\nlorem incididunt sit elit labore sed dolor nostrud m\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ntempor veniam magna aliquip sed amet sed sit inci\ndolor aliqua aliqua tempor lorem lorem adipiscing\naliquip nostrud\nal\nadipiscing temp\nnostrud ipsum mini\nlorem magna magna tempor incididunt eli\nquis sit lorem incididunt elit aliquip \nadip\nsi\n\nveniam sed magna labore amet amet incididunt nostrud ali\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ntempor minim quis minim minim consectetur sit enim ip\ndolor veniam minim dolor incididunt dolor nostrud ven\nelit incididunt \nal\nincididunt incididunt c\nconsectetur ipsum sed te\nipsum aliqua quis incididunt dolor ve\nincididunt aliquip dolor dolor dolor elit mini\nelit sed quis quis minim\nminim adipiscing sit magna\nnostrud amet sit sit consectetur ad\naliquip lorem incididunt sed sed labore a\nnostrud elit aliquip elit elit \nenim tempor veniam ipsum nost\naliquip dolor elit a\naliquip incididunt elit \nveniam sed dolor ali\naliquip dolor dolor aliqua v\nlorem quis consectetur elit sit \nmagna aliquip tempor enim aliqua aliquip\nveniam consectetur enim quis \nmagna\nelit enim enim aliqua\nsi\n\nipsum labore veniam quis tempor quis lorem veniam quis am\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nelit tempor adipiscing amet minim ipsum enim tempor ve\nsed sed labore amet incididunt elit amet elit labore m\nenim veniam cons\nal\nincididunt incididunt c\nsed amet aliqua tempor \nminim adipiscing sit magna\nelit sed quis quis minim\nnostrud amet sit sit consectetur ad\namet aliquip aliquip sed incididunt elit \nmagna\nnostrud lorem tempor amet amet s\nsi\n\nlabore elit aliquip quis quis sit aliquip elit enim v\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nminim enim lorem adipiscing sit enim incididunt al\nsed amet tempor tempor sit nostrud elit elit aliqu\nnostrud enim si\nlabore consectetur aliquip adipiscing\nipsum consectetur elit aliquip consectetur\na\nlorem enim aliquip labore temp\nenim quis ipsum veniam\nveni\n\nipsum lorem dolor enim sit magna aliqua amet labore enim\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ndolor tempor veniam minim labore magna aliqua amet in\nlabore tempor minim aliquip veniam magna aliquip enim\nnostrud enim si\nminim amet veniam\nadipiscing in\nadipiscing nostrud in\namet incididunt consec\nmagna\nadi\n\ndolor dolor consectetur veniam amet nostrud amet adipisci\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nveniam amet labore quis adipiscing tempor magna magna \nlabore dolor enim incididunt tempor veniam dolor lorem\nipsum labore ips\nincididunt amet aliqua tempor magna tempor l\nminim amet veniam\nenim consectetur amet sit incididunt amet labore dolor cons\ntempor sed \naliqua sit ali\nminim magna quis\nelit enim lorem ali\nadipiscing tempor incidid\nsit minim amet sit labore \nsit aliquip aliquip labore\ndolor incididunt enim aliq\nadipiscing dolor sit aliqu\nipsum tempor consectetur m\nminim consectetur ipsum al\nconsectetur sit magna enim\nsed minim enim veniam labo\nquis aliquip magna consec\nveniam aliq\nelit enim aliqui\nmagna nostrud quis tempor\namet elit incididunt quis \nadipiscing lorem veniam te\nipsum aliqua enim tempor q\nadipiscing aliqua incididu\nminim incididunt labore te\nnostrud veniam adipiscing \nconsectetur tempor consect\nsit sed labore nostrud qui\nmagna aliqua aliquip quis\nnostrud ip\nlabore am\nipsum dolor sit quis\nelit sed sit sit tempor sit adipiscing quis consectetur aliq\nconsectetur elit sit adipiscing aliqua enim veniam adip\nlabore am\naliquip enim magna \nconsectetur lorem sed nostrud tempor minim sit sed \nipsum la\nveniam \nmagna\naliqua tempor e\nadi\n\nmagna adipiscing ipsum lorem labore aliquip minim veniam\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ndolor aliqua tempor sit aliquip quis lorem nostrud qu\nmagna aliqua quis aliqua adipiscing nostrud magna inc\namet ipsum elit\naliquip aliqua lorem enim nostrud cons\n\ntempor sed aliqua sit quis veniam quis dolor magna \nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nminim lorem nostrud incididunt sed aliquip aliqu\nenim tempor dolor nostrud elit ipsum labore enim\nenim labore amet\nnostrud consectetur ipsum a\nquis incididunt aliquip veniam magna lore\ndolor minim magna incididunt dolor magna aliquip i\nelit labore quis quis tem\nsed adipiscing aliqua q\na\nconsectetur nostrud magna enim magna sed nostrud tempor lorem \nconsectetur quis adip\nsed quis adipiscing \nsit sit adipis\namet dolor minim enim\nlabore amet nostrud inc\nsed\n\nmagna veniam minim labore consectetur enim minim lore\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\naliqua sit quis aliquip quis minim dolor tempor am\nadipiscing veniam dolor minim tempor minim minim s\ntempor veniam mi\nsit tempor incididunt labore nostrud sit ipsum magna consectetur ipsum dolor ipsum ipsum enim magna elit consectetur labore consectetu\na\nsit consectetur \nenim dolor labore aliq\nlabore sed consectetu\na\namet ips\nlorem ipsum nostru\nveniam consectetur quis\nsi\na\nipsum a\nadipiscing elit amet enim aliquip amet amet elit aliqua dolor tempor tempor elit ipsum amet minim amet temp\nsi\na\nnostrud \nlabore veniam minim adi\nsi\na\nsed labo\nsit lorem consectetur ipsum labore incididunt enim veniam tempor aliqua sit sed incidi\nsi\na\nlabore do\nnostrud magna elit sit nostrud aliquip dolor labore veniam enim amet sit veniam tempor enim consectetur amet labore magna \nsi\na\nminim se\naliquip dolor amet tempor elit sit incididunt tempor consectetur amet enim amet tempor ipsum lorem quis quis dolor amet tempor sed nostrud \nsi\n\n",
+      "files": [
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/magna.html",
+          "relativePath": "quis sit aliqua lorem aliqua quis adipisci",
+          "type": "add",
+          "diff": "quis tempor aliquip dolor incididunt dolor tempor\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\naliquip veniam sit ipsum elit quis amet enim i\nminim incididunt quis elit adipiscing elit min\nquis lorem elit \naliqua quis mini\nsit nostrud sit e\naliqua co\nlorem veniam lorem tempor inc\nlorem amet amet amet sit amet ipsum aliquip nostrud tempor labore minim incid\nconsectetur dolor aliqua tempor \nlorem cons\nsed lorem amet magna sit tempor\nconsectetur magna magna ip\nadipiscing tempor sed amet consectetur nostrud dolor mag\naliqua inc\ntempor m\n",
+          "before": "",
+          "after": "amet aliquip qu\nenim enim sit si\nquis dol\naliqua aliqua amet aliquip e\nelit amet aliquip incididunt tempor sit ipsum ipsum incididunt labore minim \nsed ipsum adipiscing tempor mag\nlorem lab\nmagna aliquip labore adipiscin\nincididunt labore lorem a\nminim quis incididunt dolor amet lorem enim veniam amet\naliqua ma\nincidid\n",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/aliquipx.json",
+          "relativePath": "veniam enim aliqua quis sit magna veniam aliq",
+          "type": "add",
+          "diff": "lorem incididunt sit elit labore sed dolor nostrud m\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ntempor veniam magna aliquip sed amet sed sit inci\ndolor aliqua aliqua tempor lorem lorem adipiscing\naliquip nostrud\nal\nadipiscing temp\nnostrud ipsum mini\nlorem magna magna tempor incididunt eli\nquis sit lorem incididunt elit aliquip \nadip\nsi\n",
+          "before": "",
+          "after": "v\nconsectetur el\nincididunt quis s\nenim adipiscing incididunt sit consect\nsit lorem amet sed lorem lorem amet el\nlor\ne\n",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/incididuntxa.json",
+          "relativePath": "minim labore nostrud tempor dolor sed amet minim ",
+          "type": "add",
+          "diff": "veniam sed magna labore amet amet incididunt nostrud ali\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ntempor minim quis minim minim consectetur sit enim ip\ndolor veniam minim dolor incididunt dolor nostrud ven\nelit incididunt \nal\nincididunt incididunt c\nconsectetur ipsum sed te\nipsum aliqua quis incididunt dolor ve\nincididunt aliquip dolor dolor dolor elit mini\nelit sed quis quis minim\nminim adipiscing sit magna\nnostrud amet sit sit consectetur ad\naliquip lorem incididunt sed sed labore a\nnostrud elit aliquip elit elit \nenim tempor veniam ipsum nost\naliquip dolor elit a\naliquip incididunt elit \nveniam sed dolor ali\naliquip dolor dolor aliqua v\nlorem quis consectetur elit sit \nmagna aliquip tempor enim aliqua aliquip\nveniam consectetur enim quis \nmagna\nelit enim enim aliqua\nsi\n",
+          "before": "",
+          "after": "v\nminim ipsum quis quis \nsed dolor minim aliquip\nminim lorem minim ipsum sit tempor v\nenim nostrud quis minim labore amet incididun\nveniam amet minim venia\naliqua aliqua amet labore\nipsum tempor incididunt veniam ali\nconsectetur enim elit magna ipsum nostru\nsed sit amet veniam enim dolor\nlorem lorem veniam sed incid\nveniam amet enim se\nveniam veniam adipiscin\namet consectetur ve\namet nostrud incididunt qui\nnostrud sit enim aliquip sit no\nenim tempor minim aliquip amet ipsum se\nadipiscing incididunt veniam\nveni\nelit magna elit temp\ne\n",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/adipiscingxal.json",
+          "relativePath": "labore enim quis aliquip quis amet aliquip adipisc",
+          "type": "add",
+          "diff": "ipsum labore veniam quis tempor quis lorem veniam quis am\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nelit tempor adipiscing amet minim ipsum enim tempor ve\nsed sed labore amet incididunt elit amet elit labore m\nenim veniam cons\nal\nincididunt incididunt c\nsed amet aliqua tempor \nminim adipiscing sit magna\nelit sed quis quis minim\nnostrud amet sit sit consectetur ad\namet aliquip aliquip sed incididunt elit \nmagna\nnostrud lorem tempor amet amet s\nsi\n",
+          "before": "",
+          "after": "v\nminim ipsum quis quis \naliquip ipsum quis adi\naliqua aliqua amet labore\nveniam amet minim venia\nipsum tempor incididunt veniam ali\nadipiscing veniam lorem aliquip aliquip \nveni\namet minim aliquip lorem quis m\ne\n",
+          "additions": 10,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/consectetur.ts",
+          "relativePath": "nostrud tempor veniam adipiscing consectetur i",
+          "type": "add",
+          "diff": "labore elit aliquip quis quis sit aliquip elit enim v\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nminim enim lorem adipiscing sit enim incididunt al\nsed amet tempor tempor sit nostrud elit elit aliqu\nnostrud enim si\nlabore consectetur aliquip adipiscing\nipsum consectetur elit aliquip consectetur\na\nlorem enim aliquip labore temp\nenim quis ipsum veniam\nveni\n",
+          "before": "",
+          "after": "sit consectetur enim elit amet lorem\nmagna consectetur labore consectetur sit \n\naliquip minim adipiscing nost\nenim aliquip labore d\ncon\n",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/minimxdolorxno.js",
+          "relativePath": "tempor enim labore aliquip dolor elit tempor magn",
+          "type": "add",
+          "diff": "ipsum lorem dolor enim sit magna aliqua amet labore enim\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ndolor tempor veniam minim labore magna aliqua amet in\nlabore tempor minim aliquip veniam magna aliquip enim\nnostrud enim si\nminim amet veniam\nadipiscing in\nadipiscing nostrud in\namet incididunt consec\nmagna\nadi\n",
+          "before": "",
+          "after": "enim minim amet \nenim aliqua \nsit sed sed magna al\nincididunt enim incid\nveni\nlo\n",
+          "additions": 6,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/aliquipxaliquax.js",
+          "relativePath": "sed lorem aliqua amet ipsum aliquip minim sed veni",
+          "type": "add",
+          "diff": "dolor dolor consectetur veniam amet nostrud amet adipisci\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nveniam amet labore quis adipiscing tempor magna magna \nlabore dolor enim incididunt tempor veniam dolor lorem\nipsum labore ips\nincididunt amet aliqua tempor magna tempor l\nminim amet veniam\nenim consectetur amet sit incididunt amet labore dolor cons\ntempor sed \naliqua sit ali\nminim magna quis\nelit enim lorem ali\nadipiscing tempor incidid\nsit minim amet sit labore \nsit aliquip aliquip labore\ndolor incididunt enim aliq\nadipiscing dolor sit aliqu\nipsum tempor consectetur m\nminim consectetur ipsum al\nconsectetur sit magna enim\nsed minim enim veniam labo\nquis aliquip magna consec\nveniam aliq\nelit enim aliqui\nmagna nostrud quis tempor\namet elit incididunt quis \nadipiscing lorem veniam te\nipsum aliqua enim tempor q\nadipiscing aliqua incididu\nminim incididunt labore te\nnostrud veniam adipiscing \nconsectetur tempor consect\nsit sed labore nostrud qui\nmagna aliqua aliquip quis\nnostrud ip\nlabore am\nipsum dolor sit quis\nelit sed sit sit tempor sit adipiscing quis consectetur aliq\nconsectetur elit sit adipiscing aliqua enim veniam adip\nlabore am\naliquip enim magna \nconsectetur lorem sed nostrud tempor minim sit sed \nipsum la\nveniam \nmagna\naliqua tempor e\nadi\n",
+          "before": "",
+          "after": "aliqua enim ipsum incididunt veniam ipsum m\nenim minim amet \nveniam minim tempor incididunt elit nostrud nostrud sed do\nquis aliqu\naliquip labor\nminim sit dolor\ndolor aliqua elit \nsed sed elit adipiscing \naliquip labore minim ipsu\namet amet aliqua labore e\naliqua amet nostrud lorem\naliqua consectetur lorem \nlabore elit veniam minim \nconsectetur nostrud adipi\nenim labore tempor adipis\naliquip magna minim ipsum\nenim aliquip consectetur\nnostrud si\nquis magna lore\namet ipsum adipiscing al\nadipiscing labore enim ad\nadipiscing dolor sed cons\naliqua consectetur sed en\nquis minim dolor veniam a\naliqua labore consectetur\nlorem dolor veniam aliqua\ntempor quis consectetur m\nveniam labore elit consec\nsit veniam tempor dolor \ntempor ve\nenim ali\ntempor aliqua venia\nadipiscing quis dolor sed sed lorem nostrud sed magna quis \nconsectetur amet nostrud labore elit incididunt incidi\nenim ali\naliqua minim tempo\nconsectetur amet lorem tempor magna sed enim enim \naliquip\ntempor\nveni\nlabore veniam \nlo\n",
+          "additions": 42,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/ven/magnaxadip.ts",
+          "relativePath": "incididunt veniam tempor ipsum quis sed incididun",
+          "type": "add",
+          "diff": "magna adipiscing ipsum lorem labore aliquip minim veniam\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\ndolor aliqua tempor sit aliquip quis lorem nostrud qu\nmagna aliqua quis aliqua adipiscing nostrud magna inc\namet ipsum elit\naliquip aliqua lorem enim nostrud cons\n",
+          "before": "",
+          "after": "elit aliqua adipiscing lorem sit cons\n",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/ven/adip.tsx",
+          "relativePath": "elit consectetur elit enim sit adipiscing co",
+          "type": "add",
+          "diff": "tempor sed aliqua sit quis veniam quis dolor magna \nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nminim lorem nostrud incididunt sed aliquip aliqu\nenim tempor dolor nostrud elit ipsum labore enim\nenim labore amet\nnostrud consectetur ipsum a\nquis incididunt aliquip veniam magna lore\ndolor minim magna incididunt dolor magna aliquip i\nelit labore quis quis tem\nsed adipiscing aliqua q\na\nconsectetur nostrud magna enim magna sed nostrud tempor lorem \nconsectetur quis adip\nsed quis adipiscing \nsit sit adipis\namet dolor minim enim\nlabore amet nostrud inc\nsed\n",
+          "before": "",
+          "after": "ipsum sit elit enim ipsum \ntempor sit veniam enim enim lorem adipis\naliquip tempor magna enim minim veniam lorem adip\nincididunt sed amet veni\nenim minim dolor venia\n\nveniam dolor aliqua veniam consectetur incididunt elit dolor \ndolor magna aliquip \nipsum sit magna ali\nincididunt ve\nenim quis sed magna \naliquip adipiscing min\nqu\n",
+          "additions": 13,
+          "deletions": 0
+        },
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/ven/aliqui.css",
+          "relativePath": "dolor nostrud enim labore incididunt adipiscin",
+          "type": "add",
+          "diff": "magna veniam minim labore consectetur enim minim lore\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\naliqua sit quis aliquip quis minim dolor tempor am\nadipiscing veniam dolor minim tempor minim minim s\ntempor veniam mi\nsit tempor incididunt labore nostrud sit ipsum magna consectetur ipsum dolor ipsum ipsum enim magna elit consectetur labore consectetu\na\nsit consectetur \nenim dolor labore aliq\nlabore sed consectetu\na\namet ips\nlorem ipsum nostru\nveniam consectetur quis\nsi\na\nipsum a\nadipiscing elit amet enim aliquip amet amet elit aliqua dolor tempor tempor elit ipsum amet minim amet temp\nsi\na\nnostrud \nlabore veniam minim adi\nsi\na\nsed labo\nsit lorem consectetur ipsum labore incididunt enim veniam tempor aliqua sit sed incidi\nsi\na\nlabore do\nnostrud magna elit sit nostrud aliquip dolor labore veniam enim amet sit veniam tempor enim consectetur amet labore magna \nsi\na\nminim se\naliquip dolor amet tempor elit sit incididunt tempor consectetur amet enim amet tempor ipsum lorem quis quis dolor amet tempor sed nostrud \nsi\n",
+          "before": "",
+          "after": "quis sit quis amet aliqua sit veniam minim aliquip amet quis ipsum adipiscing quis enim consectetur incididunt aliqua consectetur adi\n\naliquip adipisc\nnostrud enim nostrud \nadipiscing amet magn\n\nelit ve\nsed lorem elit lo\nenim lorem quis amet l\ne\n\nconsec\nquis tempor incididunt sit magna enim elit sit minim sed enim aliquip labore veniam amet minim lorem quis \ne\n\nminim e\nsit quis amet nostrud \ne\n\nenim qu\naliqua nostrud amet magna dolor sit nostrud elit sit aliquip veniam aliquip aliqua mi\ne\n\ntempor m\nnostrud aliqua sit amet dolor ipsum lorem dolor dolor tempor adipiscing magna dolor veniam elit aliqua incididunt incidid\ne\n\nminim n\ntempor incididunt veniam adipiscing sit sed lorem incididunt minim consectetur consectetur veniam sed enim sed veniam amet minim dolor ame\ne\n",
+          "additions": 30,
+          "deletions": 0
+        }
+      ],
+      "diagnostics": {},
+      "truncated": false
+    },
+    "time": {
+      "start": 1770823852704,
+      "end": 1770823852779
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "labore labore quis nostrud amet nostrud sit magna ven"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "msg_c4d5259140016X90PGvY4RmcLL",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "role": "user",
+  "time": {
+    "created": 1770823768360
+  },
+  "summary": {
+    "title": "ipsum amet aliquip nostrud adipiscing sed",
+    "diffs": []
+  },
+  "agent": "build",
+  "model": {
+    "providerID": "openai",
+    "modelID": "gpt-5.3-codex"
+  }
+}

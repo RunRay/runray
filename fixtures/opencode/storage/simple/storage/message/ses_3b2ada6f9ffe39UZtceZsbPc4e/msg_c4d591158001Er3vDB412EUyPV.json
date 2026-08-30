@@ -1,0 +1,38 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "msg_c4d591158001Er3vDB412EUyPV",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "role": "assistant",
+  "time": {
+    "created": 1770824208728,
+    "completed": 1770824211421
+  },
+  "parentID": "msg_c4d5259140016X90PGvY4RmcLL",
+  "modelID": "gpt-5.3-codex",
+  "providerID": "openai",
+  "mode": "build",
+  "agent": "build",
+  "path": {
+    "cwd": "/home/user/project/sedxmagn/consec/temporxaliqu",
+    "root": "/home/user/project"
+  },
+  "cost": 0,
+  "tokens": {
+    "total": 38159,
+    "input": 273,
+    "output": 126,
+    "reasoning": 58,
+    "cache": {
+      "read": 37760,
+      "write": 0
+    }
+  },
+  "finish": "tool-calls"
+}

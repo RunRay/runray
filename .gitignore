@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+dist-export/
+packages/*/dist/
+packages/cli/assets/
+packages/cli/bundle/
+# copied from the repo root at prepack (scripts/prepack-meta.mjs)
+packages/cli/README.md
+packages/cli/LICENSE
+
+# Packing output — npm pack leaves the tarball in the package dir
+*.tgz
+
+# Test / coverage
+coverage/
+*.tsbuildinfo
+
+# Local config & caches
+~/.config/runray/
+~/.config/tracepulse/
+.cache/
+.DS_Store
+
+# Fixtures: never commit raw, unscrubbed logs
+fixtures/**/raw/
+*.raw.jsonl
+*.raw.json
+
+# Large perf fixture: too big for git history — generated locally per contributor.
+# See fixtures/claude-code/large/README.md
+fixtures/**/large/*.jsonl
+
+# Local pricing overrides
+pricing.local.json
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+otel/*
