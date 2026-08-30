@@ -1,0 +1,35 @@
+{
+  "name": "runray-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run",
+    "build": "pnpm -r run build",
+    "bench": "tsx scripts/bench.ts",
+    "synth-large": "tsx scripts/synth-large.ts",
+    "scrub": "tsx scripts/scrub-fixture.ts",
+    "otlp-sink": "node scripts/otlp-sink.mjs",
+    "pricing:snapshot": "tsx scripts/build-pricing-snapshot.ts",
+    "goldens": "tsx scripts/regen-goldens.ts",
+    "changeset": "changeset",
+    "version": "changeset version"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@changesets/cli": "^3.0.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.0",
+    "better-sqlite3": "^12.11.1",
+    "tinybench": "^6.0.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

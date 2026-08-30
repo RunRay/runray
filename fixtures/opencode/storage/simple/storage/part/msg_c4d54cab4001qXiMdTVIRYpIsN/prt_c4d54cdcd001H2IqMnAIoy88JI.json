@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d54cdcd001H2IqMnAIoy88JI",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d54cab4001qXiMdTVIRYpIsN",
+  "type": "reasoning",
+  "text": "elit labore aliqua adipiscing ipsu",
+  "metadata": {
+    "openai": {
+      "itemId": "magna quis sed dolor incididunt incididunt minim enim",
+      "reasoningEncryptedContent": "magna sed sit nostrud sit aliquip lorem enim nostrud tempor aliqua incididunt sit labore tempor elit veniam ipsum enim consectetur labore nostrud dolor tempor tempor amet incididunt minim nostrud sit aliquip aliquip amet tempor consectetur quis sit quis quis dolor aliquip sed nostrud labore veniam adipiscing aliquip labore tempor veniam sit elit veniam quis aliqua elit adipiscing elit amet sed dolor lorem enim magna elit enim lorem sit quis elit tempor lorem enim minim enim enim incididunt labore amet ipsum quis labore quis dolor quis aliquip amet quis nostrud enim lorem aliquip sed minim minim veniam quis lorem quis lorem lorem tempor tempor aliquip tempor adipiscing amet sit adipiscing quis ipsum magna labore dolor aliqua dolor aliqua veniam dolor magna aliqua sed dolor elit ipsum consectetur tempor quis labore magna minim magna ipsum elit tempor adipiscing sit sit labore nostrud elit quis enim ipsum labore veniam quis aliqua elit veniam amet incididunt aliqua adipiscing tempor incididunt elit consectetur labore magna quis veniam magna incididunt aliqua quis veniam ipsum ipsum sed ipsum dolor dolor aliquip aliqua incididunt dolor sed minim minim ipsum sed dolor sed sit aliqua aliquip nostrud incididunt veniam dolor dolor consectetur aliqua incididunt elit aliquip elit tempor minim minim sit si"
+    }
+  },
+  "time": {
+    "start": 1770823929293,
+    "end": 1770823931061
+  }
+}

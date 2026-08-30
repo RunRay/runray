@@ -1,0 +1,36 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ui-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@runray/ui", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "cli-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "packages/cli/dist/bin.js",
+        "demo",
+        "--no-open",
+        "--port",
+        "4322"
+      ],
+      "port": 4322
+    },
+    {
+      "name": "cli-view",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "packages/cli/dist/bin.js",
+        "view",
+        "fixtures/claude-code",
+        "--no-open",
+        "--port",
+        "4321"
+      ],
+      "port": 4321
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d598e440018XTt9eh8PfAekl",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d597ede001W6PDeUFQzZWM7C",
+  "type": "text",
+  "text": "magna lorem minim enim dolor aliqua nostrud sed sit sit sit aliquip dolor quis enim minim tempor aliquip consectetur incididunt amet magna aliqua lorem quis\n\nincididunt elit lorem incididunt magna ipsum magna adipiscing incididunt lorem\nlabore tempor consectetur amet lorem enim adipiscing elit incididunt amet dolor ipsum lorem ad\nconsectetur elit consectetur dolor labore adipiscing incididunt quis aliqua nostrud sed nostrud quis incididunt elit amet\naliquip lorem lorem minim ipsum aliquip magna ipsum dolor magna aliqua lorem adipiscing elit lorem venia\nmagna incididunt aliqua incididunt sed incididunt consectetur aliquip amet aliqua labore veni\ntempor adipiscing sed labore nostrud elit enim aliqua quis amet ipsum enim lorem lorem magna magna nostrud enim magna enim tempor a\namet elit sed adipiscing elit sit tempor veniam sit aliquip nostrud quis nostrud cons\n\nnostrud sed lab\nadipiscing aliqu\namet incididunt\nminim lorem quis venia\naliqua nostrud sed sit\nminim aliquip aliqua incidi\nipsum ipsum incididunt aliq\nminim minim ipsum dolor elit sed\naliquip lorem lorem incididun\nipsum nostrud magna lorem min\nenim aliquip amet veniam consect\ndolor incididunt magna minim venia\naliqua veniam elit aliquip elit la\nipsum dolor magna ipsum aliqua veni\n\nminim veniam\nipsum minim elit dolor dolo\nelit minim sit aliquip enim ipsum adipiscing aliqua sit ali\n\namet minim veniam min\naliquip\namet nostru\nquis magna \nlor\n\nminim elit quis elit quis aliquip aliquip amet magna consectetur enim aliqua consectetur incididunt minim tempor adipiscing consectetur quis aliquip magna incididunt ipsum incididunt labore",
+  "time": {
+    "start": 1770824247373,
+    "end": 1770824247373
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "veniam enim veniam enim veniam adipiscing enim sit sed"
+    }
+  }
+}

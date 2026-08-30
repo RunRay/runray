@@ -1,0 +1,25 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d52f978001piczd3vtIP9bz9",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d52f329001njFpVZ0fR2wJRy",
+  "type": "reasoning",
+  "text": "lorem incididunt aliquip veniam sit ",
+  "metadata": {
+    "openai": {
+      "itemId": "amet veniam quis lorem quis enim dolor ipsum adipisci",
+      "reasoningEncryptedContent": "labore magna sit ipsum sed enim aliqua adipiscing enim elit minim aliquip tempor incididunt minim lorem aliquip elit magna nostrud veniam sit enim elit enim dolor aliqua nostrud enim labore consectetur ipsum minim veniam veniam veniam minim incididunt tempor sit sit aliqua nostrud adipiscing magna magna nostrud lorem elit sed incididunt ipsum tempor adipiscing labore enim labore adipiscing nostrud tempor minim sit elit dolor lorem nostrud consectetur veniam dolor veniam aliqua adipiscing tempor labore enim tempor adipiscing quis adipiscing adipiscing nostrud lorem minim dolor tempor magna incididunt consectetur sed amet tempor ipsum incididunt aliqua aliquip sit magna adipiscing adipiscing tempor amet incididunt nostrud tempor consectetur sed sed nostrud elit ipsum incididunt adipiscing labore ipsum ipsum elit magna magna magna adipiscing adipiscing aliquip dolor aliquip consectetur nostrud dolor aliquip nostrud sit aliquip amet amet consectetur elit tempor quis magna aliqua minim "
+    }
+  },
+  "time": {
+    "start": 1770823809400,
+    "end": 1770823810323
+  }
+}

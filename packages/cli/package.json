@@ -1,0 +1,60 @@
+{
+  "name": "runray",
+  "version": "0.1.0-alpha.2",
+  "type": "module",
+  "license": "MIT",
+  "description": "Zero-config, local-first observability and token audit for local coding agents (Claude Code, OpenCode; OTLP import for others).",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "coding-agent",
+    "tokens",
+    "cost",
+    "observability",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/runray/runray.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/runray/runray#readme",
+  "bugs": {
+    "url": "https://github.com/runray/runray/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "runray": "bundle/bin.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./bundle/index.js"
+    }
+  },
+  "files": [
+    "bundle",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build",
+    "bundle": "node ./scripts/bundle.mjs",
+    "prepack": "pnpm --filter @runray/core build && node ./scripts/prepack-ui.mjs && node ./scripts/prepack-meta.mjs && node ./scripts/bundle.mjs"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0",
+    "chokidar": "^5.0.0",
+    "commander": "^15.0.0",
+    "zod": "^4.4.3"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^12.11.1"
+  },
+  "devDependencies": {
+    "@runray/core": "workspace:*",
+    "@runray/schema": "workspace:*",
+    "esbuild": "^0.28.1"
+  }
+}

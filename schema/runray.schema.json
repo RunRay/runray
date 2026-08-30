@@ -1,0 +1,549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://runray.dev/schema/0.1.0/runray.schema.json",
+  "title": "RunRay TraceFile",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "generator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Run"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generator",
+    "generatedAt",
+    "runs"
+  ],
+  "$defs": {
+    "Run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "tool": {
+              "type": "string",
+              "enum": [
+                "claude-code",
+                "opencode",
+                "otlp",
+                "unknown"
+              ]
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "claude-jsonl",
+                "opencode-storage",
+                "opencode-sqlite",
+                "opencode-export",
+                "otlp-json"
+              ]
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "tool",
+            "format",
+            "files"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "project": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "gitBranch": {
+              "type": "string"
+            }
+          }
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "message"
+            ]
+          }
+        },
+        "spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Span"
+          }
+        },
+        "totals": {
+          "$ref": "#/$defs/RunTotals"
+        },
+        "insights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Insight"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "startedAt",
+        "spans",
+        "totals",
+        "insights"
+      ]
+    },
+    "Span": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "session",
+            "turn",
+            "llm_call",
+            "tool_call",
+            "subagent",
+            "mcp_call",
+            "hook",
+            "other"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error",
+            "cancelled",
+            "in_progress",
+            "unknown"
+          ]
+        },
+        "statusReason": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "llm": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "tokens": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "output": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cacheRead": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cacheWrite": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "reasoning": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "input",
+                "output",
+                "cacheRead",
+                "cacheWrite"
+              ]
+            },
+            "costUSD": {
+              "type": "number",
+              "minimum": 0
+            },
+            "costSource": {
+              "type": "string",
+              "enum": [
+                "reported",
+                "computed",
+                "unknown"
+              ]
+            },
+            "stopReason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "tokens",
+            "costSource"
+          ]
+        },
+        "tool": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "mcpServer": {
+              "type": "string"
+            },
+            "isError": {
+              "type": "boolean"
+            },
+            "exitCode": {
+              "type": "integer"
+            },
+            "outputBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "linesAdded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "linesRemoved": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "name",
+            "isError"
+          ]
+        },
+        "agent": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "sessionId": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "promptPreview": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outputPreview": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "delegationReason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "recordId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "file"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "parentId",
+        "kind",
+        "name",
+        "status",
+        "startedAt",
+        "depth",
+        "attributes",
+        "provenance"
+      ]
+    },
+    "RunTotals": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "integer"
+            },
+            "output": {
+              "type": "integer"
+            },
+            "cacheRead": {
+              "type": "integer"
+            },
+            "cacheWrite": {
+              "type": "integer"
+            },
+            "reasoning": {
+              "type": "integer"
+            },
+            "total": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "input",
+            "output",
+            "cacheRead",
+            "cacheWrite",
+            "total"
+          ]
+        },
+        "costUSD": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "number"
+            },
+            "wastedEstimate": {
+              "type": "number"
+            },
+            "byModel": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "total",
+            "wastedEstimate",
+            "byModel"
+          ]
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "llmCalls": {
+              "type": "integer"
+            },
+            "toolCalls": {
+              "type": "integer"
+            },
+            "toolErrors": {
+              "type": "integer"
+            },
+            "subagents": {
+              "type": "integer"
+            },
+            "maxDepth": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "llmCalls",
+            "toolCalls",
+            "toolErrors",
+            "subagents",
+            "maxDepth"
+          ]
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "hitRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "hitRate"
+          ]
+        },
+        "codeChanges": {
+          "type": "object",
+          "properties": {
+            "linesAdded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "linesRemoved": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "linesAdded",
+            "linesRemoved"
+          ]
+        }
+      },
+      "required": [
+        "tokens",
+        "costUSD",
+        "counts",
+        "cache"
+      ]
+    },
+    "Insight": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ruleId": {
+          "type": "string",
+          "description": "Rule identifier. v0 registry: retry-loop, low-cache-hit, context-bloat, expensive-subagent, dead-end-run. New rules may be added in minor schema versions."
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warning",
+            "critical"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "estimatedWasteUSD": {
+          "type": "number",
+          "minimum": 0
+        },
+        "suggestion": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "ruleId",
+        "severity",
+        "title",
+        "detail",
+        "spanIds"
+      ]
+    }
+  }
+}

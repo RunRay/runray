@@ -1,0 +1,42 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d5945420015e62TN518npakk",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d5931d9001KMGvDASHZ9s3b5",
+  "type": "tool",
+  "callID": "call_PhSOP9RRf2X9jHtL9vZ5iFVa",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "amet veniam n",
+      "description": "amet magna consectetur tempor a",
+      "workdir": "quis amet enim aliqua nostrud m",
+      "timeout": 120000
+    },
+    "output": "\ndolor lorem adipiscing sed\nlabore aliquip quis ma\n\nsed magna labore sed nostrud aliquip sit labore elit venia\naliqua ipsum en\nadipiscing veniam consectetur consect\nelit sit adipiscing\nconsectetur tempor ven\namet sit aliqua nostrud ipsum quis enim adipiscing amet enim ipsum ipsum amet enim enim ipsum labore labore d\nlabore dolor aliquip labore magna nostrud adipiscing dolor sit minim lorem lorem sit aliqua ipsum amet magna \namet ipsum elit tempor ipsum labore labore labore veniam nostrud incididunt incididunt ipsum aliquip sit sit \ntempor lorem veniam aliqua\n",
+    "title": "amet magna consectetur tempor a",
+    "metadata": {
+      "output": "\ndolor lorem adipiscing sed\nlabore aliquip quis ma\n\nsed magna labore sed nostrud aliquip sit labore elit venia\naliqua ipsum en\nadipiscing veniam consectetur consect\nelit sit adipiscing\nconsectetur tempor ven\namet sit aliqua nostrud ipsum quis enim adipiscing amet enim ipsum ipsum amet enim enim ipsum labore labore d\nlabore dolor aliquip labore magna nostrud adipiscing dolor sit minim lorem lorem sit aliqua ipsum amet magna \namet ipsum elit tempor ipsum labore labore labore veniam nostrud incididunt incididunt ipsum aliquip sit sit \ntempor lorem veniam aliqua\n",
+      "exit": 0,
+      "description": "amet magna consectetur tempor a",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824222603,
+      "end": 1770824236694
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "tempor veniam aliquip tempor sit labore sed veniam co"
+    }
+  }
+}

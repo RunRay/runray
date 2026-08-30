@@ -1,0 +1,402 @@
+/*
+ * RunRay design tokens — the CSS mirror of docs/03-design.md §2
+ * (stylebook v2 "Ink & Brass"). Single source of truth: components
+ * (including SVG charts) consume these as var(--color-…) / Tailwind
+ * utilities; no TS duplication.
+ *
+ * Direction: a typeset financial audit on an instrument panel. Warm ink
+ * ground, brass = money and nothing else, muted functional hues for
+ * structure. Serif states, mono proves. Dark ("ink") is the default;
+ * the "paper ledger" light palette ships behind data-theme below.
+ */
+@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "tailwindcss";
+
+@theme {
+  /* ---- Color (Dashboard Aesthetic) ---- */
+  --color-*: initial; /* no default Tailwind palette (CLAUDE.md guardrail) */
+  --color-bg: #0a0a0f;
+  --color-surface: #141420;
+  --color-surface-2: #1a1a2e;
+  --color-border: #2a2a3e;
+  --color-border-strong: #3a3a4e;
+  --color-text: #e8e8f0;
+  --color-text-dim: #a0a0b8;
+  --color-text-faint: #6b6b80;
+
+  /* Vibrant Accent */
+  --color-brand: #7c5cff;
+  --color-brand-bright: #9378ff;
+  --color-brand-secondary: #00d4aa;
+  /* "brass" is the stylebook name for the money/accent hue; it aliases the
+     brand token so every bg-/border-/outline-brass utility renders (and stays
+     theme-aware via the brand override) instead of resolving to nothing. */
+  --color-brass: var(--color-brand);
+
+  /* Span-kind palette */
+  --color-span-llm: #7c5cff;
+  --color-span-tool: #00d4aa;
+  --color-span-subagent: #8b5cf6;
+  --color-span-mcp: #0ea5e9;
+  --color-span-hook: #6b6b80;
+  --color-span-error: #ef4444;
+
+  /* Cost heat scale / Severity */
+  --color-heat-0: #6b6b80;
+  --color-heat-1: #f59e0b;
+  --color-heat-2: #f87171;
+  --color-heat-3: #ef4444;
+  --color-cache-savings: #10b981;
+
+  /* Model identity ramp */
+  --color-model-1: #7c5cff;
+  --color-model-2: #8b5cf6;
+  --color-model-3: #a855f7;
+  --color-model-4: #c084fc;
+
+  /* --- Design System specific tokens (mr9k65ss-code.html config) --- */
+  --color-surface-container-lowest: #0d0d15;
+  --color-surface-container-high: #292932;
+  --color-inverse-surface: #e4e1ed;
+  --color-on-primary-container: #0d0096;
+  --color-on-primary-fixed: #07006c;
+  --color-surface-variant: #34343d;
+  --color-background: #13131b;
+  --color-secondary-fixed: #dae2fd;
+  --color-outline-variant: #464554;
+  --color-surface-bright: #393841;
+  --color-error: #ffb4ab;
+  --color-success-emerald: #10b981;
+  --color-on-error-container: #ffdad6;
+  --color-outline: #908fa0;
+  --color-tertiary-fixed-dim: #bcc7de;
+  --color-on-secondary-fixed: #131b2e;
+  --color-surface-dim: #13131b;
+  --color-on-primary: #1000a9;
+  --color-error-container: #93000a;
+  --color-surface-container-low: #1b1b23;
+  --color-inverse-on-surface: #303038;
+  --color-on-tertiary: #263143;
+  --color-primary: #c0c1ff;
+  --color-on-error: #690005;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-on-tertiary-container: #1f2a3c;
+  --color-on-secondary-fixed-variant: #3f465c;
+  --color-surface-tint: #c0c1ff;
+  --color-on-surface-variant: #c7c4d7;
+  --color-border-slate: #334155;
+  --color-secondary-container: #3f465c;
+  --color-inverse-primary: #494bd6;
+  --color-bg-deep-gray: #020617;
+  --color-surface-container-highest: #34343d;
+  --color-secondary: #bec6e0;
+  --color-tertiary-fixed: #d8e3fb;
+  --color-on-background: #e4e1ed;
+  --color-primary-fixed: #e1e0ff;
+  --color-error-rose: #f43f5e;
+  --color-on-secondary: #283044;
+  --color-surface-container: #1f1f27;
+  --color-surface: #13131b;
+  --color-primary-container: #8083ff;
+  --color-data-indigo: #818cf8;
+  --color-on-tertiary-fixed: #111c2d;
+  --color-on-primary-fixed-variant: #2f2ebe;
+  --color-warning-amber: #f59e0b;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-tertiary: #bcc7de;
+  --color-on-tertiary-fixed-variant: #3c475a;
+  --color-on-surface: #e4e1ed;
+  --color-tertiary-container: #8691a7;
+  --color-on-secondary-container: #adb4ce;
+
+  /* ---- Typography: Inter, JetBrains Mono data ---- */
+  --font-display: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  --font-label-caps: "JetBrains Mono";
+  --font-data-mono-bold: "JetBrains Mono";
+  --font-body-base: "Inter Variable";
+  --font-headline-lg: "Inter Variable";
+  --font-body-sm: "Inter Variable";
+  --font-data-mono: "JetBrains Mono";
+  --font-headline-md: "Inter Variable";
+
+  /* Scale font-sizes */
+  --text-label: 12px;
+  --text-label--line-height: 1.45;
+  --text-body: 13px;
+  --text-body--line-height: 1.45;
+  --text-detail: 14px;
+  --text-detail--line-height: 1.45;
+  --text-title: 16px;
+  --text-title--line-height: 1.3;
+  --text-title--letter-spacing: -0.01em;
+  --text-header: 20px;
+  --text-header--line-height: 1.3;
+  --text-header--letter-spacing: -0.01em;
+  --text-hero: 44px;
+  --text-hero--line-height: 1.1;
+  --text-hero--letter-spacing: -0.02em;
+  --text-micro: 10.5px;
+  --text-micro--line-height: 1.45;
+  --text-micro--letter-spacing: 0.12em;
+
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 12px;
+  --text-label-caps--letter-spacing: 0.05em;
+  --text-label-caps--font-weight: 700;
+
+  --text-data-mono-bold: 13px;
+  --text-data-mono-bold--line-height: 18px;
+  --text-data-mono-bold--font-weight: 600;
+
+  --text-body-base: 14px;
+  --text-body-base--line-height: 20px;
+  --text-body-base--font-weight: 400;
+
+  --text-headline-lg: 24px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 600;
+
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--font-weight: 400;
+
+  --text-data-mono: 13px;
+  --text-data-mono--line-height: 18px;
+  --text-data-mono--font-weight: 400;
+
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--font-weight: 600;
+
+  /* ---- Space, shape, elevation ---- */
+  --spacing-row: 28px; /* waterfall & table row height */
+  --spacing-gutter: 16px;
+  --spacing-trace-row-height: 32px;
+  --spacing-margin-page: 24px;
+  --spacing-panel-padding: 12px;
+  --spacing-unit: 4px;
+
+  --radius-*: initial;
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  --radius-control: 6px;
+  --radius-panel: 12px;
+
+  /* Elevation in ink: layered card shadow on panels, heavier tier on popovers */
+  --shadow-*: initial;
+  --shadow-card: 0 1px 0 rgb(0 0 0 / 0.35), 0 8px 22px rgb(0 0 0 / 0.35);
+  --shadow-popover:
+    0 0 0 1px var(--color-border), 0 2px 8px rgb(0 0 0 / 0.5),
+    0 18px 44px rgb(0 0 0 / 0.5);
+
+  /* ---- Motion: one orchestrated entrance, then 120–160ms hovers ---- */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Waterfall bars grow once on first paint (03-design.md §2 Motion) —
+   transform-only so the reduced-motion kill switch and the "transform +
+   opacity only" rule both hold. */
+@keyframes bar-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* First-paint section entrance (statement → stats → panels stagger). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The burn line draws itself once (03-design.md §2 Motion) — pathLength=1
+   at the call site so the dash math is unit-free. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  /* "Paper ledger" light theme based on new Electric Indigo scheme */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --color-bg: #f8f9fa;
+    --color-surface: #ffffff;
+    --color-surface-2: #f3f4f6;
+    --color-border: #e5e7eb;
+    --color-border-strong: #d1d5db;
+    --color-text: #1f2937;
+    --color-text-dim: #4b5563;
+    --color-text-faint: #9ca3af;
+
+    --color-brand: #4f46e5;
+    --color-brand-bright: #6366f1;
+
+    --color-span-llm: #4f46e5;
+    --color-span-tool: #4b5563;
+    --color-span-subagent: #374151;
+    --color-span-mcp: #6b7280;
+    --color-span-hook: #9ca3af;
+    --color-span-error: #dc2626;
+
+    --color-heat-0: #9ca3af;
+    --color-heat-1: #d97706;
+    --color-heat-2: #ea580c;
+    --color-heat-3: #dc2626;
+    --color-cache-savings: #16a34a;
+
+    --color-model-1: #4f46e5;
+    --color-model-2: #6366f1;
+    --color-model-3: #818cf8;
+    --color-model-4: #3730a3;
+
+    --shadow-card:
+      0 1px 0 rgb(31 41 55 / 0.04), 0 6px 18px rgb(31 41 55 / 0.08);
+    --shadow-popover:
+      0 0 0 1px var(--color-border), 0 2px 6px rgb(31 41 55 / 0.12),
+      0 14px 34px rgb(31 41 55 / 0.16);
+
+    /* --- Design System specific tokens under data-theme="light" --- */
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-high: #f0f0f8;
+    --color-inverse-surface: #1a1a2e;
+    --color-on-primary-container: #ffffff;
+    --color-on-primary-fixed: #131b2e;
+    --color-surface-variant: #f3f4f6;
+    --color-background: #ffffff;
+    --color-secondary-fixed: #dae2fd;
+    --color-outline-variant: #e5e7eb;
+    --color-surface-bright: #ffffff;
+    --color-error: #ffdad6;
+    --color-success-emerald: #16a34a;
+    --color-on-error-container: #dc2626;
+    --color-outline: #9ca3af;
+    --color-tertiary-fixed-dim: #bec6e0;
+    --color-on-secondary-fixed: #131b2e;
+    --color-surface-dim: #f8f9fa;
+    --color-on-primary: #ffffff;
+    --color-error-container: #dc2626;
+    --color-surface-container-low: #f9fafb;
+    --color-inverse-on-surface: #ffffff;
+    --color-on-tertiary: #ffffff;
+    --color-primary: #4f46e5;
+    --color-on-error: #ffffff;
+    --color-primary-fixed-dim: #6366f1;
+    --color-on-tertiary-container: #ffffff;
+    --color-on-secondary-fixed-variant: #4b5563;
+    --color-surface-tint: #4f46e5;
+    --color-on-surface-variant: #4b5563;
+    --color-border-slate: #e5e7eb;
+    --color-secondary-container: #f3f4f6;
+    --color-inverse-primary: #3730a3;
+    --color-bg-deep-gray: #f8f9fa;
+    --color-surface-container-highest: #e5e7eb;
+    --color-secondary: #4b5563;
+    --color-tertiary-fixed: #d8e3fb;
+    --color-on-background: #1f2937;
+    --color-primary-fixed: #e1e0ff;
+    --color-error-rose: #dc2626;
+    --color-on-secondary: #ffffff;
+    --color-surface-container: #ffffff;
+    --color-primary-container: #4f46e5;
+    --color-data-indigo: #4f46e5;
+    --color-on-tertiary-fixed: #131b2e;
+    --color-on-primary-fixed-variant: #3730a3;
+    --color-warning-amber: #d97706;
+    --color-secondary-fixed-dim: #bec6e0;
+    --color-tertiary: #374151;
+    --color-on-tertiary-fixed-variant: #4b5563;
+    --color-on-surface: #1f2937;
+    --color-tertiary-container: #6b7280;
+    --color-on-secondary-container: #1f2937;
+  }
+
+  /* Custom scrollbar for data density look */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-deep-gray);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-slate);
+    border-radius: 0px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-outline-variant);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.45;
+    font-weight: 400; /* body weights 400/500/600 only */
+  }
+  /* Costs and tokens must align in columns — mandatory on every number. */
+  code,
+  pre,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Display serif carries statements; keep its numerals tabular too. */
+  .font-display {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Visible focus ring (brass, 2px) everywhere — keyboard-first. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 1px;
+  }
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-brand) 35%, transparent);
+  }
+  /* Motion is opt-out at the OS level: disable all of it (03-design.md §2).
+     !important is the point here — it must beat any component-level motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      /* biome-ignore lint/complexity/noImportantStyles: global reduced-motion kill switch */
+      animation: none !important;
+      /* biome-ignore lint/complexity/noImportantStyles: global reduced-motion kill switch */
+      transition: none !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Mono-uppercase micro-label: the "instrument" half of the aesthetic.
+     Composes with text color utilities at the call site. */
+  .micro-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    line-height: var(--text-micro--line-height);
+    letter-spacing: var(--text-micro--letter-spacing);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* Premium dashboard glassmorphism effect */
+  .glass-panel {
+    background: color-mix(in oklch, var(--color-surface) 80%, transparent);
+    backdrop-filter: blur(12px);
+  }
+}

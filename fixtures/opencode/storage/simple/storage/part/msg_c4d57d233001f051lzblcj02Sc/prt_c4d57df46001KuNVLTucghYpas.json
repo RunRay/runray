@@ -1,0 +1,42 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d57df46001KuNVLTucghYpas",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d57d233001f051lzblcj02Sc",
+  "type": "tool",
+  "callID": "call_w3Qnr7H8H1BqgZ2SNvqWIboJ",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "amet nostru",
+      "description": "minim labore amet nostrud sed",
+      "workdir": "quis amet enim aliqua nostrud m",
+      "timeout": 120000
+    },
+    "output": "minim tempor elit tempor consectetur eli\naliquip amet lorem magna enim enim nostrud al\nlorem ipsum sit dolor aliqua minim quis enim dolor aliqua sed te\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\nminim tempor elit tempor consectetur eli\nipsum aliquip adipiscing quis aliquip amet incididunt enim \naliqua dolor minim elit veniam sit adipiscing enim\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\nminim tempor elit tempor consectetur eli\nconsectetur elit enim minim aliquip elit incidi\nminim dolor sed aliquip quis minim elit veniam lorem nostrud consecte\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\n\nlabore nostrud adipiscing lorem quis nostrud veniam\n\nminim magna aliqua quis lorem lorem\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\nminim minim nostrud magna consectetur enim labore ipsum \nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+    "title": "minim labore amet nostrud sed",
+    "metadata": {
+      "output": "minim tempor elit tempor consectetur eli\naliquip amet lorem magna enim enim nostrud al\nlorem ipsum sit dolor aliqua minim quis enim dolor aliqua sed te\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\nminim tempor elit tempor consectetur eli\nipsum aliquip adipiscing quis aliquip amet incididunt enim \naliqua dolor minim elit veniam sit adipiscing enim\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\nminim tempor elit tempor consectetur eli\nconsectetur elit enim minim aliquip elit incidi\nminim dolor sed aliquip quis minim elit veniam lorem nostrud consecte\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\n\nlabore nostrud adipiscing lorem quis nostrud veniam\n\nminim magna aliqua quis lorem lorem\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\nminim minim nostrud magna consectetur enim labore ipsum \nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+      "exit": 0,
+      "description": "minim labore amet nostrud sed",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824130574,
+      "end": 1770824145374
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "lorem aliqua consectetur magna dolor sit quis magna q"
+    }
+  }
+}

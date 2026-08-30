@@ -1,0 +1,42 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d591f76001NeRKno0W6K75rS",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d591c1f0013vt4pAUaFye2dM",
+  "type": "tool",
+  "callID": "call_zZ9bsHU4zQ1J6cU34Sf0IUjC",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "amet nostru",
+      "description": "lorem magna incididunt aliquip elit minim",
+      "workdir": "quis amet enim aliqua nostrud m",
+      "timeout": 120000
+    },
+    "output": "\nadipiscing incididunt quis ipsum dolor consectetur elit incididunt a\n\ntempor lorem incididunt aliquip inc\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\naliqua veniam aliqua veniam\nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+    "title": "lorem magna incididunt aliquip elit minim",
+    "metadata": {
+      "output": "\nadipiscing incididunt quis ipsum dolor consectetur elit incididunt a\n\ntempor lorem incididunt aliquip inc\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\naliqua veniam aliqua veniam\nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+      "exit": 0,
+      "description": "lorem magna incididunt aliquip elit minim",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824213716,
+      "end": 1770824216980
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "elit adipiscing magna sit ipsum consectetur magna tem"
+    }
+  }
+}

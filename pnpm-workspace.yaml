@@ -1,0 +1,9 @@
+packages:
+  - packages/*
+
+allowBuilds:
+  # esbuild's postinstall links its platform binary; required by vite.
+  esbuild: true
+  # better-sqlite3's install script links the prebuilt native binding
+  # (read-only opencode.db access, task 2.3); no network at runtime.
+  better-sqlite3: true

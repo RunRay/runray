@@ -1,0 +1,554 @@
+import type { Run, Span } from '@runray/schema';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { isTypingTarget } from '../App';
+import {
+  formatDateTime,
+  formatDuration,
+  formatTokens,
+  formatUSD,
+} from '../lib/format';
+import { KIND_BG } from '../lib/span-kind';
+import { tourAttr } from '../lib/tour-attr';
+import {
+  computeTimeRange,
+  flattenVisible,
+  matchingSpanIds,
+  type SubtreeRollup,
+  spanStartMs,
+  subagentSpanIds,
+  subtreeRollups,
+  type WaterfallRow,
+} from '../lib/waterfall';
+import { useAppStore } from '../store';
+import { SpendSpine } from './SpendSpine';
+
+/**
+ * Timeline waterfall (03-design.md §4.2): virtualized 28px rows, indent
+ * 16px per depth, bars positioned purely from startedAt/durationMs on the
+ * run's shared time scale. Square bars — data, not buttons.
+ */
+
+const ROW_PX = 32;
+const INDENT_PX = 16;
+/** Label flips to the left of the bar when it starts past this point. */
+const LABEL_FLIP_PCT = 55;
+
+interface TooltipState {
+  row: WaterfallRow;
+  x: number;
+  y: number;
+}
+
+export function Waterfall({ run }: { run: Run }) {
+  const collapsed = useAppStore((s) => s.ui.collapsed);
+  const selectedId = useAppStore((s) => s.selection.spanId);
+  const insightId = useAppStore((s) => s.selection.insightId);
+  const highlighted = useAppStore((s) => s.ui.highlighted);
+  const selectSpan = useAppStore((s) => s.selectSpan);
+  const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
+  const setCollapsed = useAppStore((s) => s.setCollapsed);
+
+  const [query, setQuery] = useState('');
+  const filterRef = useRef<HTMLInputElement>(null);
+  const visibleIds = useMemo(
+    () => matchingSpanIds(run.spans, query),
+    [run.spans, query],
+  );
+  const rows = useMemo(
+    () => flattenVisible(run, collapsed, visibleIds ?? undefined),
+    [run, collapsed, visibleIds],
+  );
+  const range = useMemo(() => computeTimeRange(run.spans), [run.spans]);
+  const subagents = useMemo(() => subagentSpanIds(run.spans), [run.spans]);
+  // subtree economics badges for container rows (D3) — a collapsed
+  // subagent is no longer economically opaque
+  const rollups = useMemo(() => subtreeRollups(run.spans), [run.spans]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_PX,
+    overscan: 16,
+  });
+
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  // First-paint bar animation only: flag drops after the stagger window.
+  const [animate, setAnimate] = useState(true);
+  useEffect(() => {
+    setAnimate(true);
+    const t = window.setTimeout(() => setAnimate(false), 450);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Cross-view navigation (treemap cell, insight evidence) and j/k walking
+  // both land here — keep the selection in view ('auto' = scroll only when
+  // needed, so j/k doesn't re-center every step).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-scroll only on selection change; rows/virtualizer identity churn must not re-trigger
+  useEffect(() => {
+    if (selectedId === null) return;
+    const index = rows.findIndex((r) => r.span.id === selectedId);
+    if (index >= 0) virtualizer.scrollToIndex(index, { align: 'auto' });
+  }, [selectedId]);
+
+  // Activating an insight scrolls its first evidence span into view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: same contract as above — react to activation only
+  useEffect(() => {
+    if (insightId === null) return;
+    const index = rows.findIndex((r) => highlighted.has(r.span.id));
+    if (index >= 0) virtualizer.scrollToIndex(index, { align: 'center' });
+  }, [insightId]);
+
+  // Row keys (03-design.md §3): j/k walk spans, ←/→ collapse/expand the
+  // selected subtree, `/` jumps to the filter. Text fields keep their keys.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === '/') {
+        e.preventDefault();
+        filterRef.current?.focus();
+        return;
+      }
+      const state = useAppStore.getState();
+      const currentId = state.selection.spanId;
+      if (e.key === 'j' || e.key === 'k') {
+        e.preventDefault();
+        const at = rows.findIndex((r) => r.span.id === currentId);
+        const next =
+          e.key === 'j'
+            ? Math.min(at + 1, rows.length - 1)
+            : Math.max(at - 1, 0);
+        const row = rows[next];
+        if (row !== undefined) state.selectSpan(row.span.id);
+        return;
+      }
+      if (
+        (e.key === 'ArrowLeft' || e.key === 'ArrowRight') &&
+        currentId !== null
+      ) {
+        const row = rows.find((r) => r.span.id === currentId);
+        if (row === undefined || !row.hasChildren) return;
+        e.preventDefault();
+        const wantCollapsed = e.key === 'ArrowLeft';
+        if (row.collapsed !== wantCollapsed) state.toggleCollapsed(currentId);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [rows]);
+
+  const allSubagentsCollapsed =
+    subagents.length > 0 && subagents.every((id) => collapsed.has(id));
+
+  // Where the top of the viewport sits in run time, for the spine marker.
+  const firstVisible = rows[virtualizer.getVirtualItems()[0]?.index ?? 0];
+  const positionFraction =
+    firstVisible === undefined
+      ? 0
+      : (spanStartMs(firstVisible.span) - range.start) /
+        (range.end - range.start);
+
+  // Spine click → the visible row whose start is nearest that moment.
+  const scrollToTime = (timeMs: number) => {
+    let best = 0;
+    let bestDist = Number.POSITIVE_INFINITY;
+    rows.forEach((row, i) => {
+      const dist = Math.abs(spanStartMs(row.span) - timeMs);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    virtualizer.scrollToIndex(best, { align: 'center' });
+  };
+
+  return (
+    <div
+      {...tourAttr('waterfall')}
+      className="flex h-full min-h-0 flex-col gap-2"
+    >
+      <div className="flex shrink-0 items-center justify-between gap-3">
+        <p className="shrink-0 font-mono text-label text-text-faint">
+          {formatTokens(rows.length)} of {formatTokens(run.spans.length)} spans
+          · {formatDuration(range.end - range.start)}
+        </p>
+        <input
+          ref={filterRef}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setQuery('');
+              e.currentTarget.blur();
+            }
+          }}
+          placeholder="filter spans · /"
+          aria-label="Filter spans by name"
+          className="h-6 w-44 min-w-0 rounded border border-border-slate bg-surface px-2 text-label text-on-surface placeholder:text-outline transition-colors duration-150 ease-out hover:bg-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+        <div className="flex shrink-0 gap-1.5">
+          {subagents.length > 0 && (
+            <ToolbarButton
+              onClick={() =>
+                setCollapsed(
+                  allSubagentsCollapsed ? new Set() : new Set(subagents),
+                )
+              }
+            >
+              {allSubagentsCollapsed
+                ? 'Expand subagents'
+                : 'Collapse subagents'}
+            </ToolbarButton>
+          )}
+          {collapsed.size > 0 && (
+            <ToolbarButton onClick={() => setCollapsed(new Set())}>
+              Expand all
+            </ToolbarButton>
+          )}
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 gap-1">
+        <SpendSpine
+          run={run}
+          range={range}
+          positionFraction={positionFraction}
+          onNavigate={scrollToTime}
+        />
+        <div
+          ref={scrollRef}
+          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded border border-border-slate bg-surface-container-low"
+        >
+          <div
+            className="relative w-full"
+            style={{ height: virtualizer.getTotalSize() }}
+          >
+            {virtualizer.getVirtualItems().map((item) => {
+              const row = rows[item.index];
+              if (row === undefined) return null;
+              return (
+                <SpanRow
+                  key={row.span.id}
+                  row={row}
+                  rollup={
+                    row.span.kind === 'subagent' || row.span.kind === 'session'
+                      ? rollups.get(row.span.id)
+                      : undefined
+                  }
+                  range={range}
+                  selected={row.span.id === selectedId}
+                  highlighted={highlighted.has(row.span.id)}
+                  animate={animate}
+                  animationDelayMs={Math.min(item.index * 8, 300)}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: item.size,
+                    transform: `translateY(${item.start}px)`,
+                  }}
+                  onSelect={() => selectSpan(row.span.id)}
+                  onToggle={() => toggleCollapsed(row.span.id)}
+                  onHover={(state) => setTooltip(state)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {tooltip !== null && <SpanTooltip tooltip={tooltip} />}
+    </div>
+  );
+}
+
+function ToolbarButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded border border-border-slate bg-surface px-2.5 py-1 text-label text-on-surface-variant transition-colors duration-150 ease-out hover:bg-surface-variant hover:text-on-surface active:bg-bg-deep-gray"
+    >
+      {children}
+    </button>
+  );
+}
+
+function SpanRow({
+  row,
+  rollup,
+  range,
+  selected,
+  highlighted,
+  animate,
+  animationDelayMs,
+  style,
+  onSelect,
+  onToggle,
+  onHover,
+}: {
+  row: WaterfallRow;
+  /** Subtree economics for container rows (subagent, session). */
+  rollup?: SubtreeRollup;
+  range: { start: number; end: number };
+  selected: boolean;
+  /** Evidence of the active insight — amber wash under everything else. */
+  highlighted: boolean;
+  animate: boolean;
+  animationDelayMs: number;
+  style: CSSProperties;
+  onSelect: () => void;
+  onToggle: () => void;
+  onHover: (state: TooltipState | null) => void;
+}) {
+  const { span } = row;
+  const indent = span.depth * INDENT_PX;
+  const total = range.end - range.start;
+  const leftPct = ((spanStartMs(span) - range.start) / total) * 100;
+  const widthPct =
+    span.durationMs !== undefined ? (span.durationMs / total) * 100 : 0;
+  const isError = span.status === 'error';
+  const labelOnLeft = leftPct > LABEL_FLIP_PCT;
+
+  const label = (
+    <>
+      <span className={isError ? 'text-span-error' : 'text-text'}>
+        {span.name}
+      </span>
+      {span.durationMs !== undefined && (
+        <span className="font-mono text-text-dim">
+          {' '}
+          {formatDuration(span.durationMs)}
+        </span>
+      )}
+      <CostBadge span={span} />
+      {rollup !== undefined && rollup.llmCalls > 0 && (
+        // always visible, collapsed or not (D3); unpriced calls surface
+        // separately so the dollar figure stays honest
+        <span className="font-mono text-label text-text-faint">
+          {' '}
+          Σ {formatUSD(rollup.costUSD)} · {formatTokens(rollup.tokens)} tok ·{' '}
+          {rollup.llmCalls} calls
+          {rollup.unpricedCalls > 0 && ` · +${rollup.unpricedCalls} unpriced`}
+        </span>
+      )}
+      {row.collapsed && (
+        <span className="font-mono text-text-faint">
+          {' '}
+          +{row.hiddenDescendants}
+        </span>
+      )}
+    </>
+  );
+
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: virtualized row needs a positioned div; button semantics are provided via role/tabIndex
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${span.kind} ${span.name}`}
+      style={style}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      onMouseMove={(e) => onHover({ row, x: e.clientX, y: e.clientY })}
+      onMouseLeave={() => onHover(null)}
+      className={`group cursor-pointer border-b border-outline-variant/30 transition-colors duration-150 ease-out ${
+        selected
+          ? 'bg-surface-variant'
+          : highlighted
+            ? 'bg-heat-2/10 hover:bg-surface-variant/40 active:bg-bg-deep-gray'
+            : 'hover:bg-surface-variant/40 active:bg-bg-deep-gray'
+      }`}
+    >
+      {/* evidence rail (active insight) */}
+      {highlighted && !selected && (
+        <span
+          className="absolute inset-y-0 left-0 w-0.5 bg-heat-2"
+          aria-hidden
+        />
+      )}
+      {/* selection rail */}
+      {selected && (
+        <span
+          className="absolute inset-y-0 left-0 w-0.5 bg-brand"
+          aria-hidden
+        />
+      )}
+
+      {/* concurrency bracket (thin line grouping overlapping siblings) */}
+      {row.lane !== null && (
+        <span
+          aria-hidden
+          className={`absolute w-px bg-text-faint ${
+            row.lane === 'start'
+              ? 'top-1/2 bottom-0'
+              : row.lane === 'end'
+                ? 'top-0 bottom-1/2'
+                : 'inset-y-0'
+          }`}
+          style={{ left: indent + 2 }}
+        />
+      )}
+
+      {/* collapse caret */}
+      {row.hasChildren && (
+        <button
+          type="button"
+          aria-expanded={!row.collapsed}
+          aria-label={row.collapsed ? 'Expand subtree' : 'Collapse subtree'}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          className="absolute top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-text-faint transition-colors duration-150 ease-out hover:text-text active:text-brand"
+          style={{ left: indent + 2 }}
+        >
+          <span
+            aria-hidden
+            className={`inline-block transition-transform duration-150 ease-out ${
+              row.collapsed ? '' : 'rotate-90'
+            }`}
+          >
+            ▸
+          </span>
+        </button>
+      )}
+
+      {/* the bar: position = time, color = kind, square corners = data */}
+      <span
+        aria-hidden
+        className={`absolute top-1/2 h-3.5 -translate-y-1/2 ${KIND_BG[span.kind]} ${
+          isError ? 'border-l-2 border-span-error' : ''
+        }`}
+        style={{
+          left: `${leftPct}%`,
+          width: `max(${widthPct}%, 2px)`,
+          transformOrigin: 'left center',
+          ...(animate && {
+            animation: `bar-in 150ms ${animationDelayMs}ms cubic-bezier(0,0,0.2,1) backwards`,
+          }),
+        }}
+      >
+        {isError && (
+          <span className="absolute -top-0.5 left-0.5 text-[10px] leading-none text-span-error">
+            ✕
+          </span>
+        )}
+      </span>
+
+      {/* label: name · duration · cost — flips sides near the right edge */}
+      <span
+        aria-hidden
+        className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-label"
+        style={
+          labelOnLeft
+            ? { right: `calc(${100 - leftPct}% + 6px)` }
+            : {
+                left: `calc(${Math.min(leftPct + widthPct, 100)}% + 6px)`,
+              }
+        }
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function CostBadge({ span }: { span: Span }) {
+  const cost = span.llm?.costUSD;
+  if (cost === undefined || span.llm?.costSource === 'unknown') return null;
+  return (
+    <span
+      className={`font-mono ${cost < 0.01 ? 'text-text-faint' : 'text-text-dim'}`}
+    >
+      {' '}
+      {formatUSD(cost)}
+    </span>
+  );
+}
+
+function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
+  const { span } = tooltip.row;
+  const x = Math.min(tooltip.x + 12, window.innerWidth - 300);
+  const y = Math.min(tooltip.y + 14, window.innerHeight - 180);
+  return (
+    <div
+      className="pointer-events-none fixed z-50 w-72 rounded-panel border border-border bg-surface-2 p-3 shadow-popover"
+      style={{ left: x, top: y }}
+    >
+      <p className="truncate text-body font-medium text-text">{span.name}</p>
+      <p className="mt-0.5 text-label text-text-dim">
+        {span.kind}
+        {' · '}
+        <span
+          className={span.status === 'error' ? 'text-span-error' : undefined}
+        >
+          {span.status}
+        </span>
+        {span.llm !== undefined && <> · {span.llm.model}</>}
+      </p>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-label">
+        <dt className="text-text-faint">started</dt>
+        <dd className="text-right font-mono text-text-dim">
+          {formatDateTime(span.startedAt)}
+        </dd>
+        <dt className="text-text-faint">duration</dt>
+        <dd className="text-right font-mono text-text-dim">
+          {span.durationMs !== undefined
+            ? formatDuration(span.durationMs)
+            : '—'}
+        </dd>
+        {span.llm !== undefined && (
+          <>
+            <dt className="text-text-faint">tokens in / out</dt>
+            <dd className="text-right font-mono text-text-dim">
+              {formatTokens(span.llm.tokens.input)} /{' '}
+              {formatTokens(span.llm.tokens.output)}
+            </dd>
+            <dt className="text-text-faint">cache r / w</dt>
+            <dd className="text-right font-mono text-text-dim">
+              {formatTokens(span.llm.tokens.cacheRead)} /{' '}
+              {formatTokens(span.llm.tokens.cacheWrite)}
+            </dd>
+            {span.llm.costUSD !== undefined && (
+              <>
+                <dt className="text-text-faint">
+                  cost ({span.llm.costSource})
+                </dt>
+                <dd className="text-right font-mono text-text">
+                  {formatUSD(span.llm.costUSD)}
+                </dd>
+              </>
+            )}
+          </>
+        )}
+        {span.tool?.isError === true && (
+          <>
+            <dt className="text-text-faint">tool</dt>
+            <dd className="text-right font-mono text-span-error">error</dd>
+          </>
+        )}
+      </dl>
+    </div>
+  );
+}

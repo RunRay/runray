@@ -1,0 +1,42 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d58e3d0001dkk4vPr9wP7VJ1",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d58b8bd001NURvK2lwhuigSH",
+  "type": "tool",
+  "callID": "call_0LUzHsSYAK8Wx3r9JZcW9T3e",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "amet nostru",
+      "description": "adipiscing magna ipsum consectetur ",
+      "workdir": "quis amet enim aliqua nostrud m",
+      "timeout": 120000
+    },
+    "output": "minim tempor elit tempor consectetur eli\nipsum aliquip adipiscing quis aliquip amet incididunt enim \naliqua dolor minim elit veniam sit adipiscing enim\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\n\nveniam labore amet enim adipiscing quis sit sed magna quis ipsum ipsum\n\nminim magna aliqua quis lorem lorem\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\naliqua veniam aliqua veniam\nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+    "title": "adipiscing magna ipsum consectetur ",
+    "metadata": {
+      "output": "minim tempor elit tempor consectetur eli\nipsum aliquip adipiscing quis aliquip amet incididunt enim \naliqua dolor minim elit veniam sit adipiscing enim\nveniam consectetur incididunt incididunt sit ipsum elit labore co\nquis dolor tempor sit\n\nveniam labore amet enim adipiscing quis sit sed magna quis ipsum ipsum\n\nminim magna aliqua quis lorem lorem\nlabore aliquip sit veniam la\n\nsed sed lorem ipsum aliqua quis qui\n\naliqua veniam aliqua veniam\nlabore quis adipiscing \n\nsed labore tempor aliquip lo\n",
+      "exit": 0,
+      "description": "adipiscing magna ipsum consectetur ",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824204868,
+      "end": 1770824208657
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "magna consectetur enim dolor nostrud adipiscing elit "
+    }
+  }
+}

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RunRay Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#0d0d15",
+                      "surface-container-high": "#292932",
+                      "inverse-surface": "#e4e1ed",
+                      "on-primary-container": "#0d0096",
+                      "on-primary-fixed": "#07006c",
+                      "surface-variant": "#34343d",
+                      "background": "#13131b",
+                      "secondary-fixed": "#dae2fd",
+                      "outline-variant": "#464554",
+                      "surface-bright": "#393841",
+                      "error": "#ffb4ab",
+                      "success-emerald": "#10b981",
+                      "on-error-container": "#ffdad6",
+                      "outline": "#908fa0",
+                      "tertiary-fixed-dim": "#bcc7de",
+                      "on-secondary-fixed": "#131b2e",
+                      "surface-dim": "#13131b",
+                      "on-primary": "#1000a9",
+                      "error-container": "#93000a",
+                      "surface-container-low": "#1b1b23",
+                      "inverse-on-surface": "#303038",
+                      "on-tertiary": "#263143",
+                      "primary": "#c0c1ff",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#c0c1ff",
+                      "on-tertiary-container": "#1f2a3c",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "surface-tint": "#c0c1ff",
+                      "on-surface-variant": "#c7c4d7",
+                      "border-slate": "#334155",
+                      "secondary-container": "#3f465c",
+                      "inverse-primary": "#494bd6",
+                      "bg-deep-gray": "#020617",
+                      "surface-container-highest": "#34343d",
+                      "secondary": "#bec6e0",
+                      "tertiary-fixed": "#d8e3fb",
+                      "on-background": "#e4e1ed",
+                      "primary-fixed": "#e1e0ff",
+                      "error-rose": "#f43f5e",
+                      "on-secondary": "#283044",
+                      "surface-container": "#1f1f27",
+                      "surface": "#13131b",
+                      "primary-container": "#8083ff",
+                      "data-indigo": "#818cf8",
+                      "on-tertiary-fixed": "#111c2d",
+                      "on-primary-fixed-variant": "#2f2ebe",
+                      "warning-amber": "#f59e0b",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "tertiary": "#bcc7de",
+                      "on-tertiary-fixed-variant": "#3c475a",
+                      "on-surface": "#e4e1ed",
+                      "tertiary-container": "#8691a7",
+                      "on-secondary-container": "#adb4ce"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "trace-row-height": "32px",
+                      "margin-page": "24px",
+                      "panel-padding": "12px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "data-mono-bold": [
+                              "JetBrains Mono"
+                      ],
+                      "body-base": [
+                              "Geist"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Geist"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "12px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono-bold": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-base": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for data density look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 0px; }
+        ::-webkit-scrollbar-thumb:hover { background: #464554; }
+    </style>
+</head>
+<body class="bg-bg-deep-gray text-on-surface font-body-base overflow-x-hidden antialiased">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest text-primary font-body-base text-body-base fixed h-full w-60 left-0 top-0 border-r border-outline-variant flex flex-col gap-4 p-panel-padding h-screen z-50">
+<div class="mb-6 px-2">
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">RunRay</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Observability Engine</p>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<!-- Active: Sessions -->
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-secondary-container text-on-secondary-container font-semibold active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">history</span>
+<span>Sessions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span>Infrastructure</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span>Live Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span>Metrics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Settings</span>
+</a>
+</div>
+<button class="mt-auto w-full bg-primary-container text-on-primary-container py-2 px-4 rounded font-data-mono-bold text-data-mono-bold hover:bg-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Analysis
+        </button>
+<div class="mt-4 pt-4 border-t border-outline-variant flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-bold text-data-mono-bold">User Profile</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Administrator</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="ml-60 min-h-screen flex flex-col bg-background">
+<!-- TopNavBar -->
+<header class="bg-surface-dim text-primary font-data-mono text-data-mono sticky top-0 w-full z-40 border-b border-outline-variant flex justify-between items-center h-trace-row-height px-margin-page py-4 transition-all duration-200">
+<div class="flex items-center gap-6">
+<!-- Navigation Links from JSON. Non-active state for general overview -->
+<a class="text-on-surface-variant hover:text-on-surface" href="#">Explorer</a>
+<a class="text-on-surface-variant hover:text-on-surface" href="#">Alerts</a>
+<a class="text-on-surface-variant hover:text-on-surface" href="#">Budgets</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 p-margin-page flex flex-col gap-6">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Session Overview</h2>
+<p class="font-body-base text-body-base text-on-surface-variant mt-1">Real-time telemetrics and cost analysis.</p>
+</div>
+<div class="flex gap-2">
+<div class="bg-surface-container border border-outline-variant px-3 py-1.5 rounded flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-success-emerald animate-pulse"></span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">Live Feed Active</span>
+</div>
+</div>
+</div>
+<!-- Hero Summary Cards (Bento style grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="bg-surface-container-low border border-border-slate p-4 rounded hover:bg-surface-container-highest transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Tokens</span>
+<span class="material-symbols-outlined text-outline text-[18px]">memory</span>
+</div>
+<div class="font-data-mono-bold text-headline-lg">1.42M</div>
+<div class="font-data-mono text-label-caps text-success-emerald flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span> 12% vs last week
+                    </div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-low border border-border-slate p-4 rounded hover:bg-surface-container-highest transition-colors flex flex-col gap-3 relative overflow-hidden">
+<div class="flex justify-between items-start relative z-10">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Cost</span>
+<span class="material-symbols-outlined text-data-indigo text-[18px]">attach_money</span>
+</div>
+<div class="font-data-mono-bold text-headline-lg text-data-indigo relative z-10">$342.50</div>
+<!-- Mini Sparkline Background -->
+<div class="absolute bottom-0 left-0 w-full h-12 flex items-end opacity-20 gap-1 px-4 pb-2 z-0">
+<div class="w-full bg-data-indigo h-[20%]"></div>
+<div class="w-full bg-data-indigo h-[40%]"></div>
+<div class="w-full bg-data-indigo h-[30%]"></div>
+<div class="w-full bg-data-indigo h-[70%]"></div>
+<div class="w-full bg-data-indigo h-[50%]"></div>
+<div class="w-full bg-data-indigo h-[90%]"></div>
+<div class="w-full bg-data-indigo h-[80%]"></div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-low border border-border-slate p-4 rounded hover:bg-surface-container-highest transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Cache Savings</span>
+<span class="material-symbols-outlined text-outline text-[18px]">save</span>
+</div>
+<div class="font-data-mono-bold text-headline-lg">$89.20</div>
+<div class="w-full bg-surface-variant h-1 mt-2">
+<div class="bg-success-emerald h-1 w-[26%]"></div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-low border border-border-slate p-4 rounded hover:bg-surface-container-highest transition-colors flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">LOC Changes</span>
+<span class="material-symbols-outlined text-outline text-[18px]">code_blocks</span>
+</div>
+<div class="font-data-mono-bold text-headline-lg">+4,210</div>
+<div class="font-data-mono text-label-caps text-on-surface-variant">Across 12 agents</div>
+</div>
+</div>
+<!-- Toolbar / Search -->
+<div class="flex gap-4 items-center bg-surface-container-low border border-border-slate p-2 rounded">
+<div class="flex-1 flex items-center gap-2 px-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">search</span>
+<input class="bg-transparent border-none outline-none w-full font-data-mono text-data-mono text-on-surface placeholder:text-outline focus:ring-0" placeholder="Filter logs by trace ID, span, or tags..." type="text"/>
+</div>
+<div class="h-6 w-px bg-outline-variant"></div>
+<button class="font-label-caps text-label-caps px-3 py-1 hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">filter_list</span> Filters
+                </button>
+</div>
+<!-- Main Table: Active Sessions -->
+<div class="border border-border-slate rounded bg-surface-container-low overflow-hidden flex flex-col flex-1">
+<!-- Table Header -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 py-2 border-b border-border-slate bg-surface-container-highest font-label-caps text-label-caps text-on-surface-variant">
+<div>Status</div>
+<div>Session / Trace ID</div>
+<div class="text-right">Duration</div>
+<div class="text-right">Cost</div>
+<div>Model Usage</div>
+</div>
+<!-- Table Body -->
+<div class="flex flex-col font-data-mono text-data-mono">
+<!-- Row 1 (Success) -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 items-center h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant cursor-pointer transition-colors">
+<div class="flex items-center gap-2 text-success-emerald">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>200 OK</span>
+</div>
+<div class="truncate text-primary hover:underline">trc_9f8e7d6c5b4a</div>
+<div class="text-right text-on-surface-variant">1,204ms</div>
+<div class="text-right text-data-indigo">$0.042</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 border border-outline-variant rounded text-[10px] bg-surface-container">GPT-4</span>
+</div>
+</div>
+<!-- Row 2 (Warning) -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 items-center h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant cursor-pointer transition-colors">
+<div class="flex items-center gap-2 text-warning-amber">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span>429 Rate</span>
+</div>
+<div class="truncate text-primary hover:underline">trc_1a2b3c4d5e6f</div>
+<div class="text-right text-on-surface-variant">8,401ms</div>
+<div class="text-right text-on-surface-variant">$0.015</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 border border-outline-variant rounded text-[10px] bg-surface-container">Claude-3</span>
+</div>
+</div>
+<!-- Row 3 (Error) -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 items-center h-trace-row-height border-b border-border-slate/50 bg-[#f43f5e10] hover:bg-[#f43f5e15] cursor-pointer transition-colors">
+<div class="flex items-center gap-2 text-error-rose">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">error</span>
+<span>500 Err</span>
+</div>
+<div class="truncate text-primary hover:underline">trc_5e6f7g8h9i0j</div>
+<div class="text-right text-on-surface-variant">42ms</div>
+<div class="text-right text-error-rose">$0.000</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 border border-error/30 rounded text-[10px] bg-surface-container text-error">Agent-Tools</span>
+</div>
+</div>
+<!-- Row 4 (Success) -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 items-center h-trace-row-height border-b border-border-slate/50 hover:bg-surface-variant cursor-pointer transition-colors">
+<div class="flex items-center gap-2 text-success-emerald">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>200 OK</span>
+</div>
+<div class="truncate text-primary hover:underline">trc_0j9i8h7g6f5e</div>
+<div class="text-right text-on-surface-variant">845ms</div>
+<div class="text-right text-data-indigo">$0.021</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 border border-outline-variant rounded text-[10px] bg-surface-container">Llama-3</span>
+</div>
+</div>
+<!-- Row 5 (Success) -->
+<div class="grid grid-cols-[100px_1fr_120px_120px_200px] gap-4 px-4 items-center h-trace-row-height hover:bg-surface-variant cursor-pointer transition-colors">
+<div class="flex items-center gap-2 text-success-emerald">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>200 OK</span>
+</div>
+<div class="truncate text-primary hover:underline">trc_aa11bb22cc33</div>
+<div class="text-right text-on-surface-variant">3,110ms</div>
+<div class="text-right text-data-indigo">$0.105</div>
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 border border-outline-variant rounded text-[10px] bg-surface-container">GPT-4</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

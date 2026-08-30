@@ -1,0 +1,42 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d529f680013C1UmRn2HfEKto",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d528e11001WbuIzmhtIlLAoi",
+  "type": "tool",
+  "callID": "call_RnmhHwvtF5y3SsZJUvoEqSwP",
+  "tool": "bash",
+  "state": {
+    "status": "completed",
+    "input": {
+      "command": "labore dolor ipsum nostrud aliquip quis amet labore ips",
+      "description": "tempor tempor elit amet amet nostrud mi",
+      "workdir": "quis amet enim aliqua nostrud m",
+      "timeout": 120000
+    },
+    "output": "veniam labore amet enim aliqua incididunt \n\n",
+    "title": "tempor tempor elit amet amet nostrud mi",
+    "metadata": {
+      "output": "veniam labore amet enim aliqua incididunt \n\n",
+      "exit": 0,
+      "description": "tempor tempor elit amet amet nostrud mi",
+      "truncated": false
+    },
+    "time": {
+      "start": 1770823786924,
+      "end": 1770823790735
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "enim aliquip amet ipsum aliquip lorem labore elit con"
+    }
+  }
+}

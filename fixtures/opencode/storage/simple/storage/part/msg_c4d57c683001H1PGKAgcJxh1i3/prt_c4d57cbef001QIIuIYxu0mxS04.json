@@ -1,0 +1,50 @@
+{
+  "_scrubbed": "SCRUBBED",
+  "_scrubMeta": {
+    "type": "x-tracellm-scrub",
+    "marker": "SCRUBBED",
+    "source": "opencode",
+    "generatedBy": "scripts/scrub-fixture.ts",
+    "note": "Synthetic content; usage/token counts and structure preserved. Never edit by hand."
+  },
+  "id": "prt_c4d57cbef001QIIuIYxu0mxS04",
+  "sessionID": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+  "messageID": "msg_c4d57c683001H1PGKAgcJxh1i3",
+  "type": "tool",
+  "callID": "call_2peCeAMWo98Bqh0sG0EQkcvH",
+  "tool": "apply_patch",
+  "state": {
+    "status": "completed",
+    "input": {
+      "patchText": "aliqua amet lab\nmagna tempor aliquip magna amet aliqua minim el\nqu\namet incididunt lore\ndolor ipsum nostrud aliquip adipiscin\naliqua adipiscing minim amet sed adipiscing tempor magna veniam te\ntempor dolor elit sit minim enim aliqua nostrud quis enim consect\nelit dolor amet sit sed aliquip enim sed minim elit conse\nquis quis aliqua sit adipi\nquis labo\nelit tempor s"
+    },
+    "output": "aliqua veniam lorem minim sit minim s\nlabore labore nostrud minim tempor aliquip incididunt sit veniam",
+    "title": "aliqua veniam lorem minim sit minim s\nlabore labore nostrud minim tempor aliquip incididunt sit veniam",
+    "metadata": {
+      "diff": "consectetur enim incididunt aliqua consectetur enim dolor ipsum minim\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nlabore aliquip magna ipsum elit aliqua adipiscing aliqua adipiscin\nadipiscing aliqua enim aliquip dolor magna aliqua minim labore ven\nsit amet consecte\nadipiscing sed amet sed aliqua \nlorem consectetur dolor sed dolor labore elit minim nostrud \nconsectetur adipiscing incididunt dolor aliquip dolor sed i\nincididunt enim dolor enim minim labore sit minim i\ntempor elit sed aliq\nsit\nminim ipsum ad\namet aliqua labo\nenim enim adipiscing lorem consectetur dolor \n\n",
+      "files": [
+        {
+          "filePath": "/home/user/project/sedxmagn/consec/temporxaliqu/ven/adipi/magnaxaliquipxla.tsx",
+          "relativePath": "enim magna dolor amet dolor nostrud lorem minim magna veniam q",
+          "type": "update",
+          "diff": "consectetur enim incididunt aliqua consectetur enim dolor ipsum minim\nnostrud incididunt quis enim labore aliquip tempor aliqua magna ali\nlabore aliquip magna ipsum elit aliqua adipiscing aliqua adipiscin\nadipiscing aliqua enim aliquip dolor magna aliqua minim labore ven\nsit amet consecte\nadipiscing sed amet sed aliqua \nlorem consectetur dolor sed dolor labore elit minim nostrud \nconsectetur adipiscing incididunt dolor aliquip dolor sed i\nincididunt enim dolor enim minim labore sit minim i\ntempor elit sed aliq\nsit\nminim ipsum ad\namet aliqua labo\nenim enim adipiscing lorem consectetur dolor \n",
+          "before": "nostrud enim consectetur sit veni\ndolor tempor adipiscing consectetur sit amet quis nostrud amet inci\nsit aliquip amet nostrud enim dolor labore dolor \naliquip amet sed quis tempor incididunt magna sed\nquis nostrud adipiscing labore minim elit ipsum lorem labor\nconsectetur adipiscing minim sed sed veniam dolor magna incididunt amet min\nsed lorem aliqua amet aliquip elit sit aliqua aliquip consectetur \n\nelit aliqua magna consectetur aliquip a\namet elit sit minim amet labore sed consectetur sit ipsum sed ali\naliqua aliqua labore adipiscing veniam lo\nipsum adipiscing adipiscing labore \naliqua consectetur minim nostrud consectetur adipiscing consectetur amet incididunt aliqua sit magna ad\n\nincididunt\naliqua in\naliquip labore enim\namet aliquip quis lorem incididunt i\nsit minim ipsum veniam minim tempor consectetur incididunt minim \nsit aliquip quis ipsum minim aliquip enim veniam elit sit aliqui\nsit quis sed tempor magna enim labore consectetur sit ad\nadipiscing incididunt mag\nquis dol\naliquip tempor amet\nnostrud ipsum lorem a\nadipiscing tempor aliquip lorem lorem labore magna\ndolor aliqua aliqua aliquip adipiscing sit sit adi\nipsum lorem nostrud elit veniam lorem dolor aliqua lorem\nquis dol\nenim aliqu\namet\nlo\n",
+          "after": "nostrud enim consectetur sit veni\ndolor tempor adipiscing consectetur sit amet quis nostrud amet inci\nsit aliquip amet nostrud enim dolor labore dolor \naliquip amet sed quis tempor incididunt magna sed\nquis nostrud adipiscing labore minim elit ipsum lorem labor\nconsectetur adipiscing minim sed sed veniam dolor magna incididunt amet min\nsed lorem aliqua amet aliquip elit sit aliqua aliquip consectetur \n\nelit aliqua magna consectetur aliquip a\namet elit sit minim amet labore sed consectetur sit ipsum sed ali\naliqua aliqua labore adipiscing veniam lo\nipsum adipiscing adipiscing labore \naliqua consectetur minim nostrud consectetur adipiscing consectetur amet incididunt aliqua sit magna ad\n\nincididunt\naliqua in\naliquip labore enim\namet aliquip quis lorem incididunt i\nsit minim ipsum veniam minim tempor consectetur incididunt minim \nsit aliquip quis ipsum minim aliquip enim veniam elit sit aliqui\nsit quis sed tempor magna enim labore consectetur sit ad\nquis dol\naliquip tempor amet\nnostrud ipsum lorem a\nadipiscing tempor aliquip lorem lorem labore magna\ndolor aliqua aliqua aliquip adipiscing sit sit adi\nipsum lorem nostrud elit veniam lorem dolor aliqua lorem\nquis dol\nenim aliqu\namet\nlo\n",
+          "additions": 0,
+          "deletions": 1
+        }
+      ],
+      "diagnostics": {},
+      "truncated": false
+    },
+    "time": {
+      "start": 1770824126930,
+      "end": 1770824126953
+    }
+  },
+  "metadata": {
+    "openai": {
+      "itemId": "adipiscing sed consectetur enim aliqua sit dolor aliq"
+    }
+  }
+}

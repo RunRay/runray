@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RunRay - Metrics &amp; Cost Insights</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-lowest": "#0d0d15",
+                        "surface-container-high": "#292932",
+                        "inverse-surface": "#e4e1ed",
+                        "on-primary-container": "#0d0096",
+                        "on-primary-fixed": "#07006c",
+                        "surface-variant": "#34343d",
+                        "background": "#13131b",
+                        "secondary-fixed": "#dae2fd",
+                        "outline-variant": "#464554",
+                        "surface-bright": "#393841",
+                        "error": "#ffb4ab",
+                        "success-emerald": "#10b981",
+                        "on-error-container": "#ffdad6",
+                        "outline": "#908fa0",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-dim": "#13131b",
+                        "on-primary": "#1000a9",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#1b1b23",
+                        "inverse-on-surface": "#303038",
+                        "on-tertiary": "#263143",
+                        "primary": "#c0c1ff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-tertiary-container": "#1f2a3c",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "surface-tint": "#c0c1ff",
+                        "on-surface-variant": "#c7c4d7",
+                        "border-slate": "#334155",
+                        "secondary-container": "#3f465c",
+                        "inverse-primary": "#494bd6",
+                        "bg-deep-gray": "#020617",
+                        "surface-container-highest": "#34343d",
+                        "secondary": "#bec6e0",
+                        "tertiary-fixed": "#d8e3fb",
+                        "on-background": "#e4e1ed",
+                        "primary-fixed": "#e1e0ff",
+                        "error-rose": "#f43f5e",
+                        "on-secondary": "#283044",
+                        "surface-container": "#1f1f27",
+                        "surface": "#13131b",
+                        "primary-container": "#8083ff",
+                        "data-indigo": "#818cf8",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "warning-amber": "#f59e0b",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary": "#bcc7de",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-surface": "#e4e1ed",
+                        "tertiary-container": "#8691a7",
+                        "on-secondary-container": "#adb4ce"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "gutter": "16px",
+                        "trace-row-height": "32px",
+                        "margin-page": "24px",
+                        "panel-padding": "12px",
+                        "unit": "4px"
+                    },
+                    fontFamily: {
+                        "label-caps": ["JetBrains Mono"],
+                        "data-mono-bold": ["JetBrains Mono"],
+                        "body-base": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Geist"]
+                    },
+                    fontSize: {
+                        "label-caps": ["11px", { lineHeight: "12px", letterSpacing: "0.05em", fontWeight: "700" }],
+                        "data-mono-bold": ["13px", { lineHeight: "18px", fontWeight: "600" }],
+                        "body-base": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }],
+                        "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+                        "data-mono": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+                        "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #020617; /* bg-deep-gray */
+            color: #e4e1ed; /* on-background */
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .bento-item {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.25rem;
+            padding: 16px;
+        }
+        .bento-item-large {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body class="flex bg-bg-deep-gray text-on-background font-body-base antialiased min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest fixed h-full w-60 left-0 top-0 border-r border-outline-variant flex flex-col gap-4 p-panel-padding z-50">
+<div class="mb-8 mt-4 px-2">
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">RunRay</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Observability Engine</p>
+</div>
+<button class="bg-primary-container text-on-primary-container font-data-mono-bold text-data-mono-bold py-2 px-4 rounded hover:bg-primary transition-colors duration-150 mb-4 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+            New Analysis
+        </button>
+<div class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">history</span>
+<span class="font-body-base text-body-base">Sessions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span class="font-body-base text-body-base">Infrastructure</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span class="font-body-base text-body-base">Live Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-secondary-container text-on-secondary-container font-semibold active:scale-95 transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span class="font-body-base text-body-base">Metrics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-body-base text-body-base">Settings</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-4 flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-border-slate">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A minimalist, high-contrast user avatar illustration suitable for a dark mode developer interface, featuring a subtle geometric silhouette in deep indigo tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdzbbZES6vxQfBjnn2SzJ2JkWLmY9mUsr8ed4pazb-4ViD9Ru2UEx7yObayYBpXMYRzNLCG2FOdhDOGtvUWUhhApjMlIi4HwV5zcPUFBwBx_3zJmWuKdL4xVZwMDCRPZT19tW1KtffcyH7vEBMJifl0_tDwTWrU22_2QZ50mUDmTa2Fctkqz02tuQjzKuFSHJesLaCPKFzuZC-HVadCM5gfpGp0zMOwUGyW7xPW_EcYrsLEE_7IiwL"/>
+</div>
+<div class="flex flex-col">
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">Admin</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-60 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface-dim sticky top-0 w-full z-40 border-b border-outline-variant flex justify-between items-center h-trace-row-height px-margin-page py-4">
+<div class="flex items-center gap-6">
+<span class="font-headline-lg text-headline-lg text-on-surface">RunRay</span>
+<nav class="hidden md:flex gap-4 ml-8">
+<a class="font-data-mono text-data-mono text-on-surface-variant hover:text-on-surface transition-all duration-200" href="#">Explorer</a>
+<a class="font-data-mono text-data-mono text-on-surface-variant hover:text-on-surface transition-all duration-200" href="#">Alerts</a>
+<a class="font-data-mono text-data-mono text-primary border-b-2 border-primary pb-1 transition-all duration-200" href="#">Budgets</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">search</span>
+<input class="bg-surface-container-high border border-border-slate rounded font-data-mono text-data-mono text-on-surface pl-8 pr-2 py-1 w-48 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Search traces..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-6 h-6 rounded-full bg-surface-variant overflow-hidden border border-border-slate ml-2">
+<img alt="Administrator" class="w-full h-full object-cover" data-alt="A small circular avatar placeholder showing a generic tech-focused user icon in dark mode, strictly monochromatic with subtle grey tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5dKw4JkZPoPXZGC7KFCW8evGTokjNmQ8JBK0rtbYr696cpMRqV9ih-8vJtEgFq7SBpC8a5SHoM8FcmlCb3eltwcsB5ey28F1jvHyS6ktHaHcNp99lelSmZxv6PLVLQzx-Uisv9i8lGuiKP8eYs5E3zUw-kAptIUaGortt6qFy_E65ib8M28FqiLoDvmCaA3m1Nf-T-Vcq8lvV-tl9SqLjPnSsavvb8zN5ixegxApROKj4Up6RopLF"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-margin-page overflow-y-auto">
+<div class="mb-6 flex justify-between items-end border-b border-border-slate pb-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-1">Cost &amp; Insights</h2>
+<p class="font-body-base text-body-base text-on-surface-variant">Attribution and efficiency analysis across LLM providers.</p>
+</div>
+<div class="flex gap-2">
+<select class="bg-surface-container-high border border-border-slate rounded font-data-mono text-data-mono text-on-surface py-1 px-2 focus:outline-none">
+<option>Last 24 Hours</option>
+<option>Last 7 Days</option>
+<option>Last 30 Days</option>
+</select>
+</div>
+</div>
+<div class="bento-grid">
+<!-- Cost by Model -->
+<div class="bento-item flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Cost by Model</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">pie_chart</span>
+</div>
+<div class="flex-1 flex flex-col justify-center gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="font-data-mono text-data-mono text-on-surface">claude-3-5-sonnet</span>
+</div>
+<span class="font-data-mono-bold text-data-mono-bold text-data-indigo">$1,245.00</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 65%"></div>
+</div>
+<div class="flex items-center justify-between mt-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="font-data-mono text-data-mono text-on-surface">gpt-4o</span>
+</div>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">$540.20</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded overflow-hidden">
+<div class="bg-secondary h-full" style="width: 25%"></div>
+</div>
+<div class="flex items-center justify-between mt-2">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary"></div>
+<span class="font-data-mono text-data-mono text-on-surface">claude-3-opus</span>
+</div>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">$120.50</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded overflow-hidden">
+<div class="bg-tertiary h-full" style="width: 10%"></div>
+</div>
+</div>
+</div>
+<!-- Wasted Spend -->
+<div class="bento-item flex flex-col gap-4 relative overflow-hidden">
+<!-- Faint rose tint for error context -->
+<div class="absolute inset-0 bg-error-rose opacity-5 pointer-events-none"></div>
+<div class="flex justify-between items-center relative z-10">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Wasted Spend</h3>
+<span class="material-symbols-outlined text-error-rose text-[16px]">warning</span>
+</div>
+<div class="flex flex-col gap-1 relative z-10 mt-2">
+<span class="font-headline-lg text-headline-lg text-error-rose">$342.85</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px]">Due to failed tools &amp; retries</span>
+</div>
+<div class="mt-auto relative z-10 flex flex-col gap-2 border-t border-border-slate pt-3">
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-data-mono text-on-surface-variant">Tool Timeout (db_query)</span>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">$180.00</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-data-mono text-data-mono text-on-surface-variant">LLM Rate Limit (429)</span>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">$162.85</span>
+</div>
+</div>
+</div>
+<!-- Token Efficiency -->
+<div class="bento-item flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Token Efficiency</h3>
+<span class="material-symbols-outlined text-success-emerald text-[16px]">speed</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-2">
+<div class="flex flex-col gap-1 border-l-2 border-border-slate pl-3">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CACHE READS</span>
+<span class="font-data-mono-bold text-data-mono-bold text-success-emerald">45.2M</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px]">Saved: $135.60</span>
+</div>
+<div class="flex flex-col gap-1 border-l-2 border-border-slate pl-3">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CACHE MISSES</span>
+<span class="font-data-mono-bold text-data-mono-bold text-on-surface">12.1M</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px]">Cost: $36.30</span>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-2 bg-surface-container-lowest p-2 border border-border-slate rounded">
+<span class="material-symbols-outlined text-on-surface-variant text-[14px]">info</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px]">Anthropic Prompt Caching active on 84% of requests.</span>
+</div>
+</div>
+<!-- Tool Usage Heatmap (Large) -->
+<div class="bento-item bento-item-large flex flex-col gap-4">
+<div class="flex justify-between items-center border-b border-border-slate pb-2">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Tool Cost Density</h3>
+<div class="flex gap-4">
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px] flex items-center gap-1"><div class="w-2 h-2 bg-surface-container-high border border-border-slate rounded-sm"></div> Low</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px] flex items-center gap-1"><div class="w-2 h-2 bg-primary rounded-sm"></div> High</span>
+</div>
+</div>
+<!-- Minimalist mock heatmap / table hybrid -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-slate">
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 font-normal">TOOL NAME</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 font-normal">CALLS</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 font-normal">AVG LATENCY</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 font-normal">TOTAL COST</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 font-normal w-1/3">DENSITY</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono">
+<tr class="border-b border-border-slate border-opacity-50 hover:bg-surface-variant transition-colors group">
+<td class="py-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px] text-on-surface-variant">database</span> query_vector_db</td>
+<td class="py-2 text-on-surface">12,450</td>
+<td class="py-2 text-on-surface">840ms</td>
+<td class="py-2 text-data-indigo font-bold">$450.20</td>
+<td class="py-2">
+<div class="flex gap-1">
+<div class="h-4 w-4 bg-primary rounded-sm opacity-100"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-80"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-90"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-100"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-60"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-80"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-100"></div>
+</div>
+</td>
+</tr>
+<tr class="border-b border-border-slate border-opacity-50 hover:bg-surface-variant transition-colors group">
+<td class="py-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px] text-on-surface-variant">api</span> fetch_external_api</td>
+<td class="py-2 text-on-surface">8,201</td>
+<td class="py-2 text-on-surface">1.2s</td>
+<td class="py-2 text-on-surface">$210.00</td>
+<td class="py-2">
+<div class="flex gap-1">
+<div class="h-4 w-4 bg-primary rounded-sm opacity-40"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-50"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-30"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-60"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-40"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-20"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-50"></div>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant transition-colors group">
+<td class="py-2 flex items-center gap-2"><span class="material-symbols-outlined text-[14px] text-on-surface-variant">code</span> execute_python</td>
+<td class="py-2 text-on-surface">1,050</td>
+<td class="py-2 text-on-surface">3.5s</td>
+<td class="py-2 text-on-surface">$45.50</td>
+<td class="py-2">
+<div class="flex gap-1">
+<div class="h-4 w-4 bg-primary rounded-sm opacity-10"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-20"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-10"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-10"></div>
+<div class="h-4 w-4 bg-surface-container-high rounded-sm border border-border-slate"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-20"></div>
+<div class="h-4 w-4 bg-primary rounded-sm opacity-10"></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

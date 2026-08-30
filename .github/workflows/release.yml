@@ -1,0 +1,51 @@
+# Publishes `runray` to npm. Deliberate, human-triggered: this workflow is the
+# npm Trusted Publisher for the package, so it needs no NPM_TOKEN — the
+# registry trusts the OIDC token GitHub mints for this exact workflow file.
+# Configure it once at npmjs.com → package Settings → Trusted Publisher.
+#
+# No --provenance: npm cannot issue attestations from a private source
+# repository, even for a public package, so passing the flag would fail the
+# publish at the very last step. Trusted publishing itself is unaffected and
+# works fine while the repo stays private. If it is ever made public, npm
+# generates provenance automatically for a trusted-publisher release — the
+# flag does not need to come back.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "npm dist-tag (`next` for pre-releases; promote to `latest` deliberately)"
+        type: choice
+        options: [next, latest]
+        default: next
+        required: true
+
+permissions:
+  contents: read
+  # mints the OIDC token the registry exchanges for publish rights
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      # the same gates CI runs; a release must never be the first place they fail
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      # build the publishable bundle before the tests, so the packaging guard
+      # actually runs on the pipeline that ships to npm rather than skipping
+      - run: pnpm --filter runray bundle
+      - run: pnpm test
+      # `prepack` assembles the package: ui assets, README + LICENSE, and the
+      # esbuild bundle that inlines the private workspace packages
+      - run: pnpm --filter runray publish --access public --no-git-checks --tag ${{ inputs.tag }}
