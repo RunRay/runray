@@ -86,7 +86,8 @@ Reguły są czyste, konfigurowalne przez `runray.config.json` (`insights.thresho
 runray view   [path]  [--source claude|opencode|otlp] [--since 7d] [--port N]
                         [--watch] [--redact] [--no-open]
 runray list   [path]  [--json] [--since 7d]
-runray export [path|runId] -o report.html [--json out.json] [--redact] [--yes]
+runray export [path|runId] -o report.html [--json out.json]
+                [--redact | --redact-prompts] [--scrub-paths] [--anonymize] [--metadata-only] [--yes]
 runray demo            # otwiera viewer na wbudowanym, zanonimizowanym fixture (zero-friction wow)
 runray pricing [--show | --refresh]
 runray diff   <runA> <runB> [path] [--json] [--source …] [--since 7d]  # add-run-diff
@@ -97,11 +98,18 @@ Globalne: --config <plik>, --verbose, --version
 ```
 Gołe `runray` = `runray view` (subkomenda domyślna; literówka w nazwie komendy trafia do `[path]` i kończy się exit 3 z podpowiedziami). Exit codes: `0` OK · `1` błąd wykonania · `2` bramka CI nie przeszła · `3` nie znaleziono danych. Config `runray.config.json` (cwd → `~/.config/runray/`): progi insightów, domyślny `--redact`, dodatkowe data-roots, port, **`limitWindow`** (opt-in okno referencyjne trybu %: `days/resetDay/resetHour/budgetUSD/budgetTokens`; niepoprawne pola odpadają z ostrzeżeniem). `list --json` raportuje dodatkowo `unpricedLlmCalls`/`unpricedTokens`; discovery wypisuje JEDNO ostrzeżenie stderr, gdy pokrycie cen < 100% (stdout `--json` zawsze czysty). `diff` rozwiązuje referencje runów jak `export` (dokładne id → unikalny prefiks; niejednoznaczne/brakujące → exit 3 z podpowiedzią `runray list`), parsuje zawsze z redakcją (diff nie dotyka treści promptów) i drukuje chipy delt tekstowo — wartość bezwzględna + procent (procent pomijany przy zerowej bazie), najgorsze regresje kosztu najpierw; **`diff --json` drukuje strukturę `RunDiff` z `@runray/core/diff` verbatim — to kontrakt wejściowy bramki CI (planowany add-ci-gate go konsumuje), odtąd rozwijany wyłącznie addytywnie** (istniejące pola nie zmieniają nazw, typów ani znaczenia).
 
+### Profile sanitizacji eksportu (`runray export`)
+| Profil | Flagi CLI | Treść promptów | Ścieżki i nazwy | Spany liściowe (llm/tool) |
+|---|---|---|---|---|
+| `sanitized` (rekomendowany) | `--anonymize` lub `--redact --scrub-paths` | usunięta (`null`) | pseudonimy (`project-N`, `branch-N`, `transcript-N`) | zachowane |
+| `metadata-only` | `--metadata-only` | usunięta (`null`) | pseudonimy | odcięte (zachowane kontenery sesji/subagentów i totals) |
+| `full` | `--yes` lub brak flag | zachowana | oryginalne ścieżki | zachowane |
+
 Serwer lokalny: goły `node:http`, bind **wyłącznie 127.0.0.1**, port 4173 + inkrementacja gdy zajęty; endpointy: `GET /` (embedded dist), `GET /api/tracefile`, `GET /api/events` (SSE, tylko `--watch`), `GET /api/pricing` (tabela efektywna capture-once + provenance origin/snapshotDate), `GET /api/transcript?run=&span=` (wycinek surowego loga za provenance spanu — klient wysyła WYŁĄCZNIE id; redakcja odmawia w core PRZED I/O; brakujące pliki/nieznane id/OTLP → statusy strukturalne, nigdy crash; cap 1 MB + `truncated`), `GET /api/viewconfig` (`{limitWindow?}`, `{}` gdy brak). Watch: chokidar (polling fallback); **zero-config watchuje unię `defaultRoots()` adapterów** (z filtrem `--source`; OTLP nic nie wnosi — import-only) → event `changed` → UI refetch; capture-once cennika odświeża się dokładnie przy inwalidacji cache — ta sama ścieżka rebuildu, którą podepnie add-persistent-index.
 
 Pakowanie UI: skrypt `prepack` w `packages/cli` buduje `ui` i kopiuje `ui/dist` + `ui/dist-export` do `cli/assets/` (pole `files` w package.json); publikowany jest wyłącznie pakiet `cli` — `ui` pozostaje `private: true`. Dzięki temu `npx runray` ściąga jeden pakiet z gotowym frontendem.
 
-Eksport singlefile: szablon `ui/dist-export/index.html` (vite-plugin-singlefile) + wstrzyknięcie przez jeden `injectGlobal` trzech globali — `__RUNRAY_DATA__`, `__RUNRAY_PRICING__` (origin+tabela; lokalna ścieżka overridu NIGDY nie trafia do udostępnialnego pliku) i `__RUNRAY_VIEW_CONFIG__` — z sanitizacją `</script>` i `<!--`. **Guard prywatności:** eksport bez `--redact` wypisuje ostrzeżenie i wymaga `--yes` lub interaktywnego potwierdzenia (plik zawiera prompty!).
+Eksport singlefile: szablon `ui/dist-export/index.html` (vite-plugin-singlefile) + wstrzyknięcie przez jeden `injectGlobal` trzech globali — `__RUNRAY_DATA__`, `__RUNRAY_PRICING__` (origin+tabela; lokalna ścieżka overridu NIGDY nie trafia do udostępnialnego pliku) i `__RUNRAY_VIEW_CONFIG__` (zawierający `SanitizationManifest`) — z sanitizacją `</script>` i `<!--`. **Guard prywatności:** eksport bez `--redact`/`--anonymize`/`--metadata-only` wypisuje ostrzeżenie i wymaga `--yes` lub interaktywnego potwierdzenia (plik zawiera prompty!). Interfejs dashboardu w przeglądarce nie generuje plików ani nie wykonuje żadnych zapytań sieciowych — dialog eksportu generuje wyłącznie dokładną komendę CLI do wykonania lokalnie w terminalu użytkownika.
 
 ## 4. `packages/ui`
 

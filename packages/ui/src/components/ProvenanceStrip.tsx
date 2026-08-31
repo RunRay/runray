@@ -1,4 +1,6 @@
 import type { TraceFile } from '@runray/schema';
+import type { SanitizationManifest } from '../lib/load';
+import { useAppStore } from '../store';
 
 /**
  * Helper to check whether any span in a TraceFile contains unredacted prompt or output text.
@@ -27,13 +29,35 @@ export function hasUnredactedPrompts(traceFile: TraceFile): boolean {
 }
 
 /**
- * Export provenance strip (Phase 6 / Task 7).
+ * Export provenance strip (Task 5.1, visualizer "Export provenance strip").
  * Rendered only when `live === false`.
- * Displays session count, generation date, version, read-only status, and prompt redaction status.
+ * Reads the manifest and names the applied profile plus the three facts independently,
+ * while keeping its own span inspection as a cross-check — a manifest claiming
+ * redaction over present prompt text renders the warning treatment (D6).
  * Contains no filesystem paths, no dismiss control, and no interactive state.
  */
-export function ProvenanceStrip({ traceFile }: { traceFile: TraceFile }) {
+export function ProvenanceStrip({
+  traceFile,
+  manifest: explicitManifest,
+}: {
+  traceFile: TraceFile;
+  manifest?: SanitizationManifest;
+}) {
+  const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
+  const manifest = explicitManifest ?? storeManifest;
+
   const hasPrompts = hasUnredactedPrompts(traceFile);
+  // Cross-check (D6): if prompt text is present in spans, redaction is false even if manifest claimed otherwise
+  const textRedacted = manifest
+    ? manifest.textRedacted && !hasPrompts
+    : !hasPrompts;
+  const pathsScrubbed = manifest ? manifest.pathsScrubbed : false;
+  const spansPruned = manifest ? manifest.spansPruned : false;
+  const profile =
+    manifest?.profile ??
+    (textRedacted ? (pathsScrubbed ? 'sanitized' : 'full') : 'full');
+
+  const isWarning = hasPrompts || !textRedacted;
   const count = traceFile.runs?.length ?? 0;
   const sessionText = count === 1 ? '1 session' : `${count} sessions`;
   const dateStr = traceFile.generatedAt
@@ -45,7 +69,7 @@ export function ProvenanceStrip({ traceFile }: { traceFile: TraceFile }) {
     <div
       data-testid="provenance-strip"
       className={`border-b px-4 py-2.5 text-body transition-colors duration-150 ${
-        hasPrompts
+        isWarning
           ? 'border-heat-2/30 bg-heat-2/10 text-text'
           : 'border-border bg-surface-2/60 text-text-dim'
       }`}
@@ -67,8 +91,19 @@ export function ProvenanceStrip({ traceFile }: { traceFile: TraceFile }) {
           </span>
           <span className="text-text-faint">·</span>
           <span>read-only</span>
+          {manifest?.profile && (
+            <>
+              <span className="text-text-faint">·</span>
+              <span
+                data-testid="provenance-profile"
+                className="font-mono text-label text-text-dim"
+              >
+                profile: {profile}
+              </span>
+            </>
+          )}
           <span className="text-text-faint">·</span>
-          {hasPrompts ? (
+          {isWarning ? (
             <span
               data-testid="provenance-redaction-status"
               className="inline-flex items-center rounded border border-heat-2/40 bg-heat-2/20 px-1.5 py-0.5 font-mono text-label font-medium text-heat-2"
@@ -82,6 +117,28 @@ export function ProvenanceStrip({ traceFile }: { traceFile: TraceFile }) {
             >
               prompt text redacted
             </span>
+          )}
+          {pathsScrubbed && (
+            <>
+              <span className="text-text-faint">·</span>
+              <span
+                data-testid="provenance-paths-status"
+                className="font-mono text-label text-text-dim"
+              >
+                identifiers scrubbed
+              </span>
+            </>
+          )}
+          {spansPruned && (
+            <>
+              <span className="text-text-faint">·</span>
+              <span
+                data-testid="provenance-spans-status"
+                className="font-mono text-label text-text-dim"
+              >
+                spans pruned
+              </span>
+            </>
           )}
         </div>
         <p

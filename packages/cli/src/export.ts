@@ -1,3 +1,9 @@
+import {
+  createManifest,
+  resolveProfile,
+  type SanitizationManifest,
+  type SanitizeProfile,
+} from '@runray/core';
 import type { TraceFile } from '@runray/schema';
 
 /**
@@ -5,6 +11,63 @@ import type { TraceFile } from '@runray/schema';
  * dashboard with everything inlined; injecting `window.__RUNRAY_DATA__`
  * turns it into a report that renders offline from `file://`.
  */
+
+export interface ExportFlagOptions {
+  redact?: boolean;
+  redactPrompts?: boolean;
+  scrubPaths?: boolean;
+  anonymize?: boolean;
+  metadataOnly?: boolean;
+}
+
+export interface ResolvedExportSanitization {
+  stripText: boolean;
+  scrubIdentity: boolean;
+  pruneSpans: boolean;
+  profile: SanitizeProfile;
+  manifest: SanitizationManifest;
+}
+
+/**
+ * Pure resolver from CLI export flags and config to resolved intents,
+ * named profile, and report manifest (Task 3.1, cli "Export sanitization flags").
+ */
+export function resolveExportSanitization(
+  opts: ExportFlagOptions,
+  config?: { redact?: boolean },
+): ResolvedExportSanitization {
+  const redactPrompts = Boolean(opts.redactPrompts ?? false);
+  const redactFlag = Boolean(opts.redact ?? false);
+  const scrubPaths = Boolean(opts.scrubPaths ?? false);
+  const anonymize = Boolean(opts.anonymize ?? false);
+  const metadataOnly = Boolean(opts.metadataOnly ?? false);
+  const configRedact = Boolean(config?.redact ?? false);
+
+  const stripText =
+    redactFlag || redactPrompts || anonymize || metadataOnly || configRedact;
+  const scrubIdentity = scrubPaths || anonymize || metadataOnly;
+  const pruneSpans = metadataOnly;
+
+  const profile = resolveProfile({
+    stripText,
+    scrubIdentity,
+    pruneSpans,
+  });
+
+  const manifest = createManifest(profile, {
+    stripText,
+    scrubIdentity,
+    pruneSpans,
+  });
+
+  return {
+    stripText,
+    scrubIdentity,
+    pruneSpans,
+    profile,
+    manifest,
+  };
+}
 
 /**
  * Inject one `window.<name>` global into the export template's `<head>`
@@ -44,9 +107,11 @@ export function injectTraceData(
 export type ExportConsent = 'proceed' | 'ask' | 'abort';
 
 /**
- * Privacy guard (cli spec "Redaction guard"): an unredacted export contains
- * full prompt/output text, so it needs `--redact`, `--yes`, or an
- * interactive confirmation; non-interactive without either aborts.
+ * Privacy guard (cli spec "Consent guard responds to text redaction only"):
+ * an unredacted export contains full prompt/output text, so it needs text
+ * redaction (`redact: true`), `--yes`, or an interactive confirmation;
+ * `--scrub-paths` alone does NOT satisfy it. Non-interactive without
+ * text redaction or `--yes` aborts.
  */
 export function exportConsent(opts: {
   redact: boolean;

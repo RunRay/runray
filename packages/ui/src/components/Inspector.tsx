@@ -18,11 +18,23 @@ import { TranscriptPane } from './TranscriptPane';
  * `null` preview = redacted in core, never filtered here) · provenance
  * footer with a Show raw toggle over the normalized span record.
  */
-export function Inspector() {
-  const spanId = useAppStore((s) => s.selection.spanId);
-  const insightId = useAppStore((s) => s.selection.insightId);
-  const run = useAppStore(selectActiveRun);
+export interface InspectorProps {
+  run?: Run;
+  spanId?: string | null;
+  insightId?: string | null;
+}
+
+export function Inspector(props: InspectorProps = {}) {
+  const { run: propRun, spanId: propSpanId, insightId: propInsightId } = props;
+  const storeSpanId = useAppStore((s) => s.selection.spanId);
+  const storeInsightId = useAppStore((s) => s.selection.insightId);
+  const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
+
+  const spanId = propSpanId !== undefined ? propSpanId : storeSpanId;
+  const insightId =
+    propInsightId !== undefined ? propInsightId : storeInsightId;
+  const run = propRun ?? storeRun;
 
   const span = useMemo(
     () => run?.spans.find((s) => s.id === spanId),
@@ -107,7 +119,7 @@ function RunSummary({ run }: { run: Run }) {
           <Mono>{(cache.hitRate * 100).toFixed(1)}%</Mono>
         </Field>
       </Section>
-      {expensive.length > 0 && (
+      {expensive.length > 0 ? (
         <Section title="Most expensive calls">
           <ul className="space-y-0.5">
             {expensive.map((span) => (
@@ -132,7 +144,18 @@ function RunSummary({ run }: { run: Run }) {
             ))}
           </ul>
         </Section>
-      )}
+      ) : useAppStore.getState().viewConfig?.manifest?.profile ===
+          'metadata-only' ||
+        useAppStore.getState().viewConfig?.manifest?.spansPruned ? (
+        <p
+          className="px-3 py-2 text-label text-text-faint"
+          data-testid="inspector-metadata-only-notice"
+        >
+          Individual LLM and tool calls omitted under the{' '}
+          <code className="font-mono text-text-dim">metadata-only</code>{' '}
+          profile. Aggregates above reflect full run totals.
+        </p>
+      ) : null}
       <p className="px-3 py-3 text-label text-text-faint">
         Select a span in the waterfall for full detail.
       </p>
