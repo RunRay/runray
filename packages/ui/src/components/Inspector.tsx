@@ -6,6 +6,7 @@ import {
   formatTokens,
   formatUSD,
 } from '../lib/format';
+import type { SanitizationManifest } from '../lib/load';
 import { KIND_BG } from '../lib/span-kind';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
@@ -22,10 +23,16 @@ export interface InspectorProps {
   run?: Run;
   spanId?: string | null;
   insightId?: string | null;
+  manifest?: SanitizationManifest;
 }
 
 export function Inspector(props: InspectorProps = {}) {
-  const { run: propRun, spanId: propSpanId, insightId: propInsightId } = props;
+  const {
+    run: propRun,
+    spanId: propSpanId,
+    insightId: propInsightId,
+    manifest: propManifest,
+  } = props;
   const storeSpanId = useAppStore((s) => s.selection.spanId);
   const storeInsightId = useAppStore((s) => s.selection.insightId);
   const storeRun = useAppStore(selectActiveRun);
@@ -69,7 +76,7 @@ export function Inspector(props: InspectorProps = {}) {
       ) : insight !== undefined && run !== undefined ? (
         <InsightDetail insight={insight} run={run} />
       ) : run !== undefined ? (
-        <RunSummary run={run} />
+        <RunSummary run={run} manifest={propManifest} />
       ) : (
         <div className="flex min-h-0 flex-1 items-center justify-center p-4">
           <p className="text-label text-text-faint">
@@ -82,8 +89,18 @@ export function Inspector(props: InspectorProps = {}) {
 }
 
 /** Default content: the run at a glance — nothing selected is not nothing. */
-function RunSummary({ run }: { run: Run }) {
+function RunSummary({
+  run,
+  manifest: propManifest,
+}: {
+  run: Run;
+  manifest?: SanitizationManifest;
+}) {
   const selectSpan = useAppStore((s) => s.selectSpan);
+  const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
+  const manifest = propManifest ?? storeManifest;
+  const spansPruned =
+    manifest?.profile === 'metadata-only' || manifest?.spansPruned === true;
   const expensive = useMemo(
     () =>
       run.spans
@@ -144,9 +161,7 @@ function RunSummary({ run }: { run: Run }) {
             ))}
           </ul>
         </Section>
-      ) : useAppStore.getState().viewConfig?.manifest?.profile ===
-          'metadata-only' ||
-        useAppStore.getState().viewConfig?.manifest?.spansPruned ? (
+      ) : spansPruned ? (
         <p
           className="px-3 py-2 text-label text-text-faint"
           data-testid="inspector-metadata-only-notice"

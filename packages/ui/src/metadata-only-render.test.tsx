@@ -111,6 +111,56 @@ describe('Degraded render paths for metadata-only payload (Tasks 5.2, 5.3)', () 
     expect(html).toContain('metadata-only');
   });
 
+  it('Inspector explains the profile instead of an empty panel or a misleading zero (Task 5.2)', () => {
+    const manifest = {
+      profile: 'metadata-only' as const,
+      textRedacted: true,
+      pathsScrubbed: true,
+      spansPruned: true,
+    };
+
+    const run = stubMetadataOnlyRun('r1');
+    const html = renderToStaticMarkup(
+      <Inspector
+        run={run}
+        spanId={null}
+        insightId={null}
+        manifest={manifest}
+      />,
+    );
+
+    // states the profile as the reason the per-call list is absent
+    expect(html).toContain('inspector-metadata-only-notice');
+    expect(html).toContain('Individual LLM and tool calls omitted under the');
+    expect(html).toContain('metadata-only');
+    // no error state
+    expect(html).not.toContain('Select a span to inspect it.');
+    // and no misleading zero — the aggregates still come from run.totals
+    expect(html).toContain('Run at a glance');
+    expect(html).toContain('>2<'); // llm calls
+    expect(html).toContain('>3<'); // tool calls
+    expect(html).toContain('25.0%'); // cache hit-rate
+  });
+
+  it('Inspector shows no metadata-only notice under a full-profile report', () => {
+    const run = stubMetadataOnlyRun('r1');
+    const html = renderToStaticMarkup(
+      <Inspector
+        run={run}
+        spanId={null}
+        insightId={null}
+        manifest={{
+          profile: 'full',
+          textRedacted: false,
+          pathsScrubbed: false,
+          spansPruned: false,
+        }}
+      />,
+    );
+
+    expect(html).not.toContain('inspector-metadata-only-notice');
+  });
+
   it('evidence selection highlights re-anchored surviving container span without errors (Task 5.3, D5)', () => {
     const insight: Insight = {
       id: 'ins_1',
