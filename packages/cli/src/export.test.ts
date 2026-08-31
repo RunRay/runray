@@ -8,6 +8,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { hasPathShape } from '@runray/core';
 import type { TraceFile } from '@runray/schema';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { buildTraceFile } from './discover.js';
@@ -15,6 +16,7 @@ import {
   exportConsent,
   injectGlobal,
   injectTraceData,
+  resolveExportSanitization,
   selectRun,
 } from './export.js';
 import { createProgram } from './program.js';
@@ -31,6 +33,188 @@ const hostile: TraceFile = {
   generatedAt: '2026-07-02T13:00:00Z',
   runs: [],
 };
+
+describe('resolveExportSanitization (cli "Export sanitization flags")', () => {
+  it.each([
+    {
+      name: 'defaults with no flags or config',
+      opts: {},
+      config: undefined,
+      want: {
+        stripText: false,
+        scrubIdentity: false,
+        pruneSpans: false,
+        profile: 'full',
+        manifest: {
+          profile: 'full',
+          textRedacted: false,
+          pathsScrubbed: false,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--redact strips text, keeps identity, profile is full',
+      opts: { redact: true },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: false,
+        pruneSpans: false,
+        profile: 'full',
+        manifest: {
+          profile: 'full',
+          textRedacted: true,
+          pathsScrubbed: false,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--redact-prompts alias behaves identically to --redact',
+      opts: { redactPrompts: true },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: false,
+        pruneSpans: false,
+        profile: 'full',
+        manifest: {
+          profile: 'full',
+          textRedacted: true,
+          pathsScrubbed: false,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--scrub-paths scrubs identity, keeps text, profile is full',
+      opts: { scrubPaths: true },
+      config: undefined,
+      want: {
+        stripText: false,
+        scrubIdentity: true,
+        pruneSpans: false,
+        profile: 'full',
+        manifest: {
+          profile: 'full',
+          textRedacted: false,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--anonymize sets both stripText and scrubIdentity -> sanitized',
+      opts: { anonymize: true },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: true,
+        pruneSpans: false,
+        profile: 'sanitized',
+        manifest: {
+          profile: 'sanitized',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--redact + --scrub-paths composite -> sanitized',
+      opts: { redact: true, scrubPaths: true },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: true,
+        pruneSpans: false,
+        profile: 'sanitized',
+        manifest: {
+          profile: 'sanitized',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: '--metadata-only implies stripText, scrubIdentity, and pruneSpans -> metadata-only',
+      opts: { metadataOnly: true },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: true,
+        pruneSpans: true,
+        profile: 'metadata-only',
+        manifest: {
+          profile: 'metadata-only',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: true,
+        },
+      },
+    },
+    {
+      name: 'redundant flags compose without error',
+      opts: {
+        metadataOnly: true,
+        anonymize: true,
+        redact: true,
+        scrubPaths: true,
+      },
+      config: undefined,
+      want: {
+        stripText: true,
+        scrubIdentity: true,
+        pruneSpans: true,
+        profile: 'metadata-only',
+        manifest: {
+          profile: 'metadata-only',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: true,
+        },
+      },
+    },
+    {
+      name: 'config.redact: true strips text when no flags passed',
+      opts: {},
+      config: { redact: true },
+      want: {
+        stripText: true,
+        scrubIdentity: false,
+        pruneSpans: false,
+        profile: 'full',
+        manifest: {
+          profile: 'full',
+          textRedacted: true,
+          pathsScrubbed: false,
+          spansPruned: false,
+        },
+      },
+    },
+    {
+      name: 'config.redact: true with --scrub-paths resolves to sanitized',
+      opts: { scrubPaths: true },
+      config: { redact: true },
+      want: {
+        stripText: true,
+        scrubIdentity: true,
+        pruneSpans: false,
+        profile: 'sanitized',
+        manifest: {
+          profile: 'sanitized',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      },
+    },
+  ])('$name', ({ opts, config, want }) => {
+    expect(resolveExportSanitization(opts, config)).toEqual(want);
+  });
+});
 
 describe('injectTraceData', () => {
   it('injects into <head>, escapes every angle bracket, round-trips', () => {
@@ -107,7 +291,7 @@ afterEach(() => {
   process.exitCode = undefined; // export failures set it; keep vitest green
 });
 
-describe('export command (privacy guard)', () => {
+describe('export command (privacy guard & consent)', () => {
   it('aborts an unredacted export without --yes when non-interactive', async () => {
     // vitest pipes stdio, so this is the cli spec's non-interactive scenario
     const out = join(scratch(), 'report.html');
@@ -121,6 +305,80 @@ describe('export command (privacy guard)', () => {
     ]);
     expect(process.exitCode).toBe(1);
     expect(existsSync(out)).toBe(false);
+  });
+
+  it('scrubbing paths alone does NOT satisfy the consent guard without --yes', async () => {
+    const out = join(scratch(), 'report.html');
+    await createProgram().parseAsync([
+      'node',
+      'runray',
+      'export',
+      fixturesDir,
+      '-o',
+      out,
+      '--scrub-paths',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(existsSync(out)).toBe(false);
+  });
+
+  it('--anonymize never prompts and satisfies the consent guard', async () => {
+    const out = join(scratch(), 'report.html');
+    await createProgram().parseAsync([
+      'node',
+      'runray',
+      'export',
+      fixturesDir,
+      '-o',
+      out,
+      '--anonymize',
+    ]);
+    expect(process.exitCode).toBeUndefined();
+    expect(existsSync(out)).toBe(true);
+  });
+
+  it('--metadata-only satisfies the consent guard', async () => {
+    const out = join(scratch(), 'report.html');
+    await createProgram().parseAsync([
+      'node',
+      'runray',
+      'export',
+      fixturesDir,
+      '-o',
+      out,
+      '--metadata-only',
+    ]);
+    expect(process.exitCode).toBeUndefined();
+    expect(existsSync(out)).toBe(true);
+  });
+
+  it('--redact-prompts satisfies the consent guard', async () => {
+    const out = join(scratch(), 'report.html');
+    await createProgram().parseAsync([
+      'node',
+      'runray',
+      'export',
+      fixturesDir,
+      '-o',
+      out,
+      '--redact-prompts',
+    ]);
+    expect(process.exitCode).toBeUndefined();
+    expect(existsSync(out)).toBe(true);
+  });
+});
+
+describe('export --help text documentation (Task 3.3)', () => {
+  it('documents every sanitization flag and the alias', () => {
+    const program = createProgram();
+    const exportCmd = program.commands.find((c) => c.name() === 'export');
+    expect(exportCmd).toBeDefined();
+    const help = exportCmd?.helpInformation() ?? '';
+    expect(help).toContain('--redact');
+    expect(help).toContain('--redact-prompts');
+    expect(help).toContain('--scrub-paths');
+    expect(help).toContain('--anonymize');
+    expect(help).toContain('--metadata-only');
   });
 });
 
@@ -157,6 +415,77 @@ describe.skipIf(resolveExportTemplate() === undefined)(
       );
     });
 
+    it('reports applied profile on stderr and keeps stdout clean (Task 3.3)', async () => {
+      const dir = scratch();
+      const out = join(dir, 'report-meta.html');
+      const stderrLines: string[] = [];
+      const stdoutLines: string[] = [];
+      const stderrSpy = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation((chunk) => {
+          stderrLines.push(String(chunk));
+          return true;
+        });
+      const stdoutSpy = vi
+        .spyOn(process.stdout, 'write')
+        .mockImplementation((chunk) => {
+          stdoutLines.push(String(chunk));
+          return true;
+        });
+      try {
+        await createProgram().parseAsync([
+          'node',
+          'runray',
+          'export',
+          fixturesDir,
+          '-o',
+          out,
+          '--metadata-only',
+        ]);
+      } finally {
+        stderrSpy.mockRestore();
+        stdoutSpy.mockRestore();
+      }
+      expect(process.exitCode).toBeUndefined();
+      expect(stdoutLines.join('')).toBe('');
+      const errOut = stderrLines.join('');
+      expect(errOut).toContain('profile: metadata-only');
+    });
+
+    it('injects manifest into __RUNRAY_VIEW_CONFIG__ without local pricing path (Task 3.4)', async () => {
+      const dir = scratch();
+      const out = join(dir, 'report-anon.html');
+      await createProgram().parseAsync([
+        'node',
+        'runray',
+        'export',
+        fixturesDir,
+        '-o',
+        out,
+        '--anonymize',
+      ]);
+      expect(process.exitCode).toBeUndefined();
+
+      const html = readFileSync(out, 'utf8');
+      expect(html).toContain('window.__RUNRAY_VIEW_CONFIG__=');
+      const match = /window\.__RUNRAY_VIEW_CONFIG__=([^;]+);/.exec(html);
+      expect(match).not.toBeNull();
+      const viewConfig = JSON.parse(match?.[1] ?? '{}');
+      expect(viewConfig.manifest).toEqual({
+        profile: 'sanitized',
+        textRedacted: true,
+        pathsScrubbed: true,
+        spansPruned: false,
+      });
+
+      // Pricing payload has origin and table but never a local path
+      const pricingMatch = /window\.__RUNRAY_PRICING__=([^;]+);/.exec(html);
+      expect(pricingMatch).not.toBeNull();
+      const pricingPayload = JSON.parse(pricingMatch?.[1] ?? '{}');
+      expect(pricingPayload.origin).toBeDefined();
+      expect(pricingPayload.path).toBeUndefined();
+    });
+
     it('exports a single run when given a run id', async () => {
       const dir = scratch();
       const out = join(dir, 'one-run.html');
@@ -188,6 +517,72 @@ describe.skipIf(resolveExportTemplate() === undefined)(
       const data = JSON.parse(readFileSync(jsonOut, 'utf8')) as TraceFile;
       expect(data.runs.map((run) => run.id)).toEqual([id]);
     });
+
+    it('E2E export each profile: self-contained offline, manifest in view config, and sanitized bytes carry no path shape (Task 6.1)', async () => {
+      const dir = scratch();
+      const outFull = join(dir, 'full.html');
+      const outSanitized = join(dir, 'sanitized.html');
+      const outMeta = join(dir, 'metadata-only.html');
+
+      await createProgram().parseAsync([
+        'node',
+        'runray',
+        'export',
+        fixturesDir,
+        '-o',
+        outFull,
+        '--yes',
+      ]);
+      await createProgram().parseAsync([
+        'node',
+        'runray',
+        'export',
+        fixturesDir,
+        '-o',
+        outSanitized,
+        '--anonymize',
+      ]);
+      await createProgram().parseAsync([
+        'node',
+        'runray',
+        'export',
+        fixturesDir,
+        '-o',
+        outMeta,
+        '--metadata-only',
+      ]);
+
+      expect(existsSync(outFull)).toBe(true);
+      expect(existsSync(outSanitized)).toBe(true);
+      expect(existsSync(outMeta)).toBe(true);
+
+      const htmlFull = readFileSync(outFull, 'utf8');
+      const htmlSanitized = readFileSync(outSanitized, 'utf8');
+      const htmlMeta = readFileSync(outMeta, 'utf8');
+
+      // Manifests are injected and contain the exact profile
+      const matchFull = /window\.__RUNRAY_VIEW_CONFIG__=([^;]+);/.exec(
+        htmlFull,
+      );
+      const matchSanitized = /window\.__RUNRAY_VIEW_CONFIG__=([^;]+);/.exec(
+        htmlSanitized,
+      );
+      const matchMeta = /window\.__RUNRAY_VIEW_CONFIG__=([^;]+);/.exec(
+        htmlMeta,
+      );
+
+      expect(JSON.parse(matchFull?.[1] ?? '{}').manifest.profile).toBe('full');
+      expect(JSON.parse(matchSanitized?.[1] ?? '{}').manifest.profile).toBe(
+        'sanitized',
+      );
+      expect(JSON.parse(matchMeta?.[1] ?? '{}').manifest.profile).toBe(
+        'metadata-only',
+      );
+
+      // Sanitized and metadata-only HTML bytes carry no path shape
+      expect(hasPathShape(htmlSanitized)).toBe(false);
+      expect(hasPathShape(htmlMeta)).toBe(false);
+    });
   },
 );
 
@@ -204,20 +599,32 @@ describe('injectGlobal (X4)', () => {
     expect(html).toContain('\u003c/script>');
   });
 
-  it('stacks multiple globals in one head (data + pricing)', () => {
+  it('stacks multiple globals in one head (data + pricing + view config)', () => {
     const withData = injectTraceData(template, {
       schemaVersion: '0.1.0',
       generator: { name: 'runray', version: 't' },
       generatedAt: '2026-07-02T14:00:00Z',
       runs: [],
     });
-    const both = injectGlobal(withData, '__RUNRAY_PRICING__', {
+    const withPricing = injectGlobal(withData, '__RUNRAY_PRICING__', {
       origin: 'user',
     });
-    expect(both).toContain('window.__RUNRAY_DATA__=');
-    expect(both).toContain('window.__RUNRAY_PRICING__=');
-    expect(both.indexOf('__RUNRAY_DATA__')).toBeLessThan(
-      both.indexOf('__RUNRAY_PRICING__'),
+    const withAll = injectGlobal(withPricing, '__RUNRAY_VIEW_CONFIG__', {
+      manifest: {
+        profile: 'metadata-only',
+        textRedacted: true,
+        pathsScrubbed: true,
+        spansPruned: true,
+      },
+    });
+    expect(withAll).toContain('window.__RUNRAY_DATA__=');
+    expect(withAll).toContain('window.__RUNRAY_PRICING__=');
+    expect(withAll).toContain('window.__RUNRAY_VIEW_CONFIG__=');
+    expect(withAll.indexOf('__RUNRAY_DATA__')).toBeLessThan(
+      withAll.indexOf('__RUNRAY_PRICING__'),
+    );
+    expect(withAll.indexOf('__RUNRAY_PRICING__')).toBeLessThan(
+      withAll.indexOf('__RUNRAY_VIEW_CONFIG__'),
     );
   });
 });

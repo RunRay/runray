@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CommandPalette } from './components/CommandPalette';
 import { DashboardTourContainer } from './components/DashboardTourContainer';
 import { DiffView } from './components/DiffView';
+import { ExportDialog } from './components/ExportDialog';
 import { HelpSheet } from './components/HelpSheet';
 import { Inspector } from './components/Inspector';
 import { Overview } from './components/Overview';
@@ -56,6 +57,7 @@ export function App() {
   const filter = useAppStore((s) => s.filter);
   const clearFilter = useAppStore((s) => s.clearFilter);
   const helpOpen = useAppStore((s) => s.ui.helpOpen);
+  const exportOpen = useAppStore((s) => s.ui.exportOpen);
   const onboarding = useAppStore((s) => s.onboarding);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const gPressedAt = useRef(0);
@@ -251,6 +253,11 @@ export function App() {
       </div>
       {helpOpen && (
         <HelpSheet onClose={() => useAppStore.getState().toggleHelp(false)} />
+      )}
+      {exportOpen && data.status === 'ready' && data.live && (
+        <ExportDialog
+          onClose={() => useAppStore.getState().toggleExport(false)}
+        />
       )}
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
       {data.status === 'ready' &&

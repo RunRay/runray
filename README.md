@@ -26,8 +26,8 @@ RunRay is a local-first CLI that reads session data your AI coding agents (Claud
 - **Actionable insights, not just telemetry** — a rule engine flags retry loops, low cache hit-rate, context bloat, expensive subagents, and dead-end runs — each with evidence spans, an estimated wasted USD, and one concrete suggestion.
 - **Timeline waterfall** — the execution tree with parallel vs sequential lanes, error marking, and the **Spend Spine**: a cumulative-cost gutter showing money accrete through the session.
 - **Cost breakdown** — per-model, per-tool, cache-aware; explicit wasted-spend table.
-- **Single-file export** — `runray export -o report.html` produces one self-contained HTML you can drop into Slack or a PR.
-- **Private by design** — 100% local; zero network calls at runtime (the only exception: explicit `pricing --refresh`); `--redact` strips prompt text while keeping structure and token counts.
+- **Single-file export** — `runray export -o report.html --anonymize` produces a self-contained offline HTML report with redacted prompts and pseudonymized paths that you can safely share on Slack or GitHub PRs.
+- **Private by design** — 100% local; zero runtime network calls (the only exception: explicit `pricing --refresh`); redaction and path pseudonymization happen in core before serialization; the browser UI generates no files and makes no outbound requests.
 
 ---
 
@@ -69,8 +69,14 @@ runray view ./traces/session-2026-07-01.jsonl
 # Machine-readable listing for scripts
 runray list --json
 
-# Self-contained shareable report (confirmation required unless --redact)
-runray export -o report.html --redact
+# Sanitized shareable report (redacts prompt text & scrubs paths into pseudonyms)
+runray export -o report.html --anonymize
+
+# Minimal metadata-only export (prunes leaf spans, keeps containers, totals & findings)
+runray export -o report.html --metadata-only
+
+# Unredacted full trace (confirmation prompt required unless --yes)
+runray export -o report.html --yes
 ```
 
 ---

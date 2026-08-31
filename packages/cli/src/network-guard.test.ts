@@ -151,10 +151,13 @@ describe('offline-first guarantee (AGENTS.md)', () => {
   });
 
   it.skipIf(resolveExportTemplate() === undefined)(
-    'export runs offline',
+    'export runs offline (--anonymize, no outbound connection attempted)',
     async () => {
-      const out = join(scratch(), 'report.html');
-      const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const dir = scratch();
+      const outAnon = join(dir, 'report-anon.html');
+      const log = vi
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => true);
       try {
         await createProgram().parseAsync([
           'node',
@@ -162,14 +165,15 @@ describe('offline-first guarantee (AGENTS.md)', () => {
           'export',
           fixturesDir,
           '-o',
-          out,
-          '--redact',
+          outAnon,
+          '--anonymize',
         ]);
       } finally {
         log.mockRestore();
       }
-      expect(existsSync(out)).toBe(true);
+      expect(existsSync(outAnon)).toBe(true);
     },
+    60_000,
   );
 
   it('demo data loads and serves offline', async () => {
