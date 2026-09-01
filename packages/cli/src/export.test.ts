@@ -26,10 +26,13 @@ const TEMPLATE =
   '<!doctype html><html><head><title>t</title></head><body></body></html>';
 
 // Hostile strings a prompt could contain: script breakout, comment breakout,
-// and `$&`-style replacement patterns.
+// `$&`-style replacement patterns, and U+2028/U+2029 line terminators.
 const hostile: TraceFile = {
   schemaVersion: '0.1.0',
-  generator: { name: "</script><!--<script>$&$'", version: '0.0.0-test' },
+  generator: {
+    name: "</script><!--<script>$&$'\u2028\u2029",
+    version: '0.0.0-test',
+  },
   generatedAt: '2026-07-02T13:00:00Z',
   runs: [],
 };
@@ -217,7 +220,7 @@ describe('resolveExportSanitization (cli "Export sanitization flags")', () => {
 });
 
 describe('injectTraceData', () => {
-  it('injects into <head>, escapes every angle bracket, round-trips', () => {
+  it('injects into <head>, escapes every angle bracket and line terminators, round-trips', () => {
     const html = injectTraceData(TEMPLATE, hostile);
     const start = html.indexOf('__RUNRAY_DATA__=') + '__RUNRAY_DATA__='.length;
     const end = html.indexOf(';</script></head>');
@@ -225,7 +228,9 @@ describe('injectTraceData', () => {
     expect(end).toBeGreaterThan(start);
     const payload = html.slice(start, end);
     expect(payload).not.toContain('<'); // nothing can close the script element
-    expect(JSON.parse(payload)).toEqual(hostile); // `$&` survived the replace
+    expect(payload).not.toContain('\u2028'); // line separator escaped
+    expect(payload).not.toContain('\u2029'); // paragraph separator escaped
+    expect(JSON.parse(payload)).toEqual(hostile); // `$&` and unicode separators survived the replace
   });
 
   it('throws on a template without <head>', () => {
@@ -626,5 +631,26 @@ describe('injectGlobal (X4)', () => {
     expect(withAll.indexOf('__RUNRAY_PRICING__')).toBeLessThan(
       withAll.indexOf('__RUNRAY_VIEW_CONFIG__'),
     );
+  });
+
+  it('escapes U+2028 (line separator) and U+2029 (paragraph separator) and round-trips losslessly', () => {
+    const payload = {
+      prompt: 'line 1\u2028line 2\u2029paragraph 2',
+      metadata: { note: '\u2028\u2029' },
+    };
+    const html = injectGlobal(template, '__RUNRAY_DATA__', payload);
+    // Raw U+2028 and U+2029 should not be present in the script
+    expect(html).not.toContain('\u2028');
+    expect(html).not.toContain('\u2029');
+    // Instead escaped unicode sequences should be present
+    expect(html).toContain('\\u2028');
+    expect(html).toContain('\\u2029');
+
+    const start =
+      html.indexOf('window.__RUNRAY_DATA__=') +
+      'window.__RUNRAY_DATA__='.length;
+    const end = html.indexOf(';</script>');
+    const extracted = html.slice(start, end);
+    expect(JSON.parse(extracted)).toEqual(payload);
   });
 });

@@ -78,6 +78,9 @@ export function resolveExportSanitization(
  * escape (backslash-u003c), which JSON.parse round-trips losslessly. That
  * covers both ways embedded text could break out of the script element: a
  * literal `</script>` and a `<!--` (HTML-comment parsing inside scripts).
+ * Line terminators U+2028 (LINE SEPARATOR) and U+2029 (PARAGRAPH SEPARATOR)
+ * are also escaped (backslash-u2028, backslash-u2029) to avoid JavaScript parse errors
+ * in classic <script> blocks in ECMAScript parsers / older browser environments.
  * The data script is a classic script, so it runs during parse — before
  * the app's inline module, which is always deferred.
  */
@@ -89,7 +92,10 @@ export function injectGlobal(
   if (!template.includes('</head>')) {
     throw new Error('export template has no <head>; rebuild the UI');
   }
-  const json = JSON.stringify(payload).replace(/</g, '\\u003c');
+  const json = JSON.stringify(payload)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
   const tag = `<script>window.${name}=${json};</script>`;
   // Replacer function: a plain string replacement would expand `$&` etc.
   // occurring inside prompt text.
