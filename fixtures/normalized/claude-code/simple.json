@@ -701,6 +701,23 @@
   "insights": [
     {
       "id": "i1",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 71.3k to 153.8k tokens",
+      "detail": "The median context of the last three model calls (153.8k) is over 2× the median of the first three (71.3k); ~390.8k cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "ed87bc7f-376a-4847-9460-14649965231a",
+        "msg_01KBECaM8FMJw9ipQAV6D2iS",
+        "msg_01RJPtfyY1X3DU6vBzsyg89T",
+        "toolu_0187ALLeyERfpCSga9L1MchQ",
+        "toolu_01HCdpB71FnxLP5YhPievKXf",
+        "toolu_01FtqgWxvNmqJHwxf3DnJyER"
+      ],
+      "estimatedWasteUSD": 1.00969,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~390.8k tokens in total."
+    },
+    {
+      "id": "i2",
       "ruleId": "idle-cache-expiry",
       "severity": "critical",
       "title": "Idle gap of 313m expired the cache",
@@ -713,7 +730,7 @@
       "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 313 minutes re-wrote 124.3k tokens at the write premium, and every further call in this context costs $0.06 in cache reads alone."
     },
     {
-      "id": "i2",
+      "id": "i3",
       "ruleId": "fixed-context-overhead",
       "severity": "warning",
       "title": "Session starts with a 48.8k-token context footprint",
