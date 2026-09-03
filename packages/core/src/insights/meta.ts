@@ -127,7 +127,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
   'context-bloat': {
     label: 'Growing context',
     explain:
-      'The context grew steadily across the session, so every later call re-paid an ever-larger prefix.',
+      'The context grew steadily across the session, so every later call re-paid an ever-larger prefix; the estimate is an upper bound that assumes the work could have gone on from a compacted context.',
     class: 'opportunity',
     playbook: {
       causes: [

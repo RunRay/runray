@@ -611,3 +611,36 @@ describe('token figures in finding copy', () => {
     expect(f?.detail).not.toMatch(/\d{5,}\.\dk/);
   });
 });
+
+describe('expensive-subagent says why there is no saving figure', () => {
+  it('names the tier that resolved when the subtree could not be repriced cheaper', () => {
+    // a reported cost below what the cheaper tier would charge for the same
+    // tokens: the tier resolves, repricing is not cheaper, no saving claimed
+    const spans = [
+      root(),
+      llm('l0', 1, { cost: 0.05 }),
+      sub('worker', 2),
+      base('l1', {
+        kind: 'llm_call',
+        startedAt: ts(3),
+        parentId: 'worker',
+        llm: {
+          provider: 'anthropic',
+          model: 'claude-opus-4-8',
+          tokens: { input: 3_000_000, output: 0, cacheRead: 0, cacheWrite: 0 },
+          costUSD: 5,
+          costSource: 'reported',
+        },
+      }),
+    ];
+    const f = findings(spans).find((i) => i.ruleId === 'expensive-subagent');
+    expect(f).toBeDefined();
+    expect(f?.estimatedWasteUSD).toBeUndefined();
+    expect(f?.detail).toContain('A cheaper tier (claude-sonnet-5) resolves');
+    expect(f?.suggestion).toContain('a cheaper tier (claude-sonnet-5) exists');
+    expect(f?.suggestion).toContain(
+      "model: claude-sonnet-5 in the worker agent's frontmatter",
+    );
+    expect(f?.suggestion).not.toContain('no priced cheaper tier');
+  });
+});

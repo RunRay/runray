@@ -516,7 +516,7 @@ const expensiveSubagent: InsightRule = {
           ? 'No cheaper same-family tier resolves in the pricing table, so no saving estimate is available.'
           : `A cheaper tier (${sugg.target}) resolves, but the subtree's calls could not be repriced cheaper (unpriced or already at/below that rate), so no saving estimate is available.`;
       // where the person sets a subagent's model in this source
-      const target = saving === undefined ? undefined : sugg?.target;
+      const target = sugg?.target;
       const how = ((): string => {
         switch (run.source.tool) {
           case 'claude-code':
@@ -544,7 +544,9 @@ const expensiveSubagent: InsightRule = {
         ...(saving === undefined ? {} : { estimatedWasteUSD: saving }),
         suggestion:
           saving === undefined
-            ? `Give ${name} a cheaper model (${how}) — its subtree is ${share}% of this run; no priced cheaper tier resolved, so the saving is not estimated.`
+            ? sugg === undefined
+              ? `Give ${name} a cheaper model (${how}) — its subtree is ${share}% of this run; no priced cheaper tier resolves for it, so the saving is not estimated.`
+              : `Give ${name} a cheaper model (${how}) — a cheaper tier (${sugg.target}) exists, but this subtree's calls could not be repriced cheaper (unpriced, or already at or below that rate), so the saving is not estimated.`
             : `Give ${name} a cheaper model (${how}) — the same tokens would have cost ~${usd(saving)} less (−${Math.round((saving / cost) * 100)}%).`,
       };
     });

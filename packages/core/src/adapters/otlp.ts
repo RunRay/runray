@@ -348,6 +348,15 @@ function toRawSpan(
       isError: status === 'error',
       ...(mcpServer === undefined ? {} : { mcpServer }),
     };
+    // a failed span's status message is the one result text OTLP carries —
+    // same content/redaction contract as the transcript adapters
+    if (status === 'error') {
+      const message = isObj(span.status) ? str(span.status.message) : undefined;
+      if (redact) base.content = { outputPreview: null };
+      else if (message !== undefined && message.length > 0) {
+        base.content = { outputPreview: message.slice(0, PREVIEW_CHARS) };
+      }
+    }
   } else if (kind === 'turn') {
     const prompt = attrStr(attrs, 'user_prompt');
     if (redact) {
