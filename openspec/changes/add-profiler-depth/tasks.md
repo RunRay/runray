@@ -409,3 +409,8 @@ automatically extends its fixture-parameterized equivalence matrix.
       visibility rule, a jump to the Errors tab; one sentence for a declined
       call; "tool errors" in the run summary takes the triage tone; the
       Inspector's rule playbook reuses `PlaybookSteps`. Added 2026-09-03.
+- [x] 12.6 A+B Docs and changeset for the series (E4): docs/08 "Errors,
+      class by class" (generated) and the Errors tab / Inspector sections
+      under "Where findings appear"; docs/05 §2.5 error triage and §4 UI
+      surfaces; README sentence; one `minor` changeset covering E0–E3.
+      Added 2026-09-03.
