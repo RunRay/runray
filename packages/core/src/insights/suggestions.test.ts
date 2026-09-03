@@ -93,6 +93,8 @@ function tool(
     targetKey?: string;
     targetKind?: 'file-read' | 'file-write' | 'command';
     linesAdded?: number;
+    /** The failure's text, as the adapters keep it on error tool spans. */
+    errorText?: string;
   } = {},
 ): RawSpan {
   const name = opts.name ?? 'Bash';
@@ -103,6 +105,9 @@ function tool(
     endedAt: ts(second + 1),
     parentId: opts.parentId ?? 'root',
     status: opts.status ?? 'ok',
+    ...(opts.errorText === undefined
+      ? {}
+      : { content: { outputPreview: opts.errorText } }),
     attributes:
       opts.targetKey === undefined
         ? {}
@@ -410,5 +415,92 @@ describe('the remaining rules address the person, with the finding in numbers', 
     expect(suggestionOf(grow, 'context-bloat', 'otlp')).toMatch(
       /^Summarize or drop history/,
     );
+  });
+});
+
+describe('findings quote the error text the adapters keep on failed tool spans', () => {
+  const failing = (
+    id: string,
+    sec: number,
+    errorText?: string,
+    name = 'Bash',
+  ) =>
+    tool(id, sec, {
+      name,
+      status: 'error',
+      targetKey: 'k',
+      parentId: 'l1',
+      ...(errorText === undefined ? {} : { errorText }),
+    });
+
+  it('retry-loop: the last failure, first line only, whitespace collapsed', () => {
+    const f = findings([
+      root(),
+      llm('l1', 0, { cost: 0.5 }),
+      failing('t1', 1, 'first'),
+      failing('t2', 2, 'second'),
+      failing(
+        't3',
+        3,
+        "  The token '&&' is not a valid   statement separator.\r\nAt line:1 char:5",
+      ),
+    ]).find((i) => i.ruleId === 'retry-loop');
+    expect(f?.detail).toContain(
+      "(last error: “The token '&&' is not a valid statement separator.”)",
+    );
+  });
+
+  it('retry-loop: caps a long error at 120 chars', () => {
+    const long = 'x'.repeat(300);
+    const f = findings([
+      root(),
+      llm('l1', 0, { cost: 0.5 }),
+      failing('t1', 1, long),
+      failing('t2', 2, long),
+      failing('t3', 3, long),
+    ]).find((i) => i.ruleId === 'retry-loop');
+    expect(f?.detail).toContain(`“${'x'.repeat(119)}…”`);
+  });
+
+  it('retry-loop: no quote when the trace holds no error text', () => {
+    const f = findings([
+      root(),
+      llm('l1', 0, { cost: 0.5 }),
+      failing('t1', 1),
+      failing('t2', 2),
+      failing('t3', 3),
+    ]).find((i) => i.ruleId === 'retry-loop');
+    expect(f?.detail).not.toContain('last error');
+  });
+
+  it('dead-end-run: the failing step says why, and stays silent otherwise', () => {
+    const withText = findings([
+      root(),
+      llm('l1', 0, { cost: 1 }),
+      tool('t9', 9, { status: 'error', errorText: 'ENOENT: no such file' }),
+    ]).find((i) => i.ruleId === 'dead-end-run');
+    expect(withText?.detail).toContain('failing Bash (“ENOENT: no such file”)');
+    const without = findings([
+      root(),
+      llm('l1', 0, { cost: 1 }),
+      tool('t9', 9, { status: 'error' }),
+    ]).find((i) => i.ruleId === 'dead-end-run');
+    expect(without?.detail).toMatch(
+      /^The session terminated on a failing Bash after/,
+    );
+  });
+
+  it("scattered-tool-failures: the dominant tool's most recent error", () => {
+    const f = findings([
+      root(),
+      llm('l1', 0, { cost: 0.2 }),
+      tool('t1', 1, { name: 'Grep', status: 'error', errorText: 'pattern A' }),
+      tool('t2', 2, { name: 'Grep', status: 'error', errorText: 'pattern B' }),
+      tool('t3', 3, { name: 'Glob', status: 'error' }),
+      tool('t4', 4, { name: 'Read', status: 'error' }),
+      tool('t5', 5, { name: 'WebFetch', status: 'error' }),
+      llm('l2', 6, { cost: 0.2 }),
+    ]).find((i) => i.ruleId === 'scattered-tool-failures');
+    expect(f?.detail).toContain('Most recent Grep error: “pattern B”.');
   });
 });

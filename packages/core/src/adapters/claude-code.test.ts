@@ -794,3 +794,49 @@ describe('claude-code adapter — meta.json sidecar adoption', () => {
     }
   });
 });
+
+describe('claude-code adapter — error text on failed tool spans', () => {
+  const toolErrorsDir = join(fixtureDir, '..', 'tool-errors');
+  async function toolErrorsRun(redact: boolean) {
+    const candidates = await claudeCodeAdapter.detect([toolErrorsDir]);
+    const candidate = candidates.find((c) =>
+      c.runRef.endsWith('tool-errors.jsonl'),
+    );
+    expect(candidate).toBeDefined();
+    if (!candidate) throw new Error('tool-errors fixture not found');
+    return claudeCodeAdapter.parse(candidate, { redact });
+  }
+
+  it('keeps the first 200 chars of a failed result as the tool span preview', async () => {
+    const run = await toolErrorsRun(false);
+    const failed = run.spans.filter(
+      (s) =>
+        s.kind !== 'llm_call' && s.status === 'error' && s.tool !== undefined,
+    );
+    expect(failed.length).toBeGreaterThan(0);
+    const withText = failed.filter(
+      (s) => typeof s.content?.outputPreview === 'string',
+    );
+    expect(withText.length).toBeGreaterThan(0);
+    for (const s of withText) {
+      expect((s.content?.outputPreview ?? '').length).toBeLessThanOrEqual(200);
+    }
+    // successful tool spans carry no preview: outputs are sized, not quoted
+    for (const s of run.spans) {
+      if (s.tool !== undefined && s.status === 'ok') {
+        expect(s.content).toBeUndefined();
+      }
+    }
+  });
+
+  it('nulls the error text under redaction, like every other preview', async () => {
+    const run = await toolErrorsRun(true);
+    const failed = run.spans.filter(
+      (s) => s.tool !== undefined && s.status === 'error',
+    );
+    expect(failed.length).toBeGreaterThan(0);
+    for (const s of failed) {
+      expect(s.content?.outputPreview).toBeNull();
+    }
+  });
+});
