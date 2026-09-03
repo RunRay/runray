@@ -44,6 +44,7 @@ function usd(x: number): string {
   return `$${x.toFixed(2)}`;
 }
 function tok(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`;
 }
 function ms(iso: string): number {
