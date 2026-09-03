@@ -81,7 +81,7 @@ const TOOL_PATTERNS: readonly Pattern[] = [
   },
   {
     id: 'missing-binary',
-    re: /nie znaleziono Python|command not found|is not recognized as|not recognized as the name|ERR_MODULE_NOT_FOUND|Cannot find module|ERR_PACKAGE_PATH_NOT_EXPORTED|Permission denied|EACCES|EPERM|No module named|npm ERR!|not found: |Could not find a working python|is not installed/i,
+    re: /nie znaleziono Python|command not found|is not recognized as|not recognized as the name|ERR_MODULE_NOT_FOUND|Cannot find module|ERR_PACKAGE_PATH_NOT_EXPORTED|Permission denied|EACCES|EPERM|No module named|npm ERR!|Could not find a working python|is not installed/i,
   },
   {
     id: 'shell-syntax',
