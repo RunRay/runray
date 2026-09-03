@@ -1,11 +1,12 @@
 import type { Insight, Run } from '@runray/schema';
 import { formatUSD } from '../lib/format';
+import { rankInsights } from '../lib/insight-order';
 import { tourAttr } from '../lib/tour-attr';
 import { useAppStore } from '../store';
 
 /**
- * Insights strip (03-design.md §4.2): one pill per finding — severity
- * color, title, waste $. Activating highlights the evidence spans in the
+ * Insights strip (03-design.md §4.2): one pill per finding, ranked by
+ * estimated waste — severity color, title, waste $. Activating highlights the evidence spans in the
  * waterfall and opens the insight in the Inspector; from the Cost view it
  * first jumps to the Timeline.
  */
@@ -41,7 +42,7 @@ export function InsightsStrip({
       aria-label="Findings"
       className="flex items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
     >
-      {run.insights.map((insight) => {
+      {rankInsights(run.insights).map((insight) => {
         const active = insight.id === activeId;
         return (
           <button
