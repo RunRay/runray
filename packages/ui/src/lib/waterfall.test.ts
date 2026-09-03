@@ -1,6 +1,7 @@
 import type { Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
+  collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
   laneMarks,
@@ -209,5 +210,39 @@ describe('subtreeRollups (D3)', () => {
     });
     expect(rollups.get('root')?.costUSD).toBeCloseTo(0.75, 6);
     expect(rollups.get('root')?.llmCalls).toBe(3);
+  });
+});
+
+describe('collapsedAncestorsOf', () => {
+  const spans = [
+    stubSpan({ id: 'root' }),
+    stubSpan({ id: 'agent', parentId: 'root', depth: 1 }),
+    stubSpan({ id: 'call', parentId: 'agent', depth: 2 }),
+    stubSpan({ id: 'other', parentId: 'root', depth: 1 }),
+    stubSpan({ id: 'leaf', parentId: 'other', depth: 2 }),
+  ];
+
+  it('returns only the collapsed ancestors of the targets', () => {
+    const hidden = collapsedAncestorsOf(
+      spans,
+      new Set(['call']),
+      new Set(['agent', 'other', 'root']),
+    );
+    expect([...hidden].sort()).toEqual(['agent', 'root']);
+  });
+
+  it('is empty when nothing above a target is collapsed', () => {
+    expect(
+      collapsedAncestorsOf(spans, new Set(['call']), new Set(['other'])).size,
+    ).toBe(0);
+    expect(collapsedAncestorsOf(spans, new Set(), new Set(['root'])).size).toBe(
+      0,
+    );
+  });
+
+  it('ignores a collapsed target itself — only ancestors hide it', () => {
+    expect(
+      collapsedAncestorsOf(spans, new Set(['agent']), new Set(['agent'])).size,
+    ).toBe(0);
   });
 });

@@ -17,6 +17,7 @@ import {
 import { KIND_BG } from '../lib/span-kind';
 import { tourAttr } from '../lib/tour-attr';
 import {
+  collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
   matchingSpanIds,
@@ -39,6 +40,8 @@ const ROW_PX = 32;
 const INDENT_PX = 16;
 /** Label flips to the left of the bar when it starts past this point. */
 const LABEL_FLIP_PCT = 55;
+/** How long the evidence rows stay lit after an insight lands the view. */
+const FLASH_MS = 5000;
 
 interface TooltipState {
   row: WaterfallRow;
@@ -98,13 +101,44 @@ export function Waterfall({ run }: { run: Run }) {
     if (index >= 0) virtualizer.scrollToIndex(index, { align: 'auto' });
   }, [selectedId]);
 
-  // Activating an insight scrolls its first evidence span into view.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: same contract as above — react to activation only
+  // An insight landing here — the dashboard's "Open in timeline" deep link
+  // or a strip pill — must answer "where?" at once: reveal the evidence
+  // (drop the `/` filter, expand any collapsed ancestor), owe a scroll to
+  // its first span, and light the evidence rows for FLASH_MS so the eye
+  // finds them before they settle into the resting wash.
+  const scrollOwed = useRef(false);
+  const [flashing, setFlashing] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: react to activation only — rows/collapsed/highlighted churn must not re-trigger the reveal
   useEffect(() => {
     if (insightId === null) return;
-    const index = rows.findIndex((r) => highlighted.has(r.span.id));
-    if (index >= 0) virtualizer.scrollToIndex(index, { align: 'center' });
+    setQuery('');
+    const hidden = collapsedAncestorsOf(run.spans, highlighted, collapsed);
+    if (hidden.size > 0) {
+      const next = new Set(collapsed);
+      for (const id of hidden) next.delete(id);
+      setCollapsed(next);
+    }
+    scrollOwed.current = true;
+    setFlashing(true);
+    const t = window.setTimeout(() => setFlashing(false), FLASH_MS);
+    return () => window.clearTimeout(t);
   }, [insightId]);
+
+  // The owed scroll runs once the rows actually contain an evidence span:
+  // immediately when nothing hid it, on the next render after the reveal
+  // above. Deferred a frame so the virtualizer has measured a freshly
+  // mounted scroll element (cross-run navigation mounts and scrolls in
+  // the same commit).
+  useEffect(() => {
+    if (!scrollOwed.current) return;
+    const index = rows.findIndex((r) => highlighted.has(r.span.id));
+    if (index < 0) return;
+    const frame = requestAnimationFrame(() => {
+      scrollOwed.current = false;
+      virtualizer.scrollToIndex(index, { align: 'center' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [rows, highlighted, virtualizer]);
 
   // Row keys (03-design.md §3): j/k walk spans, ←/→ collapse/expand the
   // selected subtree, `/` jumps to the filter. Text fields keep their keys.
@@ -246,6 +280,7 @@ export function Waterfall({ run }: { run: Run }) {
                   range={range}
                   selected={row.span.id === selectedId}
                   highlighted={highlighted.has(row.span.id)}
+                  flash={flashing && highlighted.has(row.span.id)}
                   animate={animate}
                   animationDelayMs={Math.min(item.index * 8, 300)}
                   style={{
@@ -295,6 +330,7 @@ function SpanRow({
   range,
   selected,
   highlighted,
+  flash,
   animate,
   animationDelayMs,
   style,
@@ -309,6 +345,8 @@ function SpanRow({
   selected: boolean;
   /** Evidence of the active insight — amber wash under everything else. */
   highlighted: boolean;
+  /** Just landed on this evidence: a saturated wash that settles (FLASH_MS). */
+  flash: boolean;
   animate: boolean;
   animationDelayMs: number;
   style: CSSProperties;
@@ -380,6 +418,15 @@ function SpanRow({
             : 'hover:bg-surface-variant/40 active:bg-bg-deep-gray'
       }`}
     >
+      {/* arrival flash: under the bar and label, opacity-only settle into
+          the resting wash; a static wash for FLASH_MS under reduced motion */}
+      {flash && (
+        <span
+          className="pointer-events-none absolute inset-0 bg-heat-2/35 motion-safe:animate-[evidence-flash_var(--ease-out)_both]"
+          style={{ animationDuration: `${FLASH_MS}ms` }}
+          aria-hidden
+        />
+      )}
       {/* evidence rail (active insight) */}
       {highlighted && !selected && (
         <span

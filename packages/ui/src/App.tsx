@@ -170,9 +170,14 @@ export function App() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-bg text-text font-sans antialiased">
+    // The shell is viewport-bound (h-screen, not min-h-screen): every pane
+    // scrolls internally, which is what the virtualized waterfall's
+    // scrollToIndex, the sessions rail, and the sticky run header rely on.
+    // An unbounded shell grew to content height, rendered every span, and
+    // left deep links parked at the top of the document.
+    <div className="flex h-screen overflow-hidden bg-bg text-text font-sans antialiased">
       <SideNavBar />
-      <div className="ml-60 flex-1 flex flex-col min-h-screen relative overflow-hidden bg-bg">
+      <div className="ml-60 flex-1 flex flex-col min-h-0 relative overflow-hidden bg-bg">
         {data.status === 'ready' && !data.live && (
           <ProvenanceStrip traceFile={data.traceFile} />
         )}
