@@ -6,7 +6,7 @@
  * else.
  */
 
-import type { Run, Span } from '@runray/schema';
+import type { Insight, Run, Span } from '@runray/schema';
 
 /** Bracket segment marking consecutive siblings whose time ranges overlap. */
 export type LaneMark = 'start' | 'mid' | 'end' | null;
@@ -226,4 +226,28 @@ export function subtreeRollups(
     rollup.costUSD = Math.round(rollup.costUSD * 1e6) / 1e6;
   }
   return rollups;
+}
+
+/**
+ * The collapsed ids that hide any of `targets` — their proper ancestors
+ * present in `collapsed`. Expanding exactly these reveals the targets
+ * (insight evidence, a deep-linked span) without touching unrelated
+ * collapsed subtrees.
+ */
+export function collapsedAncestorsOf(
+  spans: readonly Span[],
+  targets: ReadonlySet<string>,
+  collapsed: ReadonlySet<string>,
+): Set<string> {
+  const out = new Set<string>();
+  if (targets.size === 0 || collapsed.size === 0) return out;
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  for (const id of targets) {
+    let cursor = byId.get(id);
+    while (cursor !== undefined && cursor.parentId !== null) {
+      cursor = byId.get(cursor.parentId);
+      if (cursor !== undefined && collapsed.has(cursor.id)) out.add(cursor.id);
+    }
+  }
+  return out;
 }
