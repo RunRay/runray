@@ -251,3 +251,37 @@ export function collapsedAncestorsOf(
   }
   return out;
 }
+
+/** Severity order for worst-first sorting (critical > warning > info). */
+export const SEVERITY_RANK: Record<Insight['severity'], number> = {
+  info: 0,
+  warning: 1,
+  critical: 2,
+};
+
+/**
+ * Findings keyed by evidence span id, each list worst-first (severity, then
+ * estimated waste, then id) — the waterfall's per-row finding marker and
+ * the Inspector's Activity | Finding switch both read from this.
+ */
+export function insightsBySpan(
+  insights: readonly Insight[],
+): Map<string, Insight[]> {
+  const map = new Map<string, Insight[]>();
+  for (const insight of insights) {
+    for (const id of insight.spanIds) {
+      const list = map.get(id);
+      if (list === undefined) map.set(id, [insight]);
+      else list.push(insight);
+    }
+  }
+  for (const list of map.values()) {
+    list.sort(
+      (a, b) =>
+        SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
+        (b.estimatedWasteUSD ?? 0) - (a.estimatedWasteUSD ?? 0) ||
+        (a.id < b.id ? -1 : 1),
+    );
+  }
+  return map;
+}

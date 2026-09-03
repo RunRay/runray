@@ -262,6 +262,11 @@ Composition (all [UI → /frontend-design]; savings panel first, rest on top):
       stamp. After 7.21 (TopBar serialization).
 - [x] 7.23 B Command palette: add `go:dashboard` as first "Go to" entry;
       remove the misleading `dashboard` keyword from `go:sessions` (D7). ∥
+- [x] 7.24 B [UI → /frontend-design] Finding markers in the waterfall
+      (severity notch + count chip per evidence row, `insightsBySpan`) and
+      the Inspector Activity | Finding switch (`selection.focus`,
+      `showInsight`, `focusInspector`); spec: visualizer "Finding markers
+      and the Inspector detail switch". Added 2026-09-03.
 
 ## 8. Human-gated fixtures — Batch 2 (additive golden commits, one per capture)
 

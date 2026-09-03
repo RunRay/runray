@@ -133,6 +133,13 @@ export interface AppState {
     spanId: string | null;
     /** Insight activated from the strip; drives evidence highlighting. */
     insightId: string | null;
+    /**
+     * Which detail the Inspector shows when BOTH a span and an insight are
+     * set: the selected activity, or the finding it is evidence of. The
+     * Inspector's Activity | Finding switch flips it; selecting a span
+     * resets it to the activity, opening a finding sets it to the finding.
+     */
+    focus: 'span' | 'insight';
   };
   ui: {
     inspectorOpen: boolean;
@@ -192,6 +199,15 @@ export interface AppState {
   selectSpan(spanId: string | null): void;
   /** Toggle an insight: same id deactivates; highlight follows. */
   activateInsight(insight: Insight | null): void;
+  /**
+   * Open a finding in the Inspector without toggle semantics (row chip,
+   * Inspector switch, finding chips). A selected span that is among the
+   * finding's evidence stays selected — pass `spanId` to select one in the
+   * same step; an unrelated span is dropped.
+   */
+  showInsight(insight: Insight, spanId?: string): void;
+  /** Flip the Inspector between the selected activity and the active finding. */
+  focusInspector(focus: 'span' | 'insight'): void;
   /** Stage an insight to activate once the target run's route lands. */
   stageInsight(insight: Insight): void;
   toggleInspector(): void;
@@ -200,6 +216,30 @@ export interface AppState {
   toggleCollapsed(spanId: string): void;
   /** Replace the collapsed set wholesale (collapse-all / expand-all). */
   setCollapsed(spanIds: ReadonlySet<string>): void;
+}
+
+/**
+ * The state that opens `insight` in the Inspector (showInsight, and the
+ * activating half of activateInsight): evidence highlighted, the finding in
+ * focus, a related selected span kept so the Activity | Finding switch has
+ * both sides, an unrelated one dropped so no stale activity hides behind.
+ */
+function openInsight(
+  s: AppState,
+  insight: Insight,
+  spanId?: string,
+): Pick<AppState, 'selection' | 'ui'> {
+  const current = spanId ?? s.selection.spanId;
+  const keep =
+    current !== null && insight.spanIds.includes(current) ? current : null;
+  return {
+    selection: { spanId: keep, insightId: insight.id, focus: 'insight' },
+    ui: {
+      ...s.ui,
+      highlighted: new Set(insight.spanIds),
+      inspectorOpen: true,
+    },
+  };
 }
 
 export const useAppStore = create<AppState>()((set) => ({
@@ -220,7 +260,7 @@ export const useAppStore = create<AppState>()((set) => ({
   // The boot script already stamped the persisted choice on the root; mirror
   // it so React components (TopBar toggle, palette) render the right state.
   theme: currentTheme(),
-  selection: { spanId: null, insightId: null },
+  selection: { spanId: null, insightId: null, focus: 'span' },
   ui: {
     inspectorOpen: true,
     helpOpen: false,
@@ -373,7 +413,7 @@ export const useAppStore = create<AppState>()((set) => ({
         return {
           route,
           pendingInsight: null,
-          selection: { spanId: null, insightId: pending.id },
+          selection: { spanId: null, insightId: pending.id, focus: 'insight' },
           ui: {
             ...s.ui,
             highlighted: new Set(pending.spanIds),
@@ -384,15 +424,20 @@ export const useAppStore = create<AppState>()((set) => ({
       return {
         route,
         pendingInsight: null,
-        selection: { spanId: null, insightId: null },
+        selection: { spanId: null, insightId: null, focus: 'span' },
         ui: { ...s.ui, highlighted: new Set<string>() },
       };
     }),
-  // Span detail wins in the Inspector; the insight highlight stays visible
-  // so evidence can be walked span by span.
+  // Selecting a span puts the activity in front; the insight highlight
+  // stays visible so evidence can be walked span by span, and the
+  // Inspector switch can bring the finding back.
   selectSpan: (spanId) =>
     set((s) => ({
-      selection: { ...s.selection, spanId },
+      selection: {
+        ...s.selection,
+        spanId,
+        focus: spanId === null ? s.selection.focus : 'span',
+      },
       ui: {
         ...s.ui,
         inspectorOpen: spanId === null ? s.ui.inspectorOpen : true,
@@ -401,23 +446,21 @@ export const useAppStore = create<AppState>()((set) => ({
   stageInsight: (insight) => set({ pendingInsight: insight }),
   activateInsight: (insight) =>
     set((s) => {
-      const deactivate =
-        insight === null || s.selection.insightId === insight.id;
+      if (insight !== null && s.selection.insightId !== insight.id) {
+        return openInsight(s, insight);
+      }
+      // deactivate: the highlight drops, a selected span stays in front
       return {
-        selection: {
-          insightId: deactivate ? null : insight.id,
-          // Activating an insight shows ITS detail, not a stale span's.
-          spanId: deactivate ? s.selection.spanId : null,
-        },
-        ui: {
-          ...s.ui,
-          highlighted: deactivate
-            ? new Set<string>()
-            : new Set(insight.spanIds),
-          inspectorOpen: deactivate ? s.ui.inspectorOpen : true,
-        },
+        selection: { ...s.selection, insightId: null, focus: 'span' },
+        ui: { ...s.ui, highlighted: new Set<string>() },
       };
     }),
+  showInsight: (insight, spanId) => set((s) => openInsight(s, insight, spanId)),
+  focusInspector: (focus) =>
+    set((s) => ({
+      selection: { ...s.selection, focus },
+      ui: { ...s.ui, inspectorOpen: true },
+    })),
   toggleInspector: () =>
     set((s) => ({ ui: { ...s.ui, inspectorOpen: !s.ui.inspectorOpen } })),
   toggleHelp: (open) =>
