@@ -702,7 +702,7 @@
     {
       "id": "i1",
       "ruleId": "idle-cache-expiry",
-      "severity": "info",
+      "severity": "critical",
       "title": "Idle gap of 313m expired the cache",
       "detail": "After 313 minutes of inactivity the provider cache TTL lapsed; the next claude-opus-4-8 call re-wrote 124.3k tokens of prefix that had been cached before the gap.",
       "spanIds": [
@@ -715,7 +715,7 @@
     {
       "id": "i2",
       "ruleId": "fixed-context-overhead",
-      "severity": "info",
+      "severity": "warning",
       "title": "Session starts with a 48.8k-token context footprint",
       "detail": "The first model call already carried 48.8k input-class tokens (tool definitions, project instructions, attachments); 28.8k tokens above the 20.0k floor were written once and re-read on each of the 9 later calls.",
       "spanIds": [

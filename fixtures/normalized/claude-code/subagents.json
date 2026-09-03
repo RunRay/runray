@@ -39062,7 +39062,7 @@
     {
       "id": "i1",
       "ruleId": "retry-loop",
-      "severity": "warning",
+      "severity": "info",
       "title": "TaskStop failed 8× in a row",
       "detail": "The same TaskStop call failed 8 consecutive attempts, driving ~$0.07 of same-scope model calls between the first and last attempt.",
       "spanIds": [
@@ -39081,7 +39081,7 @@
     {
       "id": "i2",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (165.4k → 29.6k cached)",
       "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium.",
       "spanIds": [
@@ -39094,7 +39094,7 @@
     {
       "id": "i3",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (35.3k → 0 cached)",
       "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
       "spanIds": [
@@ -39107,7 +39107,7 @@
     {
       "id": "i4",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (172.6k → 0 cached)",
       "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
       "spanIds": [
@@ -39120,7 +39120,7 @@
     {
       "id": "i5",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (399.1k → 29.6k cached)",
       "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
       "spanIds": [
@@ -39185,7 +39185,7 @@
     {
       "id": "i10",
       "ruleId": "fixed-context-overhead",
-      "severity": "info",
+      "severity": "warning",
       "title": "Session starts with a 61.2k-token context footprint",
       "detail": "The first model call already carried 61.2k input-class tokens (tool definitions, project instructions, attachments); 41.2k tokens above the 20.0k floor were written once and re-read on each of the 200 later calls.",
       "spanIds": [
@@ -39197,7 +39197,7 @@
     {
       "id": "i11",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "“sitxlabo.ts” was read 3 times; 2 of those read(s) had no write in between and re-entered ≈714 tokens of unchanged content into the context.",
       "spanIds": [
@@ -39211,7 +39211,7 @@
     {
       "id": "i12",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 3× without changes",
       "detail": "“tempo.ts” was read 5 times; 3 of those read(s) had no write in between and re-entered ≈5.3k tokens of unchanged content into the context.",
       "spanIds": [
@@ -39226,7 +39226,7 @@
     {
       "id": "i13",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "“sitxadipiscingx.ts” was read 3 times; 2 of those read(s) had no write in between and re-entered ≈581 tokens of unchanged content into the context.",
       "spanIds": [
@@ -39240,7 +39240,7 @@
     {
       "id": "i14",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "“sitxaliqu.ts” was read 3 times; 2 of those read(s) had no write in between and re-entered ≈169 tokens of unchanged content into the context.",
       "spanIds": [
