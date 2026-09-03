@@ -953,7 +953,7 @@
     {
       "id": "i1",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (20.4k → 0 cached)",
       "detail": "Between two consecutive claude-opus-4-8[1m] calls the cache read collapsed from 20.4k to 0 tokens while 14.9k tokens were re-written — content that was already cached was paid for again at the write premium.",
       "spanIds": [
