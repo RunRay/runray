@@ -6943,7 +6943,7 @@
       "ruleId": "context-bloat",
       "severity": "critical",
       "title": "Context grew from 9.1k to 161.2k tokens",
-      "detail": "The median context of the last three model calls (161.2k) is over 2× the median of the first three (9.1k); ~8150.4k cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "detail": "The median context of the last three model calls (161.2k) is over 2× the median of the first three (9.1k); ~8.2M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
       "spanIds": [
         "msg_c9b33c7a1001SnbKuElnuCvhBB",
         "msg_c9b33eb28001reMILOOb7DUQDi",
@@ -6953,7 +6953,7 @@
         "prt_c9b237003001TGSZ9KlUZYQrOw"
       ],
       "estimatedWasteUSD": 1.27882,
-      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~8150.4k tokens in total."
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~8.2M tokens in total."
     }
   ]
 }
