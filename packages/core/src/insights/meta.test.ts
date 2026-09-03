@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { RULE_META, ruleClass } from './meta.js';
+import {
+  PLAYBOOK_SOURCES,
+  playbookActions,
+  RULE_META,
+  ruleClass,
+} from './meta.js';
 import { V0_RULES } from './rules.js';
 
 describe('rule metadata registry', () => {
@@ -29,5 +34,35 @@ describe('rule metadata registry', () => {
       expect(meta.label.length, id).toBeGreaterThan(0);
       expect(meta.explain.length, id).toBeGreaterThan(0);
     }
+  });
+
+  it('every entry carries a complete playbook: causes, actions per source, limits', () => {
+    for (const [id, meta] of Object.entries(RULE_META)) {
+      const { causes, actions, limits } = meta.playbook;
+      expect(causes.length, `${id} causes`).toBeGreaterThan(0);
+      expect(limits.length, `${id} limits`).toBeGreaterThan(0);
+      for (const source of PLAYBOOK_SOURCES) {
+        expect(actions[source].length, `${id} ${source}`).toBeGreaterThan(0);
+      }
+      // one line each, no dangling backtick — the UI splits on backticks
+      for (const line of [
+        ...causes,
+        ...limits,
+        ...Object.values(actions).flat(),
+      ]) {
+        expect(line, `${id}: "${line}"`).not.toMatch(/\n/);
+        expect((line.match(/`/g) ?? []).length % 2, `${id}: "${line}"`).toBe(0);
+      }
+    }
+  });
+
+  it('resolves playbook actions by source, falling back to the custom-agent list', () => {
+    expect(playbookActions('retry-loop', 'claude-code')).toBe(
+      RULE_META['retry-loop']?.playbook.actions['claude-code'],
+    );
+    expect(playbookActions('retry-loop', 'something-else')).toBe(
+      RULE_META['retry-loop']?.playbook.actions.otlp,
+    );
+    expect(playbookActions('no-such-rule', 'claude-code')).toEqual([]);
   });
 });

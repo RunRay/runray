@@ -18,6 +18,7 @@
     "otlp-sink": "node scripts/otlp-sink.mjs",
     "pricing:snapshot": "tsx scripts/build-pricing-snapshot.ts",
     "goldens": "tsx scripts/regen-goldens.ts",
+    "docs:playbooks": "tsx scripts/render-playbooks.ts",
     "changeset": "changeset",
     "version": "changeset version"
   },

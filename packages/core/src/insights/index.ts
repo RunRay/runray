@@ -277,6 +277,19 @@ export function applyInsights(
   };
 }
 
-export type { RuleClass, RuleMeta } from './meta.js';
-export { RULE_META, ruleClass } from './meta.js';
+export type { Playbook, PlaybookSource, RuleClass, RuleMeta } from './meta.js';
+export {
+  PLAYBOOK_SOURCE_LABEL,
+  PLAYBOOK_SOURCES,
+  playbookActions,
+  RULE_META,
+  ruleClass,
+} from './meta.js';
+export {
+  extractPlaybooksBlock,
+  PLAYBOOKS_END,
+  PLAYBOOKS_START,
+  renderPlaybooksMarkdown,
+  replacePlaybooksBlock,
+} from './playbook-markdown.js';
 export { V0_RULES } from './rules.js';
