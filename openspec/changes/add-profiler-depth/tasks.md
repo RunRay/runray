@@ -353,3 +353,14 @@ automatically extends its fixture-parameterized equivalence matrix.
       dead-end-run and scattered-tool-failures quote it; `PowerShell` joins
       the claude-code target map (command identity). Goldens regenerated in a
       dedicated commit. Added 2026-09-03.
+- [x] 11.10 A Rule semantics after the suggestions audit (spec: cost-engine
+      "Cache lifecycle insights" and "Context overhead insights" amended):
+      context-bloat measures the full input-class context of the main
+      session and prices each call's excess at what that call actually paid
+      per token (it never fired on cached sessions before); cache-prefix-break
+      classifies the break by what survived (front · history · compaction,
+      `cachePrefixBreak.baseRetainedTokens` / `shrinkRatio`) and words the
+      finding per shape; the 1h-TTL attribution of idle-cache-expiry was
+      checked against real sessions (1h caches survive 5–60 min gaps in
+      ~90% of pairs) and kept. Goldens regenerated in a dedicated commit.
+      Added 2026-09-03.

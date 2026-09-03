@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { RawRun, RawSpan } from '../adapter.js';
 import { normalize } from '../normalize.js';
-import { CACHE_WRITE_1H_ATTR } from '../pricing/index.js';
+import {
+  bundledPricing,
+  CACHE_WRITE_1H_ATTR,
+  matchModel,
+} from '../pricing/index.js';
 import { applyInsights } from './index.js';
 
 /**
@@ -502,5 +506,93 @@ describe('findings quote the error text the adapters keep on failed tool spans',
       llm('l2', 6, { cost: 0.2 }),
     ]).find((i) => i.ruleId === 'scattered-tool-failures');
     expect(f?.detail).toContain('Most recent Grep error: “pattern B”.');
+  });
+});
+
+describe('context-bloat measures the full context of the main session', () => {
+  it('fires on cached growth and prices the excess at the cache-read rate', () => {
+    // fresh input stays small; the cached prefix grows 10k → 150k
+    const reads = [10_000, 10_000, 10_000, 60_000, 150_000, 150_000, 150_000];
+    const spans = [
+      root(),
+      ...reads.map((cacheRead, i) =>
+        llm(`l${i}`, i * 10, { input: 2_000, cacheRead }),
+      ),
+    ];
+    const f = findings(spans).find((i) => i.ruleId === 'context-bloat');
+    expect(f).toBeDefined();
+    expect(f?.title).toBe('Context grew from 12.0k to 152.0k tokens');
+    // excess over the 12k baseline: 50k + 3 × 140k = 470k tokens
+    expect(f?.detail).toContain('~470.0k cumulative excess');
+    const entry = matchModel(bundledPricing(), 'claude-sonnet-4-6');
+    if (entry === undefined) throw new Error('sonnet must be priced');
+    // every excess token was a cache read plus a 2k/152k sliver of input
+    const rateLast =
+      (2_000 * entry.inputPerMTok + 150_000 * entry.cacheReadPerMTok) / 152_000;
+    const rateMid =
+      (2_000 * entry.inputPerMTok + 60_000 * entry.cacheReadPerMTok) / 62_000;
+    const expected = (50_000 * rateMid + 3 * 140_000 * rateLast) / 1e6;
+    expect(f?.estimatedWasteUSD).toBeCloseTo(expected, 6);
+    expect(f?.estimatedWasteUSD ?? 0).toBeLessThan(
+      (470_000 * entry.inputPerMTok) / 1e6,
+    );
+  });
+
+  it('ignores subagent calls when taking the medians', () => {
+    const spans = [
+      root(),
+      ...[0, 1, 2, 3, 4, 5].map((i) => llm(`m${i}`, i * 10, { input: 80_000 })),
+      sub('worker', 55),
+      ...[0, 1, 2].map((i) =>
+        llm(`s${i}`, 56 + i, { input: 5_000, parentId: 'worker' }),
+      ),
+    ];
+    expect(
+      findings(spans).filter((i) => i.ruleId === 'context-bloat'),
+    ).toHaveLength(0);
+  });
+});
+
+describe('cache-prefix-break says what survived', () => {
+  const pair = (b: {
+    cacheRead: number;
+    cacheWrite: number;
+    input?: number;
+  }) => [
+    root(),
+    llm('a', 0, { cacheRead: 200_000, input: 1_000 }),
+    llm('b', 5, { input: 1_000, ...b }),
+  ];
+  const finding = (b: Parameters<typeof pair>[0]) =>
+    findings(pair(b)).find((i) => i.ruleId === 'cache-prefix-break');
+
+  it('history: the front stayed cached, the conversation was written again', () => {
+    const f = finding({ cacheRead: 38_000, cacheWrite: 190_000 });
+    expect(f?.detail).toContain(
+      'The first 38.0k tokens (system prompt and tools) stayed cached',
+    );
+    expect(f?.suggestion).toMatch(/^The system prompt and tools stayed cached/);
+  });
+
+  it('front: almost nothing stayed cached, so the tool list or a setting changed', () => {
+    const f = finding({ cacheRead: 1_000, cacheWrite: 200_000 });
+    expect(f?.detail).toContain('Only 1.0k tokens stayed cached');
+    expect(f?.suggestion).toMatch(
+      /^Everything from the front was written again/,
+    );
+  });
+
+  it('compaction: the context shrank, the summary is the new prefix', () => {
+    const f = finding({ cacheRead: 1_000, cacheWrite: 58_000 });
+    expect(f?.detail).toContain(
+      'The context shrank from 201.0k to 60.0k tokens',
+    );
+    expect(f?.suggestion).toMatch(/^This is the price of compaction/);
+  });
+
+  it('the estimate does not depend on the shape', () => {
+    const history = finding({ cacheRead: 38_000, cacheWrite: 190_000 });
+    const front = finding({ cacheRead: 1_000, cacheWrite: 190_000 });
+    expect(history?.estimatedWasteUSD).toBe(front?.estimatedWasteUSD);
   });
 });

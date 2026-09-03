@@ -42,7 +42,7 @@ The absolute floors exist so that a few cents in a tiny session never read as cr
 | rule | class | fires when | the estimate counts |
 |---|---|---|---|
 | `retry-loop` · Repeated failing tool calls | burned | the same tool call (same name and target) fails 3+ times in a row within one scope, tolerating up to 3 other calls in between | model calls in the same scope between the first and the last attempt — each retry re-bills the full context |
-| `cache-prefix-break` · Cache prefix broken mid-session | burned | between two consecutive calls of the same model the cached prefix collapses (≥ 20k tokens read, then ≤ 20 % of that) and ≥ 10k tokens are written again | the re-written prefix at the cache-write premium over the cache-read rate |
+| `cache-prefix-break` · Cache prefix broken mid-session | burned | between two consecutive calls of the same model the cached prefix collapses (≥ 20k tokens read, then ≤ 20 % of that) and ≥ 10k tokens are written again | the re-written prefix at the cache-write premium over the cache-read rate; the finding says what survived — the front (tools or settings changed), the history (conversation written again), or a compaction |
 | `idle-cache-expiry` · Cache expired while idle | burned | a pause longer than the live cache's TTL (5 min, or 60 min when the previous call wrote a 1-hour cache), followed by a ≥ 10k-token re-write | the re-written prefix at the cache-write premium |
 | `duplicate-read` · Same file re-read unchanged | burned | the same file is read 3+ times with no write to it in between | the redundant reads' output (≈ bytes ÷ 4 tokens) at the input rate |
 | `scattered-tool-failures` · Scattered tool failures | burned | 5+ isolated tool failures outside retry loops, making up ≥ 20 % of tool calls | the model calls that reacted to the failures |
@@ -50,7 +50,7 @@ The absolute floors exist so that a few cents in a tiny session never read as cr
 | `fixed-context-overhead` · Heavy fixed context | opportunity | the very first call already carries ≥ 20k tokens (tool definitions, project instructions) and the run has 5+ calls | the excess, written once and re-read on every later call |
 | `model-mismatch` · Wrong model tier | opportunity | a cheaper same-family model would save ≥ $0.50 on calls that are not risky (few tool calls, modest context) | the risk-free repricing delta |
 | `expensive-subagent` · Expensive subagent | opportunity | one delegated subtree costs > 50 % of the run and ≥ $0.25 | the subtree repriced one tier down; no cheaper tier means no figure |
-| `context-bloat` · Growing context | opportunity | the last calls' input is 2× the first calls' and above 50k tokens | the cumulative excess over the starting context, at the input rate |
+| `context-bloat` · Growing context | opportunity | the last calls' context (input-class tokens, main session) is 2× the first calls' and above 50k tokens | the cumulative excess over the starting context, priced at what each call actually paid per token — cache reads where it was served from cache |
 | `low-cache-hit` · Low cache hit-rate | opportunity | hit-rate below 40 % on a run costing more than $0.10 with 5+ calls | what a 60 % hit-rate would have saved |
 | `oversized-output` · Oversized tool output | opportunity | tool outputs of 100 kB or more enter the context | ≈ bytes ÷ 4 tokens at the input rate — usefulness is unknowable, so never burned |
 
@@ -128,7 +128,7 @@ Most input tokens were paid at the full rate instead of being served from the pr
 
 ### `context-bloat` · Growing context
 
-Input tokens grew steadily across the session, so every later call re-paid an ever-larger context.
+The context grew steadily across the session, so every later call re-paid an ever-larger prefix.
 
 **Why it happens**
 
@@ -249,7 +249,7 @@ The cached prompt prefix was invalidated mid-session, so already-cached content 
 
 - Something in the cached prefix changed between two calls: an MCP server connected or disconnected (its tools are part of the prefix), the model or a setting switched, an early turn was edited.
 - The context was compacted: the new, shorter history is a different prefix and is written once more.
-- Very large contexts get re-written with no visible change between the calls; in the sessions RunRay has seen this starts well above 180k tokens, and the cause sits on the platform side.
+- Very large contexts get re-written with no visible change between the calls; in the sessions RunRay has seen this starts well above 180k tokens, and the cause sits on the platform side. The finding says which part survived: the front (tools or settings changed), the history (conversation written again), or a compaction.
 
 **What you can do**
 
@@ -270,7 +270,7 @@ The cached prompt prefix was invalidated mid-session, so already-cached content 
 
 **Out of your hands**
 
-- RunRay sees the collapse and the re-write, not what changed; the shape of the finding hints at the cause but does not prove it.
+- RunRay sees the collapse and the re-write, not what changed; the shape (front, history, compaction) narrows the cause but does not prove it.
 
 ### `idle-cache-expiry` · Cache expired while idle
 
@@ -436,7 +436,7 @@ Detection gates and the severity tiers live under `insights.thresholds` in `runr
       "contextBloat": { "multiplier": 2, "minMedianInputTokens": 50000, "topCulprits": 3 },
       "expensiveSubagent": { "minShareOfRunCost": 0.5, "minCostUSD": 0.25 },
       "modelMismatch": { "minSavingsUSD": 0.5, "riskToolCalls": 25, "riskContextTokens": 150000 },
-      "cachePrefixBreak": { "minPrefixTokens": 20000, "collapseRatio": 0.2, "rewriteFloorTokens": 10000 },
+      "cachePrefixBreak": { "minPrefixTokens": 20000, "collapseRatio": 0.2, "rewriteFloorTokens": 10000, "baseRetainedTokens": 5000, "shrinkRatio": 0.6 },
       "idleCacheExpiry": { "minIdleMinutes": 5, "rewriteFloorTokens": 10000 },
       "fixedContextOverhead": { "floorTokens": 20000, "minLlmCalls": 5 },
       "duplicateRead": { "minRepeats": 3 },

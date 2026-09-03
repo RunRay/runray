@@ -127,7 +127,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
   'context-bloat': {
     label: 'Growing context',
     explain:
-      'Input tokens grew steadily across the session, so every later call re-paid an ever-larger context.',
+      'The context grew steadily across the session, so every later call re-paid an ever-larger prefix.',
     class: 'opportunity',
     playbook: {
       causes: [
@@ -243,7 +243,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
       causes: [
         'Something in the cached prefix changed between two calls: an MCP server connected or disconnected (its tools are part of the prefix), the model or a setting switched, an early turn was edited.',
         'The context was compacted: the new, shorter history is a different prefix and is written once more.',
-        'Very large contexts get re-written with no visible change between the calls; in the sessions RunRay has seen this starts well above 180k tokens, and the cause sits on the platform side.',
+        'Very large contexts get re-written with no visible change between the calls; in the sessions RunRay has seen this starts well above 180k tokens, and the cause sits on the platform side. The finding says which part survived: the front (tools or settings changed), the history (conversation written again), or a compaction.',
       ],
       actions: {
         'claude-code': [
@@ -260,7 +260,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
       },
       limits: [
-        'RunRay sees the collapse and the re-write, not what changed; the shape of the finding hints at the cause but does not prove it.',
+        'RunRay sees the collapse and the re-write, not what changed; the shape (front, history, compaction) narrows the cause but does not prove it.',
       ],
     },
   },
