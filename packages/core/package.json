@@ -19,6 +19,10 @@
     "./diff": {
       "types": "./dist/diff/index.d.ts",
       "import": "./dist/diff/index.js"
+    },
+    "./triage": {
+      "types": "./dist/triage/index.d.ts",
+      "import": "./dist/triage/index.js"
     }
   },
   "files": [

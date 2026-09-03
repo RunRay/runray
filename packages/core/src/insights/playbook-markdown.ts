@@ -32,25 +32,43 @@ export function renderPlaybooksMarkdown(): string {
   return `${out.join('\n')}\n`;
 }
 
-/** The current block of a document, markers excluded; undefined when the
- * markers are missing. Line endings are normalized to LF. */
-export function extractPlaybooksBlock(doc: string): string | undefined {
+/** The current block between two markers, markers excluded; undefined when
+ * they are missing. Line endings are normalized to LF. */
+export function extractBlock(
+  doc: string,
+  startMarker: string,
+  endMarker: string,
+): string | undefined {
   const text = doc.replace(/\r\n/g, '\n');
-  const start = text.indexOf(PLAYBOOKS_START);
-  const end = text.indexOf(PLAYBOOKS_END);
+  const start = text.indexOf(startMarker);
+  const end = text.indexOf(endMarker);
   if (start < 0 || end < 0 || end < start) return undefined;
-  return text.slice(start + PLAYBOOKS_START.length, end).replace(/^\n/, '');
+  return text.slice(start + startMarker.length, end).replace(/^\n/, '');
 }
 
-/** The document with its block replaced; throws when the markers are missing. */
-export function replacePlaybooksBlock(doc: string, block: string): string {
+/** The document with the block between two markers replaced; throws when
+ * the markers are missing. */
+export function replaceBlock(
+  doc: string,
+  startMarker: string,
+  endMarker: string,
+  block: string,
+): string {
   const text = doc.replace(/\r\n/g, '\n');
-  const start = text.indexOf(PLAYBOOKS_START);
-  const end = text.indexOf(PLAYBOOKS_END);
+  const start = text.indexOf(startMarker);
+  const end = text.indexOf(endMarker);
   if (start < 0 || end < 0 || end < start) {
-    throw new Error(
-      `playbook markers ${PLAYBOOKS_START} … ${PLAYBOOKS_END} not found`,
-    );
+    throw new Error(`markers ${startMarker} … ${endMarker} not found`);
   }
-  return `${text.slice(0, start + PLAYBOOKS_START.length)}\n${block}${text.slice(end)}`;
+  return `${text.slice(0, start + startMarker.length)}\n${block}${text.slice(end)}`;
+}
+
+/** The current playbooks block of a document (see `extractBlock`). */
+export function extractPlaybooksBlock(doc: string): string | undefined {
+  return extractBlock(doc, PLAYBOOKS_START, PLAYBOOKS_END);
+}
+
+/** The document with its playbooks block replaced (see `replaceBlock`). */
+export function replacePlaybooksBlock(doc: string, block: string): string {
+  return replaceBlock(doc, PLAYBOOKS_START, PLAYBOOKS_END, block);
 }

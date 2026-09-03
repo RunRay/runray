@@ -414,6 +414,618 @@ Very large tool outputs entered the context; their usefulness is unknowable, so 
 - RunRay cannot tell how much of the output was needed, so this is an opportunity, never burned waste.
 <!-- playbooks:end -->
 
+## Errors, class by class
+
+A failed call is not one thing. On real sessions a third of the "errors" are the agent's own check-and-fix loop (a test that did not pass yet), a third are the model's slips corrected within seconds, and under a tenth are something the person can act on. RunRay reads the failure text into an **error class** and an **owner** — who has a lever — and the Errors tab groups a session's failures by owner, most actionable first. Classification is a pure function of the text (`packages/core/src/triage`); under `--redact` it falls back to what the span shape still tells (an MCP call, a non-zero exit code) and says so. The pill in the sessions list turns red only when a group needs you or a tool never came back.
+
+<!-- error-classes:start -->
+<!-- Generated from ERROR_CLASS_META in packages/core/src/triage/meta.ts by `pnpm docs:playbooks`. Edit the registry, not this block. -->
+
+### Needs you
+
+*something in your environment or configuration; the agent cannot fix it alone.*
+
+#### `model-limit` · Usage limit reached
+
+The model call was refused because a plan or session limit was hit; the message names the reset time.
+
+**Why it happens**
+
+- A plan, session or model-specific usage limit was reached mid-session.
+
+**What you can do**
+
+*Claude Code*
+
+- Wait for the reset the message names, or switch tiers with `/model` so the session can continue on a tier with its own budget.
+- Resume where you were with `claude --continue`; the transcript is intact.
+
+*OpenCode*
+
+- Switch models with `/models` (or the `model` key in `opencode.json`); provider limits are per model.
+
+*Custom agent (OTLP)*
+
+- Surface provider limit responses to the person instead of retrying blindly.
+
+**Out of your hands**
+
+- RunRay reads the harness message; it cannot see the limit or how much of it is left.
+
+#### `model-auth` · Not authenticated
+
+The model call was refused because the session is not logged in or the credentials were rejected.
+
+**Why it happens**
+
+- The login expired or the API key was rejected.
+
+**What you can do**
+
+*Claude Code*
+
+- Run `/login`, then resume with `claude --continue`.
+
+*OpenCode*
+
+- Re-authenticate the provider with `opencode auth login` and resume with `opencode -c`.
+
+*Custom agent (OTLP)*
+
+- Return the authentication failure to the caller.
+
+**Out of your hands**
+
+- Everything after the failure was lost time, not lost money.
+
+#### `shell-syntax` · Shell syntax
+
+The shell could not parse the command: a quoting mistake, a heredoc that never closed, an operator this shell does not have.
+
+**Why it happens**
+
+- The agent wrote for a different shell than the one it runs in (PowerShell 5.1 has no `&&`; Git Bash heredocs need care).
+
+**What you can do**
+
+*Claude Code*
+
+- Put the shell fact into `CLAUDE.md`, for example `Shell is PowerShell 5.1: no && chaining` or `write multi-line scripts with the Write tool, not heredocs`.
+- For a pattern you never want billed, a `PreToolUse` hook that exits with code 2 blocks the call before it runs.
+
+*OpenCode*
+
+- Put the shell fact into `AGENTS.md`; the `permission` block can deny a command pattern outright.
+
+*Custom agent (OTLP)*
+
+- State the shell and its limits in the system prompt.
+
+**Out of your hands**
+
+- The agent usually recovers on its own; the lever prevents the next session from paying again.
+
+#### `missing-binary` · Missing program, module or permission
+
+A command or module the agent relied on is not installed, not on PATH, or not permitted.
+
+**Why it happens**
+
+- The tool is not installed, not on PATH for this shell, or the file is not executable.
+
+**What you can do**
+
+*Claude Code*
+
+- Install it, or write into `CLAUDE.md` that it is not available and what to use instead.
+- For a tool that must never be tried, `permissions.deny` in settings stops the probing.
+
+*OpenCode*
+
+- Install it, or note in `AGENTS.md` what is not available.
+
+*Custom agent (OTLP)*
+
+- List the available tools in the system prompt.
+
+**Out of your hands**
+
+- RunRay cannot tell an uninstalled tool from a PATH problem.
+
+#### `tool-unavailable` · Tool or configuration unavailable
+
+The agent reached for a tool, skill or launch configuration that does not exist in this session.
+
+**Why it happens**
+
+- A skill or plugin is not installed, a tool is disabled in this context, or `.claude/launch.json` is missing.
+
+**What you can do**
+
+*Claude Code*
+
+- Add the configuration the agent looked for: a `.claude/launch.json` entry for a preview server, or the skill/plugin it named.
+- Check the MCP servers with `claude mcp list` if the missing tool belongs to one.
+
+*OpenCode*
+
+- Enable the tool in the `tools` map or the MCP server with `mcp.<name>.enabled` in `opencode.json`.
+
+*Custom agent (OTLP)*
+
+- Advertise only the tools that exist.
+
+**Out of your hands**
+
+- The message names what was missing; RunRay quotes it.
+
+#### `port-in-use` · Port in use
+
+A preview or dev server could not start because its port is taken.
+
+**Why it happens**
+
+- Another process, often a previous server, holds the port.
+
+**What you can do**
+
+*Claude Code*
+
+- Stop the process the message names, or change the `port` in `.claude/launch.json`.
+
+*OpenCode*
+
+- Free the port or change it in the project config.
+
+*Custom agent (OTLP)*
+
+- Pick a free port before starting the server.
+
+**Out of your hands**
+
+- Nothing the agent can do without you.
+
+#### `http-error` · HTTP or network error
+
+A fetch failed: a 404, a refused connection, a DNS miss.
+
+**Why it happens**
+
+- A wrong URL, a service that is down, or no network.
+
+**What you can do**
+
+*Claude Code*
+
+- Check the address or the service; if the agent must not fetch it, `permissions.deny` for `WebFetch` stops the attempts.
+
+*OpenCode*
+
+- Check the address or the service.
+
+*Custom agent (OTLP)*
+
+- Return the status code to the model.
+
+**Out of your hands**
+
+- RunRay sees the status, not the response.
+
+### Tooling
+
+*the Browser pane, a preview server or an MCP server; restart or reconfigure, not reprompt.*
+
+#### `pane-timeout` · Browser pane timeout
+
+A screenshot, click or navigation in the Browser or Preview pane timed out; the pane, not the page, is usually stuck.
+
+**Why it happens**
+
+- A stuck renderer, a modal dialog, or a page that never finished rendering.
+
+**What you can do**
+
+*Claude Code*
+
+- Close the pane tab and open it again; a stuck renderer keeps timing out on every step.
+- If the page is a dev server, read `preview_logs` before retrying.
+- Interrupt (Esc) when the same step fails twice; each retry re-bills the context.
+
+*OpenCode*
+
+- Restart the browser tool or the MCP server behind it.
+
+*Custom agent (OTLP)*
+
+- Cap retries on timeouts and surface them.
+
+**Out of your hands**
+
+- The most common single error class on real sessions; a retry usually works, a restart always does.
+
+#### `pane-navigation` · Navigation refused
+
+The Browser pane refused to open the address: a `file://` page, a blocked origin, a server that is not up.
+
+**Why it happens**
+
+- The pane cannot open local files, the origin is not allowed, or nothing listens on the port yet.
+
+**What you can do**
+
+*Claude Code*
+
+- Serve the file instead of opening it: an entry in `.claude/launch.json` lets the agent open it with `preview_start`.
+- Tell the agent in `CLAUDE.md` to publish local HTML as an artifact rather than open it in the pane.
+
+*OpenCode*
+
+- Serve local files; check the origin allowlist of the browser tool.
+
+*Custom agent (OTLP)*
+
+- Validate the URL before navigating.
+
+**Out of your hands**
+
+- The refusal is a policy of the pane, not a bug in the page.
+
+#### `mcp-error` · MCP server error
+
+An MCP server returned an error RunRay does not recognize; the server, not the prompt, is the place to look.
+
+**Why it happens**
+
+- The server is down, misconfigured, or rejected the call.
+
+**What you can do**
+
+*Claude Code*
+
+- Check the server with `claude mcp list`; remove it with `claude mcp remove <name>` until it is fixed.
+
+*OpenCode*
+
+- Set `mcp.<name>.enabled: false` in `opencode.json` until the server is fixed.
+
+*Custom agent (OTLP)*
+
+- Log the server response with the span.
+
+**Out of your hands**
+
+- Under `--redact` every MCP failure lands here.
+
+### Agent slips
+
+*the model's own mistake, usually corrected by the model; worth a note only when it repeats.*
+
+#### `edit-anchor-miss` · Edit anchor not found
+
+An edit could not find the text it meant to replace, so nothing was written.
+
+**Why it happens**
+
+- The model misremembered the file, or the file changed under it: a formatter on save, a concurrent edit, CRLF line endings.
+
+**What you can do**
+
+*Claude Code*
+
+- Once is the model; several times on one file is the file changing under it. Pause format-on-save or the watcher while the agent works.
+- Line-ending churn: a `.gitattributes` with `* text=auto` keeps the working copy stable.
+
+*OpenCode*
+
+- Pause format-on-save while the agent edits; keep line endings stable.
+
+*Custom agent (OTLP)*
+
+- Re-read before editing when the previous edit missed.
+
+**Out of your hands**
+
+- Nothing to configure; the agent corrects this itself.
+
+#### `read-before-write` · Write before read
+
+The harness refused a write because the agent had not read the file first.
+
+**Why it happens**
+
+- A safety check of the harness, doing its job.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing to configure; the agent corrects this itself.
+
+*OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Custom agent (OTLP)*
+
+- Keep the read-before-write check; it is cheap.
+
+**Out of your hands**
+
+- The retry costs one model call.
+
+#### `input-validation` · Invalid tool arguments
+
+The tool rejected the arguments the model sent: a missing field, a wrong type, unparseable JSON.
+
+**Why it happens**
+
+- The model produced arguments the tool schema does not accept.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing per event. If one tool keeps rejecting, a line in `CLAUDE.md` showing its correct call shape saves the retry.
+
+*OpenCode*
+
+- Nothing per event; a correct example in `AGENTS.md` if one tool keeps rejecting.
+
+*Custom agent (OTLP)*
+
+- Return the validation message verbatim; the model uses it.
+
+**Out of your hands**
+
+- Each rejection costs one model call to correct.
+
+#### `tool-misuse` · Tool used out of order
+
+The tool refused because a precondition was missing: no page open, no screenshot taken, a file too large for one read.
+
+**Why it happens**
+
+- The model skipped a step the tool requires.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing to configure; the agent corrects this itself.
+
+*OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Custom agent (OTLP)*
+
+- Make the precondition part of the error message.
+
+**Out of your hands**
+
+- Each refusal costs one model call.
+
+#### `path-not-found` · Path not found
+
+A file or directory the agent named does not exist: a guessed name, a drifted working directory, a stale path.
+
+**Why it happens**
+
+- The model guessed a path, or the working directory drifted from an earlier `cd`.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing per event. If the same path keeps failing across sessions, a short repo map in `CLAUDE.md` removes the guess.
+
+*OpenCode*
+
+- Nothing per event; a repo map in `AGENTS.md` if the same path keeps failing.
+
+*Custom agent (OTLP)*
+
+- Give the agent a file listing before it guesses.
+
+**Out of your hands**
+
+- Corrected on the next call in most sessions.
+
+#### `script-error` · Agent script threw
+
+A script the agent wrote raised an exception when it ran it.
+
+**Why it happens**
+
+- A bug in an ad-hoc script the model wrote to inspect data.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing to configure; the agent corrects this itself.
+
+*OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Custom agent (OTLP)*
+
+- Return the stack trace; the model fixes its own script.
+
+**Out of your hands**
+
+- Each attempt costs one model call.
+
+### Model calls
+
+*the request to the model itself failed; not in the tool-error count.*
+
+#### `model-server` · Provider error
+
+The provider answered with a server-side error (500, 529, overloaded, timeout); the harness retried.
+
+**Why it happens**
+
+- A transient provider-side failure.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing on your side: Claude Code retries. A run of them is worth a look at status.claude.com before retrying by hand.
+
+*OpenCode*
+
+- Nothing on your side beyond a retry; check the provider status page if it keeps happening.
+
+*Custom agent (OTLP)*
+
+- Retry with backoff and log the status code.
+
+**Out of your hands**
+
+- The retry re-bills the context; RunRay counts that in the next model call, not in this one.
+
+#### `model-content` · Request rejected by the provider
+
+The provider refused the request itself: a safeguard flag or an image it could not process.
+
+**Why it happens**
+
+- A safeguard flagged the message, or an image in the conversation could not be processed.
+
+**What you can do**
+
+*Claude Code*
+
+- Rephrase or drop the flagged content; for an image, re-read the file another way or at a smaller size.
+
+*OpenCode*
+
+- Rephrase or drop the content the provider refused.
+
+*Custom agent (OTLP)*
+
+- Log the refusal reason and return it to the caller.
+
+**Out of your hands**
+
+- The provider does not say which part was flagged.
+
+#### `model-error` · Model call failed
+
+The model call failed for a reason RunRay does not recognize.
+
+**Why it happens**
+
+- An API error outside the recognized patterns.
+
+**What you can do**
+
+*Claude Code*
+
+- Read the message in the Inspector; the transcript keeps it.
+
+*OpenCode*
+
+- Read the message in the Inspector.
+
+*Custom agent (OTLP)*
+
+- Record the error message on the span status.
+
+**Out of your hands**
+
+- Without the text (redacted sessions) the class is a guess.
+
+### Expected feedback
+
+*the agent ran a check and read the result; not a failure of the session and never counted as waste.*
+
+#### `check-failed` · Check did not pass
+
+A test, lint, type or build run reported failures; the agent asked for exactly this feedback.
+
+**Why it happens**
+
+- The fix-and-check loop; the exit code is the answer the agent wanted.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing. This is the agent working.
+
+*OpenCode*
+
+- Nothing. This is the agent working.
+
+*Custom agent (OTLP)*
+
+- Nothing; do not count it as a failure of the run.
+
+**Out of your hands**
+
+- Never counted as waste; a long run of them is a hard task, not an error.
+
+#### `exit-nonzero` · Command returned non-zero
+
+A command exited with a non-zero code without naming a failure RunRay recognizes; usually a probe (grep with no match, a partial pipeline).
+
+**Why it happens**
+
+- A probe or a pipeline where a harmless step returned non-zero.
+
+**What you can do**
+
+*Claude Code*
+
+- Nothing per event. Read the text if the same command keeps failing.
+
+*OpenCode*
+
+- Nothing per event.
+
+*Custom agent (OTLP)*
+
+- Record the exit code on the span.
+
+**Out of your hands**
+
+- Without the text RunRay cannot tell a probe from a real failure.
+
+### Unclassified
+
+*RunRay could not read a cause from the text.*
+
+#### `unclassified` · Unclassified
+
+The failure text did not match any known class.
+
+**Why it happens**
+
+- A message RunRay has no pattern for, or a redacted session.
+
+**What you can do**
+
+*Claude Code*
+
+- Read the text in the Inspector.
+
+*OpenCode*
+
+- Read the text in the Inspector.
+
+*Custom agent (OTLP)*
+
+- Put the error message on the span status so it can be read.
+
+**Out of your hands**
+
+- Under `--redact` every non-MCP tool failure lands here.
+<!-- error-classes:end -->
+
 ## Where findings appear
 
 - **Dashboard → Potential savings.** Burned and opportunity totals side by side, then the top three rules by amount with their worst findings expandable in place. *Open in timeline* jumps to the evidence and lights it up.

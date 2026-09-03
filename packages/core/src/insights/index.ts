@@ -295,10 +295,12 @@ export {
   ruleClass,
 } from './meta.js';
 export {
+  extractBlock,
   extractPlaybooksBlock,
   PLAYBOOKS_END,
   PLAYBOOKS_START,
   renderPlaybooksMarkdown,
+  replaceBlock,
   replacePlaybooksBlock,
 } from './playbook-markdown.js';
 export { V0_RULES } from './rules.js';

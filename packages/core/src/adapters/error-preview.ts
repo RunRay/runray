@@ -22,10 +22,11 @@ const NEGATED_LINE =
   /\b(?:no|0|zero)\s+(?:errors?|failures?)\b|\bwithout\s+(?:errors?|failures?)\b|\b0\s+failed\b|\berrors?:\s*0\b/i;
 /** The shell wrapper's own first line (Claude Code's Bash/PowerShell). */
 const EXIT_CODE_LINE = /^\s*(?:Error:\s*)?Exit code (\d+)\s*$/i;
-/** The harness reporting that the person declined the call — Claude Code's
- * two phrasings and its interrupt marker, OpenCode's permission refusal. */
+/** The harness reporting that the person declined or stopped the call —
+ * Claude Code's two phrasings and its interrupt marker, OpenCode's
+ * permission refusal and its abort message. */
 const USER_REJECTION =
-  /^\s*(?:Error:\s*)?(?:The user doesn't want to (?:proceed|take this action)|\[Request interrupted by user|The user rejected permission)/i;
+  /^\s*(?:Error:\s*)?(?:The user doesn't want to (?:proceed|take this action)|\[Request interrupted by user|The user rejected permission|Tool execution aborted)/i;
 
 interface Line {
   start: number;
