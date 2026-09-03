@@ -285,6 +285,12 @@ const SEVERITY_TEXT: Record<Insight['severity'], string> = {
 
 function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
   const selectSpan = useAppStore((s) => s.selectSpan);
+  // Severity is graded from this share (docs/08-FINDINGS.md); showing it
+  // next to the grade makes the grade explain itself.
+  const share =
+    insight.estimatedWasteUSD !== undefined && run.totals.costUSD.total > 0
+      ? (insight.estimatedWasteUSD / run.totals.costUSD.total) * 100
+      : undefined;
   const evidence = useMemo(() => {
     const byId = new Map(run.spans.map((s) => [s.id, s]));
     return insight.spanIds
@@ -296,7 +302,16 @@ function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="border-b border-border px-3 py-3">
         <p className={`text-label ${SEVERITY_TEXT[insight.severity]}`}>
-          ⚠ {insight.severity} · {ruleLabel(insight.ruleId).label}{' '}
+          ⚠ {insight.severity}
+          {share !== undefined && (
+            // why this grade: the share of the run the estimate represents
+            <span className="text-text-dim">
+              {' · '}
+              {share.toFixed(share < 10 ? 1 : 0)}% of this run
+            </span>
+          )}
+          {' · '}
+          {ruleLabel(insight.ruleId).label}{' '}
           <span className="font-mono text-text-faint">{insight.ruleId}</span>
         </p>
         <h2 className="mt-1 text-detail font-medium text-text">
