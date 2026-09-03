@@ -139,9 +139,16 @@ premium — re-written tokens times the difference between the EFFECTIVE
 cache-write rate (the 5m/1h blend of the re-writing span, per the
 TTL-aware pricing requirement) and the cache-read rate — with the breaking
 call as evidence. When an event satisfies both predicates it SHALL be
-attributed to idle-cache-expiry only. The low-cache-hit savings target
-SHALL be configurable, defaulting to 0.6, never below the firing
-threshold.
+attributed to idle-cache-expiry only. Each cache-prefix-break finding
+SHALL classify the break by what survived, from the two calls' token
+shapes: *compaction* when the breaking call's context (input + cacheRead
++ cacheWrite) is below the configured shrink ratio of the previous call's,
+*front* when fewer than the configured base tokens stayed cached (the tool
+list, system prompt or a setting changed), else *history* (the fixed front
+stayed cached and the conversation was written again). The detail and the
+suggestion SHALL follow the shape; the estimate SHALL NOT depend on it.
+The low-cache-hit savings target SHALL be configurable, defaulting to 0.6,
+never below the firing threshold.
 
 #### Scenario: Mid-session prefix break
 - GIVEN call N−1 with 80k cacheRead and call N with 2k cacheRead and 75k
@@ -157,12 +164,29 @@ threshold.
 - THEN an idle-cache-expiry finding is emitted for the pair and no
   cache-prefix-break finding duplicates it
 
+#### Scenario: Shape follows what survived
+- GIVEN three breaks after a 200k-token cached call: one where 38k tokens
+  stay cached and 190k are written again, one where 1k stays cached and
+  200k are written again, and one where the breaking call's whole context
+  is 60k tokens
+- WHEN rules are evaluated
+- THEN the findings read as a history re-write, a front change and a
+  compaction respectively, with different suggestions and the same
+  re-write-premium estimate formula
+
 ### Requirement: Context overhead insights
 The system SHALL detect sessions whose first llm_call context footprint
 (input + cacheRead + cacheWrite) exceeds a configurable floor, pricing the
 overhead as one cache write plus a cache read per subsequent call; and the
-context-bloat estimate SHALL be the cumulative excess input tokens across
-all calls beyond the baseline median, not a trailing-window approximation.
+context-bloat rule SHALL measure each call's full input-class context
+(input + cacheRead + cacheWrite) of the main session (subagent calls
+excluded, as for the footprint), fire when the median of the last three
+calls exceeds the configured multiple of the first three and the floor,
+and estimate the cumulative excess over the baseline median across all
+later calls, each call's excess priced at what that call actually paid per
+input-class token (its input, cache-read and effective cache-write legs) —
+never a trailing-window approximation, and never the input rate for tokens
+that were served from cache.
 
 #### Scenario: Session born bloated
 - GIVEN a session whose first llm_call carries a 95k-token context footprint
@@ -176,6 +200,20 @@ all calls beyond the baseline median, not a trailing-window approximation.
 - WHEN context-bloat is evaluated
 - THEN the estimate sums each call's excess over the 20k baseline rather
   than three times the final delta
+
+#### Scenario: Cached growth is visible and priced as cache reads
+- GIVEN a run whose calls read 10k tokens from cache at the start and
+  150k tokens from cache at the end, with a few thousand fresh input
+  tokens per call throughout
+- WHEN context-bloat is evaluated
+- THEN it fires on the cached growth and prices the excess at the
+  cache-read rate, not the input rate
+
+#### Scenario: Subagent calls do not drag the medians
+- GIVEN a main session whose context is flat at 80k tokens and a subagent
+  whose calls run at 5k tokens
+- WHEN context-bloat is evaluated
+- THEN it stays silent
 
 ### Requirement: Tool-usage insights
 The system SHALL detect repeated reads of an unchanged target (same tool

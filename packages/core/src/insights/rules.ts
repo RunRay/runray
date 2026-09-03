@@ -319,16 +319,57 @@ function median3(values: number[]): number {
   return sorted[1] ?? 0;
 }
 
+/** Input-class tokens of one call: what the model had in front of it,
+ * whichever rate each part was billed at. */
+function contextTokens(s: Span): number {
+  const t = s.llm?.tokens;
+  return t === undefined ? 0 : t.input + t.cacheRead + t.cacheWrite;
+}
+
+/** What one input-class token of this call cost on average: its input,
+ * cache-read and effective cache-write legs over its context. A grown
+ * context served from cache is priced as cache reads, not as fresh input
+ * — measuring `input` alone never saw a cached session grow, and the
+ * input rate would overstate one by an order of magnitude. */
+function contextRatePerMTok(
+  s: Span,
+  pricing: PricingTable,
+  fallback: PricingEntry | undefined,
+): number | undefined {
+  const t = s.llm?.tokens;
+  if (t === undefined) return undefined;
+  const entry =
+    (s.llm === undefined ? undefined : matchModel(pricing, s.llm.model)) ??
+    fallback;
+  if (entry === undefined) return undefined;
+  const context = t.input + t.cacheRead + t.cacheWrite;
+  if (context <= 0) return undefined;
+  return (
+    (t.input * entry.inputPerMTok +
+      t.cacheRead * entry.cacheReadPerMTok +
+      t.cacheWrite * spanCacheWriteRate(entry, s)) /
+    context
+  );
+}
+
 const contextBloat: InsightRule = {
   id: 'context-bloat',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
     const cfg = ctx.thresholds;
-    const llms = run.spans.filter((s) => s.kind === 'llm_call' && s.llm);
+    // main session only, like fixed-context-overhead: a subagent runs its
+    // own context, and its small calls would drag the session's medians
+    const scope = buildScopeIndex(run);
+    const scopeKind = new Map(run.spans.map((s) => [s.id, s.kind]));
+    const llms = chronologicalLlmCalls(run).filter(
+      (l) =>
+        l.llm !== undefined &&
+        scopeKind.get(scope.get(l.id) ?? '') !== 'subagent',
+    );
     if (llms.length < 6) return [];
-    const inputs = llms.map((s) => s.llm?.tokens.input ?? 0);
-    const first = median3(inputs.slice(0, 3));
+    const contexts = llms.map(contextTokens);
+    const first = median3(contexts.slice(0, 3));
     const last3 = llms.slice(-3);
-    const last = median3(inputs.slice(-3));
+    const last = median3(contexts.slice(-3));
     const t = cfg.contextBloat;
     if (last <= t.multiplier * first || last <= t.minMedianInputTokens)
       return [];
@@ -345,21 +386,25 @@ const contextBloat: InsightRule = {
           (a.id < b.id ? -1 : 1),
       )
       .slice(0, t.topCulprits);
-    const entry = dominantModelEntry(run, ctx.pricing);
-    // cumulative excess beyond the opening baseline (B5) — the old
-    // trailing-window approximation understated by ~(llmCalls/3)×
-    const excessTokens = inputs
-      .slice(3)
-      .reduce((acc, v) => acc + Math.max(0, v - first), 0);
-    const waste =
-      entry === undefined
-        ? undefined
-        : round6((excessTokens * entry.inputPerMTok) / 1e6);
+    const fallback = dominantModelEntry(run, ctx.pricing);
+    // cumulative excess beyond the opening baseline (B5), each call's share
+    // priced at what that call actually paid per input-class token
+    let excessTokens = 0;
+    let excessUSD: number | undefined = 0;
+    for (let i = 3; i < llms.length; i++) {
+      const excess = Math.max(0, (contexts[i] ?? 0) - first);
+      if (excess === 0) continue;
+      excessTokens += excess;
+      const rate = contextRatePerMTok(llms[i] as Span, ctx.pricing, fallback);
+      if (rate === undefined) excessUSD = undefined;
+      else if (excessUSD !== undefined) excessUSD += (excess * rate) / 1e6;
+    }
+    const waste = excessUSD === undefined ? undefined : round6(excessUSD);
     return [
       {
         ruleId: 'context-bloat',
-        title: `Context grew from ${tok(first)} to ${tok(last)} input tokens`,
-        detail: `The median input of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input tokens were re-paid beyond the opening baseline. The largest tool outputs listed in evidence are the likely culprits.`,
+        title: `Context grew from ${tok(first)} to ${tok(last)} tokens`,
+        detail: `The median context of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The largest tool outputs listed in evidence are the likely culprits.`,
         spanIds: [...last3.map((s) => s.id), ...culprits.map((s) => s.id)],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
         suggestion:
@@ -764,6 +809,27 @@ function isIdleExpiryPair(
   );
 }
 
+/** What survived a prefix break, from the two calls' token shapes:
+ * `compaction` when the breaking call's context shrank below the ratio
+ * (the history was summarized and written once as a new prefix), `front`
+ * when fewer than the base tokens stayed cached (the tool list, system
+ * prompt or a setting changed — everything from the front was written
+ * again), else `history` (the fixed front stayed cached; the conversation
+ * after it was written again). The estimate never depends on the shape;
+ * the copy does, because the lever differs. */
+type BreakShape = 'compaction' | 'front' | 'history';
+function breakShape(
+  a: Span,
+  b: Span,
+  cfg: Thresholds['cachePrefixBreak'],
+): BreakShape {
+  if (contextTokens(b) < cfg.shrinkRatio * contextTokens(a)) {
+    return 'compaction';
+  }
+  if ((b.llm?.tokens.cacheRead ?? 0) < cfg.baseRetainedTokens) return 'front';
+  return 'history';
+}
+
 const cachePrefixBreak: InsightRule = {
   id: 'cache-prefix-break',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
@@ -796,17 +862,30 @@ const cachePrefixBreak: InsightRule = {
                 (spanCacheWriteRate(entry, b) - entry.cacheReadPerMTok)) /
                 1e6,
             );
+      const shape = breakShape(a, b, cfg);
+      const costNote =
+        waste === undefined
+          ? `${tok(rewritten)} tokens were written again here`
+          : `this break cost ${usd(waste)}`;
+      const shapeNote =
+        shape === 'compaction'
+          ? ` The context shrank from ${tok(contextTokens(a))} to ${tok(contextTokens(b))} tokens: the history was compacted and the summary written once as a new prefix.`
+          : shape === 'front'
+            ? ` Only ${tok(bRead)} tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.`
+            : ` The first ${tok(bRead)} tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.`;
+      const suggestion =
+        shape === 'compaction'
+          ? `This is the price of compaction — the shortened history is a new prefix, written once; compact earlier, while there is less to summarize, or start a new session per task; ${costNote}.`
+          : shape === 'front'
+            ? `Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; ${costNote}.`
+            : `The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; ${costNote}.`;
       findings.push({
         ruleId: 'cache-prefix-break',
         title: `Cache prefix broke mid-session (${tok(aRead)} → ${tok(bRead)} cached)`,
-        detail: `Between two consecutive ${b.llm?.model} calls the cache read collapsed from ${tok(aRead)} to ${tok(bRead)} tokens while ${tok(bWrite)} tokens were re-written — content that was already cached was paid for again at the write premium.`,
+        detail: `Between two consecutive ${b.llm?.model} calls the cache read collapsed from ${tok(aRead)} to ${tok(bRead)} tokens while ${tok(bWrite)} tokens were re-written — content that was already cached was paid for again at the write premium.${shapeNote}`,
         spanIds: [a.id, b.id],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion: `Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; ${
-          waste === undefined
-            ? `${tok(rewritten)} tokens were written again here`
-            : `one break of a ${tok(aRead)}-token prefix costs ${usd(waste)}`
-        }.`,
+        suggestion,
       });
     }
     return findings;

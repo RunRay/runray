@@ -45,6 +45,12 @@ export interface Thresholds {
     minPrefixTokens: number;
     collapseRatio: number;
     rewriteFloorTokens: number;
+    /** Below this many cached tokens after the break, the front of the
+     * prompt itself changed (tools, system prompt, a setting). */
+    baseRetainedTokens: number;
+    /** A breaking call whose context is below this share of the previous
+     * call's was a compaction, not an invalidation. */
+    shrinkRatio: number;
   };
   idleCacheExpiry: { minIdleMinutes: number; rewriteFloorTokens: number };
   fixedContextOverhead: { floorTokens: number; minLlmCalls: number };
@@ -85,6 +91,8 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
     minPrefixTokens: 20_000,
     collapseRatio: 0.2,
     rewriteFloorTokens: 10_000,
+    baseRetainedTokens: 5_000,
+    shrinkRatio: 0.6,
   },
   idleCacheExpiry: { minIdleMinutes: 5, rewriteFloorTokens: 10_000 },
   fixedContextOverhead: { floorTokens: 20_000, minLlmCalls: 5 },
