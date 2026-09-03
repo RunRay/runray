@@ -7,16 +7,25 @@ import { adapters } from './adapters/index.js';
 import { applyInsights } from './insights/index.js';
 import { normalize } from './normalize.js';
 import { priceRun } from './pricing/index.js';
+import {
+  createIdentityTable,
+  pruneToMetadata,
+  type SanitizeProfile,
+  scrubIdentity,
+} from './sanitize/index.js';
 
 /**
- * Golden tests (task 2.6): every committed fixture must normalize to the
- * byte-identical output committed in fixtures/normalized/. Regenerate
- * deliberately with `pnpm goldens` (dedicated commit — AGENTS.md).
+ * Golden tests: every committed fixture must normalize to the byte-identical
+ * output committed in fixtures/normalized/ (full), fixtures/sanitized/ (sanitized),
+ * and fixtures/metadata-only/ (metadata-only). Regenerate deliberately with
+ * `pnpm goldens` (dedicated commit — AGENTS.md).
  */
 
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
 const fixturesDir = join(repoRoot, 'fixtures');
 const normalizedDir = join(fixturesDir, 'normalized');
+const sanitizedDir = join(fixturesDir, 'sanitized');
+const metadataOnlyDir = join(fixturesDir, 'metadata-only');
 
 function safeDirs(dir: string): string[] {
   try {
@@ -34,10 +43,20 @@ interface Expected {
   adapterId: string;
   variant: string;
   candidateIndex: number;
+  profile: SanitizeProfile;
 }
 
-async function expectedGoldens(): Promise<Expected[]> {
+const PROFILE_DIRS: Record<SanitizeProfile, string> = {
+  full: normalizedDir,
+  sanitized: sanitizedDir,
+  'metadata-only': metadataOnlyDir,
+};
+
+async function expectedGoldens(
+  profile: SanitizeProfile = 'full',
+): Promise<Expected[]> {
   const out: Expected[] = [];
+  const baseDir = PROFILE_DIRS[profile];
   for (const adapter of adapters.all()) {
     for (const variant of safeDirs(join(fixturesDir, adapter.id))) {
       if (variant === 'large') continue; // machine-local, not committed
@@ -50,10 +69,11 @@ async function expectedGoldens(): Promise<Expected[]> {
             ? `${variant}.json`
             : `${variant}-${i + 1}.json`;
         out.push({
-          goldenPath: join(normalizedDir, adapter.id, name),
+          goldenPath: join(baseDir, adapter.id, name),
           adapterId: adapter.id,
           variant,
           candidateIndex: i,
+          profile,
         });
       }
     }
@@ -62,50 +82,79 @@ async function expectedGoldens(): Promise<Expected[]> {
 }
 
 describe('goldens', () => {
-  it('every committed fixture has a byte-stable, schema-valid golden', async () => {
-    const expected = await expectedGoldens();
-    expect(expected.length).toBeGreaterThan(0);
+  const profiles: SanitizeProfile[] = ['full', 'sanitized', 'metadata-only'];
 
-    for (const { goldenPath, adapterId, variant, candidateIndex } of expected) {
-      expect(
-        existsSync(goldenPath),
-        `missing golden: ${goldenPath} — run pnpm goldens`,
-      ).toBe(true);
-      const golden = readFileSync(goldenPath, 'utf8');
+  for (const profile of profiles) {
+    it(`every committed fixture has a byte-stable, schema-valid golden (${profile})`, async () => {
+      const expected = await expectedGoldens(profile);
+      expect(expected.length).toBeGreaterThan(0);
 
-      // schema-valid against the frozen contract
-      RunSchema.parse(JSON.parse(golden));
+      for (const {
+        goldenPath,
+        adapterId,
+        variant,
+        candidateIndex,
+      } of expected) {
+        expect(
+          existsSync(goldenPath),
+          `missing golden: ${goldenPath} — run pnpm goldens`,
+        ).toBe(true);
+        const golden = readFileSync(goldenPath, 'utf8');
 
-      // byte-stable: a fresh pipeline run reproduces the committed golden
-      const adapter = adapters.get(adapterId as never);
-      expect(adapter).toBeDefined();
-      if (!adapter) continue;
-      const candidates = (
-        await adapter.detect([join(fixturesDir, adapterId, variant)])
-      ).filter((c) => !/[\\/]raw[\\/]/.test(c.runRef));
-      const candidate = candidates[candidateIndex];
-      expect(candidate).toBeDefined();
-      if (!candidate) continue;
-      const run = applyInsights(
-        normalize(priceRun(await adapter.parse(candidate, { redact: false })), {
-          baseDir: repoRoot,
-        }),
-      );
-      expect(
-        `${JSON.stringify(run, null, 2)}\n`,
-        `golden drift: ${goldenPath}`,
-      ).toBe(golden);
-    }
-  }, 60_000);
+        // schema-valid against the frozen contract
+        RunSchema.parse(JSON.parse(golden));
 
-  it('no stale goldens exist without a matching fixture', async () => {
-    const expected = new Set(
-      (await expectedGoldens()).map((e) => e.goldenPath),
-    );
-    for (const adapterDir of safeDirs(normalizedDir)) {
-      for (const file of readdirSync(join(normalizedDir, adapterDir))) {
-        expect(expected.has(join(normalizedDir, adapterDir, file))).toBe(true);
+        // byte-stable: a fresh pipeline run reproduces the committed golden
+        const adapter = adapters.get(adapterId as never);
+        expect(adapter).toBeDefined();
+        if (!adapter) continue;
+        const candidates = (
+          await adapter.detect([join(fixturesDir, adapterId, variant)])
+        ).filter((c) => !/[\\/]raw[\\/]/.test(c.runRef));
+        const candidate = candidates[candidateIndex];
+        expect(candidate).toBeDefined();
+        if (!candidate) continue;
+
+        if (profile === 'full') {
+          const run = applyInsights(
+            normalize(
+              priceRun(await adapter.parse(candidate, { redact: false })),
+              {
+                baseDir: repoRoot,
+              },
+            ),
+          );
+          expect(
+            `${JSON.stringify(run, null, 2)}\n`,
+            `golden drift: ${goldenPath}`,
+          ).toBe(golden);
+        } else {
+          const raw = await adapter.parse(candidate, { redact: true });
+          const norm = normalize(priceRun(raw), { baseDir: repoRoot });
+          const table = createIdentityTable([norm]);
+          const runSanitized = applyInsights(scrubIdentity(norm, table));
+          const run =
+            profile === 'metadata-only'
+              ? pruneToMetadata(runSanitized)
+              : runSanitized;
+          expect(
+            `${JSON.stringify(run, null, 2)}\n`,
+            `golden drift: ${goldenPath}`,
+          ).toBe(golden);
+        }
       }
-    }
-  }, 60_000);
+    }, 60_000);
+
+    it(`no stale goldens exist without a matching fixture (${profile})`, async () => {
+      const dir = PROFILE_DIRS[profile];
+      const expected = new Set(
+        (await expectedGoldens(profile)).map((e) => e.goldenPath),
+      );
+      for (const adapterDir of safeDirs(dir)) {
+        for (const file of readdirSync(join(dir, adapterDir))) {
+          expect(expected.has(join(dir, adapterDir, file))).toBe(true);
+        }
+      }
+    }, 60_000);
+  }
 });

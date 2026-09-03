@@ -1,0 +1,66 @@
+{
+  "id": "run_8d8c9f888153d7fe",
+  "source": {
+    "tool": "opencode",
+    "format": "opencode-sqlite",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1"
+  },
+  "startedAt": "2026-02-11T15:29:28.327Z",
+  "endedAt": "2026-02-11T15:37:27.477Z",
+  "durationMs": 479150,
+  "spans": [
+    {
+      "id": "ses_3b2ada6f9ffe39UZtceZsbPc4e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-02-11T15:29:28.327Z",
+      "endedAt": "2026-02-11T15:37:27.477Z",
+      "durationMs": 479150,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ses_3b2ada6f9ffe39UZtceZsbPc4e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "ses_3b2ada6f9ffe39UZtceZsbPc4e"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 64798,
+      "output": 23876,
+      "cacheRead": 597248,
+      "cacheWrite": 0,
+      "reasoning": 1906,
+      "total": 687828
+    },
+    "costUSD": {
+      "total": 0.413477,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5.3-codex": 0.413477
+      }
+    },
+    "counts": {
+      "llmCalls": 28,
+      "toolCalls": 28,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.9021
+    }
+  },
+  "insights": []
+}

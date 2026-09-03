@@ -1,0 +1,74 @@
+{
+  "id": "run_3f98712950781ed8",
+  "source": {
+    "tool": "otlp",
+    "format": "otlp-json",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "startedAt": "2026-07-07T12:34:21.544Z",
+  "endedAt": "2026-07-07T12:36:57.525Z",
+  "durationMs": 155981,
+  "spans": [
+    {
+      "id": "4ef60afa-89ea-4cb8-a831-cc7e4b90445f",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:34:21.544Z",
+      "endedAt": "2026-07-07T12:36:57.525Z",
+      "durationMs": 155981,
+      "depth": 0,
+      "agent": {
+        "sessionId": "4ef60afa-89ea-4cb8-a831-cc7e4b90445f"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "4ef60afa-89ea-4cb8-a831-cc7e4b90445f"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 10149,
+      "output": 8187,
+      "cacheRead": 213347,
+      "cacheWrite": 41889,
+      "reasoning": 0,
+      "total": 273572
+    },
+    "costUSD": {
+      "total": 0.000606,
+      "wastedEstimate": 0,
+      "byModel": {
+        "claude-haiku-4-5-20251001": 0.000606
+      }
+    },
+    "counts": {
+      "llmCalls": 11,
+      "toolCalls": 9,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 5
+    },
+    "cache": {
+      "hitRate": 0.9546
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (20.4k → 0 cached)",
+      "detail": "Between two consecutive claude-opus-4-8[1m] calls the cache read collapsed from 20.4k to 0 tokens while 14.9k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "spanIds": [
+        "4ef60afa-89ea-4cb8-a831-cc7e4b90445f"
+      ],
+      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+    }
+  ]
+}
