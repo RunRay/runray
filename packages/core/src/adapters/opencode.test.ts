@@ -152,6 +152,45 @@ describe('opencode parse (export era)', () => {
   });
 });
 
+describe('opencode declined calls (trace-ingestion "User-rejected tool calls")', () => {
+  it('marks a permission refusal cancelled with the harness message as preview', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-oc-reject-'));
+    try {
+      const doc = JSON.parse(
+        readFileSync(join(fixtures, 'export-json', 'simple.json'), 'utf8'),
+      ) as {
+        messages: {
+          parts: { id: string; type: string; state: Record<string, unknown> }[];
+        }[];
+      };
+      const part = doc.messages
+        .flatMap((m) => m.parts)
+        .find((p) => p.type === 'tool');
+      if (part === undefined) throw new Error('fixture has no tool part');
+      part.state = {
+        ...part.state,
+        status: 'error',
+        error:
+          'Error: The user rejected permission to use this specific tool call.',
+      };
+      writeFileSync(join(dir, 'export.json'), JSON.stringify(doc), 'utf8');
+      const run = await runOn(dir);
+      const span = run.spans.find((s) => s.id === part.id);
+      expect(span?.status).toBe('cancelled');
+      expect(span?.statusReason).toBe('user-rejected');
+      expect(span?.tool?.isError).toBe(false);
+      expect(
+        span?.content?.outputPreview?.startsWith(
+          'Error: The user rejected permission',
+        ),
+      ).toBe(true);
+      expect(run.totals.counts.toolErrors).toBe(0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('cross-era equivalence (trace-ingestion spec)', () => {
   it('storage and sqlite eras of the same snapshot are identical modulo provenance', async () => {
     const storage = await runOn(join(fixtures, 'storage'));

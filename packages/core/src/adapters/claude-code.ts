@@ -13,6 +13,7 @@ import type {
 } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
+import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
 
 /**
@@ -136,10 +137,16 @@ interface ToolResultRef {
   line: number;
   isError: boolean;
   outputBytes: number | undefined;
-  /** First PREVIEW_CHARS of an error result's text — the one thing a
-   * retry-loop or dead-end finding can quote; prompt-derived, so it goes
-   * through the content/redaction contract like every preview. */
+  /** PREVIEW_CHARS of an error result's text starting where the failure is
+   * named (error-preview.ts) — the one thing a retry-loop or dead-end
+   * finding can quote; prompt-derived, so it goes through the
+   * content/redaction contract like every preview. */
   errorPreview: string | undefined;
+  /** `Exit code N` parsed from a shell tool's failure text. */
+  exitCode: number | undefined;
+  /** The "failure" is the harness reporting that the person declined the
+   * call — a decision, not an error (spec: "User-rejected tool calls"). */
+  rejected: boolean;
   toolUseResult: Json | undefined;
 }
 /** One llm_call — assistant JSONL records sharing a message.id (Claude Code
@@ -278,15 +285,16 @@ async function collectTranscript(
           if (!isObj(block) || block.type !== 'tool_result') continue;
           const toolUseId = str(block.tool_use_id);
           if (toolUseId === undefined) continue;
+          const failureText =
+            block.is_error === true ? textOf(block.content) : undefined;
           t.results.set(toolUseId, {
             timestamp: ts ?? EPOCH,
             line,
             isError: block.is_error === true,
             outputBytes: byteLength(block.content),
-            errorPreview:
-              block.is_error === true
-                ? textOf(block.content)?.slice(0, PREVIEW_CHARS)
-                : undefined,
+            errorPreview: errorPreview(failureText, PREVIEW_CHARS),
+            exitCode: exitCodeOf(failureText),
+            rejected: isUserRejection(failureText),
             toolUseResult: isObj(rec.toolUseResult)
               ? rec.toolUseResult
               : undefined,
@@ -306,6 +314,7 @@ async function collectTranscript(
 
 function mapAgentStatus(result: ToolResultRef | undefined): RawSpan['status'] {
   if (!result) return 'in_progress';
+  if (result.rejected) return 'cancelled';
   if (result.isError) return 'error';
   const s = str(result.toolUseResult?.status)?.toLowerCase();
   if (s === undefined) return 'ok';
@@ -462,19 +471,27 @@ async function emitFromTranscript(
         parentId: g.key,
         kind: mcpServer === undefined ? 'tool_call' : 'mcp_call',
         name: tu.name,
+        // a declined call is the person's decision, not the tool failing:
+        // `cancelled` keeps it out of toolErrors and every failure rule
         status:
           result === undefined
             ? 'in_progress'
-            : result.isError
-              ? 'error'
-              : 'ok',
+            : result.rejected
+              ? 'cancelled'
+              : result.isError
+                ? 'error'
+                : 'ok',
+        ...(result?.rejected ? { statusReason: 'user-rejected' } : {}),
         startedAt: tu.timestamp,
         ...(endedAt === undefined ? {} : { endedAt }),
         durationMs: durationBetween(tu.timestamp, endedAt),
         tool: {
           name: tu.name,
-          isError: result?.isError === true,
+          isError: result?.isError === true && !result.rejected,
           ...(mcpServer === undefined ? {} : { mcpServer }),
+          ...(result?.exitCode === undefined
+            ? {}
+            : { exitCode: result.exitCode }),
           ...(result?.outputBytes === undefined
             ? {}
             : { outputBytes: result.outputBytes }),

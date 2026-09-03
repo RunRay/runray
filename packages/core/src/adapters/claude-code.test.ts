@@ -4,7 +4,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Candidate, RawRun } from '../adapter.js';
+import { normalize } from '../normalize.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import { priceRun } from '../pricing/index.js';
 import { claudeCodeAdapter } from './claude-code.js';
 
 const fixtureDir = fileURLToPath(
@@ -838,5 +840,159 @@ describe('claude-code adapter — error text on failed tool spans', () => {
     for (const s of failed) {
       expect(s.content?.outputPreview).toBeNull();
     }
+  });
+});
+
+describe('claude-code adapter — where a failure is named, exit codes, declined calls', () => {
+  const BATCH_LOG = [
+    '[navigate] navigated to http://localhost:4326',
+    '',
+    'Tab Context:',
+    '- Executed on tabId: seed',
+    '',
+    '[computer:screenshot] Screenshot size: 800x450',
+    '',
+    'actions[2] (computer:screenshot) failed: screenshot failed: Screenshot timed out after 5s: the page did not finish rendering in time. (2 completed, 0 remaining)',
+  ].join('\n');
+  const REJECTION =
+    "The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.";
+
+  function failedResult(
+    uuid: string,
+    ts: string,
+    toolUseId: string,
+    text: string,
+  ) {
+    return {
+      type: 'user',
+      uuid,
+      sessionId: 'sess-e0',
+      timestamp: ts,
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: toolUseId,
+            is_error: true,
+            content: [{ type: 'text', text }],
+          },
+        ],
+      },
+    };
+  }
+
+  async function parseSession(redact: boolean): Promise<RawRun> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-e0-'));
+    try {
+      const proj = join(dir, 'proj');
+      mkdirSync(proj, { recursive: true });
+      const lines = [
+        {
+          type: 'user',
+          uuid: 'u1',
+          sessionId: 'sess-e0',
+          timestamp: '2026-09-03T10:00:00Z',
+          cwd: '/home/user/project/x',
+          message: { role: 'user', content: 'fix it' },
+        },
+        {
+          ...assistant('a1', 'u1', 'msg_e0', '2026-09-03T10:00:01Z', [
+            {
+              type: 'tool_use',
+              id: 'tu_bash',
+              name: 'Bash',
+              input: { command: 'cd packages/ui/src && ls' },
+            },
+            {
+              type: 'tool_use',
+              id: 'tu_batch',
+              name: 'mcp__Claude_Browser__browser_batch',
+              input: { actions: [] },
+            },
+            {
+              type: 'tool_use',
+              id: 'tu_edit',
+              name: 'Edit',
+              input: {
+                file_path: '/home/user/project/x/a.ts',
+                old_string: 'a',
+                new_string: 'b',
+              },
+            },
+          ]),
+          sessionId: 'sess-e0',
+        },
+        failedResult(
+          'u2',
+          '2026-09-03T10:00:02Z',
+          'tu_bash',
+          'Exit code 1\n/usr/bin/bash: line 1: cd: packages/ui/src: No such file or directory',
+        ),
+        failedResult('u3', '2026-09-03T10:00:03Z', 'tu_batch', BATCH_LOG),
+        failedResult('u4', '2026-09-03T10:00:04Z', 'tu_edit', REJECTION),
+      ];
+      writeFileSync(
+        join(proj, 'sess-e0.jsonl'),
+        `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+      );
+      const candidates = await claudeCodeAdapter.detect([dir]);
+      const candidate = candidates.find((c) =>
+        c.runRef.endsWith('sess-e0.jsonl'),
+      );
+      if (!candidate) throw new Error('synthetic session not detected');
+      // awaited inside the try: the finally below deletes the transcript
+      return await claudeCodeAdapter.parse(candidate, { redact });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('parses the Exit code line into tool.exitCode and previews the message after it', async () => {
+    const run = await parseSession(false);
+    const bash = run.spans.find((s) => s.id === 'tu_bash');
+    expect(bash?.status).toBe('error');
+    expect(bash?.tool?.exitCode).toBe(1);
+    expect(bash?.tool?.isError).toBe(true);
+    expect(bash?.content?.outputPreview).toBe(
+      '/usr/bin/bash: line 1: cd: packages/ui/src: No such file or directory',
+    );
+  });
+
+  it('starts a batch log preview at the failing step', async () => {
+    const run = await parseSession(false);
+    const batch = run.spans.find((s) => s.id === 'tu_batch');
+    expect(batch?.kind).toBe('mcp_call');
+    expect(batch?.tool?.exitCode).toBeUndefined();
+    expect(
+      batch?.content?.outputPreview?.startsWith(
+        'actions[2] (computer:screenshot) failed:',
+      ),
+    ).toBe(true);
+  });
+
+  it('marks a declined call cancelled, not failed, and keeps its message', async () => {
+    const run = await parseSession(false);
+    const edit = run.spans.find((s) => s.id === 'tu_edit');
+    expect(edit?.status).toBe('cancelled');
+    expect(edit?.statusReason).toBe('user-rejected');
+    expect(edit?.tool?.isError).toBe(false);
+    expect(edit?.tool?.linesAdded).toBeUndefined();
+    expect(
+      edit?.content?.outputPreview?.startsWith("The user doesn't want"),
+    ).toBe(true);
+    // the normalizer counts failures by status, so a decision is not one
+    const normalized = normalize(priceRun(run), { baseDir: '/' });
+    expect(normalized.totals.counts.toolErrors).toBe(2);
+    expect(normalized.totals.counts.toolCalls).toBe(3);
+  });
+
+  it('nulls the declined call message under redaction too', async () => {
+    const run = await parseSession(true);
+    const edit = run.spans.find((s) => s.id === 'tu_edit');
+    expect(edit?.status).toBe('cancelled');
+    expect(edit?.content).toEqual({ outputPreview: null });
+    const bash = run.spans.find((s) => s.id === 'tu_bash');
+    expect(bash?.tool?.exitCode).toBe(1);
   });
 });

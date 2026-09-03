@@ -11,6 +11,7 @@ import type {
 } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
+import { errorPreview } from './error-preview.js';
 
 /**
  * OTLP adapter (task 2.8, best-effort by design — trace-ingestion spec).
@@ -354,7 +355,9 @@ function toRawSpan(
       const message = isObj(span.status) ? str(span.status.message) : undefined;
       if (redact) base.content = { outputPreview: null };
       else if (message !== undefined && message.length > 0) {
-        base.content = { outputPreview: message.slice(0, PREVIEW_CHARS) };
+        base.content = {
+          outputPreview: errorPreview(message, PREVIEW_CHARS),
+        };
       }
     }
   } else if (kind === 'turn') {

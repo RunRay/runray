@@ -131,12 +131,19 @@ run warning naming their count.
   the unlinked transcripts
 
 ### Requirement: Tool error text capture
-Adapters SHALL keep the first 200 characters of a failed tool result's text
-as the tool span's `content.outputPreview`, under the same content contract
-as every other preview: present only when redaction is off, `null` under
-`--redact`. Successful tool results SHALL carry no preview (their size is
-recorded, their text is not). The Claude Code adapter SHALL recognize
-`PowerShell` as a command tool for target identity, exactly like `Bash`.
+Adapters SHALL keep 200 characters of a failed tool result's text as the
+tool span's `content.outputPreview`, under the same content contract as
+every other preview: present only when redaction is off, `null` under
+`--redact`. The preview SHALL start where the failure is named: at the last
+line that contains `failed`/`failure`/`failing`/`error`/`exception` as a
+word and does not negate it ("0 errors", "no failures"), else at the first
+non-empty line that is not the shell wrapper's `Exit code N` line, else at
+the first non-empty line; the selection SHALL be a pure function of the
+text, shared by all adapters. The Claude Code adapter SHALL parse a leading
+`Exit code N` line into `tool.exitCode`. Successful tool results SHALL carry
+no preview (their size is recorded, their text is not). The Claude Code
+adapter SHALL recognize `PowerShell` as a command tool for target identity,
+exactly like `Bash`.
 
 #### Scenario: A failed Bash call keeps its error
 - GIVEN a tool_result with `is_error: true` whose text starts
@@ -145,7 +152,45 @@ recorded, their text is not). The Claude Code adapter SHALL recognize
 - THEN the tool span's `outputPreview` starts with that text, and the same
   span parsed with redaction carries `outputPreview: null`
 
+#### Scenario: The preview starts at the failing step of a batch log
+- GIVEN a failed `browser_batch` result whose text logs two successful steps
+  and ends with "actions[2] (computer:screenshot) failed: …"
+- WHEN the transcript is parsed
+- THEN the tool span's `outputPreview` starts with "actions[2]", not with
+  the first successful step
+
+#### Scenario: The wrapper line becomes the exit code
+- GIVEN a failed Bash result whose text is "Exit code 1\n/usr/bin/bash:
+  line 1: cd: x: No such file or directory"
+- WHEN the transcript is parsed
+- THEN the tool span carries `tool.exitCode: 1` and its `outputPreview`
+  starts with "/usr/bin/bash:"
+
 #### Scenario: Successful output is sized, not quoted
 - GIVEN a successful Read of a 5 kB file
 - WHEN the transcript is parsed
 - THEN the tool span records `outputBytes` and no content preview
+
+### Requirement: User-rejected tool calls are decisions, not failures
+When a tool result reports that the person declined the call (Claude Code's
+"The user doesn't want to proceed with this tool use" / "…take this action
+right now" / "[Request interrupted by user…", OpenCode's "The user rejected
+permission to use this specific tool call"), the adapter SHALL emit the span
+with status `cancelled` and `statusReason: "user-rejected"`, `tool.isError`
+false, and the harness message as its `outputPreview` under the usual
+content contract. Cancelled spans SHALL NOT count toward `toolErrors` and
+SHALL NOT feed the failure rules (retry-loop, scattered-tool-failures,
+dead-end-run).
+
+#### Scenario: A declined edit is cancelled
+- GIVEN a Claude Code tool_result with `is_error: true` whose text starts
+  "The user doesn't want to proceed with this tool use"
+- WHEN the transcript is parsed
+- THEN the tool span has status `cancelled`, `statusReason` `user-rejected`,
+  `tool.isError` false, and the run's `toolErrors` does not include it
+
+#### Scenario: An OpenCode permission refusal is cancelled
+- GIVEN an OpenCode tool part in error state whose error text is "The user
+  rejected permission to use this specific tool call."
+- WHEN the part is parsed
+- THEN the span has status `cancelled` and `statusReason` `user-rejected`
