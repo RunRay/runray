@@ -55,9 +55,9 @@ export function Inspector(props: InspectorProps = {}) {
   return (
     <aside
       aria-label="Inspector"
-      className="flex w-[360px] shrink-0 flex-col border-l border-border bg-surface"
+      className="flex w-[360px] shrink-0 h-full flex-col border-l border-border bg-surface min-h-0"
     >
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+      <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
         <p className="micro-label text-text-faint">Inspector</p>
         <button
           type="button"
@@ -68,7 +68,7 @@ export function Inspector(props: InspectorProps = {}) {
           ✕
         </button>
       </div>
-      <div className="p-2 pb-0">
+      <div className="shrink-0 p-2 pb-0">
         <ContextualHint hintKey="redact" />
       </div>
       {span !== undefined ? (

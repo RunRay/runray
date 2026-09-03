@@ -68,7 +68,7 @@ export function ProvenanceStrip({
   return (
     <div
       data-testid="provenance-strip"
-      className={`border-b px-4 py-2.5 text-body transition-colors duration-150 ${
+      className={`shrink-0 border-b px-4 py-2.5 text-body transition-colors duration-150 ${
         isWarning
           ? 'border-heat-2/30 bg-heat-2/10 text-text'
           : 'border-border bg-surface-2/60 text-text-dim'
