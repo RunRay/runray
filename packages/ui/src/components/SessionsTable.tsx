@@ -11,6 +11,7 @@ import {
 import { assignModelColors } from '../lib/model-colors';
 import { DEFAULT_SORT, type SortKey, sortRuns } from '../lib/sort-runs';
 import { tourAttr } from '../lib/tour-attr';
+import { errorPill } from '../lib/triage';
 import { useAppStore } from '../store';
 
 /**
@@ -374,11 +375,26 @@ function SessionRow({
       <td className="whitespace-nowrap px-3">
         <span className="flex items-center justify-between gap-1.5">
           <span className="flex items-center gap-1.5">
-            {run.totals.counts.toolErrors > 0 && (
-              <Badge className="bg-span-error/12 text-span-error">
-                {run.totals.counts.toolErrors} errors
-              </Badge>
-            )}
+            {(() => {
+              // the count stays; the tone is the triage's — red only when
+              // something is for the person or the session never got past it
+              const pill = errorPill(run);
+              return (
+                pill !== null && (
+                  <span title={pill.title}>
+                    <Badge
+                      className={
+                        pill.tone === 'alarm'
+                          ? 'bg-span-error/12 text-span-error'
+                          : 'bg-surface-2 text-text-dim'
+                      }
+                    >
+                      {pill.label}
+                    </Badge>
+                  </span>
+                )
+              );
+            })()}
             {run.totals.counts.subagents > 0 && (
               <Badge className="bg-span-subagent/12 text-span-subagent">
                 subagents:{run.totals.counts.subagents}

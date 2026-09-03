@@ -4,7 +4,8 @@
  * and `file://` (no history API, no server rewrites).
  *
  * Routes: `#/dashboard` (default) · `#/sessions` · `#/run/:id` (cost is the
- * run default) · `#/run/:id/timeline` · `#/run/:id/time` · `#/diff/:a/:b`
+ * run default) · `#/run/:id/timeline` · `#/run/:id/time` ·
+ * `#/run/:id/errors` · `#/diff/:a/:b`
  * (add-run-diff). Filter state rides a query-style suffix in the
  * canonical order `project, source, period, model, day, tool` (D6 —
  * supersedes add-dashboard-extensions D2), so a copied link restores the
@@ -19,7 +20,11 @@ export type Route =
   | { view: 'timeline'; runId: string }
   | { view: 'cost'; runId: string }
   | { view: 'time'; runId: string }
+  | { view: 'errors'; runId: string }
   | { view: 'diff'; runA: string; runB: string };
+
+/** The run-scoped views, as `RunView` switches between them. */
+export type RunViewName = 'timeline' | 'cost' | 'time' | 'errors';
 
 export const DASHBOARD_ROUTE: Route = { view: 'dashboard' };
 export const SESSIONS_ROUTE: Route = { view: 'sessions' };
@@ -42,6 +47,7 @@ export function parseHash(hash: string): Route {
     const runId = decodeURIComponent(segments[1]);
     if (segments[2] === 'timeline') return { view: 'timeline', runId };
     if (segments[2] === 'time') return { view: 'time', runId };
+    if (segments[2] === 'errors') return { view: 'errors', runId };
     return { view: 'cost', runId };
   }
   if (
@@ -90,6 +96,8 @@ export function toHash(route: Route): string {
       return `#/run/${encodeURIComponent(route.runId)}/timeline`;
     case 'time':
       return `#/run/${encodeURIComponent(route.runId)}/time`;
+    case 'errors':
+      return `#/run/${encodeURIComponent(route.runId)}/errors`;
     case 'cost':
       return `#/run/${encodeURIComponent(route.runId)}`;
     case 'diff':
