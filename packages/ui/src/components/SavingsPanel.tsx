@@ -137,8 +137,10 @@ function TopChangeRow({
   rank: number;
 }) {
   const [open, setOpen] = useState(rank === 1);
+  // the rule's own explanation, never the top finding's suggestion: a group
+  // spans many findings (for retry-loop, many tools), and each finding's
+  // suggestion is read in the Inspector where it applies
   const { label, explain } = ruleLabel(group.ruleId);
-  const suggestion = group.entries[0]?.insight.suggestion;
 
   return (
     <div className="border-b border-border-slate last:border-b-0">
@@ -160,7 +162,7 @@ function TopChangeRow({
             </span>
           </span>
           <span className="block truncate text-label text-text-dim">
-            {suggestion ?? explain}
+            {explain}
           </span>
         </span>
         <SeverityPill severity={group.worstSeverity} />

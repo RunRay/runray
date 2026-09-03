@@ -407,16 +407,22 @@ export function ruleClass(ruleId: string): RuleClass {
   return RULE_META[ruleId]?.class ?? 'opportunity';
 }
 
-/** The playbook actions for a rule in one source; unknown sources get the
- * custom-agent list, unknown rules an empty one. */
+/** The playbook a run's source reads: its own when it has one, otherwise
+ * the custom-agent playbook (an OTLP or unknown source is somebody's own
+ * agent). */
+export function resolvePlaybookSource(source: string): PlaybookSource {
+  return (PLAYBOOK_SOURCES as readonly string[]).includes(source)
+    ? (source as PlaybookSource)
+    : 'otlp';
+}
+
+/** The playbook actions for a rule in one source; unknown rules get an
+ * empty list. */
 export function playbookActions(
   ruleId: string,
   source: string,
 ): readonly string[] {
   const playbook = RULE_META[ruleId]?.playbook;
   if (playbook === undefined) return [];
-  const key = (PLAYBOOK_SOURCES as readonly string[]).includes(source)
-    ? (source as PlaybookSource)
-    : 'otlp';
-  return playbook.actions[key];
+  return playbook.actions[resolvePlaybookSource(source)];
 }

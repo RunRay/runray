@@ -40,6 +40,7 @@ export {
   RULE_META,
   renderPlaybooksMarkdown,
   replacePlaybooksBlock,
+  resolvePlaybookSource,
   resolveThresholds,
   V0_RULES,
 } from './insights/index.js';

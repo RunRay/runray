@@ -349,3 +349,39 @@ severity SHALL be independent of the rule's waste/opportunity class.
 - GIVEN a finding whose waste could not be priced
 - WHEN severity is graded
 - THEN it is `info` regardless of its rule
+
+### Requirement: Suggestions address the person running the agent
+Every finding's `suggestion` SHALL be one sentence addressed to the person
+running the agent, naming a lever that person has (a command, a
+configuration key, an instructions file, a model switch), never an
+instruction the model would have to follow. Where the finding's own numbers
+change the decision (the cost of one loop, the per-call cache-read cost of a
+large context, the tokens re-written) the sentence SHALL carry them, and
+where the lever differs by source the sentence SHALL pick it by
+`run.source.tool` (Claude Code, OpenCode, or a custom agent for OTLP and
+unknown sources). Each rule SHALL register a playbook in the rule metadata
+registry — causes, actions per source, limits — which is the single source
+for the generated docs section "How to fix, rule by rule" and for the
+Inspector.
+
+#### Scenario: A retry loop on a shell tool points at the instructions file
+- GIVEN a Claude Code run with a retry-loop finding on `Bash`
+- WHEN the finding is emitted
+- THEN its suggestion names `CLAUDE.md` as the place to record the missing
+  environment fact, and the same finding on an OpenCode run names
+  `AGENTS.md`
+
+#### Scenario: An idle expiry states the running cost
+- GIVEN an idle-cache-expiry finding after a two-hour gap that re-wrote 50k
+  tokens
+- WHEN the finding is emitted
+- THEN its suggestion says to compact before a long break or start a new
+  session, and states the cache-read cost every further call in that
+  context pays
+
+#### Scenario: Playbook coverage
+- GIVEN the registered rule set
+- WHEN the metadata registry is checked
+- THEN every rule has a playbook with at least one cause, at least one
+  action for each of Claude Code, OpenCode and custom agents, and at least
+  one limit, and the committed docs block equals the rendered registry

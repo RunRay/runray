@@ -63,7 +63,7 @@ interface InsightRule { id: string; evaluate(run: Run, ctx: RuleContext): Findin
 // RuleContext = { thresholds: Thresholds; pricing: PricingTable } — reguły
 // wyceniają ZAWSZE z tabeli efektywnej, nigdy bez warunku ze snapshotu.
 ```
-Reguły są czyste, konfigurowalne przez `runray.config.json` (`insights.thresholds`), testowane na syntetycznych runach. Klasyfikacja i prezentacja z JEDNEGO rejestru `insights/meta.ts` (`RULE_META`: label · explain · klasa, subpath `@runray/core/insights-meta`; pokrycie wymuszone testem): klasa **waste** (spalone pieniądze) wchodzi do `totals.costUSD.wastedEstimate` z twardym capem `≤ costUSD.total`; klasa **opportunity** niesie `estimatedWasteUSD` do rankingu, ale nigdy nie zawyża rollupu. Kolejność rejestracji ZAMROŻONA (id insightów od niej zależą): piątka v0 → `model-mismatch` → szóstka nowych.
+Reguły są czyste, konfigurowalne przez `runray.config.json` (`insights.thresholds`), testowane na syntetycznych runach. Klasyfikacja i prezentacja z JEDNEGO rejestru `insights/meta.ts` (`RULE_META`: label · explain · klasa · playbook, subpath `@runray/core/insights-meta`; pokrycie wymuszone testem; playbooki — przyczyny · akcje per źródło · ograniczenia — renderowane do bloku „How to fix, rule by rule" w 08-FINDINGS.md skryptem `pnpm docs:playbooks`, test dryfu pilnuje zgodności): klasa **waste** (spalone pieniądze) wchodzi do `totals.costUSD.wastedEstimate` z twardym capem `≤ costUSD.total`; klasa **opportunity** niesie `estimatedWasteUSD` do rankingu, ale nigdy nie zawyża rollupu. Kolejność rejestracji ZAMROŻONA (id insightów od niej zależą): piątka v0 → `model-mismatch` → szóstka nowych.
 
 | ruleId | klasa | Logika detekcji (klucz configu, domyślne progi) | estimatedWasteUSD |
 |---|---|---|---|
