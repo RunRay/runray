@@ -320,3 +320,32 @@ recomputed on demand, never persisted into the frozen TraceFile schema.
 - WHEN coverage is computed
 - THEN it reports 3 unpriced calls, their summed tokens, and the model names
   in stable order, and `complete` is false
+
+### Requirement: Severity grading
+The system SHALL assign each finding's severity centrally in the engine,
+after rule evaluation, from the finding's estimated waste as a share of the
+run's total cost: `critical` when the share is at least the critical share
+AND the amount is at least the critical floor; `warning` when the share is
+at least the warning share AND the amount is at least the warning floor;
+`info` otherwise. Findings without an estimate, and findings on runs with
+zero priced cost, SHALL be `info`. The shares and floors SHALL be
+configurable under `insights.thresholds.severity` (defaults: warning 2% /
+$0.05, critical 10% / $1). Rules SHALL NOT set severity themselves, and
+severity SHALL be independent of the rule's waste/opportunity class.
+
+#### Scenario: Same rule, different runs
+- GIVEN two runs with a retry-loop finding worth $0.60, one run costing
+  $0.65 and the other $600
+- WHEN rules are evaluated
+- THEN the first finding is `warning` and the second is `info`
+
+#### Scenario: Critical needs both share and amount
+- GIVEN a $0.50 finding on a $0.50 run and a $20 finding on a $100 run
+- WHEN severity is graded
+- THEN the first is `warning` (below the $1 floor) and the second is
+  `critical`
+
+#### Scenario: No estimate means info
+- GIVEN a finding whose waste could not be priced
+- WHEN severity is graded
+- THEN it is `info` regardless of its rule

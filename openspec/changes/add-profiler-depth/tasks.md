@@ -330,3 +330,10 @@ automatically extends its fixture-parameterized equivalence matrix.
       isSidechain legacy gate scoped to the MAIN transcript, sidecars in
       candidate provenance, scrub allowlist keeps sidecar join keys,
       O(spans+agents) adoption index, parallel sidecar reads.
+- [x] 11.7 A Severity graded by the engine, not the rules (spec: cost-engine
+      "Severity grading"): `gradeSeverity` from estimatedWasteUSD as a share
+      of run cost with per-tier floors (`insights.thresholds.severity`),
+      `deadEndRun.criticalCostUSD` retired, rules no longer emit severity;
+      UI insights strip and run tour rank findings by estimated waste
+      (`rankInsights`). Goldens regenerated (severity values only) in a
+      dedicated commit. Added 2026-09-03.

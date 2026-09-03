@@ -22,12 +22,14 @@ export type {
   Finding,
   InsightRule,
   RuleContext,
+  SeverityThresholds,
   ThresholdOverrides,
   Thresholds,
 } from './insights/index.js';
 export {
   applyInsights,
   DEFAULT_THRESHOLDS,
+  gradeSeverity,
   resolveThresholds,
   V0_RULES,
 } from './insights/index.js';

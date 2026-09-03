@@ -79,7 +79,7 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 |---|---|---|
 | `id` | string | Unique per run. |
 | `ruleId` | string | Open registry; v0 set: `retry-loop` \| `low-cache-hit` \| `context-bloat` \| `expensive-subagent` \| `dead-end-run`. New rules land in minor schema versions. |
-| `severity` | enum | `info` \| `warning` \| `critical` |
+| `severity` | enum | `info` \| `warning` \| `critical` — graded by the engine from `estimatedWasteUSD` as a share of the run's `costUSD.total` (defaults: warning ≥ 2% and ≥ $0.05, critical ≥ 10% and ≥ $1; no estimate or unpriced run ⇒ `info`). Independent of the rule's waste/opportunity class. |
 | `title` / `detail` | string | Human-readable; `detail` must cite concrete numbers. |
 | `spanIds[]` | string | Evidence — UI highlights these in the waterfall. |
 | `estimatedWasteUSD?` | number | Where computable. |
