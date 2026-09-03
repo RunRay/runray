@@ -364,3 +364,20 @@ automatically extends its fixture-parameterized equivalence matrix.
       checked against real sessions (1h caches survive 5–60 min gaps in
       ~90% of pairs) and kept. Goldens regenerated in a dedicated commit.
       Added 2026-09-03.
+
+## 12. Error triage (post-analysis addition, spec: trace-ingestion "Tool error text capture" amended + "User-rejected tool calls are decisions, not failures"; error-triage capability; visualizer "Errors tab")
+
+- [x] 12.1 A Failure text selection, exit codes and user rejections (E0):
+      shared `adapters/error-preview.ts` (preview starts at the last line
+      naming the failure, else past the `Exit code N` wrapper line) used by
+      all three adapters; claude-code parses `Exit code N` into
+      `tool.exitCode`; a declined call ("The user doesn't want to proceed…",
+      OpenCode "The user rejected permission…") is `cancelled` +
+      `statusReason: user-rejected`, out of `toolErrors` and the failure
+      rules. Goldens regenerated in a dedicated commit. Added 2026-09-03.
+- [ ] 12.2 A Duplicate transcript records (E0, separate branch): the
+      claude-code adapter keeps the first copy of each record uuid — a
+      desktop `bridge-session` re-appends the history and doubled every tool
+      span before it (4 of the user's 70 sessions, phantom retry-loop
+      findings). Owned by the spawned session on
+      `claude/suspicious-ellis-0abbbd`. Added 2026-09-03.
