@@ -596,3 +596,18 @@ describe('cache-prefix-break says what survived', () => {
     expect(history?.estimatedWasteUSD).toBe(front?.estimatedWasteUSD);
   });
 });
+
+describe('token figures in finding copy', () => {
+  it('switch to millions past 1M, so a cumulative excess never reads as 469443.8k', () => {
+    const reads = [10_000, 10_000, 10_000, ...Array(10).fill(900_000)];
+    const spans = [
+      root(),
+      ...reads.map((cacheRead, i) =>
+        llm(`l${i}`, i * 10, { input: 2_000, cacheRead }),
+      ),
+    ];
+    const f = findings(spans).find((i) => i.ruleId === 'context-bloat');
+    expect(f?.detail).toContain('~8.9M cumulative excess');
+    expect(f?.detail).not.toMatch(/\d{5,}\.\dk/);
+  });
+});
