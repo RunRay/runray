@@ -1,0 +1,413 @@
+import { describe, expect, it } from 'vitest';
+import type { RawRun, RawSpan } from '../adapter.js';
+import { normalize } from '../normalize.js';
+import { CACHE_WRITE_1H_ATTR } from '../pricing/index.js';
+import { applyInsights } from './index.js';
+
+/**
+ * Suggestions address the person running the agent, name a lever that
+ * person has, and pick it by `run.source.tool`. These tests pin the copy
+ * contract, not the detection (that lives in rules/new-rules tests).
+ */
+
+type Source = RawRun['source']['tool'];
+const FORMAT: Record<Source, RawRun['source']['format']> = {
+  'claude-code': 'claude-jsonl',
+  opencode: 'opencode-storage',
+  otlp: 'otlp-json',
+};
+
+const T0 = Date.parse('2026-07-02T13:00:00Z');
+function ts(seconds: number): string {
+  return new Date(T0 + seconds * 1000).toISOString().replace(/\.000Z$/, 'Z');
+}
+
+function base(id: string, overrides: Partial<RawSpan>): RawSpan {
+  return {
+    id,
+    parentId: 'root',
+    kind: 'other',
+    name: id,
+    status: 'ok',
+    startedAt: ts(0),
+    attributes: {},
+    provenance: { file: 'x.jsonl', line: 1 },
+    ...overrides,
+  };
+}
+const root = (): RawSpan =>
+  base('root', {
+    parentId: null,
+    kind: 'session',
+    name: 'session',
+    agent: { sessionId: 's' },
+  });
+
+function llm(
+  id: string,
+  second: number,
+  opts: {
+    input?: number;
+    cacheRead?: number;
+    cacheWrite?: number;
+    write1h?: number;
+    cost?: number;
+    parentId?: string;
+    model?: string;
+  } = {},
+): RawSpan {
+  return base(id, {
+    kind: 'llm_call',
+    startedAt: ts(second),
+    endedAt: ts(second + 1),
+    ...(opts.write1h === undefined
+      ? {}
+      : { attributes: { [CACHE_WRITE_1H_ATTR]: opts.write1h } }),
+    parentId: opts.parentId ?? 'root',
+    llm: {
+      provider: 'anthropic',
+      model: opts.model ?? 'claude-sonnet-4-6',
+      tokens: {
+        input: opts.input ?? 1000,
+        output: 100,
+        cacheRead: opts.cacheRead ?? 0,
+        cacheWrite: opts.cacheWrite ?? 0,
+      },
+      ...(opts.cost === undefined ? {} : { costUSD: opts.cost }),
+      costSource: opts.cost === undefined ? 'unknown' : 'computed',
+    },
+  });
+}
+
+function tool(
+  id: string,
+  second: number,
+  opts: {
+    name?: string;
+    kind?: 'tool_call' | 'mcp_call';
+    mcpServer?: string;
+    status?: RawSpan['status'];
+    parentId?: string;
+    outputBytes?: number;
+    targetKey?: string;
+    targetKind?: 'file-read' | 'file-write' | 'command';
+    linesAdded?: number;
+  } = {},
+): RawSpan {
+  const name = opts.name ?? 'Bash';
+  return base(id, {
+    kind: opts.kind ?? 'tool_call',
+    name,
+    startedAt: ts(second),
+    endedAt: ts(second + 1),
+    parentId: opts.parentId ?? 'root',
+    status: opts.status ?? 'ok',
+    attributes:
+      opts.targetKey === undefined
+        ? {}
+        : {
+            'runray.targetKey': opts.targetKey,
+            'runray.targetKind': opts.targetKind ?? 'file-read',
+          },
+    tool: {
+      name,
+      isError: opts.status === 'error',
+      ...(opts.mcpServer === undefined ? {} : { mcpServer: opts.mcpServer }),
+      ...(opts.outputBytes === undefined
+        ? {}
+        : { outputBytes: opts.outputBytes }),
+      ...(opts.linesAdded === undefined ? {} : { linesAdded: opts.linesAdded }),
+    },
+  });
+}
+
+const sub = (id: string, second: number): RawSpan =>
+  base(id, {
+    kind: 'subagent',
+    name: `subagent:${id}`,
+    startedAt: ts(second),
+    parentId: 'root',
+    agent: { name: id },
+  });
+
+function findings(spans: RawSpan[], source: Source = 'claude-code') {
+  const raw: RawRun = {
+    source: { tool: source, format: FORMAT[source], files: ['x'] },
+    spans,
+    warnings: [],
+  };
+  return applyInsights(normalize(raw)).insights;
+}
+function suggestionOf(
+  spans: RawSpan[],
+  ruleId: string,
+  source: Source = 'claude-code',
+): string {
+  const f = findings(spans, source).find((i) => i.ruleId === ruleId);
+  if (f?.suggestion === undefined)
+    throw new Error(`${ruleId} did not fire for ${source}`);
+  return f.suggestion;
+}
+
+describe('retry-loop suggestion picks the lever by tool class', () => {
+  // the failures hang off the model call that issued them, as in the
+  // adapters — that call is what the loop bills
+  const fail = (id: string, sec: number, name: string, extra: object) =>
+    tool(id, sec, {
+      name,
+      status: 'error',
+      targetKey: 'k',
+      parentId: 'l1',
+      ...extra,
+    });
+  const loop = (name: string, extra: Parameters<typeof tool>[2] = {}) => [
+    root(),
+    llm('l1', 0, { cost: 0.5 }),
+    fail('t1', 1, name, extra),
+    fail('t2', 2, name, extra),
+    fail('t3', 3, name, extra),
+  ];
+
+  it('shell: points at the instructions file of the source', () => {
+    expect(suggestionOf(loop('Bash'), 'retry-loop')).toContain('CLAUDE.md');
+    expect(suggestionOf(loop('bash'), 'retry-loop', 'opencode')).toContain(
+      'AGENTS.md',
+    );
+    expect(suggestionOf(loop('Bash'), 'retry-loop', 'otlp')).toContain(
+      'system prompt',
+    );
+  });
+
+  it('edit: points at the file changing under the agent', () => {
+    expect(suggestionOf(loop('Edit'), 'retry-loop')).toMatch(
+      /changed the file under the agent/,
+    );
+  });
+
+  it('mcp: names the server', () => {
+    const s = suggestionOf(
+      loop('mcp__notion__search', { kind: 'mcp_call', mcpServer: 'notion' }),
+      'retry-loop',
+    );
+    expect(s).toContain('notion MCP server');
+    expect(s).toContain('3 failures in a row');
+  });
+
+  it('anything else: tells the person to interrupt, with the loop cost', () => {
+    const s = suggestionOf(loop('Grep'), 'retry-loop');
+    expect(s).toMatch(/^Interrupt the agent/);
+    expect(s).toContain('$0.50');
+  });
+
+  it('detail no longer claims the calls were identical', () => {
+    const f = findings(loop('Bash')).find((i) => i.ruleId === 'retry-loop');
+    expect(f?.detail).toMatch(/^3 consecutive Bash calls failed/);
+  });
+});
+
+describe('fixed-context-overhead suggestion', () => {
+  const heavy = (extra: RawSpan[] = []) => [
+    root(),
+    llm('l1', 0, { input: 30_000 }),
+    llm('l2', 10),
+    llm('l3', 20),
+    llm('l4', 30),
+    llm('l5', 40),
+    ...extra,
+  ];
+
+  it('lists the candidates the person controls in Claude Code', () => {
+    const s = suggestionOf(heavy(), 'fixed-context-overhead');
+    expect(s).toContain('CLAUDE.md');
+    expect(s).toContain('no MCP server was called in this session');
+    expect(s).toContain('re-read 4 times');
+  });
+
+  it('names the MCP servers that were actually called, sorted', () => {
+    const s = suggestionOf(
+      heavy([
+        tool('m1', 5, { kind: 'mcp_call', name: 'mcp__z__a', mcpServer: 'z' }),
+        tool('m2', 6, { kind: 'mcp_call', name: 'mcp__a__b', mcpServer: 'a' }),
+        tool('m3', 7, { kind: 'mcp_call', name: 'mcp__a__c', mcpServer: 'a' }),
+      ]),
+      'fixed-context-overhead',
+    );
+    expect(s).toContain('only a and z were called in this session');
+  });
+
+  it('speaks OpenCode and OTLP', () => {
+    expect(
+      suggestionOf(heavy(), 'fixed-context-overhead', 'opencode'),
+    ).toContain('mcp.<name>.enabled: false');
+    expect(suggestionOf(heavy(), 'fixed-context-overhead', 'otlp')).toMatch(
+      /^Trim the fixed part of every request/,
+    );
+  });
+});
+
+describe('idle-cache-expiry suggestion', () => {
+  const pair = (gapMinutes: number, write1h?: number) => [
+    root(),
+    llm('l1', 0, {
+      cacheRead: 50_000,
+      cacheWrite: 1_000,
+      ...(write1h === undefined ? {} : { write1h }),
+    }),
+    llm('l2', gapMinutes * 60, { cacheWrite: 50_000 }),
+  ];
+
+  it('a long break: compact first or start a new session, with the running cost', () => {
+    const s = suggestionOf(pair(120), 'idle-cache-expiry');
+    expect(s).toMatch(/^Compact before a long break, or start the next task/);
+    expect(s).toContain('resuming after 120 minutes re-wrote 50.0k tokens');
+    expect(s).toMatch(/every further call in this context costs \$\d/);
+  });
+
+  it('a short break on a 5-minute cache in Claude Code: the TTL is a setting', () => {
+    const s = suggestionOf(pair(10), 'idle-cache-expiry');
+    expect(s).toMatch(/^Compact before stepping away/);
+    expect(s).toContain('promptCacheTtl');
+    expect(s).toContain('a 10-minute pause');
+  });
+
+  it('the TTL hint is Claude Code only', () => {
+    expect(
+      suggestionOf(pair(10), 'idle-cache-expiry', 'opencode'),
+    ).not.toContain('promptCacheTtl');
+  });
+});
+
+describe('low-cache-hit suggestion names the cause per source', () => {
+  const cold = () => [
+    root(),
+    ...[0, 10, 20, 30, 40].map((sec, i) =>
+      llm(`l${i}`, sec, { input: 20_000, cost: 0.1 }),
+    ),
+  ];
+  it('claude-code: the prefix must be changing', () => {
+    expect(suggestionOf(cold(), 'low-cache-hit')).toContain(
+      'cache-prefix-break',
+    );
+  });
+  it('opencode: the provider may not cache', () => {
+    expect(suggestionOf(cold(), 'low-cache-hit', 'opencode')).toContain(
+      'provider and model support prompt caching',
+    );
+  });
+  it('otlp: the agent has to mark the prefix', () => {
+    expect(suggestionOf(cold(), 'low-cache-hit', 'otlp')).toMatch(
+      /^Mark a stable prefix/,
+    );
+  });
+});
+
+describe('model and subagent suggestions say where the switch lives', () => {
+  const opus = (id: string, sec: number, parentId = 'root') =>
+    llm(id, sec, {
+      model: 'claude-opus-4-8',
+      cost: 5,
+      input: 10_000,
+      parentId,
+    });
+
+  it('model-mismatch: /model alias in Claude Code, /models in OpenCode', () => {
+    expect(suggestionOf([root(), opus('l1', 1)], 'model-mismatch')).toContain(
+      '/model sonnet switches mid-session',
+    );
+    expect(
+      suggestionOf([root(), opus('l1', 1)], 'model-mismatch', 'opencode'),
+    ).toContain('/models');
+    expect(
+      suggestionOf([root(), opus('l1', 1)], 'model-mismatch', 'otlp'),
+    ).not.toContain('/model');
+  });
+
+  it('expensive-subagent: frontmatter in Claude Code, agent config in OpenCode', () => {
+    const spans = [
+      root(),
+      llm('l0', 1, { cost: 0.05 }),
+      sub('worker', 2),
+      opus('l1', 3, 'worker'),
+    ];
+    expect(suggestionOf(spans, 'expensive-subagent')).toContain(
+      "model: claude-sonnet-5 in the worker agent's frontmatter",
+    );
+    expect(suggestionOf(spans, 'expensive-subagent', 'opencode')).toContain(
+      'agent.worker.model = claude-sonnet-5 in opencode.json',
+    );
+  });
+});
+
+describe('the remaining rules address the person, with the finding in numbers', () => {
+  it('scattered-tool-failures: the dominant tool with its share, and the instructions file', () => {
+    const s = suggestionOf(
+      [
+        root(),
+        llm('l1', 0, { cost: 0.2 }),
+        tool('t1', 1, { name: 'Grep', status: 'error' }),
+        tool('t2', 2, { name: 'Grep', status: 'error' }),
+        tool('t3', 3, { name: 'Glob', status: 'error' }),
+        tool('t4', 4, { name: 'Read', status: 'error' }),
+        tool('t5', 5, { name: 'WebFetch', status: 'error' }),
+        llm('l2', 6, { cost: 0.2 }),
+      ],
+      'scattered-tool-failures',
+    );
+    expect(s).toContain('why Grep kept failing (2 of the 5)');
+    expect(s).toContain('CLAUDE.md');
+  });
+
+  it('dead-end-run: resume when a completed change exists, otherwise fix before rerunning', () => {
+    const tail = [
+      llm('l1', 0, { cost: 1 }),
+      tool('t9', 9, { status: 'error' }),
+    ];
+    expect(suggestionOf([root(), ...tail], 'dead-end-run')).toMatch(
+      /^Deal with the failing Bash before running this again/,
+    );
+    expect(
+      suggestionOf(
+        [
+          root(),
+          tool('e1', 1, { name: 'Edit', linesAdded: 3 }),
+          llm('l2', 2, { cost: 0.5 }),
+          ...tail,
+        ],
+        'dead-end-run',
+      ),
+    ).toContain('last completed change (Edit) is intact');
+  });
+
+  it('duplicate-read: says plainly there is nothing to configure', () => {
+    const read = (id: string, sec: number) =>
+      tool(id, sec, { name: 'Read', targetKey: 'f', targetKind: 'file-read' });
+    expect(
+      suggestionOf(
+        [root(), read('r1', 1), read('r2', 2), read('r3', 3)],
+        'duplicate-read',
+      ),
+    ).toMatch(/^Nothing to configure here/);
+  });
+
+  it('oversized-output: names the tool and its size', () => {
+    expect(
+      suggestionOf(
+        [root(), tool('t1', 1, { name: 'Read', outputBytes: 150_000 })],
+        'oversized-output',
+      ),
+    ).toContain('Read returned 150.0k bytes');
+  });
+
+  it('context-bloat: /compact for agents that have it, history trimming for OTLP', () => {
+    const grow = [
+      root(),
+      ...[10_000, 10_000, 10_000, 60_000, 120_000, 120_000, 120_000].map(
+        (input, i) => llm(`l${i}`, i * 10, { input }),
+      ),
+    ];
+    expect(suggestionOf(grow, 'context-bloat')).toContain('/compact');
+    expect(suggestionOf(grow, 'context-bloat', 'otlp')).toMatch(
+      /^Summarize or drop history/,
+    );
+  });
+});
