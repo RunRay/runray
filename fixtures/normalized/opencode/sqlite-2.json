@@ -6122,6 +6122,9 @@
         "name": "apply_patch",
         "isError": true
       },
+      "content": {
+        "outputPreview": "magna ipsum adipiscing adipiscing quis aliquip adipiscing sit tempor minim aliqua labore elit veniam tempor sit dolor ipsum labore\ntempor nostrud nostrud quis tempor veniam tempor quis lorem dolor min"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",

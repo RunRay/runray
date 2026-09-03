@@ -2474,7 +2474,11 @@
         "isError": false,
         "outputBytes": 318
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 239
@@ -2526,7 +2530,11 @@
         "isError": false,
         "outputBytes": 14
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 245
@@ -2751,6 +2759,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 468
       },
+      "content": {
+        "outputPreview": "consectetur elit minim veniam tempor nostrud sit amet lorem adipiscing sit labore minim lorem aliquip labore minim quis nostrud aliqua nostrud quis consectetur lorem magna veniam dolor nostrud sed qui"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -2964,7 +2975,11 @@
         "isError": false,
         "outputBytes": 14
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 270
@@ -5710,6 +5725,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
+      },
       "attributes": {
         "runray.targetKey": "dd8050e57701463e",
         "runray.targetKind": "file-write",
@@ -6749,7 +6767,11 @@
         "isError": false,
         "outputBytes": 11
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 552
@@ -6826,7 +6848,11 @@
         "isError": false,
         "outputBytes": 204
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 559
@@ -6878,7 +6904,11 @@
         "isError": false,
         "outputBytes": 9
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "f0d4bb326b8f2209",
+        "runray.targetKind": "command",
+        "runray.target": "consectetur"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 564
@@ -7059,6 +7089,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -7111,6 +7144,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -7754,6 +7790,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 56
       },
+      "content": {
+        "outputPreview": "ipsum elit incididunt veniam magna tempor magna aliqua d"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -7775,6 +7814,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 56
+      },
+      "content": {
+        "outputPreview": "ipsum elit incididunt veniam magna tempor magna aliqua d"
       },
       "attributes": {},
       "provenance": {
@@ -7828,7 +7870,11 @@
         "isError": false,
         "outputBytes": 9
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 632
@@ -9601,7 +9647,11 @@
         "isError": false,
         "outputBytes": 9
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 791
@@ -10100,6 +10150,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -10152,6 +10205,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -10258,6 +10314,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -11075,7 +11134,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 892
@@ -11898,7 +11961,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 947
@@ -13485,7 +13552,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1072
@@ -16313,7 +16384,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1297
@@ -17191,7 +17266,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1371
@@ -17881,7 +17960,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1424
@@ -18605,7 +18688,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1481
@@ -18838,6 +18925,9 @@
         "isError": true,
         "outputBytes": 953
       },
+      "content": {
+        "outputPreview": "amet dolor veniam nostrud dolor enim veniam veniam m\nminim elit magna minim sed labore aliquip aliqua sit aliqua labore labore al\nsit adipiscing quis minim ipsum tempor lorem sed sed enim quis tempor "
+      },
       "attributes": {
         "runray.targetKey": "2e23d093cefcca35",
         "runray.targetKind": "file-write",
@@ -18893,6 +18983,9 @@
         "name": "Edit",
         "isError": true,
         "outputBytes": 287
+      },
+      "content": {
+        "outputPreview": "amet dolor veniam nostrud dolor enim veniam veniam m\nminim elit magna minim sed labore aliquip aliqua sit aliqua labore labore al\nsit adipiscing quis minim ipsum tempor lorem sed sed enim quis tempor "
       },
       "attributes": {
         "runray.targetKey": "2e23d093cefcca35",
@@ -20406,7 +20499,11 @@
         "name": "PowerShell",
         "isError": false
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1617
@@ -20526,7 +20623,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1635
@@ -20900,6 +21001,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -20952,6 +21056,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -21671,7 +21778,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1731
@@ -22249,7 +22360,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1776
@@ -22779,7 +22894,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1814
@@ -23810,7 +23929,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 1900
@@ -26376,6 +26499,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
+      },
       "attributes": {
         "runray.targetKey": "7e51652d7408d51c",
         "runray.targetKind": "file-write",
@@ -27256,7 +27382,11 @@
         "isError": false,
         "outputBytes": 5
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2183
@@ -27576,6 +27706,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -28566,6 +28699,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
+      },
       "attributes": {
         "runray.targetKey": "8fff37c04a132493",
         "runray.targetKind": "file-write",
@@ -29510,6 +29646,9 @@
         "name": "Bash",
         "isError": true,
         "outputBytes": 453
+      },
+      "content": {
+        "outputPreview": "minim ipsum\nenim enim aliqua incididunt consectetur nostrud dolor enim tempor labore quis c\nquis amet aliquip veniam nostrud nostrud consectetur incididunt nostrud sit sit amet qui\nnostrud incididunt "
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
@@ -32939,7 +33078,11 @@
         "isError": false,
         "outputBytes": 132
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2638
@@ -32994,7 +33137,11 @@
         "isError": false,
         "outputBytes": 19
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command",
+        "runray.target": "labore"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2645
@@ -33272,7 +33419,11 @@
         "isError": false,
         "outputBytes": 14
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "f0d4bb326b8f2209",
+        "runray.targetKind": "command",
+        "runray.target": "consectetur"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2663
@@ -33526,7 +33677,11 @@
         "isError": false,
         "outputBytes": 136
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2680
@@ -34434,6 +34589,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 311
       },
+      "content": {
+        "outputPreview": "quis veniam ipsum labore elit minim ipsum lorem minim lorem consectetur lorem adipiscing quis amet enim quis sit quis\nipsum magna sed sit sed labore m\n\n\nipsum e\ndolor consectetur adipiscing tempor ven"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -34547,6 +34705,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 572
+      },
+      "content": {
+        "outputPreview": "ipsum sed aliqua aliquip elit labore ipsum consectetur lorem quis sit enim magna incididunt quis minim aliqua sit incididunt sit aliqua incididunt nost\nsit ipsum ipsum incididunt amet sed \n\n\nipsum e\ni"
       },
       "attributes": {},
       "provenance": {
@@ -34715,6 +34876,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 56
       },
+      "content": {
+        "outputPreview": "ipsum elit incididunt veniam magna tempor magna aliqua d"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -34828,7 +34992,11 @@
         "isError": false,
         "outputBytes": 47
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "f6e2f31d10ac27e4",
+        "runray.targetKind": "command",
+        "runray.target": "magna"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2781
@@ -35032,6 +35200,9 @@
         "name": "Edit",
         "isError": true,
         "outputBytes": 96
+      },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
       },
       "attributes": {
         "runray.targetKey": "d2d4ac42cbe33f42",
@@ -35643,6 +35814,9 @@
         "isError": true,
         "outputBytes": 59
       },
+      "content": {
+        "outputPreview": "sit magna v\nincididunt consectetur minim v\nincididunt labor"
+      },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
@@ -35703,6 +35877,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 56
       },
+      "content": {
+        "outputPreview": "ipsum elit incididunt veniam magna tempor magna aliqua d"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -35758,7 +35935,14 @@
         "isError": true,
         "outputBytes": 768
       },
-      "attributes": {},
+      "content": {
+        "outputPreview": "ipsum aliqu\nsit labore sit magn\ndolor veniam veniam aliquip ipsum consectetur lorem lorem nostrud adipiscing dol\nadipiscing incididunt labore adipiscing tempor sed aliquip tempor al\naliquip amet tempo"
+      },
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2856
@@ -35813,7 +35997,11 @@
         "isError": false,
         "outputBytes": 63
       },
-      "attributes": {},
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum"
+      },
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
         "line": 2860
@@ -37447,6 +37635,9 @@
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/tool-errors/tool-errors.jsonl",
@@ -37499,6 +37690,9 @@
         "isError": true,
         "mcpServer": "Claude_Preview",
         "outputBytes": 169
+      },
+      "content": {
+        "outputPreview": "nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing tempor dolor magna nostrud dolor elit enim quis do"
       },
       "attributes": {},
       "provenance": {
@@ -38180,7 +38374,7 @@
       "ruleId": "retry-loop",
       "severity": "info",
       "title": "mcp__Claude_Preview__preview_screenshot failed 3× in a row",
-      "detail": "3 consecutive mcp__Claude_Preview__preview_screenshot calls failed, driving ~$1.33 of model calls in the same scope between the first and the last attempt.",
+      "detail": "3 consecutive mcp__Claude_Preview__preview_screenshot calls failed (last error: “nostrud sit aliquip sed quis amet ipsum tempor sit labore sit magna quis incididunt tempor veniam magna sed adipiscing …”), driving ~$1.33 of model calls in the same scope between the first and the last attempt.",
       "spanIds": [
         "toolu_01Hub8ettDx7mbX2ZNN7S5BZ",
         "toolu_01CaJbzfWk85dmg9Cp2WtBLv",
