@@ -710,7 +710,7 @@
         "msg_01KBECaM8FMJw9ipQAV6D2iS"
       ],
       "estimatedWasteUSD": 1.180698,
-      "suggestion": "Batch prompts or close the session instead of leaving it idle past the cache TTL."
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 313 minutes re-wrote 124.3k tokens at the write premium, and every further call in this context costs $0.06 in cache reads alone."
     },
     {
       "id": "i2",
@@ -722,7 +722,7 @@
         "msg_01GL76wDhRm7Lz2cA5iZqrkZ"
       ],
       "estimatedWasteUSD": 0.418064,
-      "suggestion": "Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session."
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only ccd_session was called in this session) — 28.8k tokens above the floor were re-read 9 times."
     }
   ]
 }

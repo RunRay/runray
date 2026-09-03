@@ -960,7 +960,7 @@
         "289e59e8f3b48040",
         "70b258b49c9f5edd"
       ],
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; 14.9k tokens were written again here."
     }
   ]
 }
