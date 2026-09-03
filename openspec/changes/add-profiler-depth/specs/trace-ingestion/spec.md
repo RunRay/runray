@@ -149,3 +149,46 @@ recorded, their text is not). The Claude Code adapter SHALL recognize
 - GIVEN a successful Read of a 5 kB file
 - WHEN the transcript is parsed
 - THEN the tool span records `outputBytes` and no content preview
+
+### Requirement: Duplicate transcript records
+The claude-code adapter SHALL treat a record's `uuid` as its identity within
+a transcript. When a transcript carries several records with the same
+`uuid` — the desktop app re-appends the whole session after a
+`bridge-session` record, so every record written before it appears again
+later, with new provenance lines and small metadata differences (a newer
+`version`, a `slug`, sometimes an emptied `toolUseResult`) — the adapter
+SHALL keep the FIRST occurrence and skip every later copy deterministically,
+so each span is emitted once, provenance stays on the line written live, and
+token, cost and error totals match a single copy of the session. A
+`tool_use` block whose id was already seen, and a `tool_result` block for a
+`tool_use_id` that already has a result, SHALL likewise be ignored
+(first-wins), whatever record carries them. Records without a `uuid` SHALL
+NOT be deduplicated.
+
+#### Scenario: Transcript re-appended after a bridge
+- GIVEN a session whose records repeat after a `bridge-session` record with
+  the same `uuid`, `message.id` and `tool_use` ids
+- WHEN the session is ingested
+- THEN every llm_call, tool_call and error span appears exactly once, each
+  span's provenance line is the first occurrence, and the run's token, cost
+  and tool-error totals equal those of the un-duplicated transcript
+
+#### Scenario: Repeated tool_use and tool_result under fresh uuids
+- GIVEN later records under new `uuid`s: an assistant record repeating a
+  `tool_use` block whose id was already seen, and a `user` record carrying
+  a `tool_result` for a `tool_use_id` that already received one
+- WHEN the transcript is parsed
+- THEN the tool span is emitted once and keeps the first result's status,
+  output size, error text and provenance
+
+#### Scenario: Copies manufacture no findings
+- GIVEN a run of consecutive failed calls of one tool that the re-appended
+  copies repeat
+- WHEN the session is ingested and insights are evaluated
+- THEN the failures form one retry-loop finding, not a second cluster
+  built from the copies
+
+#### Scenario: Records without a uuid are kept
+- GIVEN two assistant records that carry neither `uuid` nor `message.id`
+- WHEN the transcript is parsed
+- THEN both are emitted as separate llm_call spans
