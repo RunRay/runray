@@ -186,7 +186,9 @@ and estimate the cumulative excess over the baseline median across all
 later calls, each call's excess priced at what that call actually paid per
 input-class token (its input, cache-read and effective cache-write legs) —
 never a trailing-window approximation, and never the input rate for tokens
-that were served from cache.
+that were served from cache. The finding SHALL state that this estimate is
+an upper bound which assumes the work could have continued from a
+compacted context.
 
 #### Scenario: Session born bloated
 - GIVEN a session whose first llm_call carries a 95k-token context footprint
