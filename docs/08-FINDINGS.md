@@ -50,7 +50,7 @@ The absolute floors exist so that a few cents in a tiny session never read as cr
 | `fixed-context-overhead` · Heavy fixed context | opportunity | the very first call already carries ≥ 20k tokens (tool definitions, project instructions) and the run has 5+ calls | the excess, written once and re-read on every later call |
 | `model-mismatch` · Wrong model tier | opportunity | a cheaper same-family model would save ≥ $0.50 on calls that are not risky (few tool calls, modest context) | the risk-free repricing delta |
 | `expensive-subagent` · Expensive subagent | opportunity | one delegated subtree costs > 50 % of the run and ≥ $0.25 | the subtree repriced one tier down; no cheaper tier means no figure |
-| `context-bloat` · Growing context | opportunity | the last calls' context (input-class tokens, main session) is 2× the first calls' and above 50k tokens | the cumulative excess over the starting context, priced at what each call actually paid per token — cache reads where it was served from cache |
+| `context-bloat` · Growing context | opportunity | the last calls' context (input-class tokens, main session) is 2× the first calls' and above 50k tokens | the cumulative excess over the starting context, priced at what each call actually paid per token — cache reads where it was served from cache; an upper bound that assumes the work could have continued from a compacted context |
 | `low-cache-hit` · Low cache hit-rate | opportunity | hit-rate below 40 % on a run costing more than $0.10 with 5+ calls | what a 60 % hit-rate would have saved |
 | `oversized-output` · Oversized tool output | opportunity | tool outputs of 100 kB or more enter the context | ≈ bytes ÷ 4 tokens at the input rate — usefulness is unknowable, so never burned |
 
@@ -453,7 +453,7 @@ Raising `severity.criticalShare` to `0.25`, for example, reserves `critical` for
 
 - **Wasted is capped at the run's cost.** Overlap between burned rules is only partly de-duplicated, so the cap keeps the headline honest.
 - **Unpriced models have no dollar figure.** Their calls show tokens without USD, the totals are marked as understated, and their findings grade `info`. `runray pricing --refresh` fetches current prices — the only network call RunRay ever makes, and only when you ask for it.
-- **Opportunities describe a counterfactual.** "Would have cost $X less on a cheaper model" assumes the cheaper model would have done the job; the risk flags exclude the subtrees where that is least likely.
+- **Opportunities describe a counterfactual.** "Would have cost $X less on a cheaper model" assumes the cheaper model would have done the job; the risk flags exclude the subtrees where that is least likely. `context-bloat` is the widest of them: its estimate is the cost of carrying the grown context, an upper bound that assumes the work could have continued from a compacted context, so on long cached sessions it can dominate the opportunities total.
 - **Findings are a pure function of the log.** Same session, same prices, same thresholds — the same findings, byte for byte.
 
 Normative details live in [02-DATA-MODEL.md](02-DATA-MODEL.md) (the `Insight` record) and [05-ARCHITECTURE.md](05-ARCHITECTURE.md) §2.4 (rule formulas and registration order).

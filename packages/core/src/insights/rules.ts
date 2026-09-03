@@ -404,7 +404,7 @@ const contextBloat: InsightRule = {
       {
         ruleId: 'context-bloat',
         title: `Context grew from ${tok(first)} to ${tok(last)} tokens`,
-        detail: `The median context of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The largest tool outputs listed in evidence are the likely culprits.`,
+        detail: `The median context of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.`,
         spanIds: [...last3.map((s) => s.id), ...culprits.map((s) => s.id)],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
         suggestion:
