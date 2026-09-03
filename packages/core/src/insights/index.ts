@@ -13,6 +13,12 @@ import { V0_RULES } from './rules.js';
  * sums only WASTE-CLASS findings — money already burned (retry-loop,
  * dead-end-run). Efficiency-opportunity findings (low-cache-hit, …) carry
  * their own `estimatedWasteUSD` but never inflate the run's wasted total.
+ *
+ * Severity semantics: rules do NOT grade themselves. The engine assigns
+ * `severity` after evaluation from the finding's estimate as a share of the
+ * run's cost (`gradeSeverity`, `thresholds.severity`), so severity answers
+ * "how big is this in THIS run" while the class answers "is it already
+ * burned" — two independent axes.
  */
 
 export interface Thresholds {
@@ -30,7 +36,6 @@ export interface Thresholds {
     topCulprits: number;
   };
   expensiveSubagent: { minShareOfRunCost: number; minCostUSD: number };
-  deadEndRun: { criticalCostUSD: number };
   modelMismatch: {
     minSavingsUSD: number;
     riskToolCalls: number;
@@ -46,6 +51,19 @@ export interface Thresholds {
   duplicateRead: { minRepeats: number };
   scatteredToolFailures: { minFailures: number; minErrorShare: number };
   oversizedOutput: { minOutputBytes: number; topOffenders: number };
+  /** Severity grading — see `gradeSeverity`. */
+  severity: SeverityThresholds;
+}
+
+/**
+ * Severity tiers as a share of the run's `costUSD.total`, each with an
+ * absolute floor so cents in a tiny run never read as critical.
+ */
+export interface SeverityThresholds {
+  warningShare: number;
+  warningFloorUSD: number;
+  criticalShare: number;
+  criticalFloorUSD: number;
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
@@ -58,7 +76,6 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   },
   contextBloat: { multiplier: 2, minMedianInputTokens: 50_000, topCulprits: 3 },
   expensiveSubagent: { minShareOfRunCost: 0.5, minCostUSD: 0.25 },
-  deadEndRun: { criticalCostUSD: 1 },
   modelMismatch: {
     minSavingsUSD: 0.5,
     riskToolCalls: 25,
@@ -74,6 +91,12 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   duplicateRead: { minRepeats: 3 },
   scatteredToolFailures: { minFailures: 5, minErrorShare: 0.2 },
   oversizedOutput: { minOutputBytes: 100_000, topOffenders: 5 },
+  severity: {
+    warningShare: 0.02,
+    warningFloorUSD: 0.05,
+    criticalShare: 0.1,
+    criticalFloorUSD: 1,
+  },
 };
 
 export type ThresholdOverrides = {
@@ -111,7 +134,6 @@ export function resolveThresholds(
       ...DEFAULT_THRESHOLDS.expensiveSubagent,
       ...overrides.expensiveSubagent,
     },
-    deadEndRun: { ...DEFAULT_THRESHOLDS.deadEndRun, ...overrides.deadEndRun },
     modelMismatch: {
       ...DEFAULT_THRESHOLDS.modelMismatch,
       ...overrides.modelMismatch,
@@ -140,6 +162,7 @@ export function resolveThresholds(
       ...DEFAULT_THRESHOLDS.oversizedOutput,
       ...overrides.oversizedOutput,
     },
+    severity: { ...DEFAULT_THRESHOLDS.severity, ...overrides.severity },
   };
   // a raised firing gate must never produce a negative-savings absurdity
   resolved.lowCacheHit.targetHitRate = Math.max(
@@ -149,8 +172,32 @@ export function resolveThresholds(
   return resolved;
 }
 
-/** A finding before the engine assigns its per-run id. */
-export type Finding = Omit<Insight, 'id'>;
+/**
+ * A finding as a rule emits it: no per-run id yet, and no severity — the
+ * engine grades that from the estimate's share of the run (`gradeSeverity`).
+ */
+export type Finding = Omit<Insight, 'id' | 'severity'>;
+
+/**
+ * Severity from magnitude alone: the estimate's share of the run's priced
+ * cost, gated by an absolute floor per tier. No estimate, or a run with no
+ * priced cost, cannot be sized and grades `info` — never a guess.
+ */
+export function gradeSeverity(
+  estimatedWasteUSD: number | undefined,
+  runCostUSD: number,
+  t: SeverityThresholds = DEFAULT_THRESHOLDS.severity,
+): Insight['severity'] {
+  if (estimatedWasteUSD === undefined || !(runCostUSD > 0)) return 'info';
+  const share = estimatedWasteUSD / runCostUSD;
+  if (share >= t.criticalShare && estimatedWasteUSD >= t.criticalFloorUSD) {
+    return 'critical';
+  }
+  if (share >= t.warningShare && estimatedWasteUSD >= t.warningFloorUSD) {
+    return 'warning';
+  }
+  return 'info';
+}
 
 /**
  * Everything a rule may consult (C3). `pricing` is the same effective table
@@ -179,8 +226,9 @@ function round6(x: number): number {
 
 /**
  * Evaluate rules over a normalized Run. Pure — returns a new Run with
- * `insights` filled and `totals.costUSD.wastedEstimate` recomputed. Rule
- * order is fixed (registration order) so insight ids are deterministic.
+ * `insights` filled (severity graded per finding) and
+ * `totals.costUSD.wastedEstimate` recomputed. Rule order is fixed
+ * (registration order) so insight ids are deterministic.
  */
 export function applyInsights(
   run: Run,
@@ -194,8 +242,19 @@ export function applyInsights(
   };
   const insights: Insight[] = [];
   for (const rule of rules) {
-    for (const finding of rule.evaluate(run, ctx)) {
-      insights.push({ id: `i${insights.length + 1}`, ...finding });
+    for (const { ruleId, ...rest } of rule.evaluate(run, ctx)) {
+      // key order is part of the byte-stable contract (goldens, exports):
+      // id · ruleId · severity · the rule's own fields, as it always was
+      insights.push({
+        id: `i${insights.length + 1}`,
+        ruleId,
+        severity: gradeSeverity(
+          rest.estimatedWasteUSD,
+          run.totals.costUSD.total,
+          ctx.thresholds.severity,
+        ),
+        ...rest,
+      });
     }
   }
   // cap (B2): waste-class overlap is only partially deduped across rules, so

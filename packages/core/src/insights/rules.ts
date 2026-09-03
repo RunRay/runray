@@ -129,7 +129,6 @@ const retryLoop: InsightRule = {
       const n = cluster.failures.length;
       return {
         ruleId: 'retry-loop',
-        severity: 'warning' as const,
         title: `${first.name} failed ${n}× in a row`,
         detail: `The same ${first.name} call failed ${n} consecutive attempts, driving ~${usd(wasted)} of same-scope model calls between the first and last attempt.`,
         spanIds: cluster.failures.map((s) => s.id),
@@ -184,7 +183,6 @@ const lowCacheHit: InsightRule = {
     return [
       {
         ruleId: 'low-cache-hit',
-        severity: 'info',
         title: `Cache hit-rate at ${(hitRate * 100).toFixed(1)}%`,
         detail: `Only ${tok(cacheRead)} of ${tok(cacheRead + input)} input-class tokens were served from cache; a stable session prefix would have converted most of the ${tok(input)} input tokens to cache reads.`,
         spanIds: evidence,
@@ -240,7 +238,6 @@ const contextBloat: InsightRule = {
     return [
       {
         ruleId: 'context-bloat',
-        severity: 'warning',
         title: `Context grew from ${tok(first)} to ${tok(last)} input tokens`,
         detail: `The median input of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input tokens were re-paid beyond the opening baseline. The largest tool outputs listed in evidence are the likely culprits.`,
         spanIds: [...last3.map((s) => s.id), ...culprits.map((s) => s.id)],
@@ -352,7 +349,6 @@ const expensiveSubagent: InsightRule = {
           : `A cheaper tier (${sugg.target}) resolves, but the subtree's calls could not be repriced cheaper (unpriced or already at/below that rate), so no saving estimate is available.`;
       return {
         ruleId: 'expensive-subagent',
-        severity: 'info' as const,
         title: `Subagent ${name} consumed ${share}% of the run`,
         detail:
           saving === undefined
@@ -429,10 +425,6 @@ const deadEndRun: InsightRule = {
     return [
       {
         ruleId: 'dead-end-run',
-        severity:
-          waste > ctx.thresholds.deadEndRun.criticalCostUSD
-            ? 'critical'
-            : 'warning',
         title: 'Run ended in an error',
         detail,
         spanIds: [terminal.id],
@@ -532,7 +524,6 @@ const modelMismatch: InsightRule = {
       ];
       findings.push({
         ruleId: 'model-mismatch',
-        severity: 'info',
         title: `${modelSpans.length} calls on ${model} could run on ${sugg.target}`,
         detail: `${modelSpans.length} llm calls ran on ${model}; at ${sugg.target} rates the risk-free portion would cost ${usd(round6(safeCurrent - saving))} instead of ${usd(safeCurrent)} (−${usd(saving)}), estimated on identical token usage.${notes.length > 0 ? ` ${notes.join('; ')}.` : ''}`,
         spanIds: evidence,
@@ -652,7 +643,6 @@ const cachePrefixBreak: InsightRule = {
             );
       findings.push({
         ruleId: 'cache-prefix-break',
-        severity: 'warning',
         title: `Cache prefix broke mid-session (${tok(aRead)} → ${tok(bRead)} cached)`,
         detail: `Between two consecutive ${b.llm?.model} calls the cache read collapsed from ${tok(aRead)} to ${tok(bRead)} tokens while ${tok(bWrite)} tokens were re-written — content that was already cached was paid for again at the write premium.`,
         spanIds: [a.id, b.id],
@@ -692,7 +682,6 @@ const idleCacheExpiry: InsightRule = {
       );
       findings.push({
         ruleId: 'idle-cache-expiry',
-        severity: 'info',
         title: `Idle gap of ${gapMin}m expired the cache`,
         detail: `After ${gapMin} minutes of inactivity the provider cache TTL lapsed; the next ${b.llm?.model} call re-wrote ${tok(bWrite)} tokens of prefix that had been cached before the gap.`,
         spanIds: [a.id, b.id],
@@ -743,7 +732,6 @@ const fixedContextOverhead: InsightRule = {
     return [
       {
         ruleId: 'fixed-context-overhead',
-        severity: 'info',
         title: `Session starts with a ${tok(footprint)}-token context footprint`,
         detail: `The first model call already carried ${tok(footprint)} input-class tokens (tool definitions, project instructions, attachments); ${tok(overhead)} tokens above the ${tok(cfg.floorTokens)} floor were written once and re-read on each of the ${llms.length - 1} later calls.`,
         spanIds: [first.id],
@@ -844,7 +832,6 @@ const duplicateRead: InsightRule = {
       // changes" with the total count would be factually wrong then
       findings.push({
         ruleId: 'duplicate-read',
-        severity: 'warning',
         title: `Same file re-read ${wasted.length}× without changes`,
         detail: `${display === undefined ? 'The same target' : `“${display}”`} was read ${reads.length} times; ${wasted.length} of those read(s) had no write in between and re-entered ≈${tok(Math.round(wastedBytes / 4))} tokens of unchanged content into the context.`,
         // evidence: the reference read + the redundant ones (legitimate
@@ -930,7 +917,6 @@ const scatteredToolFailures: InsightRule = {
     return [
       {
         ruleId: 'scattered-tool-failures',
-        severity: 'warning',
         title: `${failures.length} scattered tool failures outside retry loops`,
         detail: `${failures.length} of ${toolCalls} tool calls (${share}%) failed outside any retry loop; the model calls reacting to them cost ~${usd(waste)}.`,
         spanIds: failures.slice(0, 10).map((s) => s.id),
@@ -970,7 +956,6 @@ const oversizedOutput: InsightRule = {
     return [
       {
         ruleId: 'oversized-output',
-        severity: 'info',
         title: `${offenders.length} oversized tool output${offenders.length === 1 ? '' : 's'} entered the context`,
         detail: `${offenders.length} tool call(s) returned ≥${tok(cfg.minOutputBytes)} bytes (largest: ${top?.name} at ${tok(top?.tool?.outputBytes ?? 0)} bytes); ≈${tok(Math.round(totalBytes / 4))} tokens of tool output entered the context. Output utility is unknowable, so this is an opportunity, never burned waste.`,
         spanIds: offenders.slice(0, cfg.topOffenders).map((s) => s.id),
