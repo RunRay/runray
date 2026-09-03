@@ -406,6 +406,9 @@
         "isError": true,
         "outputBytes": 57
       },
+      "content": {
+        "outputPreview": "ipsum aliqu\nincididunt magna adipiscing aliquip magna qui"
+      },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
@@ -1234,6 +1237,9 @@
         "isError": true,
         "outputBytes": 90
       },
+      "content": {
+        "outputPreview": "magna quis dolor adipiscing minim nostrud dolor aliquip consectetur ipsum aliquip incididu"
+      },
       "attributes": {
         "runray.targetKey": "f69559477eacbf0e",
         "runray.targetKind": "file-read",
@@ -1871,6 +1877,9 @@
         "name": "Read",
         "isError": true,
         "outputBytes": 197
+      },
+      "content": {
+        "outputPreview": "enim sed minim lorem aliqua enim aliqua consectetur quis sed consectetur aliqua amet magna lorem magna incididunt minim dolor ipsum enim lorem minim nostrud elit sed tempor quis incididunt sed dolo"
       },
       "attributes": {
         "runray.targetKey": "1bb7f82d71a7c6c5",
@@ -18549,6 +18558,9 @@
         "isError": true,
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": "minim ipsum\naliqua veniam ipsum tempor nostrud enim \ntempor enim amet veniam enim aliqua\ninc\naliqua veniam ipsum tempor nostrud enim \ntempor enim amet veniam enim aliqua"
+      },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
@@ -23798,6 +23810,9 @@
         "isError": true,
         "outputBytes": 295
       },
+      "content": {
+        "outputPreview": "tempor adipiscing lorem sit aliqua elit enim aliqua sit magna consectetur lorem sed dolor nostrud lorem quis aliquip enim lorem adipiscing incididunt lorem sit magna elit aliqua amet elit adipiscing l"
+      },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
@@ -25466,6 +25481,9 @@
         "name": "Bash",
         "isError": true,
         "outputBytes": 41
+      },
+      "content": {
+        "outputPreview": "nostrud elit \nsit magna consectetur venia"
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
@@ -27752,6 +27770,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
+      },
       "attributes": {
         "runray.targetKey": "dd8050e57701463e",
         "runray.targetKind": "file-write",
@@ -28063,6 +28084,9 @@
         "isError": true,
         "outputBytes": 1725
       },
+      "content": {
+        "outputPreview": "ipsum aliqu\nmagna inc\naliquip incididunt sit dolor enim amet aliqua e\nlorem dolor tempor ipsum labore consectetur magn\nnostrud enim adipiscing quis aliqua adipiscing quis sit minim sit temp\ntempor ali"
+      },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
@@ -28270,6 +28294,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": "aliquip magna adipiscing sit consectetur labore consectetur elit nostrud "
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28290,6 +28317,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": "consectetur incididunt aliquip enim aliquip tempor aliqua quis dolor magn"
       },
       "attributes": {},
       "provenance": {
@@ -28312,6 +28342,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": "sit quis dolor enim adipiscing consectetur adipiscing enim adipiscing adi"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28332,6 +28365,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": "elit aliquip nostrud veniam consectetur ipsum sit incididunt dolor lorem "
       },
       "attributes": {},
       "provenance": {
@@ -28354,6 +28390,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": "incididunt enim sit incididunt amet nostrud labore dolor enim ipsum amet "
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28374,6 +28413,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": "veniam ipsum aliqua magna nostrud sed lorem minim amet adipiscing sed dol"
       },
       "attributes": {},
       "provenance": {
@@ -28396,6 +28438,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": "labore aliqua ipsum minim enim amet nostrud magna elit dolor veniam conse"
+      },
       "attributes": {},
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28416,6 +28461,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": "labore ipsum tempor elit incididunt quis aliqua veniam ipsum sit dolor si"
       },
       "attributes": {},
       "provenance": {
@@ -33975,6 +34023,9 @@
         "isError": true,
         "outputBytes": 88
       },
+      "content": {
+        "outputPreview": "labore aliqua veniam consectetur lorem lorem aliqua minim dolor aliquip labore nostrud c"
+      },
       "attributes": {
         "runray.targetKey": "ab7e2a13e2697669",
         "runray.targetKind": "file-read",
@@ -36736,6 +36787,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": "dolor minim amet aliqua adipiscing sed minim veniam aliqua nostrud amet aliqua quis labore aliqu"
+      },
       "attributes": {
         "runray.targetKey": "3819de4807f6444e",
         "runray.targetKind": "file-write",
@@ -39064,7 +39118,7 @@
       "ruleId": "retry-loop",
       "severity": "info",
       "title": "TaskStop failed 8× in a row",
-      "detail": "8 consecutive TaskStop calls failed, driving ~$0.07 of model calls in the same scope between the first and the last attempt.",
+      "detail": "8 consecutive TaskStop calls failed (last error: “labore ipsum tempor elit incididunt quis aliqua veniam ipsum sit dolor si”), driving ~$0.07 of model calls in the same scope between the first and the last attempt.",
       "spanIds": [
         "toolu_01S5c9G5vg3dgurKHYu6xwJW",
         "toolu_01GNn79dmiEtr6CMjBgofxtU",
