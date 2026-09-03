@@ -1,5 +1,5 @@
 ---
-"runray": patch
+"runray": minor
 ---
 
 Findings now tell the person running the agent what to do, and show them how.
