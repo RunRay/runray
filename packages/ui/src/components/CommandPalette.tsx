@@ -57,6 +57,8 @@ function buildCommands(
   clearFilter: () => void,
   theme: Theme,
   toggleTheme: () => void,
+  isLive?: boolean,
+  onClose?: () => void,
 ): Command[] {
   const cmds: Command[] = [];
   const nav = (route: Route) => () => {
@@ -77,6 +79,19 @@ function buildCommands(
     keywords: 'sessions list all runs',
     perform: nav(SESSIONS_ROUTE),
   });
+
+  if (isLive) {
+    cmds.push({
+      id: 'action:export',
+      group: 'Go to',
+      label: 'Export report…',
+      keywords: 'export report share anonymize sanitize singlefile',
+      perform: () => {
+        onClose?.();
+        useAppStore.getState().toggleExport(true);
+      },
+    });
+  }
 
   if (activeRunId !== null) {
     cmds.push({
@@ -239,8 +254,20 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         clearFilter,
         theme,
         toggleTheme,
+        data.status === 'ready' && data.live,
+        onClose,
       ),
-    [runs, activeRunId, filter, setFilter, clearFilter, theme, toggleTheme],
+    [
+      runs,
+      activeRunId,
+      filter,
+      setFilter,
+      clearFilter,
+      theme,
+      toggleTheme,
+      data,
+      onClose,
+    ],
   );
 
   // Empty query → the full set in group order; a query → a flat, best-first

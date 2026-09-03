@@ -68,6 +68,31 @@ export {
   DEFAULT_PRICING_PROVIDERS,
   LITELLM_PRICING_URL,
 } from './pricing/litellm.js';
+export type {
+  IdentityTable,
+  SanitizationManifest,
+  SanitizeIntents,
+  SanitizeProfile,
+} from './sanitize/index.js';
+export {
+  assertNoPathShapes,
+  createIdentityTable,
+  createManifest,
+  findPathShapes,
+  hasPathShape,
+  isAttributeAllowed,
+  isSanitizeProfile,
+  profileIntents,
+  pruneToMetadata,
+  pruneTraceFileToMetadata,
+  resolveProfile,
+  sanitize,
+  sanitizeRun,
+  sanitizeTraceFile,
+  scrubAttributes,
+  scrubIdentity,
+  scrubIdentityRuns,
+} from './sanitize/index.js';
 export { stripBom } from './text.js';
 export type {
   TranscriptOptions,

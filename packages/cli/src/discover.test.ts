@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Run, Span, TraceFile } from '@runray/schema';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -511,5 +512,55 @@ describe('formatNoDataHints', () => {
       Never run an agent here? See it on a sample session:  runray demo
       "
     `);
+  });
+});
+
+describe('buildTraceFile sanitization pipeline (1.7)', () => {
+  const fixturePath = fileURLToPath(
+    new URL('../../../fixtures/claude-code', import.meta.url),
+  );
+
+  it('applies sanitized profile: scrubs paths and redacts prompt text', async () => {
+    const result = await buildTraceFile({
+      paths: [fixturePath],
+      redact: false,
+      profile: 'sanitized',
+      generatorVersion: '0.1.0-test',
+    });
+
+    expect(result.traceFile.runs.length).toBeGreaterThan(0);
+    const run = result.traceFile.runs[0];
+    expect(run).toBeDefined();
+    if (!run) return;
+    expect(run.project?.path).toMatch(/^project-\d+$/);
+    expect(run.project?.name).toMatch(/^project-\d+$/);
+    expect(run.source.files[0]).toMatch(/^transcript-\d+$/);
+    expect(run.title).toBeUndefined();
+    // Spans have scrubbed provenance and no prompt text
+    for (const span of run.spans) {
+      expect(span.provenance.file).toMatch(/^transcript-\d+$/);
+      if (span.content) {
+        for (const val of Object.values(span.content)) {
+          expect(val).toBeNull();
+        }
+      }
+    }
+  });
+
+  it('applies metadata-only profile: prunes to session/subagent and re-anchors evidence', async () => {
+    const result = await buildTraceFile({
+      paths: [fixturePath],
+      redact: false,
+      profile: 'metadata-only',
+      generatorVersion: '0.1.0-test',
+    });
+
+    expect(result.traceFile.runs.length).toBeGreaterThan(0);
+    const run = result.traceFile.runs[0];
+    expect(run).toBeDefined();
+    if (!run) return;
+    for (const span of run.spans) {
+      expect(['session', 'subagent']).toContain(span.kind);
+    }
   });
 });

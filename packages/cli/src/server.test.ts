@@ -454,3 +454,21 @@ describe('/api/onboarding', () => {
     }
   });
 });
+
+describe('negative tests: server export route (Task 3.5, cli "No export endpoint is added to the local server")', () => {
+  it('exposes no GET /api/export route and returns 404', async () => {
+    const server = await start();
+    const res = await fetch(new URL('/api/export', server.url));
+    expect(res.status).toBe(404);
+  });
+
+  it('exposes no POST /api/export route and writes no report file', async () => {
+    const server = await start();
+    const res = await fetch(new URL('/api/export', server.url), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ profile: 'sanitized', output: 'report.html' }),
+    });
+    expect(res.status).toBe(404);
+  });
+});

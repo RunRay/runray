@@ -21,9 +21,17 @@ export interface PricingPayload {
   table: PricingTable;
 }
 
-/** View configuration delivered by the CLI (E1): `{ limitWindow? }`. */
+export interface SanitizationManifest {
+  profile: 'full' | 'sanitized' | 'metadata-only';
+  textRedacted: boolean;
+  pathsScrubbed: boolean;
+  spansPruned: boolean;
+}
+
+/** View configuration delivered by the CLI (E1): `{ limitWindow?, manifest? }`. */
 export interface ViewConfigPayload {
   limitWindow?: LimitWindowConfig;
+  manifest?: SanitizationManifest;
   /** Live-only (§4.7): the roots discovery checked, `~`-abbreviated by the
    * CLI. Never present in an export — see plan constraint 6. */
   rootsScanned?: Array<{

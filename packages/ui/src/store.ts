@@ -139,6 +139,8 @@ export interface AppState {
     /** Keyboard-shortcut help sheet — the ? key and the TopBar button
      * share this one path (D7). */
     helpOpen: boolean;
+    /** Export dialog for handoff to CLI export command (Task 4.2 / 4.3). */
+    exportOpen: boolean;
     /** Collapsed waterfall subtrees, persisted per span id (task 3.3). */
     collapsed: ReadonlySet<string>;
     /** Evidence span ids of the active insight (empty when none). */
@@ -197,6 +199,8 @@ export interface AppState {
   toggleInspector(): void;
   /** Toggle the help sheet; pass a boolean to force a state. */
   toggleHelp(open?: boolean): void;
+  /** Toggle the export dialog; pass a boolean to force a state. */
+  toggleExport(open?: boolean): void;
   toggleCollapsed(spanId: string): void;
   /** Replace the collapsed set wholesale (collapse-all / expand-all). */
   setCollapsed(spanIds: ReadonlySet<string>): void;
@@ -224,6 +228,7 @@ export const useAppStore = create<AppState>()((set) => ({
   ui: {
     inspectorOpen: true,
     helpOpen: false,
+    exportOpen: false,
     collapsed: new Set(),
     highlighted: new Set(),
   },
@@ -422,6 +427,8 @@ export const useAppStore = create<AppState>()((set) => ({
     set((s) => ({ ui: { ...s.ui, inspectorOpen: !s.ui.inspectorOpen } })),
   toggleHelp: (open) =>
     set((s) => ({ ui: { ...s.ui, helpOpen: open ?? !s.ui.helpOpen } })),
+  toggleExport: (open) =>
+    set((s) => ({ ui: { ...s.ui, exportOpen: open ?? !s.ui.exportOpen } })),
   toggleCollapsed: (spanId) =>
     set((s) => {
       const collapsed = new Set(s.ui.collapsed);

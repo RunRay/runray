@@ -1,0 +1,299 @@
+{
+  "id": "run_8dc308a14d035ebd",
+  "source": {
+    "tool": "otlp",
+    "format": "otlp-json",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "startedAt": "2026-07-07T12:01:25.369Z",
+  "endedAt": "2026-07-07T12:01:37.810Z",
+  "durationMs": 12441,
+  "spans": [
+    {
+      "id": "c333a538bfc17870",
+      "parentId": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e",
+      "kind": "turn",
+      "name": "claude_code.interaction",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:25.369Z",
+      "endedAt": "2026-07-07T12:01:37.810Z",
+      "durationMs": 12441,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "c333a538bfc17870"
+      }
+    },
+    {
+      "id": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:25.369Z",
+      "endedAt": "2026-07-07T12:01:37.810Z",
+      "durationMs": 12441,
+      "depth": 0,
+      "agent": {
+        "sessionId": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e"
+      }
+    },
+    {
+      "id": "237cb5045304ccac",
+      "parentId": "c333a538bfc17870",
+      "kind": "llm_call",
+      "name": "claude_code.llm_request",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:25.375Z",
+      "endedAt": "2026-07-07T12:01:26.516Z",
+      "durationMs": 1141,
+      "depth": 2,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5-20251001",
+        "tokens": {
+          "input": 527,
+          "output": 16,
+          "cacheRead": 0,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "stopReason": "end_turn",
+        "costUSD": 0.000607
+      },
+      "attributes": {
+        "gen_ai.system": "anthropic",
+        "gen_ai.request.model": "claude-haiku-4-5-20251001",
+        "gen_ai.response.id": "req_011CcnfL8K8C5MxAHqPfC9hA",
+        "gen_ai.response.finish_reasons": [
+          "end_turn"
+        ]
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "237cb5045304ccac"
+      }
+    },
+    {
+      "id": "00abad99429488d0",
+      "parentId": "c333a538bfc17870",
+      "kind": "llm_call",
+      "name": "claude_code.llm_request",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:25.501Z",
+      "endedAt": "2026-07-07T12:01:28.320Z",
+      "durationMs": 2819,
+      "depth": 2,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8[1m]",
+        "tokens": {
+          "input": 4115,
+          "output": 159,
+          "cacheRead": 20432,
+          "cacheWrite": 4539
+        },
+        "costSource": "unknown",
+        "stopReason": "tool_use"
+      },
+      "attributes": {
+        "gen_ai.system": "anthropic",
+        "gen_ai.request.model": "claude-opus-4-8[1m]",
+        "gen_ai.response.id": "req_011CcnfL8xKQZAuUG5ofJkC9",
+        "gen_ai.response.finish_reasons": [
+          "tool_use"
+        ]
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "00abad99429488d0"
+      }
+    },
+    {
+      "id": "23b47c526e1fd15d",
+      "parentId": "c333a538bfc17870",
+      "kind": "tool_call",
+      "name": "claude_code.tool",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:27.903Z",
+      "endedAt": "2026-07-07T12:01:29.341Z",
+      "durationMs": 1438,
+      "depth": 2,
+      "tool": {
+        "name": "Bash",
+        "isError": false
+      },
+      "attributes": {
+        "gen_ai.tool.call.id": "toolu_01UFFLytRY4kdunvkRbBJwKN"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "23b47c526e1fd15d"
+      }
+    },
+    {
+      "id": "35f8b64118ea3acf",
+      "parentId": "23b47c526e1fd15d",
+      "kind": "other",
+      "name": "claude_code.tool.blocked_on_user",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:27.903Z",
+      "endedAt": "2026-07-07T12:01:27.925Z",
+      "durationMs": 22,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "35f8b64118ea3acf"
+      }
+    },
+    {
+      "id": "04c421de850df2c2",
+      "parentId": "23b47c526e1fd15d",
+      "kind": "other",
+      "name": "claude_code.tool.execution",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:27.926Z",
+      "endedAt": "2026-07-07T12:01:29.341Z",
+      "durationMs": 1415,
+      "depth": 3,
+      "attributes": {
+        "gen_ai.tool.call.id": "toolu_01UFFLytRY4kdunvkRbBJwKN"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "04c421de850df2c2"
+      }
+    },
+    {
+      "id": "b334789dff7ca6a9",
+      "parentId": "c333a538bfc17870",
+      "kind": "tool_call",
+      "name": "claude_code.tool",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:28.304Z",
+      "endedAt": "2026-07-07T12:01:28.312Z",
+      "durationMs": 8,
+      "depth": 2,
+      "tool": {
+        "name": "Read",
+        "isError": false
+      },
+      "attributes": {
+        "gen_ai.tool.call.id": "toolu_01GiiRvZU2enoUY7oBVzomU6"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "b334789dff7ca6a9"
+      }
+    },
+    {
+      "id": "fd2f034c90d4eb84",
+      "parentId": "b334789dff7ca6a9",
+      "kind": "other",
+      "name": "claude_code.tool.blocked_on_user",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:28.304Z",
+      "endedAt": "2026-07-07T12:01:28.309Z",
+      "durationMs": 5,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "fd2f034c90d4eb84"
+      }
+    },
+    {
+      "id": "4c73debeffb561aa",
+      "parentId": "b334789dff7ca6a9",
+      "kind": "other",
+      "name": "claude_code.tool.execution",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:28.310Z",
+      "endedAt": "2026-07-07T12:01:28.312Z",
+      "durationMs": 2,
+      "depth": 3,
+      "attributes": {
+        "gen_ai.tool.call.id": "toolu_01GiiRvZU2enoUY7oBVzomU6"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "4c73debeffb561aa"
+      }
+    },
+    {
+      "id": "b316cbd1fa751e4a",
+      "parentId": "c333a538bfc17870",
+      "kind": "llm_call",
+      "name": "claude_code.llm_request",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:29.397Z",
+      "endedAt": "2026-07-07T12:01:37.806Z",
+      "durationMs": 8409,
+      "depth": 2,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-opus-4-8[1m]",
+        "tokens": {
+          "input": 485,
+          "output": 648,
+          "cacheRead": 24971,
+          "cacheWrite": 5284
+        },
+        "costSource": "unknown",
+        "stopReason": "end_turn"
+      },
+      "attributes": {
+        "gen_ai.system": "anthropic",
+        "gen_ai.request.model": "claude-opus-4-8[1m]",
+        "gen_ai.response.id": "req_011CcnfLRSWeJqAJ6JSk9bA7",
+        "gen_ai.response.finish_reasons": [
+          "end_turn"
+        ]
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "b316cbd1fa751e4a"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 5127,
+      "output": 823,
+      "cacheRead": 45403,
+      "cacheWrite": 9823,
+      "reasoning": 0,
+      "total": 61176
+    },
+    "costUSD": {
+      "total": 0.000607,
+      "wastedEstimate": 0,
+      "byModel": {
+        "claude-haiku-4-5-20251001": 0.000607
+      }
+    },
+    "counts": {
+      "llmCalls": 3,
+      "toolCalls": 2,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8985
+    }
+  },
+  "insights": []
+}
