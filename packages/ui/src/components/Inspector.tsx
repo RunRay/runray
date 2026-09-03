@@ -7,6 +7,7 @@ import {
   formatUSD,
 } from '../lib/format';
 import { KIND_BG } from '../lib/span-kind';
+import { insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
 import { ruleLabel } from './SavingsPanel';
@@ -21,8 +22,11 @@ import { TranscriptPane } from './TranscriptPane';
 export function Inspector() {
   const spanId = useAppStore((s) => s.selection.spanId);
   const insightId = useAppStore((s) => s.selection.insightId);
+  const focus = useAppStore((s) => s.selection.focus);
   const run = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
+  const showInsight = useAppStore((s) => s.showInsight);
+  const focusInspector = useAppStore((s) => s.focusInspector);
 
   const span = useMemo(
     () => run?.spans.find((s) => s.id === spanId),
@@ -32,6 +36,27 @@ export function Inspector() {
     () => run?.insights.find((i) => i.id === insightId),
     [run, insightId],
   );
+  // Findings this activity is evidence of, worst first: the Activity |
+  // Finding switch and its per-finding chips are built from it.
+  const spanFindings = useMemo(
+    () =>
+      span === undefined || run === undefined
+        ? []
+        : (insightsBySpan(run.insights).get(span.id) ?? []),
+    [run, span],
+  );
+  // The switch flips `focus`; with no span selected the finding shows on
+  // its own, with no finding active the activity does.
+  const showingFinding =
+    insight !== undefined && (span === undefined || focus === 'insight');
+  const openFinding = () => {
+    if (span === undefined) return;
+    if (insight?.spanIds.includes(span.id)) {
+      focusInspector('insight');
+    } else if (spanFindings[0] !== undefined) {
+      showInsight(spanFindings[0], span.id);
+    }
+  };
 
   return (
     <aside
@@ -52,10 +77,28 @@ export function Inspector() {
       <div className="p-2 pb-0">
         <ContextualHint hintKey="redact" />
       </div>
-      {span !== undefined ? (
-        <SpanDetail span={span} />
-      ) : insight !== undefined && run !== undefined ? (
+      {span !== undefined && spanFindings.length > 0 && (
+        <DetailSwitch
+          mode={showingFinding ? 'finding' : 'activity'}
+          findings={spanFindings}
+          onActivity={() => focusInspector('span')}
+          onFinding={openFinding}
+        />
+      )}
+      {showingFinding &&
+        span !== undefined &&
+        insight !== undefined &&
+        spanFindings.length > 1 && (
+          <FindingChips
+            findings={spanFindings}
+            activeId={insight.id}
+            onPick={(f) => showInsight(f, span.id)}
+          />
+        )}
+      {showingFinding && insight !== undefined && run !== undefined ? (
         <InsightDetail insight={insight} run={run} />
+      ) : span !== undefined ? (
+        <SpanDetail span={span} />
       ) : run !== undefined ? (
         <RunSummary run={run} />
       ) : (
@@ -66,6 +109,100 @@ export function Inspector() {
         </div>
       )}
     </aside>
+  );
+}
+
+/**
+ * Activity | Finding switch (B): offered when the selected span is evidence
+ * of at least one finding. The finding side carries the worst severity's
+ * glyph and a count when the span sits under several findings.
+ */
+function DetailSwitch({
+  mode,
+  findings,
+  onActivity,
+  onFinding,
+}: {
+  mode: 'activity' | 'finding';
+  findings: Insight[];
+  onActivity: () => void;
+  onFinding: () => void;
+}) {
+  const worst = findings[0];
+  const segment = (active: boolean) =>
+    `flex-1 px-3 py-1 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary ${
+      active
+        ? 'bg-surface-variant font-semibold text-on-surface'
+        : 'bg-surface text-on-surface-variant hover:bg-surface-variant/40 hover:text-on-surface active:bg-bg-deep-gray'
+    }`;
+  return (
+    <div className="px-3 pt-2">
+      <div className="flex overflow-hidden rounded border border-border-slate">
+        <button
+          type="button"
+          aria-pressed={mode === 'activity'}
+          onClick={onActivity}
+          className={segment(mode === 'activity')}
+        >
+          Activity
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'finding'}
+          onClick={onFinding}
+          className={segment(mode === 'finding')}
+        >
+          {worst !== undefined && (
+            <span aria-hidden className={SEVERITY_TEXT[worst.severity]}>
+              ⚠{' '}
+            </span>
+          )}
+          Finding{findings.length > 1 ? ` · ${findings.length}` : ''}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** One chip per finding the selected span is evidence of, worst first. */
+function FindingChips({
+  findings,
+  activeId,
+  onPick,
+}: {
+  findings: Insight[];
+  activeId: string;
+  onPick: (insight: Insight) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 px-3 pt-2">
+      {findings.map((f) => {
+        const active = f.id === activeId;
+        return (
+          <button
+            key={f.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onPick(f)}
+            className={`rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg ${
+              active
+                ? 'border-border-slate bg-surface-2 text-text'
+                : 'border-border bg-surface text-text-dim hover:bg-surface-2 hover:text-text'
+            }`}
+          >
+            <span aria-hidden className={SEVERITY_TEXT[f.severity]}>
+              ⚠{' '}
+            </span>
+            {ruleLabel(f.ruleId).label}
+            {f.estimatedWasteUSD !== undefined && (
+              <span className="ml-1 font-mono text-text-faint">
+                {formatUSD(f.estimatedWasteUSD)}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

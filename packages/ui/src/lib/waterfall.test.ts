@@ -4,6 +4,7 @@ import {
   collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  insightsBySpan,
   laneMarks,
   matchingSpanIds,
   subagentSpanIds,
@@ -244,5 +245,51 @@ describe('collapsedAncestorsOf', () => {
     expect(
       collapsedAncestorsOf(spans, new Set(['agent']), new Set(['agent'])).size,
     ).toBe(0);
+  });
+});
+
+describe('insightsBySpan', () => {
+  const finding = (
+    id: string,
+    severity: 'info' | 'warning' | 'critical',
+    spanIds: string[],
+    usd?: number,
+  ) => ({
+    id,
+    ruleId: 'retry-loop',
+    severity,
+    title: id,
+    detail: '',
+    spanIds,
+    ...(usd === undefined ? {} : { estimatedWasteUSD: usd }),
+  });
+
+  it('keys every evidence span and lists a shared span under each finding', () => {
+    const map = insightsBySpan([
+      finding('a', 'warning', ['s1', 's2']),
+      finding('b', 'info', ['s2', 's3']),
+    ]);
+    expect([...map.keys()].sort()).toEqual(['s1', 's2', 's3']);
+    expect(map.get('s2')?.map((i) => i.id)).toEqual(['a', 'b']);
+    expect(map.get('s3')?.map((i) => i.id)).toEqual(['b']);
+  });
+
+  it('orders a span’s findings worst first: severity, then waste, then id', () => {
+    const map = insightsBySpan([
+      finding('cheap', 'warning', ['s'], 1),
+      finding('info', 'info', ['s'], 50),
+      finding('critical', 'critical', ['s']),
+      finding('dear', 'warning', ['s'], 9),
+    ]);
+    expect(map.get('s')?.map((i) => i.id)).toEqual([
+      'critical',
+      'dear',
+      'cheap',
+      'info',
+    ]);
+  });
+
+  it('is empty for a run without findings', () => {
+    expect(insightsBySpan([]).size).toBe(0);
   });
 });

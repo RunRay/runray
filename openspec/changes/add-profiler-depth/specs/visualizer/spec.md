@@ -356,3 +356,38 @@ hover, focus-visible, and active states.
 - GIVEN any view
 - WHEN the user activates the top-bar help button
 - THEN the help sheet opens, and Escape or the button closes it
+
+### Requirement: Finding markers and the Inspector detail switch
+The system SHALL mark every waterfall row that is evidence of a finding — a
+severity-tinted notch in the row gutter and a chip after the label carrying
+the finding count when the span sits under several findings — independent
+of which finding is active; the marker SHALL never be color-alone (the
+row's accessible name and tooltip list the findings). Activating a row's
+marker SHALL select that span and open its worst finding in the Inspector.
+When the selected span is evidence of at least one finding, the Inspector
+SHALL offer an Activity | Finding switch between the span detail and the
+finding detail without losing either selection; a span under several
+findings SHALL let the user pick which one to show.
+
+#### Scenario: Evidence rows are marked while no finding is active
+- GIVEN a run with a retry-loop finding over three tool calls
+- WHEN the timeline renders with no finding activated
+- THEN those three rows carry the finding marker and the other rows do not
+
+#### Scenario: Marker opens the finding
+- GIVEN a marked row
+- WHEN the user activates its marker
+- THEN the span is selected, the finding's evidence is highlighted, and the
+  Inspector shows the finding
+
+#### Scenario: Switching between activity and finding
+- GIVEN a finding is active and one of its evidence spans is selected
+- WHEN the user switches the Inspector to Activity and back to Finding
+- THEN the span detail and the finding detail alternate, the span stays
+  selected, and the evidence highlight stays
+
+#### Scenario: A span under several findings
+- GIVEN a span that is evidence of two findings
+- WHEN its finding detail is shown
+- THEN both findings are offered and picking the other one shows it with its
+  own evidence highlighted
