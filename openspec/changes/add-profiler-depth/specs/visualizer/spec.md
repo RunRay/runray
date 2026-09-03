@@ -391,3 +391,27 @@ findings SHALL let the user pick which one to show.
 - WHEN its finding detail is shown
 - THEN both findings are offered and picking the other one shows it with its
   own evidence highlighted
+
+### Requirement: Finding playbook in the Inspector
+When the Inspector shows a finding, it SHALL render, after the finding's
+suggestion, the rule's playbook actions for the run's own source (Claude
+Code, OpenCode, or the custom-agent playbook for other sources) as a
+numbered list in the order the registry gives them, with commands, keys and
+file names set apart from prose; the causes and the limits SHALL be
+available behind one disclosure that is keyboard-operable and announces its
+state. The dashboard's savings groups SHALL describe a rule with the rule's
+own explanation, never with one finding's suggestion.
+
+#### Scenario: Levers for the session's source
+- GIVEN a Claude Code run with a fixed-context-overhead finding shown in the
+  Inspector
+- WHEN the finding view renders
+- THEN a "How to fix · Claude Code" section lists that rule's Claude Code
+  actions, numbered, and the disclosure reveals "Why it happens" and "Out
+  of your hands"
+
+#### Scenario: Custom-agent fallback
+- GIVEN a run whose source is OTLP
+- WHEN a finding is shown
+- THEN the section is labelled for a custom agent and lists the
+  custom-agent actions

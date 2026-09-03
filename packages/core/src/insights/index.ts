@@ -283,6 +283,7 @@ export {
   PLAYBOOK_SOURCES,
   playbookActions,
   RULE_META,
+  resolvePlaybookSource,
   ruleClass,
 } from './meta.js';
 export {

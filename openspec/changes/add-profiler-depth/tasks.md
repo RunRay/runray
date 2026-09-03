@@ -337,3 +337,12 @@ automatically extends its fixture-parameterized equivalence matrix.
       UI insights strip and run tour rank findings by estimated waste
       (`rankInsights`). Goldens regenerated (severity values only) in a
       dedicated commit. Added 2026-09-03.
+- [x] 11.8 A Suggestions and playbooks (spec: cost-engine "Suggestions address
+      the person running the agent", visualizer "Finding playbook in the
+      Inspector"): every rule's suggestion rewritten for the person running
+      the agent, source-aware via `run.source.tool`, carrying the finding's
+      numbers (goldens regenerated, text only, dedicated commit); `RULE_META`
+      playbooks (causes · actions per source · limits) rendered into
+      docs/08-FINDINGS.md by `pnpm docs:playbooks` with a drift test;
+      Inspector "How to fix" section; dashboard groups describe the rule,
+      not one finding. Added 2026-09-03.

@@ -1,11 +1,17 @@
+import {
+  PLAYBOOK_SOURCE_LABEL,
+  RULE_META,
+  resolvePlaybookSource,
+} from '@runray/core/insights-meta';
 import type { Insight, Run, Span } from '@runray/schema';
-import { type ReactNode, useMemo, useState } from 'react';
+import { Fragment, type ReactNode, useMemo, useState } from 'react';
 import {
   formatDateTime,
   formatDuration,
   formatTokens,
   formatUSD,
 } from '../lib/format';
+import { splitInlineCode } from '../lib/inline-code';
 import { KIND_BG } from '../lib/span-kind';
 import { insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
@@ -161,6 +167,109 @@ function DetailSwitch({
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * The page behind the one-sentence suggestion (docs/08-FINDINGS.md, "How
+ * to fix"): the levers the person has in THIS session's source, most
+ * effective first — a real order, hence the numbers. The causes and the
+ * limits sit behind one disclosure, so the pane stays about what to do.
+ */
+function Playbook({ ruleId, source }: { ruleId: string; source: string }) {
+  const [why, setWhy] = useState(false);
+  const meta = RULE_META[ruleId];
+  if (meta === undefined) return null;
+  const key = resolvePlaybookSource(source);
+  return (
+    <Section title={`How to fix · ${PLAYBOOK_SOURCE_LABEL[key]}`}>
+      <ol className="space-y-1.5">
+        {meta.playbook.actions[key].map((line, i) => (
+          <li
+            key={line}
+            className="flex gap-2 text-label leading-[1.45] text-text"
+          >
+            <span
+              aria-hidden
+              className="w-3 shrink-0 text-right font-mono text-text-faint tabular-nums"
+            >
+              {i + 1}
+            </span>
+            <span className="min-w-0">
+              <InlineCode line={line} />
+            </span>
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        aria-expanded={why}
+        onClick={() => setWhy((v) => !v)}
+        className="mt-2 flex items-center gap-1.5 rounded-control px-1 py-0.5 text-label text-text-dim transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg"
+      >
+        <span
+          aria-hidden
+          className={`inline-block text-[9px] transition-transform duration-150 ease-out ${why ? 'rotate-90' : ''}`}
+        >
+          ▶
+        </span>
+        Why it happens, and what is out of your hands
+      </button>
+      {why && (
+        <div className="mt-1.5 space-y-2.5 border-l border-border pl-2.5">
+          <PlaybookList label="Why it happens" lines={meta.playbook.causes} />
+          <PlaybookList
+            label="Out of your hands"
+            lines={meta.playbook.limits}
+          />
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function PlaybookList({
+  label,
+  lines,
+}: {
+  label: string;
+  lines: readonly string[];
+}) {
+  return (
+    <div>
+      <p className="micro-label mb-1 text-text-faint">{label}</p>
+      <ul className="space-y-1">
+        {lines.map((line) => (
+          <li key={line} className="text-label leading-[1.45] text-text-dim">
+            <InlineCode line={line} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** A playbook line with its backtick runs set in mono. */
+function InlineCode({ line }: { line: string }) {
+  const seen = new Map<string, number>();
+  return (
+    <>
+      {splitInlineCode(line).map((run) => {
+        const n = (seen.get(run.text) ?? 0) + 1;
+        seen.set(run.text, n);
+        const key = `${run.code ? 'c' : 't'}${n}:${run.text}`;
+        return run.code ? (
+          <code
+            key={key}
+            className="rounded-control bg-surface-2 px-1 font-mono text-[0.92em] text-text"
+          >
+            {run.text}
+          </code>
+        ) : (
+          <Fragment key={key}>{run.text}</Fragment>
+        );
+      })}
+    </>
   );
 }
 
@@ -335,6 +444,7 @@ function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
           </p>
         </Section>
       )}
+      <Playbook ruleId={insight.ruleId} source={run.source.tool} />
       <Section title={`Evidence (${evidence.length})`}>
         <ul className="space-y-0.5">
           {evidence.map((span) => (

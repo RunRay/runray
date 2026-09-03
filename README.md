@@ -86,7 +86,7 @@ Total session cost, cost stacked by model over time, a treemap by tool/agent sub
 ### Findings
 Every finding answers two questions. **Is the money gone?** — *burned* findings (retry loops, cache breaks, duplicate reads, dead ends) add up to the run's **wasted** figure; *opportunity* findings (heavy fixed context, wrong model tier, low cache hit-rate) are savings you could still make and never inflate it. **How big is it here?** — severity is not a property of the rule: the engine grades each finding by its share of *that run's* cost (by default `warning` from 2% and $0.05, `critical` from 10% and $1), so the same $0.60 retry loop is a warning in a $0.65 run and a footnote in a $600 one.
 
-The strip above the timeline lists findings ranked by amount; evidence rows in the waterfall carry a severity notch and a ⚠ chip, and the Inspector switches between an activity and the finding it belongs to. Full rule list, formulas and threshold keys: [docs/08-FINDINGS.md](https://github.com/apitome-app/runray/blob/main/docs/08-FINDINGS.md).
+The strip above the timeline lists findings ranked by amount; evidence rows in the waterfall carry a severity notch and a ⚠ chip, and the Inspector switches between an activity and the finding it belongs to. Every suggestion is addressed to you, not to the model, and the Inspector shows the rule's playbook for your tool under *How to fix*. Full rule list, formulas and threshold keys: [docs/08-FINDINGS.md](https://github.com/apitome-app/runray/blob/main/docs/08-FINDINGS.md).
 
 ---
 
