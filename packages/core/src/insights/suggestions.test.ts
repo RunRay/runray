@@ -10,7 +10,8 @@ import { applyInsights } from './index.js';
  * contract, not the detection (that lives in rules/new-rules tests).
  */
 
-type Source = RawRun['source']['tool'];
+/** The sources suggestions distinguish (the schema also knows 'unknown'). */
+type Source = 'claude-code' | 'opencode' | 'otlp';
 const FORMAT: Record<Source, RawRun['source']['format']> = {
   'claude-code': 'claude-jsonl',
   opencode: 'opencode-storage',

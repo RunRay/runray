@@ -21,7 +21,10 @@ export { diffRuns } from './diff/index.js';
 export type {
   Finding,
   InsightRule,
+  Playbook,
+  PlaybookSource,
   RuleContext,
+  RuleMeta,
   SeverityThresholds,
   ThresholdOverrides,
   Thresholds,
@@ -29,7 +32,14 @@ export type {
 export {
   applyInsights,
   DEFAULT_THRESHOLDS,
+  extractPlaybooksBlock,
   gradeSeverity,
+  PLAYBOOK_SOURCE_LABEL,
+  PLAYBOOK_SOURCES,
+  playbookActions,
+  RULE_META,
+  renderPlaybooksMarkdown,
+  replacePlaybooksBlock,
   resolveThresholds,
   V0_RULES,
 } from './insights/index.js';
