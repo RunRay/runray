@@ -340,6 +340,14 @@ const CASES: [string, Partial<Span> & { text?: string | null }, string][] = [
     },
     'agent',
   ],
+  [
+    'path-not-found',
+    {
+      name: 'read',
+      text: 'Error: File not found: D:\\GIT\\ReplyAI\\apps\\planner\\lib\\spotlight.ts',
+    },
+    'agent',
+  ],
   ['unclassified', { text: 'something nobody has seen before' }, 'unknown'],
 ];
 

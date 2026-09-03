@@ -478,3 +478,30 @@ tooltip SHALL name the owner breakdown.
 - GIVEN a run with one shell-syntax failure
 - WHEN the sessions rail renders
 - THEN the pill reads "1 errors · 1 needs you" in the alarm tone
+
+### Requirement: Inspector error sections
+When the Inspector shows a failed span, it SHALL render after the Output
+section a "What this is" section — the owner and class from the run's
+triage, the class explanation, and what happened to this occurrence
+(whether the next call of the same tool succeeded and after how long, what
+the reacting model call cost) — and a "What you can do" section with the
+class playbook's actions for the run's own source, under the same
+visibility rule as the Errors tab (always for owners you, tooling, model
+and unclassified; for agent slips only when the cluster repeated or never
+recovered; otherwise the explanation only). Both SHALL read from the same
+triage the Errors tab renders, and a control SHALL open the Errors tab.
+A cancelled span SHALL get one sentence saying the person declined the
+call and it is not counted as an error. The "tool errors" count in the
+run summary SHALL take the triage's tone.
+
+#### Scenario: A failed shell call in the Inspector
+- GIVEN a selected Bash span whose failure is classified shell-syntax
+- WHEN the Inspector renders it
+- THEN "What this is" says "Needs you · Shell syntax", reports that the
+  next Bash call succeeded and what the reaction cost, and "What you can
+  do · Claude Code" lists the class's Claude Code actions
+
+#### Scenario: A declined call
+- GIVEN a selected span with status cancelled
+- WHEN the Inspector renders it
+- THEN it says the person declined the call and shows no playbook

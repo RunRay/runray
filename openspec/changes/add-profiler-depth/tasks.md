@@ -402,3 +402,10 @@ automatically extends its fixture-parameterized equivalence matrix.
       `runTriage`, `errorPill`), pills in the sessions table and rail tinted
       by `triageTone` with "· N need you", palette entry, contextual hint,
       shared `PlaybookSteps`. Added 2026-09-03.
+- [x] 12.5 B [UI → /frontend-design] Inspector error sections (E3, spec:
+      visualizer "Inspector error sections"): `ErrorTriageSections` after
+      Output — owner · class, explanation, what happened to this occurrence
+      (recovery, reaction cost), the source playbook under the tab's
+      visibility rule, a jump to the Errors tab; one sentence for a declined
+      call; "tool errors" in the run summary takes the triage tone; the
+      Inspector's rule playbook reuses `PlaybookSteps`. Added 2026-09-03.

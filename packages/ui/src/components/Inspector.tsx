@@ -4,18 +4,20 @@ import {
   resolvePlaybookSource,
 } from '@runray/core/insights-meta';
 import type { Insight, Run, Span } from '@runray/schema';
-import { Fragment, type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
   formatDateTime,
   formatDuration,
   formatTokens,
   formatUSD,
 } from '../lib/format';
-import { splitInlineCode } from '../lib/inline-code';
 import { KIND_BG } from '../lib/span-kind';
+import { errorPill } from '../lib/triage';
 import { insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
+import { ErrorTriageSections } from './ErrorTriageSections';
+import { PlaybookList, PlaybookSteps } from './PlaybookSteps';
 import { ruleLabel } from './SavingsPanel';
 import { TranscriptPane } from './TranscriptPane';
 
@@ -183,24 +185,7 @@ function Playbook({ ruleId, source }: { ruleId: string; source: string }) {
   const key = resolvePlaybookSource(source);
   return (
     <Section title={`How to fix · ${PLAYBOOK_SOURCE_LABEL[key]}`}>
-      <ol className="space-y-1.5">
-        {meta.playbook.actions[key].map((line, i) => (
-          <li
-            key={line}
-            className="flex gap-2 text-label leading-[1.45] text-text"
-          >
-            <span
-              aria-hidden
-              className="w-3 shrink-0 text-right font-mono text-text-faint tabular-nums"
-            >
-              {i + 1}
-            </span>
-            <span className="min-w-0">
-              <InlineCode line={line} />
-            </span>
-          </li>
-        ))}
-      </ol>
+      <PlaybookSteps actions={meta.playbook.actions[key]} />
       <button
         type="button"
         aria-expanded={why}
@@ -225,51 +210,6 @@ function Playbook({ ruleId, source }: { ruleId: string; source: string }) {
         </div>
       )}
     </Section>
-  );
-}
-
-function PlaybookList({
-  label,
-  lines,
-}: {
-  label: string;
-  lines: readonly string[];
-}) {
-  return (
-    <div>
-      <p className="micro-label mb-1 text-text-faint">{label}</p>
-      <ul className="space-y-1">
-        {lines.map((line) => (
-          <li key={line} className="text-label leading-[1.45] text-text-dim">
-            <InlineCode line={line} />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** A playbook line with its backtick runs set in mono. */
-function InlineCode({ line }: { line: string }) {
-  const seen = new Map<string, number>();
-  return (
-    <>
-      {splitInlineCode(line).map((run) => {
-        const n = (seen.get(run.text) ?? 0) + 1;
-        seen.set(run.text, n);
-        const key = `${run.code ? 'c' : 't'}${n}:${run.text}`;
-        return run.code ? (
-          <code
-            key={key}
-            className="rounded-control bg-surface-2 px-1 font-mono text-[0.92em] text-text"
-          >
-            {run.text}
-          </code>
-        ) : (
-          <Fragment key={key}>{run.text}</Fragment>
-        );
-      })}
-    </>
   );
 }
 
@@ -340,11 +280,24 @@ function RunSummary({ run }: { run: Run }) {
           <Mono>{formatTokens(counts.toolCalls)}</Mono>
         </Field>
         <Field label="tool errors">
-          <span
-            className={`font-mono ${counts.toolErrors > 0 ? 'text-span-error' : ''}`}
-          >
-            {formatTokens(counts.toolErrors)}
-          </span>
+          {(() => {
+            // the count stays; the tone is the triage's (see lib/triage)
+            const pill = errorPill(run);
+            return (
+              <span
+                title={pill?.title}
+                className={`font-mono ${pill?.tone === 'alarm' ? 'text-span-error' : ''}`}
+              >
+                {formatTokens(counts.toolErrors)}
+                {pill?.label.includes('need') && (
+                  <span className="text-text-faint">
+                    {' '}
+                    · {pill.label.split(' · ')[1]}
+                  </span>
+                )}
+              </span>
+            );
+          })()}
         </Field>
         <Field label="subagents">
           <Mono>{formatTokens(counts.subagents)}</Mono>
@@ -483,6 +436,7 @@ function SpanDetail({ span }: { span: Span }) {
   const activeRunId = useAppStore((s) =>
     'runId' in s.route ? s.route.runId : null,
   );
+  const run = useAppStore(selectActiveRun);
   const [showRaw, setShowRaw] = useState(false);
   const isError = span.status === 'error';
 
@@ -614,6 +568,9 @@ function SpanDetail({ span }: { span: Span }) {
           <PreviewText value={span.content.outputPreview} />
         </Section>
       )}
+
+      {/* what a failure is, who can act, what to do (error-triage) */}
+      {run !== undefined && <ErrorTriageSections span={span} run={run} />}
 
       {/* full source-log slice behind the preview (D4) */}
       {activeRunId !== null && (
