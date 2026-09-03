@@ -136,6 +136,10 @@ interface ToolResultRef {
   line: number;
   isError: boolean;
   outputBytes: number | undefined;
+  /** First PREVIEW_CHARS of an error result's text — the one thing a
+   * retry-loop or dead-end finding can quote; prompt-derived, so it goes
+   * through the content/redaction contract like every preview. */
+  errorPreview: string | undefined;
   toolUseResult: Json | undefined;
 }
 /** One llm_call — assistant JSONL records sharing a message.id (Claude Code
@@ -279,6 +283,10 @@ async function collectTranscript(
             line,
             isError: block.is_error === true,
             outputBytes: byteLength(block.content),
+            errorPreview:
+              block.is_error === true
+                ? textOf(block.content)?.slice(0, PREVIEW_CHARS)
+                : undefined,
             toolUseResult: isObj(rec.toolUseResult)
               ? rec.toolUseResult
               : undefined,
@@ -472,6 +480,15 @@ async function emitFromTranscript(
             : { outputBytes: result.outputBytes }),
           ...counts,
         },
+        // only a failure's text is kept: successful outputs are sized, not
+        // previewed (a file's first 200 chars would be noise in every span)
+        ...(result?.isError
+          ? {
+              content: contentField(ctx, {
+                outputPreview: result.errorPreview,
+              }),
+            }
+          : {}),
         attributes: toolTargetAttributes(
           'claude-code',
           tu.name,

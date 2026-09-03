@@ -346,3 +346,10 @@ automatically extends its fixture-parameterized equivalence matrix.
       docs/08-FINDINGS.md by `pnpm docs:playbooks` with a drift test;
       Inspector "How to fix" section; dashboard groups describe the rule,
       not one finding. Added 2026-09-03.
+- [x] 11.9 A Error text on failed tool spans (spec: trace-ingestion "Tool
+      error text capture", cost-engine "Findings quote the failure"): the
+      claude-code and opencode adapters keep the first 200 chars of a failed
+      result as `content.outputPreview` (null under `--redact`); retry-loop,
+      dead-end-run and scattered-tool-failures quote it; `PowerShell` joins
+      the claude-code target map (command identity). Goldens regenerated in a
+      dedicated commit. Added 2026-09-03.

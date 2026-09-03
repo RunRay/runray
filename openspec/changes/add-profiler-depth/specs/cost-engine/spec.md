@@ -385,3 +385,23 @@ Inspector.
 - THEN every rule has a playbook with at least one cause, at least one
   action for each of Claude Code, OpenCode and custom agents, and at least
   one limit, and the committed docs block equals the rendered registry
+
+### Requirement: Findings quote the failure
+Where a failed tool span carries an error preview, retry-loop SHALL quote
+the last failure's first line (whitespace collapsed, at most 120
+characters) in its detail, dead-end-run SHALL name the failing step's
+reason, and scattered-tool-failures SHALL quote the dominant tool's most
+recent error. Without a preview (redacted, or not captured by the source)
+the findings SHALL read exactly as before, with no placeholder.
+
+#### Scenario: Retry loop names the error
+- GIVEN three consecutive Bash failures whose last error reads "The token
+  '&&' is not a valid statement separator."
+- WHEN the finding is emitted
+- THEN its detail quotes that sentence as the last error
+
+#### Scenario: Redaction leaves no trace of the text
+- GIVEN the same session parsed with `--redact`
+- WHEN the findings are emitted
+- THEN no finding text contains any part of the error, and no placeholder
+  stands in for it

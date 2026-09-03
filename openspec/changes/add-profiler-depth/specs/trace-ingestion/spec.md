@@ -129,3 +129,23 @@ run warning naming their count.
 - WHEN the session is ingested
 - THEN the transcript is skipped and the run carries a warning counting
   the unlinked transcripts
+
+### Requirement: Tool error text capture
+Adapters SHALL keep the first 200 characters of a failed tool result's text
+as the tool span's `content.outputPreview`, under the same content contract
+as every other preview: present only when redaction is off, `null` under
+`--redact`. Successful tool results SHALL carry no preview (their size is
+recorded, their text is not). The Claude Code adapter SHALL recognize
+`PowerShell` as a command tool for target identity, exactly like `Bash`.
+
+#### Scenario: A failed Bash call keeps its error
+- GIVEN a tool_result with `is_error: true` whose text starts
+  "ENOENT: no such file"
+- WHEN the transcript is parsed without redaction
+- THEN the tool span's `outputPreview` starts with that text, and the same
+  span parsed with redaction carries `outputPreview: null`
+
+#### Scenario: Successful output is sized, not quoted
+- GIVEN a successful Read of a 5 kB file
+- WHEN the transcript is parsed
+- THEN the tool span records `outputBytes` and no content preview

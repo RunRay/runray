@@ -166,6 +166,21 @@ function claimedLlmIds(
   return out;
 }
 
+/** The one line of a failed tool span's error worth quoting: the first
+ * non-empty line of the preview the adapters keep on error results,
+ * whitespace collapsed, capped at 120 chars. Absent under redaction (the
+ * preview is null) and for sources that carry no error text. */
+function errorSnippet(span: Span): string | undefined {
+  const preview = span.content?.outputPreview;
+  if (typeof preview !== 'string') return undefined;
+  const line = preview
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .find((l) => l.length > 0);
+  if (line === undefined) return undefined;
+  return line.length > 120 ? `${line.slice(0, 119)}…` : line;
+}
+
 const retryLoop: InsightRule = {
   id: 'retry-loop',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
@@ -194,6 +209,11 @@ const retryLoop: InsightRule = {
       // does not know about (shell), the file changing under it (edit), a
       // server (mcp), or simply stopping the loop sooner (anything else)
       const perLoop = wasted > 0 ? ` at ${usd(wasted)} a loop` : '';
+      const lastError = errorSnippet(
+        cluster.failures[cluster.failures.length - 1] as Span,
+      );
+      const quoted =
+        lastError === undefined ? '' : ` (last error: “${lastError}”)`;
       const suggestion = ((): string => {
         switch (toolClassOf(first)) {
           case 'shell':
@@ -209,7 +229,7 @@ const retryLoop: InsightRule = {
       return {
         ruleId: 'retry-loop',
         title: `${first.name} failed ${n}× in a row`,
-        detail: `${n} consecutive ${first.name} calls failed, driving ~${usd(wasted)} of model calls in the same scope between the first and the last attempt.`,
+        detail: `${n} consecutive ${first.name} calls failed${quoted}, driving ~${usd(wasted)} of model calls in the same scope between the first and the last attempt.`,
         spanIds: cluster.failures.map((s) => s.id),
         estimatedWasteUSD: wasted,
         suggestion,
@@ -512,8 +532,17 @@ const deadEndRun: InsightRule = {
     );
     const marker = markers[markers.length - 1];
 
+    // the reason, when the trace holds one: a machine-ish statusReason, or
+    // the first line of the failure's own text
+    const snippet = errorSnippet(terminal);
+    const why =
+      terminal.statusReason !== undefined
+        ? ` (${terminal.statusReason})`
+        : snippet !== undefined
+          ? ` (“${snippet}”)`
+          : '';
     let waste = total;
-    let detail = `The session terminated on a failing ${terminal.name} (${terminal.statusReason ?? 'error'}) after spending ${usd(total)} with no completed outcome.`;
+    let detail = `The session terminated on a failing ${terminal.name}${why} after spending ${usd(total)} with no completed outcome.`;
     let suggestion = `Deal with the failing ${terminal.name} before running this again — nothing was produced, so a plain rerun spends the ${usd(total)} a second time.`;
     if (marker !== undefined) {
       const markerT = ms(marker.startedAt);
@@ -537,7 +566,7 @@ const deadEndRun: InsightRule = {
           tail.reduce((acc, l) => acc + (l.llm?.costUSD ?? 0), 0),
         ),
       );
-      detail = `The session terminated on a failing ${terminal.name} (${terminal.statusReason ?? 'error'}); ~${usd(waste)} of model calls after the last completed code change (${marker.name}) produced no result.`;
+      detail = `The session terminated on a failing ${terminal.name}${why}; ~${usd(waste)} of model calls after the last completed code change (${marker.name}) produced no result.`;
       suggestion = `Resume the session and deal with the failing ${terminal.name} first — everything up to the last completed change (${marker.name}) is intact; only the ~${usd(waste)} tail after it needs redoing.`;
     }
     return [
@@ -1083,11 +1112,19 @@ const scatteredToolFailures: InsightRule = {
       (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
     )[0] ?? ['tool', 0];
     const share = Math.round((failures.length / toolCalls) * 100);
+    const recent = [...failures]
+      .reverse()
+      .map((f) => (f.name === dominant ? errorSnippet(f) : undefined))
+      .find((s) => s !== undefined);
+    const quoted =
+      recent === undefined
+        ? ''
+        : ` Most recent ${dominant} error: “${recent}”.`;
     return [
       {
         ruleId: 'scattered-tool-failures',
         title: `${failures.length} scattered tool failures outside retry loops`,
-        detail: `${failures.length} of ${toolCalls} tool calls (${share}%) failed outside any retry loop; the model calls reacting to them cost ~${usd(waste)}.`,
+        detail: `${failures.length} of ${toolCalls} tool calls (${share}%) failed outside any retry loop; the model calls reacting to them cost ~${usd(waste)}.${quoted}`,
         spanIds: failures.slice(0, 10).map((s) => s.id),
         estimatedWasteUSD: waste,
         suggestion: `Look at why ${dominant} kept failing (${dominantCount} of the ${failures.length}) and record the fix in ${instructionsFile(run)} — each failure cost a model call to recover from, ~${usd(waste)} in total.`,

@@ -74,6 +74,7 @@ const TOOL_MAP: Record<
     Write: { kind: 'file-write', fields: ['file_path'] },
     NotebookEdit: { kind: 'file-write', fields: ['notebook_path'] },
     Bash: { kind: 'command', fields: ['command'] },
+    PowerShell: { kind: 'command', fields: ['command'] },
   },
   opencode: {
     read: { kind: 'file-read', fields: ['filePath'] },

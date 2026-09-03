@@ -446,6 +446,19 @@ function outputBytes(state: Json | undefined): number | undefined {
   return undefined;
 }
 
+/** First PREVIEW_CHARS of a failed part's error: a string in the storage
+ * format, an `{ name, message }` object in some exports. */
+function errorPreview(state: Json | undefined): string | undefined {
+  const err = state?.error;
+  const text =
+    typeof err === 'string'
+      ? err
+      : isObj(err)
+        ? (str(err.message) ?? str(err.name))
+        : undefined;
+  return text?.slice(0, PREVIEW_CHARS);
+}
+
 function durationBetween(
   startedAt: string,
   endedAt: string | undefined,
@@ -583,6 +596,15 @@ function emitBundle(
           ...(bytes === undefined ? {} : { outputBytes: bytes }),
           ...counts,
         },
+        // a failure's text is the one output worth previewing (same
+        // content/redaction contract as the claude-code adapter)
+        ...(status === 'error'
+          ? {
+              content: contentField(ctx, {
+                outputPreview: errorPreview(state),
+              }),
+            }
+          : {}),
         attributes: {
           ...toolTargetAttributes('opencode', toolName, input, ctx.redact),
           ...(mcpServer === undefined

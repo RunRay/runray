@@ -57,7 +57,7 @@ TraceFile
 | `llm?` | object | Only for `llm_call`: `provider`, `model`, `tokens {input, output, cacheRead, cacheWrite, reasoning?}`, `costUSD?`, `costSource: reported\|computed\|unknown`, `stopReason?`. |
 | `tool?` | object | Only for `tool_call`/`mcp_call`: `name`, `mcpServer?`, `isError`, `exitCode?`, `outputBytes?`, `linesAdded?`, `linesRemoved?` (file-modifying tools only, when derivable from the source record). |
 | `agent?` | object | For `subagent`/`session`: `{ name?, sessionId? }`. |
-| `content?` | object | `{ promptPreview?, outputPreview?, delegationReason? }` — all prompt-derived text lives here and is nulled by `--redact`; previews are first N chars; `delegationReason` (subagent spans) is the Task description. |
+| `content?` | object | `{ promptPreview?, outputPreview?, delegationReason? }` — all prompt-derived text lives here and is nulled by `--redact`; previews are first N chars; `delegationReason` (subagent spans) is the Task description; tool spans carry `outputPreview` only for a failed result (the first N chars of its error). |
 | `attributes` | object | Passthrough bag; prefer `gen_ai.*` keys where applicable. |
 | `provenance` | object | `{ file, line?, recordId? }`. |
 

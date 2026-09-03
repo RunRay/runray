@@ -92,7 +92,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
       },
       limits: [
-        'The finding names the tool and the count; the error text itself is not part of the trace.',
+        'The finding quotes the error text when the session was parsed without `--redact`; with redaction it names only the tool and the count.',
       ],
     },
   },
@@ -369,7 +369,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
       },
       limits: [
-        'The finding counts failures outside retry loops; the error text itself is not part of the trace.',
+        'The finding counts failures outside retry loops and quotes the most recent error of the dominant tool when parsed without `--redact`.',
       ],
     },
   },

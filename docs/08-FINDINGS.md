@@ -95,7 +95,7 @@ The same tool failed several times in a row — every retry re-billed the full c
 
 **Out of your hands**
 
-- The finding names the tool and the count; the error text itself is not part of the trace.
+- The finding quotes the error text when the session was parsed without `--redact`; with redaction it names only the tool and the count.
 
 ### `low-cache-hit` · Low cache hit-rate
 
@@ -383,7 +383,7 @@ Many isolated tool failures forced extra model calls to react and recover.
 
 **Out of your hands**
 
-- The finding counts failures outside retry loops; the error text itself is not part of the trace.
+- The finding counts failures outside retry loops and quotes the most recent error of the dominant tool when parsed without `--redact`.
 
 ### `oversized-output` · Oversized tool output
 

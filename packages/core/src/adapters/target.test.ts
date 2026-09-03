@@ -118,3 +118,21 @@ describe('toolTargetAttributes', () => {
     expect(toolTargetAttributes('claude-code', 'Glob', {}, false)).toEqual({});
   });
 });
+
+describe('PowerShell commands (Claude Code on Windows)', () => {
+  it('hash the executable token like Bash, so a loop of failing commands has an identity', () => {
+    const a = extractToolTarget('claude-code', 'PowerShell', {
+      command: 'git status',
+    });
+    const b = extractToolTarget('claude-code', 'PowerShell', {
+      command: 'git log --oneline -5',
+    });
+    const bash = extractToolTarget('claude-code', 'Bash', {
+      command: 'git status',
+    });
+    expect(a?.kind).toBe('command');
+    expect(a?.key).toBe(b?.key);
+    expect(a?.key).toBe(bash?.key);
+    expect(a?.display).toBe('git');
+  });
+});
