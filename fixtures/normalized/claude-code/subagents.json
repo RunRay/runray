@@ -39064,7 +39064,7 @@
       "ruleId": "retry-loop",
       "severity": "info",
       "title": "TaskStop failed 8× in a row",
-      "detail": "The same TaskStop call failed 8 consecutive attempts, driving ~$0.07 of same-scope model calls between the first and last attempt.",
+      "detail": "8 consecutive TaskStop calls failed, driving ~$0.07 of model calls in the same scope between the first and the last attempt.",
       "spanIds": [
         "toolu_01S5c9G5vg3dgurKHYu6xwJW",
         "toolu_01GNn79dmiEtr6CMjBgofxtU",
@@ -39076,7 +39076,7 @@
         "toolu_01Y4BKE9v6cvJ8G79K6yntNc"
       ],
       "estimatedWasteUSD": 0.065026,
-      "suggestion": "Fix the failing TaskStop invocation before retrying — each repeat re-bills the full context."
+      "suggestion": "Interrupt the agent when the same TaskStop call fails twice — each further attempt re-billed the full context, $0.07 across this loop."
     },
     {
       "id": "i2",
@@ -39089,7 +39089,7 @@
         "msg_0151uaBY7CEKM5CjNgq7MyhZ"
       ],
       "estimatedWasteUSD": 1.570882,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 165.4k-token prefix costs $1.57."
     },
     {
       "id": "i3",
@@ -39102,7 +39102,7 @@
         "msg_01NuwZbtc7FVNDUBbMLmpNFb"
       ],
       "estimatedWasteUSD": 0.202929,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 35.3k-token prefix costs $0.20."
     },
     {
       "id": "i4",
@@ -39115,7 +39115,7 @@
         "msg_01DTkrzAPXprrr6K9ZSWS9Ud"
       ],
       "estimatedWasteUSD": 0.992646,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 172.6k-token prefix costs $0.99."
     },
     {
       "id": "i5",
@@ -39128,7 +39128,7 @@
         "msg_01JToRg7VVVeRjoYyRhmYaHq"
       ],
       "estimatedWasteUSD": 0.161196,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 399.1k-token prefix costs $0.16."
     },
     {
       "id": "i6",
@@ -39141,7 +39141,7 @@
         "msg_01KG56VMAcCPzS4cELMEfuW7"
       ],
       "estimatedWasteUSD": 2.978421,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 343.7k-token prefix costs $2.98."
     },
     {
       "id": "i7",
@@ -39154,7 +39154,7 @@
         "msg_01WR5sYLzWAaMFjLBKCBdNxU"
       ],
       "estimatedWasteUSD": 3.617496,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 410.8k-token prefix costs $3.62."
     },
     {
       "id": "i8",
@@ -39167,7 +39167,7 @@
         "msg_01YcJnnMHAJ3A7VkMouGoxXJ"
       ],
       "estimatedWasteUSD": 4.159233,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 467.3k-token prefix costs $4.16."
     },
     {
       "id": "i9",
@@ -39180,7 +39180,7 @@
         "msg_01EZjdJE5dPATXMDgBTyECan"
       ],
       "estimatedWasteUSD": 4.724236,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 526.9k-token prefix costs $4.72."
     },
     {
       "id": "i10",
@@ -39192,7 +39192,7 @@
         "msg_014jjwy48BhMc281zD2rRgN9"
       ],
       "estimatedWasteUSD": 4.52672,
-      "suggestion": "Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session."
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only ccd_session was called in this session) — 41.2k tokens above the floor were re-read 200 times."
     },
     {
       "id": "i11",
@@ -39206,7 +39206,7 @@
         "toolu_0187fp8t82Rwz5kVWZHvn6Ke"
       ],
       "estimatedWasteUSD": 0.003571,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “sitxlabo.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
       "id": "i12",
@@ -39221,7 +39221,7 @@
         "toolu_01F5g6TPeNcszTDdUWDdMiKZ"
       ],
       "estimatedWasteUSD": 0.026396,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “tempo.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
       "id": "i13",
@@ -39235,7 +39235,7 @@
         "toolu_017q2TcEkk3xDCSgkcPXFJLS"
       ],
       "estimatedWasteUSD": 0.002906,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “sitxadipiscingx.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
       "id": "i14",
@@ -39249,7 +39249,7 @@
         "toolu_01CFVLCpwKRyZxKjEgxbQbCT"
       ],
       "estimatedWasteUSD": 0.000843,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “sitxaliqu.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     }
   ]
 }

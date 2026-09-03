@@ -38180,14 +38180,14 @@
       "ruleId": "retry-loop",
       "severity": "info",
       "title": "mcp__Claude_Preview__preview_screenshot failed 3× in a row",
-      "detail": "The same mcp__Claude_Preview__preview_screenshot call failed 3 consecutive attempts, driving ~$1.33 of same-scope model calls between the first and last attempt.",
+      "detail": "3 consecutive mcp__Claude_Preview__preview_screenshot calls failed, driving ~$1.33 of model calls in the same scope between the first and the last attempt.",
       "spanIds": [
         "toolu_01Hub8ettDx7mbX2ZNN7S5BZ",
         "toolu_01CaJbzfWk85dmg9Cp2WtBLv",
         "toolu_01CtNtriSicdNzWHU87HnXBV"
       ],
       "estimatedWasteUSD": 1.330527,
-      "suggestion": "Fix the failing mcp__Claude_Preview__preview_screenshot invocation before retrying — each repeat re-bills the full context."
+      "suggestion": "Check the Claude_Preview MCP server — 3 failures in a row usually mean it is down, timing out or rejecting the arguments, and every retry re-bills the full context."
     },
     {
       "id": "i2",
@@ -38200,7 +38200,7 @@
         "msg_01SvRvKhkWrzfH8xL9A5Ze7r"
       ],
       "estimatedWasteUSD": 4.736662,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 272.1k-token prefix costs $4.74."
     },
     {
       "id": "i3",
@@ -38213,7 +38213,7 @@
         "msg_01TdQz13KaTWsNYJBYUrFmue"
       ],
       "estimatedWasteUSD": 5.680943,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 322.1k-token prefix costs $5.68."
     },
     {
       "id": "i4",
@@ -38226,7 +38226,7 @@
         "msg_014VHEY8dxZHb3aAj31scHW3"
       ],
       "estimatedWasteUSD": 6.912048,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 386.8k-token prefix costs $6.91."
     },
     {
       "id": "i5",
@@ -38239,7 +38239,7 @@
         "msg_01KPXmbLhvTwApXhCswVuxKF"
       ],
       "estimatedWasteUSD": 7.884601,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 437.5k-token prefix costs $7.88."
     },
     {
       "id": "i6",
@@ -38252,7 +38252,7 @@
         "msg_01WDWPn4xND9cgU1nYEJEvUR"
       ],
       "estimatedWasteUSD": 8.031547,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 447.2k-token prefix costs $8.03."
     },
     {
       "id": "i7",
@@ -38265,7 +38265,7 @@
         "msg_01L5gzWpMgUGDtQoMYGc2Qz1"
       ],
       "estimatedWasteUSD": 8.270947,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 455.1k-token prefix costs $8.27."
     },
     {
       "id": "i8",
@@ -38278,7 +38278,7 @@
         "msg_012kdr8c7HbHGuujeT4f281d"
       ],
       "estimatedWasteUSD": 8.554731,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 474.2k-token prefix costs $8.55."
     },
     {
       "id": "i9",
@@ -38291,7 +38291,7 @@
         "msg_01RAxCY3SWadxrqsUB3kFt8F"
       ],
       "estimatedWasteUSD": 8.636165,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 479.1k-token prefix costs $8.64."
     },
     {
       "id": "i10",
@@ -38304,7 +38304,7 @@
         "msg_01DD6eqD2k6JdAxwgWGdMoK9"
       ],
       "estimatedWasteUSD": 8.807963,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 480.3k-token prefix costs $8.81."
     },
     {
       "id": "i11",
@@ -38317,7 +38317,7 @@
         "msg_01VCqss2e7BkEqyQrEMvQoJp"
       ],
       "estimatedWasteUSD": 9.029484,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 498.8k-token prefix costs $9.03."
     },
     {
       "id": "i12",
@@ -38330,7 +38330,7 @@
         "msg_01Uz9KCCrWGsdFMnJpHhzYxR"
       ],
       "estimatedWasteUSD": 9.251271,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 509.9k-token prefix costs $9.25."
     },
     {
       "id": "i13",
@@ -38343,7 +38343,7 @@
         "msg_016ugVwoHBaNqX2iPnc9G4nc"
       ],
       "estimatedWasteUSD": 3.873397,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 430.5k-token prefix costs $3.87."
     },
     {
       "id": "i14",
@@ -38356,7 +38356,7 @@
         "msg_01XoRic3gJnKgQ4dCvQ5h6fA"
       ],
       "estimatedWasteUSD": 4.354629,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 481.4k-token prefix costs $4.35."
     },
     {
       "id": "i15",
@@ -38369,7 +38369,7 @@
         "msg_013e4HcpHjvUw2t4qipcu26h"
       ],
       "estimatedWasteUSD": 4.570127,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 503.6k-token prefix costs $4.57."
     },
     {
       "id": "i16",
@@ -38382,7 +38382,7 @@
         "msg_015QasxuW4eKP5z7i3k9EhgX"
       ],
       "estimatedWasteUSD": 4.870251,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 534.9k-token prefix costs $4.87."
     },
     {
       "id": "i17",
@@ -38395,7 +38395,7 @@
         "msg_017ULDJaaSzEgZmeP39mjSEe"
       ],
       "estimatedWasteUSD": 5.404683,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 591.0k-token prefix costs $5.40."
     },
     {
       "id": "i18",
@@ -38408,7 +38408,7 @@
         "msg_01GGT1V6PtPsVKgMz8cZB5Dr"
       ],
       "estimatedWasteUSD": 5.897382,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 644.4k-token prefix costs $5.90."
     },
     {
       "id": "i19",
@@ -38421,7 +38421,7 @@
         "msg_0134wmt9T3hw166F1artG9Te"
       ],
       "estimatedWasteUSD": 6.118057,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 666.3k-token prefix costs $6.12."
     },
     {
       "id": "i20",
@@ -38434,7 +38434,7 @@
         "msg_01WLQ39mZADTPt1zhud4g2Nd"
       ],
       "estimatedWasteUSD": 6.433657,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 699.7k-token prefix costs $6.43."
     },
     {
       "id": "i21",
@@ -38447,7 +38447,7 @@
         "msg_019en1GkTMp8YdAmpSvpMHvG"
       ],
       "estimatedWasteUSD": 6.337887,
-      "suggestion": "Batch prompts or close the session instead of leaving it idle past the cache TTL."
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 268 minutes re-wrote 333.6k tokens at the write premium, and every further call in this context costs $0.33 in cache reads alone."
     },
     {
       "id": "i22",
@@ -38460,7 +38460,7 @@
         "msg_01Br8hCdgC4zK2v61knXMd23"
       ],
       "estimatedWasteUSD": 8.534135,
-      "suggestion": "Batch prompts or close the session instead of leaving it idle past the cache TTL."
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 221 minutes re-wrote 449.2k tokens at the write premium, and every further call in this context costs $0.45 in cache reads alone."
     },
     {
       "id": "i23",
@@ -38472,7 +38472,7 @@
         "msg_01VjaC3qwah9TnRnCMgxxKwX"
       ],
       "estimatedWasteUSD": 9.484425,
-      "suggestion": "Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session."
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only Claude_Preview and ccd_session were called in this session) — 28.1k tokens above the floor were re-read 655 times."
     },
     {
       "id": "i24",
@@ -38487,7 +38487,7 @@
         "toolu_01YDMFgY2ASKwEhEzbnsJuE2"
       ],
       "estimatedWasteUSD": 0.005428,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “aliq.tsx” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
       "id": "i25",
@@ -38501,7 +38501,7 @@
         "toolu_01ChUpWKyQhXuGGsFJdqTqEr"
       ],
       "estimatedWasteUSD": 0.00289,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “quisxtemporx.tsx” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
       "id": "i26",
@@ -38516,7 +38516,7 @@
         "toolu_01FXyXtM5eT1qYAndnCJmypW"
       ],
       "estimatedWasteUSD": 0.013964,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read “consec.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     }
   ]
 }
