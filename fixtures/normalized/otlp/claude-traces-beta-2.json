@@ -955,12 +955,12 @@
       "ruleId": "cache-prefix-break",
       "severity": "info",
       "title": "Cache prefix broke mid-session (20.4k → 0 cached)",
-      "detail": "Between two consecutive claude-opus-4-8[1m] calls the cache read collapsed from 20.4k to 0 tokens while 14.9k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8[1m] calls the cache read collapsed from 20.4k to 0 tokens while 14.9k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
       "spanIds": [
         "289e59e8f3b48040",
         "70b258b49c9f5edd"
       ],
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; 14.9k tokens were written again here."
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; 14.9k tokens were written again here."
     }
   ]
 }

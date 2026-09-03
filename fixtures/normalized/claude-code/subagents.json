@@ -39134,110 +39134,127 @@
     },
     {
       "id": "i2",
-      "ruleId": "cache-prefix-break",
-      "severity": "info",
-      "title": "Cache prefix broke mid-session (165.4k → 29.6k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 65.9k to 533.0k tokens",
+      "detail": "The median context of the last three model calls (533.0k) is over 2× the median of the first three (65.9k); ~52191.3k cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
       "spanIds": [
-        "msg_01JaXbWHz9G9tXctAXso7mZB",
-        "msg_0151uaBY7CEKM5CjNgq7MyhZ"
+        "msg_01EZjdJE5dPATXMDgBTyECan",
+        "msg_01XfXNjEJBVWNu8SCAMWy5GZ",
+        "msg_01GZkS2itGHfACKffHH9hCj2",
+        "toolu_018x4twJQ7RFuKYWiFgbFw23",
+        "toolu_01Axj3keuDxADYdDKm5JszRo",
+        "toolu_01FBXTX8CX72JnXGKcCqcTmn"
       ],
-      "estimatedWasteUSD": 1.570882,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 165.4k-token prefix costs $1.57."
+      "estimatedWasteUSD": 45.602816,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~52191.3k tokens in total."
     },
     {
       "id": "i3",
       "ruleId": "cache-prefix-break",
       "severity": "info",
-      "title": "Cache prefix broke mid-session (35.3k → 0 cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (165.4k → 29.6k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 29.6k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
-        "msg_018DvN8RwU8XuSUSiLJUTUrN",
-        "msg_01NuwZbtc7FVNDUBbMLmpNFb"
+        "msg_01JaXbWHz9G9tXctAXso7mZB",
+        "msg_0151uaBY7CEKM5CjNgq7MyhZ"
       ],
-      "estimatedWasteUSD": 0.202929,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 35.3k-token prefix costs $0.20."
+      "estimatedWasteUSD": 1.570882,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $1.57."
     },
     {
       "id": "i4",
       "ruleId": "cache-prefix-break",
       "severity": "info",
-      "title": "Cache prefix broke mid-session (172.6k → 0 cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (35.3k → 0 cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
       "spanIds": [
-        "msg_01HWAMnM4EMj8D6MUAQpFPfw",
-        "msg_01DTkrzAPXprrr6K9ZSWS9Ud"
+        "msg_018DvN8RwU8XuSUSiLJUTUrN",
+        "msg_01NuwZbtc7FVNDUBbMLmpNFb"
       ],
-      "estimatedWasteUSD": 0.992646,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 172.6k-token prefix costs $0.99."
+      "estimatedWasteUSD": 0.202929,
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.20."
     },
     {
       "id": "i5",
       "ruleId": "cache-prefix-break",
       "severity": "info",
+      "title": "Cache prefix broke mid-session (172.6k → 0 cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
+      "spanIds": [
+        "msg_01HWAMnM4EMj8D6MUAQpFPfw",
+        "msg_01DTkrzAPXprrr6K9ZSWS9Ud"
+      ],
+      "estimatedWasteUSD": 0.992646,
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.99."
+    },
+    {
+      "id": "i6",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (399.1k → 29.6k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium. The context shrank from 399.8k to 60.7k tokens: the history was compacted and the summary written once as a new prefix.",
       "spanIds": [
         "msg_017UEqenYdNEuBsvrqvdHUrd",
         "msg_01JToRg7VVVeRjoYyRhmYaHq"
       ],
       "estimatedWasteUSD": 0.161196,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 399.1k-token prefix costs $0.16."
-    },
-    {
-      "id": "i6",
-      "ruleId": "cache-prefix-break",
-      "severity": "warning",
-      "title": "Cache prefix broke mid-session (343.7k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 343.7k to 32.7k tokens while 313.5k tokens were re-written — content that was already cached was paid for again at the write premium.",
-      "spanIds": [
-        "msg_01BJsc4QxG4f1VqT6Ndvwc3Q",
-        "msg_01KG56VMAcCPzS4cELMEfuW7"
-      ],
-      "estimatedWasteUSD": 2.978421,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 343.7k-token prefix costs $2.98."
+      "suggestion": "This is the price of compaction — the shortened history is a new prefix, written once; compact earlier, while there is less to summarize, or start a new session per task; this break cost $0.16."
     },
     {
       "id": "i7",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
-      "title": "Cache prefix broke mid-session (410.8k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 410.8k to 32.7k tokens while 380.8k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (343.7k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 343.7k to 32.7k tokens while 313.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
-        "msg_01AW6khvQmje1jk45zfzwNRT",
-        "msg_01WR5sYLzWAaMFjLBKCBdNxU"
+        "msg_01BJsc4QxG4f1VqT6Ndvwc3Q",
+        "msg_01KG56VMAcCPzS4cELMEfuW7"
       ],
-      "estimatedWasteUSD": 3.617496,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 410.8k-token prefix costs $3.62."
+      "estimatedWasteUSD": 2.978421,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $2.98."
     },
     {
       "id": "i8",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
-      "title": "Cache prefix broke mid-session (467.3k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 467.3k to 32.7k tokens while 437.8k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (410.8k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 410.8k to 32.7k tokens while 380.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
-        "msg_019CbULpMw6Whz71BC4LcwsR",
-        "msg_01YcJnnMHAJ3A7VkMouGoxXJ"
+        "msg_01AW6khvQmje1jk45zfzwNRT",
+        "msg_01WR5sYLzWAaMFjLBKCBdNxU"
       ],
-      "estimatedWasteUSD": 4.159233,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 467.3k-token prefix costs $4.16."
+      "estimatedWasteUSD": 3.617496,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $3.62."
     },
     {
       "id": "i9",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
+      "title": "Cache prefix broke mid-session (467.3k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 467.3k to 32.7k tokens while 437.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "msg_019CbULpMw6Whz71BC4LcwsR",
+        "msg_01YcJnnMHAJ3A7VkMouGoxXJ"
+      ],
+      "estimatedWasteUSD": 4.159233,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.16."
+    },
+    {
+      "id": "i10",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
       "title": "Cache prefix broke mid-session (526.9k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 526.9k to 32.7k tokens while 497.3k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 526.9k to 32.7k tokens while 497.3k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
         "msg_012pWTS9D9ckFBJdQBPnzTFA",
         "msg_01EZjdJE5dPATXMDgBTyECan"
       ],
       "estimatedWasteUSD": 4.724236,
-      "suggestion": "Keep the prefix from changing mid-session — adding an MCP server, switching model or settings, or editing an early turn re-writes it; one break of a 526.9k-token prefix costs $4.72."
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.72."
     },
     {
-      "id": "i10",
+      "id": "i11",
       "ruleId": "fixed-context-overhead",
       "severity": "warning",
       "title": "Session starts with a 61.2k-token context footprint",
@@ -39249,7 +39266,7 @@
       "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only ccd_session was called in this session) — 41.2k tokens above the floor were re-read 200 times."
     },
     {
-      "id": "i11",
+      "id": "i12",
       "ruleId": "duplicate-read",
       "severity": "info",
       "title": "Same file re-read 2× without changes",
@@ -39263,7 +39280,7 @@
       "suggestion": "Nothing to configure here — the agent re-read “sitxlabo.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i12",
+      "id": "i13",
       "ruleId": "duplicate-read",
       "severity": "info",
       "title": "Same file re-read 3× without changes",
@@ -39278,7 +39295,7 @@
       "suggestion": "Nothing to configure here — the agent re-read “tempo.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i13",
+      "id": "i14",
       "ruleId": "duplicate-read",
       "severity": "info",
       "title": "Same file re-read 2× without changes",
@@ -39292,7 +39309,7 @@
       "suggestion": "Nothing to configure here — the agent re-read “sitxadipiscingx.ts” after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i14",
+      "id": "i15",
       "ruleId": "duplicate-read",
       "severity": "info",
       "title": "Same file re-read 2× without changes",
