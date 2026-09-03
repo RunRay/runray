@@ -465,3 +465,79 @@ describe('otlp parse errors', () => {
     rmSync(tmp2, { recursive: true, force: true });
   });
 });
+
+describe('otlp failed tool spans keep their status message', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'runray-otlp-err-'));
+  afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+  function write(name: string) {
+    const file = join(tmp, name);
+    writeFileSync(
+      file,
+      JSON.stringify({
+        resourceSpans: [
+          {
+            scopeSpans: [
+              {
+                spans: [
+                  {
+                    traceId: 'd'.repeat(32),
+                    spanId: 'e'.repeat(16),
+                    name: 'claude_code.tool',
+                    startTimeUnixNano: '1783425685375000000',
+                    endTimeUnixNano: '1783425686375000000',
+                    status: {
+                      code: 2,
+                      message: 'ENOENT: no such file or directory',
+                    },
+                    attributes: [
+                      { key: 'session.id', value: { stringValue: 'ses-e' } },
+                      { key: 'tool_name', value: { stringValue: 'Bash' } },
+                    ],
+                  },
+                  {
+                    traceId: 'd'.repeat(32),
+                    spanId: 'f'.repeat(16),
+                    name: 'claude_code.tool',
+                    startTimeUnixNano: '1783425687375000000',
+                    attributes: [
+                      { key: 'session.id', value: { stringValue: 'ses-e' } },
+                      { key: 'tool_name', value: { stringValue: 'Read' } },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    const candidate: Candidate = {
+      runRef: `${file}::ses-e`,
+      format: 'otlp-json',
+      files: [file],
+      mtimeMs: 0,
+      sizeBytes: 0,
+    };
+    return candidate;
+  }
+
+  it('as outputPreview without redaction; successful spans carry none', async () => {
+    const raw = await otlpAdapter.parse(write('err.json'), { redact: false });
+    const failed = raw.spans.find((s) => s.tool?.name === 'Bash');
+    expect(failed?.status).toBe('error');
+    expect(failed?.content?.outputPreview).toBe(
+      'ENOENT: no such file or directory',
+    );
+    const ok = raw.spans.find((s) => s.tool?.name === 'Read');
+    expect(ok?.content).toBeUndefined();
+  });
+
+  it('as null under --redact', async () => {
+    const raw = await otlpAdapter.parse(write('err-redact.json'), {
+      redact: true,
+    });
+    const failed = raw.spans.find((s) => s.tool?.name === 'Bash');
+    expect(failed?.content).toEqual({ outputPreview: null });
+  });
+});
