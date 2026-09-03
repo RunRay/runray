@@ -101,6 +101,7 @@ describe('isUserRejection', () => {
         'Error: The user rejected permission to use this specific tool call.',
       ),
     ).toBe(true);
+    expect(isUserRejection('Tool execution aborted')).toBe(true);
   });
   it('is false for real failures and missing text', () => {
     expect(isUserRejection('Exit code 1\nPermission denied')).toBe(false);

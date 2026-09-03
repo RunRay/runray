@@ -44,6 +44,12 @@ export {
   resolveThresholds,
   V0_RULES,
 } from './insights/index.js';
+export {
+  extractBlock,
+  PLAYBOOKS_END,
+  PLAYBOOKS_START,
+  replaceBlock,
+} from './insights/playbook-markdown.js';
 export type { NormalizeOptions } from './normalize.js';
 export { normalize } from './normalize.js';
 export type {
@@ -89,3 +95,29 @@ export type {
   TranscriptSlice,
 } from './transcript.js';
 export { readTranscriptSlice } from './transcript.js';
+export type {
+  ClusterOutcome,
+  ErrorClassId,
+  ErrorClassification,
+  ErrorClassMeta,
+  ErrorCluster,
+  ErrorOccurrence,
+  ErrorOwner,
+  ErrorOwnerMeta,
+  RecoveryKind,
+  RunTriage,
+  TriageTone,
+} from './triage/index.js';
+export {
+  classifyError,
+  ERROR_CLASS_IDS,
+  ERROR_CLASS_META,
+  ERROR_CLASSES_END,
+  ERROR_CLASSES_START,
+  ERROR_OWNER_META,
+  ERROR_OWNER_ORDER,
+  errorClassOwner,
+  renderErrorClassesMarkdown,
+  triageRun,
+  triageTone,
+} from './triage/index.js';
