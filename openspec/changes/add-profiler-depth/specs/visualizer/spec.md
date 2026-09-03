@@ -415,3 +415,66 @@ own explanation, never with one finding's suggestion.
 - WHEN a finding is shown
 - THEN the section is labelled for a custom agent and lists the
   custom-agent actions
+
+### Requirement: Errors tab
+The run view SHALL offer an Errors tab (`#/run/:id/errors`) beside
+Overview, Timeline Explorer and Time, rendered from the core error triage
+(error-triage capability) and never from a UI-side classification. The tab
+SHALL open with a summary — failed tool calls, failed model calls, how many
+need the person, how many recovered on the next call, the reaction cost —
+a strip of failures by owner, and the failures placed on the session's time
+axis; then the clusters grouped by owner in triage order (needs you,
+tooling, agent slips, model calls, expected feedback, unclassified), each
+group carrying its meaning, count and reaction cost. A cluster row SHALL
+show the tool, the class, the first line of its latest failure text, its
+count and time span, its outcome and its reaction cost, and SHALL open to
+the failure text, one control per occurrence that selects the span and
+opens the Timeline Explorer on it, the findings that cite the cluster (each
+opening the finding), and the class playbook for the run's own source. The
+playbook's actions SHALL show for owners you, tooling, model and
+unclassified, and for agent slips only when the cluster repeated or never
+recovered; expected feedback SHALL show only its explanation, and its group
+SHALL start collapsed and dimmed. Filter controls SHALL narrow the groups to
+one owner. The tab's label in the tab bar SHALL carry the failure count in
+the triage's tone. Hue SHALL encode the owner, never severity; a run with
+no failures SHALL render an empty state that points to the Overview. Under
+redaction the tab SHALL say that classes are read from the tool alone.
+
+#### Scenario: Owner groups in triage order
+- GIVEN a Claude Code run with a shell-syntax failure, a path-not-found
+  slip that recovered and a failed test run
+- WHEN the Errors tab renders
+- THEN "Needs you" comes first with the shell failure open, showing its
+  text and the Claude Code playbook; "Agent slips" follows; "Expected
+  feedback" is last, collapsed, with a control to show it
+
+#### Scenario: Occurrence opens the timeline
+- GIVEN an open cluster with two occurrences
+- WHEN the person activates the second occurrence
+- THEN that span is selected and the Timeline Explorer opens scrolled to it
+
+#### Scenario: No failures
+- GIVEN a run whose calls all succeeded
+- WHEN the Errors tab renders
+- THEN it says there were no failed calls and links to the Overview
+
+### Requirement: Error triage in the sessions lists
+The sessions table, the sessions rail and the run header's tab bar SHALL
+keep showing a run's failure count, but SHALL tint it by the triage's
+attention signal — alarm when the run needs the person or never got past a
+failure, neutral otherwise — and SHALL append "· N need(s) you" when
+clusters owned by the person exist. A run whose only failures are
+model-call failures SHALL show a model-error count instead of nothing. The
+tooltip SHALL name the owner breakdown.
+
+#### Scenario: Recovered slips read neutral
+- GIVEN a run with three path-not-found slips each followed by a
+  successful call of the same tool
+- WHEN the sessions table renders
+- THEN the pill reads "3 errors" in the neutral tone and its tooltip says
+  the agent handled them
+
+#### Scenario: A shell failure reads as the person's
+- GIVEN a run with one shell-syntax failure
+- WHEN the sessions rail renders
+- THEN the pill reads "1 errors · 1 needs you" in the alarm tone

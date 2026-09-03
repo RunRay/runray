@@ -3,6 +3,7 @@ import { useAppStore } from '../store';
 
 export type HintKey =
   | 'time-view'
+  | 'errors-view'
   | 'what-if'
   | 'diff'
   | 'limit-mode'
@@ -12,6 +13,8 @@ export type HintKey =
 export const HINT_COPY: Record<HintKey, string> = {
   'time-view':
     'Wall clock, not the sum of spans — this is where the waiting actually was.',
+  'errors-view':
+    'Grouped by who can act. Most red is not yours: a check that did not pass is the agent working.',
   'what-if':
     'Re-price this session against another model. Nothing is sent anywhere.',
   diff: 'Two runs of the same task? Compare them: runray diff <runA> <runB>',

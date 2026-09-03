@@ -5,24 +5,20 @@ import {
   formatTokens,
   formatUSD,
 } from '../lib/format';
-import { type Route, toHash } from '../lib/router';
+import { type Route, type RunViewName, toHash } from '../lib/router';
+import { errorPill } from '../lib/triage';
 import { useAppStore } from '../store';
 import { CostView } from './CostView';
+import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
 import { Waterfall } from './Waterfall';
 
 /**
- * Center pane: run header + Timeline|Cost tab switch (hash-driven). The
- * actual views are placeholders until tasks 3.3–3.7 fill them in.
+ * Center pane: run header + Overview | Timeline Explorer | Time | Errors
+ * tab switch (hash-driven).
  */
-export function RunView({
-  run,
-  view,
-}: {
-  run: Run;
-  view: 'timeline' | 'cost' | 'time';
-}) {
+export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const inspectorOpen = useAppStore((s) => s.ui.inspectorOpen);
   const wasted = run.totals.costUSD.wastedEstimate;
@@ -87,7 +83,7 @@ export function RunView({
         </div>
 
         <div className="mt-3">
-          <ViewTabs runId={run.id} view={view} />
+          <ViewTabs run={run} view={view} />
         </div>
       </div>
 
@@ -98,6 +94,8 @@ export function RunView({
           <Waterfall run={run} />
         ) : view === 'time' ? (
           <TimeView run={run} />
+        ) : view === 'errors' ? (
+          <ErrorsView run={run} />
         ) : (
           <CostView run={run} />
         )}
@@ -106,14 +104,17 @@ export function RunView({
   );
 }
 
-function ViewTabs({
-  runId,
-  view,
-}: {
-  runId: string;
-  view: 'timeline' | 'cost' | 'time';
-}) {
-  const tabs: { label: string; route: Route; active: boolean }[] = [
+function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
+  const runId = run.id;
+  // the Errors tab carries its count with the triage's tone, so the tab
+  // bar already says whether the failures are the person's problem
+  const pill = errorPill(run);
+  const tabs: {
+    label: string;
+    route: Route;
+    active: boolean;
+    badge?: { text: string; tone: 'alarm' | 'quiet'; title: string };
+  }[] = [
     {
       label: 'Overview',
       route: { view: 'cost', runId },
@@ -129,17 +130,32 @@ function ViewTabs({
       route: { view: 'time', runId },
       active: view === 'time',
     },
+    {
+      label: 'Errors',
+      route: { view: 'errors', runId },
+      active: view === 'errors',
+      ...(pill === null || pill.tone === 'none'
+        ? {}
+        : {
+            badge: {
+              text: pill.label.split(' ')[0] ?? '',
+              tone: pill.tone,
+              title: `${pill.label} — ${pill.title}`,
+            },
+          }),
+    },
   ];
   return (
     <nav
       aria-label="Run views"
       className="flex overflow-hidden rounded border border-border-slate"
     >
-      {tabs.map(({ label, route, active }) => (
+      {tabs.map(({ label, route, active, badge }) => (
         <a
           key={label}
           href={toHash(route)}
           aria-current={active ? 'page' : undefined}
+          title={badge?.title}
           className={`px-3 py-1 text-label transition-colors duration-150 ease-out ${
             active
               ? 'bg-surface-variant text-on-surface font-semibold'
@@ -147,6 +163,15 @@ function ViewTabs({
           }`}
         >
           {label}
+          {badge !== undefined && (
+            <span
+              className={`ml-1.5 font-mono text-[11px] font-normal ${
+                badge.tone === 'alarm' ? 'text-span-error' : 'text-text-faint'
+              }`}
+            >
+              {badge.text}
+            </span>
+          )}
         </a>
       ))}
     </nav>

@@ -1,6 +1,7 @@
 import type { Insight, Run } from '@runray/schema';
 import { formatUSD } from '../lib/format';
 import { rankInsights } from '../lib/insight-order';
+import type { RunViewName } from '../lib/router';
 import { tourAttr } from '../lib/tour-attr';
 import { useAppStore } from '../store';
 
@@ -17,13 +18,7 @@ const SEVERITY_PILL: Record<Insight['severity'], string> = {
   critical: 'border-heat-3/50 text-heat-3',
 };
 
-export function InsightsStrip({
-  run,
-  view,
-}: {
-  run: Run;
-  view: 'timeline' | 'cost' | 'time';
-}) {
+export function InsightsStrip({ run, view }: { run: Run; view: RunViewName }) {
   const activeId = useAppStore((s) => s.selection.insightId);
   const activateInsight = useAppStore((s) => s.activateInsight);
   if (run.insights.length === 0) return null;

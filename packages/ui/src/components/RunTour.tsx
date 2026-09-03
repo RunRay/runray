@@ -53,7 +53,10 @@ export default function RunTour() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
   const isRunRoute =
-    route.view === 'timeline' || route.view === 'cost' || route.view === 'time';
+    route.view === 'timeline' ||
+    route.view === 'cost' ||
+    route.view === 'time' ||
+    route.view === 'errors';
 
   const isOfferable =
     onboarding.enabled &&
