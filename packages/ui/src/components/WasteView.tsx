@@ -143,7 +143,7 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
         <p
           className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.burnedUSD > 0 ? 'text-heat-2' : 'text-text-dim'}`}
         >
-          {formatUSD(waste.burnedUSD)}
+          {waste.burnedUSD > 0 ? formatUSD(waste.burnedUSD) : '$0.00'}
         </p>
         <p className="mt-1 text-label text-text-dim">
           {waste.burnedUSD > 0 ? (
@@ -166,7 +166,7 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
         >
           {waste.opportunityUSD > 0
             ? `up to ${formatUSD(waste.opportunityUSD)}`
-            : formatUSD(0)}
+            : '$0.00'}
         </p>
         <p className="mt-1 text-label text-text-dim">
           if you change the setup · upper bounds, not additive
@@ -310,7 +310,7 @@ function GroupRow({
   const openFinding = (o: WasteOccurrence) => {
     const insight: Insight | undefined = byId.get(o.insightId);
     if (insight === undefined) return;
-    showInsight(insight, o.spanIds[0]);
+    showInsight(insight, o.spanId ?? o.spanIds[0]);
     navigateTo({ view: 'timeline', runId: run.id });
   };
 
