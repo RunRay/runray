@@ -12,6 +12,7 @@ import { formatOffset } from '../lib/triage';
 import { leadSentence, runWaste, tok } from '../lib/waste';
 import { useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
+import { LeakRail } from './LeakRail';
 import { InlineCode, PlaybookList, PlaybookSteps } from './PlaybookSteps';
 import { SeverityPill } from './SeverityPill';
 
@@ -23,8 +24,10 @@ import { SeverityPill } from './SeverityPill';
  * the largest burn and its lever; then the groups by rule, burned first,
  * each graded as a group, opening to its occurrences (each a jump to the
  * finding on the timeline), its shape split and the playbook for the
- * session's own source. Cents fold into one line. Hue: heat for burned,
- * savings green for opportunities, severity only on the pill.
+ * session's own source. Cents fold into one line. Between the figures
+ * and the groups, the leak rail places every burned finding on the
+ * session's clock. Hue: heat for burned, savings green for
+ * opportunities, severity only on the pill.
  */
 
 const OCCURRENCES_SHOWN = 6;
@@ -166,6 +169,11 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
           </>
         )}
       </p>
+      {(waste.events.length > 0 || waste.context.length > 0) && (
+        <div className="md:col-span-3">
+          <LeakRail run={run} waste={waste} />
+        </div>
+      )}
     </section>
   );
 }

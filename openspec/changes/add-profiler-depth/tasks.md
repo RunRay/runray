@@ -434,7 +434,7 @@ automatically extends its fixture-parameterized equivalence matrix.
       the lead sentence, burned and opportunity groups with occurrences,
       shape split, playbook per group, folded cents, empty state), tab badge
       with the burned amount, palette entry, contextual hint, `lib/waste.ts`.
-- [ ] 13.3 B [UI → /frontend-design] Leak rail (W2, spec: visualizer "Waste
+- [x] 13.3 B [UI → /frontend-design] Leak rail (W2, spec: visualizer "Waste
       tab" — "Leaks on the clock"): context curve per model call, one bar
       per burned event sized by amount, idle bands, compaction marks, a 200k
       guide; a bar opens the timeline on its span.
