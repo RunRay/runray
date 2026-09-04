@@ -462,8 +462,9 @@ redaction the tab SHALL say that classes are read from the tool alone.
 The sessions table, the sessions rail and the run header's tab bar SHALL
 keep showing a run's failure count, but SHALL tint it by the triage's
 attention signal — alarm when the run needs the person or never got past a
-failure, neutral otherwise — and SHALL append "· N need(s) you" when
-clusters owned by the person exist. A run whose only failures are
+failure, neutral otherwise. The sessions table SHALL append "· N need(s)
+you" when clusters owned by the person exist; the narrow sessions rail and
+the tab bar SHALL show the count alone. A run whose only failures are
 model-call failures SHALL show a model-error count instead of nothing. The
 tooltip SHALL name the owner breakdown.
 
@@ -477,7 +478,9 @@ tooltip SHALL name the owner breakdown.
 #### Scenario: A shell failure reads as the person's
 - GIVEN a run with one shell-syntax failure
 - WHEN the sessions rail renders
-- THEN the pill reads "1 errors · 1 needs you" in the alarm tone
+- THEN the rail's pill reads "1 errors" in the alarm tone, its tooltip
+  names the owner breakdown, and the sessions table's pill reads
+  "1 errors · 1 needs you"
 
 ### Requirement: Inspector error sections
 When the Inspector shows a failed span, it SHALL render after the Output
