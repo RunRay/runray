@@ -30,8 +30,8 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const opportunity = runWaste(run).opportunityUSD;
 
   return (
-    <div className="flex h-full min-w-0 flex-col">
-      <div className="border-b border-outline-variant/30 bg-surface-dim px-4 py-3">
+    <div className="flex h-full min-w-0 flex-col min-h-0">
+      <div className="shrink-0 border-b border-outline-variant/30 bg-surface-dim px-4 py-3">
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="truncate font-display text-header font-semibold">
             {run.title ?? run.project?.name ?? `${run.source.tool} session`}
@@ -106,7 +106,7 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
 
       <InsightsStrip run={run} view={view} />
 
-      <div className="min-h-0 flex-1 p-4">
+      <div className="min-h-0 flex-1 p-4 flex flex-col overflow-hidden">
         {view === 'timeline' ? (
           <Waterfall run={run} />
         ) : view === 'time' ? (

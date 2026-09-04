@@ -12,13 +12,17 @@ import { useAppStore } from '../store';
  * (otlp), truncated (1 MB cap), and not-live (exports point back at
  * `runray view`).
  */
+export interface TranscriptPaneProps {
+  runId: string;
+  spanId: string;
+  manifest?: import('../lib/load').SanitizationManifest;
+}
+
 export function TranscriptPane({
   runId,
   spanId,
-}: {
-  runId: string;
-  spanId: string;
-}) {
+  manifest: propManifest,
+}: TranscriptPaneProps) {
   const data = useAppStore((s) => s.data);
   const live = data.status === 'ready' && data.live;
   const [state, setState] = useState<TranscriptState | 'idle' | 'loading'>(
@@ -30,6 +34,20 @@ export function TranscriptPane({
   if (lastKey.current !== key) {
     lastKey.current = key;
     if (state !== 'idle') setState('idle');
+  }
+
+  const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
+  const manifest = propManifest ?? storeManifest;
+  if (manifest?.profile === 'metadata-only' || manifest?.spansPruned) {
+    return (
+      <p
+        className="text-label text-text-faint"
+        data-testid="transcript-metadata-only-notice"
+      >
+        Transcript omitted — this report was exported with the{' '}
+        <code className="font-mono text-text-dim">metadata-only</code> profile.
+      </p>
+    );
   }
 
   if (!live) {

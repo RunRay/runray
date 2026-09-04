@@ -45,7 +45,7 @@ export function InsightsStrip({ run, view }: { run: Run; view: RunViewName }) {
       {...tourAttr('insights-strip')}
       role="toolbar"
       aria-label="Findings"
-      className="flex items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
+      className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
     >
       {shown.map((insight) => {
         const active = insight.id === activeId;

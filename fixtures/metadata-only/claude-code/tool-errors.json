@@ -1,0 +1,455 @@
+{
+  "id": "run_ef287293b38696a7",
+  "source": {
+    "tool": "claude-code",
+    "format": "claude-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-06-12T08:48:02.008Z",
+  "endedAt": "2026-06-13T12:24:12.468Z",
+  "durationMs": 99370460,
+  "warnings": [
+    {
+      "message": "subagent transcript not found for agentId a9818710f29ed40d1",
+      "file": "transcript-1",
+      "line": 28
+    },
+    {
+      "message": "subagent transcript not found for agentId aeb8e6273de844c1b",
+      "file": "transcript-1",
+      "line": 29
+    }
+  ],
+  "spans": [
+    {
+      "id": "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-06-12T08:48:02.008Z",
+      "endedAt": "2026-06-13T12:24:12.468Z",
+      "durationMs": 99370460,
+      "depth": 0,
+      "agent": {
+        "sessionId": "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 1
+      }
+    },
+    {
+      "id": "a9818710f29ed40d1",
+      "parentId": "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad",
+      "kind": "subagent",
+      "name": "subagent:Explore",
+      "status": "ok",
+      "startedAt": "2026-06-12T08:50:16.496Z",
+      "endedAt": "2026-06-12T08:52:21.965Z",
+      "durationMs": 125469,
+      "depth": 3,
+      "agent": {
+        "name": "Explore",
+        "sessionId": "a9818710f29ed40d1"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 28
+      }
+    },
+    {
+      "id": "aeb8e6273de844c1b",
+      "parentId": "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad",
+      "kind": "subagent",
+      "name": "subagent:Explore",
+      "status": "ok",
+      "startedAt": "2026-06-12T08:50:27.445Z",
+      "endedAt": "2026-06-12T08:52:43.713Z",
+      "durationMs": 136268,
+      "depth": 3,
+      "agent": {
+        "name": "Explore",
+        "sessionId": "aeb8e6273de844c1b"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 29
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 36014,
+      "output": 477592,
+      "cacheRead": 268531862,
+      "cacheWrite": 10882087,
+      "reasoning": 0,
+      "total": 279927555
+    },
+    "costUSD": {
+      "total": 387.525203,
+      "wastedEstimate": 143.543376,
+      "byModel": {
+        "claude-fable-5": 264.636942,
+        "claude-opus-4-8": 122.888261
+      }
+    },
+    "counts": {
+      "llmCalls": 656,
+      "toolCalls": 699,
+      "toolErrors": 26,
+      "subagents": 2,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.9999
+    },
+    "codeChanges": {
+      "linesAdded": 5881,
+      "linesRemoved": 1836
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "retry-loop",
+      "severity": "info",
+      "title": "mcp__Claude_Preview__preview_screenshot failed 3× in a row",
+      "detail": "3 consecutive mcp__Claude_Preview__preview_screenshot calls failed, driving ~$1.33 of model calls in the same scope between the first and the last attempt.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 1.330527,
+      "suggestion": "Check the Claude_Preview MCP server — 3 failures in a row usually mean it is down, timing out or rejecting the arguments, and every retry re-bills the full context."
+    },
+    {
+      "id": "i2",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 52.2k to 704.0k tokens",
+      "detail": "The median context of the last three model calls (704.0k) is over 2× the median of the first three (52.2k); ~245.5M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 321.213946,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~245.5M tokens in total."
+    },
+    {
+      "id": "i3",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (272.1k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 272.1k to 25.2k tokens while 249.3k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 4.736662,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.74."
+    },
+    {
+      "id": "i4",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (322.1k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 322.1k to 25.2k tokens while 299.0k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 5.680943,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $5.68."
+    },
+    {
+      "id": "i5",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (386.8k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 386.8k to 25.2k tokens while 363.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 6.912048,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $6.91."
+    },
+    {
+      "id": "i6",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (437.5k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 437.5k to 25.2k tokens while 415.0k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 7.884601,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $7.88."
+    },
+    {
+      "id": "i7",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (447.2k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 447.2k to 25.2k tokens while 422.7k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.031547,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $8.03."
+    },
+    {
+      "id": "i8",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (455.1k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 455.1k to 25.2k tokens while 435.3k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.270947,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $8.27."
+    },
+    {
+      "id": "i9",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (474.2k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 474.2k to 25.2k tokens while 450.2k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.554731,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $8.55."
+    },
+    {
+      "id": "i10",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (479.1k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 479.1k to 25.2k tokens while 454.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.636165,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $8.64."
+    },
+    {
+      "id": "i11",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (480.3k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 480.3k to 25.2k tokens while 463.6k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.807963,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $8.81."
+    },
+    {
+      "id": "i12",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (498.8k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 498.8k to 25.2k tokens while 475.2k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 9.029484,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $9.03."
+    },
+    {
+      "id": "i13",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (509.9k → 25.2k cached)",
+      "detail": "Between two consecutive claude-fable-5 calls the cache read collapsed from 509.9k to 25.2k tokens while 486.9k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 9.251271,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $9.25."
+    },
+    {
+      "id": "i14",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (430.5k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 430.5k to 25.2k tokens while 407.7k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 3.873397,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $3.87."
+    },
+    {
+      "id": "i15",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (481.4k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 481.4k to 25.2k tokens while 458.4k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 4.354629,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.35."
+    },
+    {
+      "id": "i16",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (503.6k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 503.6k to 25.2k tokens while 481.1k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 4.570127,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.57."
+    },
+    {
+      "id": "i17",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (534.9k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 534.9k to 25.2k tokens while 512.7k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 4.870251,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.87."
+    },
+    {
+      "id": "i18",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (591.0k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 591.0k to 25.2k tokens while 568.9k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 5.404683,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $5.40."
+    },
+    {
+      "id": "i19",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (644.4k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 644.4k to 25.2k tokens while 620.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 5.897382,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $5.90."
+    },
+    {
+      "id": "i20",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (666.3k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 666.3k to 25.2k tokens while 644.0k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 6.118057,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $6.12."
+    },
+    {
+      "id": "i21",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (699.7k → 25.2k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 699.7k to 25.2k tokens while 677.2k tokens were re-written — content that was already cached was paid for again at the write premium. The first 25.2k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 6.433657,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $6.43."
+    },
+    {
+      "id": "i22",
+      "ruleId": "idle-cache-expiry",
+      "severity": "info",
+      "title": "Idle gap of 268m expired the cache",
+      "detail": "After 268 minutes of inactivity the provider cache TTL lapsed; the next claude-fable-5 call re-wrote 333.6k tokens of prefix that had been cached before the gap.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 6.337887,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 268 minutes re-wrote 333.6k tokens at the write premium, and every further call in this context costs $0.33 in cache reads alone."
+    },
+    {
+      "id": "i23",
+      "ruleId": "idle-cache-expiry",
+      "severity": "warning",
+      "title": "Idle gap of 221m expired the cache",
+      "detail": "After 221 minutes of inactivity the provider cache TTL lapsed; the next claude-fable-5 call re-wrote 449.2k tokens of prefix that had been cached before the gap.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 8.534135,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 221 minutes re-wrote 449.2k tokens at the write premium, and every further call in this context costs $0.45 in cache reads alone."
+    },
+    {
+      "id": "i24",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 48.1k-token context footprint",
+      "detail": "The first model call already carried 48.1k input-class tokens (tool definitions, project instructions, attachments); 28.1k tokens above the 20.0k floor were written once and re-read on each of the 655 later calls.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 9.484425,
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only Claude_Preview and ccd_session were called in this session) — 28.1k tokens above the floor were re-read 655 times."
+    },
+    {
+      "id": "i25",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 3× without changes",
+      "detail": "The same target was read 5 times; 3 of those read(s) had no write in between and re-entered ≈1.1k tokens of unchanged content into the context.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 0.005428,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    },
+    {
+      "id": "i26",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 2× without changes",
+      "detail": "The same target was read 4 times; 2 of those read(s) had no write in between and re-entered ≈578 tokens of unchanged content into the context.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 0.00289,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    },
+    {
+      "id": "i27",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 3× without changes",
+      "detail": "The same target was read 11 times; 3 of those read(s) had no write in between and re-entered ≈2.8k tokens of unchanged content into the context.",
+      "spanIds": [
+        "72d7b780-6856-4e7b-9e5d-58b7c5aa71ad"
+      ],
+      "estimatedWasteUSD": 0.013964,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    }
+  ]
+}

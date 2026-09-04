@@ -23,7 +23,7 @@ Usage trackers tell you how many tokens you spent this week. That number is easy
 - **Time.** Where the wall clock went: model wait, tool execution, coordination, idle gaps.
 - **Waste.** What the session burned and what it could have saved, with every burn placed on the session's clock over the context size it happened in.
 - **Errors.** Failed calls grouped by who can act on them, with the error text and what to do in your tool.
-- **A single-file report.** `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread.
+- **A single-file report.** `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` redacts prompt text and pseudonymizes paths first, so the file is safe to hand over.
 
 ### Waste
 
@@ -59,7 +59,7 @@ Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches 
 
 ## Privacy
 
-Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account. `--redact` strips prompt and output text in the parser and keeps structure and counts, and `runray export` asks for confirmation before it writes an unredacted file.
+Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account. `--redact` strips prompt and output text in the parser and keeps structure and counts, `--scrub-paths` pseudonymizes project paths, branch names and transcript paths, and `--anonymize` is the two together. `--metadata-only` goes further and prunes leaf spans, keeping containers, totals and findings. All of it happens in core before serialization, never as a UI-side filter, and `runray export` asks for confirmation before it writes an unredacted file.
 
 ## Commands
 
@@ -67,7 +67,7 @@ Everything stays on your machine. The local server binds to 127.0.0.1 only. Ther
 |---|---|
 | `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
 | `runray list [path] --json` | The same discovery as a machine-readable list. |
-| `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--json out.json` also writes the normalized trace. |
+| `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
 | `runray demo` | The dashboard on a bundled, scrubbed sample. |
 | `runray diff <runA> <runB>` | Two runs side by side: cost, tokens, errors, alignment. `--json` prints the diff for scripts. |
 | `runray pricing [--refresh]` | Show the pricing snapshot, or fetch a current one. |
