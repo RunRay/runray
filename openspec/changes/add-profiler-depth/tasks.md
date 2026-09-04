@@ -438,7 +438,7 @@ automatically extends its fixture-parameterized equivalence matrix.
       tab" — "Leaks on the clock"): context curve per model call, one bar
       per burned event sized by amount, idle bands, compaction marks, a 200k
       guide; a bar opens the timeline on its span.
-- [ ] 13.4 B [UI → /frontend-design] Re-homing (W3, spec: visualizer "Cost
+- [x] 13.4 B [UI → /frontend-design] Re-homing (W3, spec: visualizer "Cost
       breakdown view" and "Insights strip" amended): the waste table and the
       what-if panel leave the Overview for the Waste tab; the strip shows the
       five largest findings and a "+N more in Waste" control; tour, hints and

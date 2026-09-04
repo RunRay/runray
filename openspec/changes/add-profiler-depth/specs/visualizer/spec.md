@@ -97,8 +97,10 @@ collapsed.
   unpriced count
 
 ### Requirement: Cost breakdown view
-The system SHALL provide a per-run cost view with totals, cost-over-time by
-model, a hierarchical agent-subtree map, and the waste table. The subtree
+The system SHALL provide a per-run cost view with totals, the tool spend
+leaderboard, cost-over-time by model and a hierarchical agent-subtree map —
+where the money went; what could have been kept (the findings and the
+what-if repricing) lives on the Waste tab, not here. The subtree
 map SHALL nest delegated subagents inside their delegating subagent (never
 flattening nested delegation into innermost-only attribution), SHALL derive
 each node's own value from the cost-engine's canonical attribution cells so
@@ -151,7 +153,7 @@ rule fired it SHALL state that explicitly rather than hiding.
 - THEN it states that the rules found nothing to save in this period
 
 ### Requirement: What-if repricing panel
-The run Cost view SHALL provide a what-if panel: a target-tier selector (the
+The run's Waste tab SHALL provide a what-if panel: a target-tier selector (the
 suggested downgrade preselected, any model from the delivered pricing table
 selectable), a per-subtree table of current cost, repriced cost, and delta
 with risk flags rendered as named badges, and a total line showing both the
@@ -171,7 +173,7 @@ cost-engine primitive, never a UI reimplementation.
 
 #### Scenario: No pricing payload
 - GIVEN an exported report produced without an embedded pricing payload
-- WHEN the Cost view renders
+- WHEN the Waste tab renders
 - THEN the panel shows a notice explaining repricing is unavailable and no
   fabricated rates are used
 
@@ -576,3 +578,21 @@ the amounts are lower bounds.
 - THEN the rail shows fourteen bars whose heights follow the amounts, the
   context area rising to each re-write, four compaction marks, two shaded
   gaps and the 200k guide, and no bar for the re-reads
+
+### Requirement: Findings strip hands over to the Waste tab
+The findings strip above a run's views SHALL show at most the five largest
+findings ranked by estimated waste, and when more exist SHALL end with a
+control reading "+N more in Waste" that opens the Waste tab, where the rest
+are grouped by rule rather than listed. Activating a pill SHALL keep
+highlighting its evidence and opening the finding in the Inspector.
+
+#### Scenario: Thirty-six findings, five pills
+- GIVEN a run with thirty-six findings
+- WHEN the strip renders
+- THEN it shows the five largest and "+31 more in Waste", which opens
+  `#/run/:id/waste`
+
+#### Scenario: Few findings, no hand-over
+- GIVEN a run with three findings
+- WHEN the strip renders
+- THEN it shows all three and no hand-over control
