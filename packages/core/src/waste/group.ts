@@ -40,6 +40,9 @@ export interface WasteOccurrence {
   usd: number;
   priced: boolean;
   spanIds: string[];
+  /** The span to open: the breaking or resumed call for cache findings,
+   * the first evidence span otherwise; undefined when none resolves. */
+  spanId: string | undefined;
   /** Offset from the run's start of the moment the leak happened: the
    * breaking or resumed call for cache findings, the first evidence
    * otherwise. Undefined when no evidence span resolves. */
@@ -137,7 +140,7 @@ function ms(iso: string): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-function byIdThenTime(a: Span, b: Span): number {
+function byTimeThenId(a: Span, b: Span): number {
   return startMs(a) - startMs(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
@@ -155,12 +158,14 @@ function occurrenceOf(
     usd: insight.estimatedWasteUSD ?? 0,
     priced,
     spanIds: [...insight.spanIds],
+    spanId: undefined,
     atMs: undefined,
     untilMs: undefined,
   };
   if (spans.length === 0) return occ;
-  const ordered = [...spans].sort(byIdThenTime);
+  const ordered = [...spans].sort(byTimeThenId);
   const first = ordered[0] as Span;
+  occ.spanId = first.id;
   occ.atMs = startMs(first) - t0;
   occ.untilMs = Math.max(...ordered.map(endMs)) - t0;
   const firstTool = spans.find(
@@ -173,6 +178,7 @@ function occurrenceOf(
   if (CACHE_PAIR_RULES.has(insight.ruleId) && spans.length === 2) {
     const [a, b] = spans as [Span, Span];
     if (a.llm !== undefined && b.llm !== undefined) {
+      occ.spanId = b.id;
       occ.atMs = startMs(b) - t0;
       occ.model = b.llm.model;
       if (insight.ruleId === 'cache-prefix-break') {
@@ -184,10 +190,15 @@ function occurrenceOf(
         };
       } else {
         occ.gapMs = Math.max(0, startMs(b) - endMs(a));
+        // capped at what was live before the gap — the same `lost` the rule
+        // prices, so the tokens shown match the amount beside them
         occ.cache = {
           readBefore: a.llm.tokens.cacheRead,
           readAfter: b.llm.tokens.cacheRead,
-          rewritten: b.llm.tokens.cacheWrite,
+          rewritten: Math.min(
+            b.llm.tokens.cacheWrite,
+            a.llm.tokens.cacheRead + a.llm.tokens.cacheWrite,
+          ),
         };
       }
     }
@@ -236,7 +247,7 @@ function eventsOf(
       ];
     }
   }
-  const ordered = [...spans].sort(byIdThenTime);
+  const ordered = [...spans].sort(byTimeThenId);
   return [
     {
       ...base,
@@ -347,7 +358,7 @@ export function wasteRun(run: Run, opts: WasteOptions = {}): RunWaste {
 
   const context: ContextPoint[] = run.spans
     .filter((s) => s.kind === 'llm_call' && s.llm !== undefined)
-    .sort(byIdThenTime)
+    .sort(byTimeThenId)
     .map((s) => ({
       offsetMs: startMs(s) - t0,
       tokens: contextTokens(s),

@@ -117,7 +117,9 @@ grouping for its per-shape split, with the rule's thresholds
 (`baseRetainedTokens`, `shrinkRatio`) as the defaults. A cache-prefix-break
 occurrence SHALL carry its shape, the cached tokens before and after the
 break, the tokens re-written and the breaking call's model; an idle
-occurrence SHALL carry the gap length and the same token figures.
+occurrence SHALL carry the gap length and the same token figures. Every
+occurrence SHALL name the span to open: the breaking or resumed call for
+cache findings, the first evidence span otherwise.
 
 #### Scenario: Rule and grouping agree
 - GIVEN a finding the rule worded as a compaction

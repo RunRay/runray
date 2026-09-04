@@ -104,6 +104,13 @@ function wording(
       const history = shapes.history ?? { count: 0, usd: 0 };
       const front = shapes.front ?? { count: 0, usd: 0 };
       const compaction = shapes.compaction ?? { count: 0, usd: 0 };
+      if (history.count + front.count + compaction.count === 0) {
+        // evidence that did not resolve (a trimmed export): no shape to word
+        return {
+          what: `${plural(g.count, 'cache break')} re-wrote already-cached content at the write premium — ${usd}.`,
+          lever: playbookActions(g.ruleId, source)[0] ?? '',
+        };
+      }
       if (history.usd >= front.usd && history.usd >= compaction.usd) {
         const sizes = g.occurrences
           .filter((o) => o.shape === 'history' && o.cache !== undefined)

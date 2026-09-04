@@ -215,6 +215,7 @@ describe('wasteRun', () => {
     expect(big?.model).toBe('claude-fable-5-1');
     // the leak is at the breaking call, not the call before it
     expect(big?.atMs).toBe(400_000);
+    expect(big?.spanId).toBe('L5');
     expect(small?.shape).toBe('compaction');
   });
 
@@ -227,9 +228,23 @@ describe('wasteRun', () => {
     expect(o?.cache?.rewritten).toBe(150_000);
   });
 
+  it('caps the idle re-write at what was live before the gap, like the rule', () => {
+    const w2 = wasteRun(
+      run(
+        [
+          llm('A', 0, { cacheRead: 10_000 }),
+          llm('B', 1000, { cacheWrite: 50_000 }),
+        ],
+        [finding('i1', 'idle-cache-expiry', ['A', 'B'], 1)],
+      ),
+    );
+    expect(w2.burned[0]?.occurrences[0]?.cache?.rewritten).toBe(10_000);
+  });
+
   it('names the tool and the span of a tool-evidence finding', () => {
     const retry = w.burned.find((g) => g.ruleId === 'retry-loop');
     expect(retry?.occurrences[0]?.tool).toBe('Bash');
+    expect(retry?.occurrences[0]?.spanId).toBe('B1');
     expect(retry?.occurrences[0]?.atMs).toBe(500_000);
     expect(retry?.occurrences[0]?.untilMs).toBe(520_500);
   });
@@ -282,6 +297,7 @@ describe('wasteRun', () => {
   it('survives evidence that does not resolve', () => {
     const w2 = wasteRun(run(SPANS, [finding('i1', 'retry-loop', ['nope'], 1)]));
     expect(w2.burned[0]?.occurrences[0]?.atMs).toBeUndefined();
+    expect(w2.burned[0]?.occurrences[0]?.spanId).toBeUndefined();
     expect(w2.events).toEqual([]);
   });
 

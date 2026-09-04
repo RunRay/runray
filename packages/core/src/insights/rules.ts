@@ -867,11 +867,7 @@ const fixedContextOverhead: InsightRule = {
     // calls neither carry nor re-read the session's opening footprint. Counting
     // them inflated both the footprint owner (llms[0]) and the re-read
     // multiplier (llms.length − 1).
-    const scope = buildScopeIndex(run);
-    const scopeKind = new Map(run.spans.map((s) => [s.id, s.kind]));
-    const llms = chronologicalLlmCalls(run).filter(
-      (l) => scopeKind.get(scope.get(l.id) ?? '') !== 'subagent',
-    );
+    const llms = mainScopeLlmCalls(run);
     const first = llms[0];
     if (first?.llm === undefined || llms.length < cfg.minLlmCalls) return [];
     const t = first.llm.tokens;

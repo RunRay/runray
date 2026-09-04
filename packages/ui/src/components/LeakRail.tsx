@@ -128,6 +128,9 @@ export function LeakRail({ run, waste }: { run: Run; waste: RunWaste }) {
   const step = tickStepMs(durationMs);
   const ticks: number[] = [];
   for (let t = 0; t <= durationMs; t += step) ticks.push(t);
+  // the end label always renders; a tick label within 5% of it would
+  // overlap, so that tick keeps its mark and loses its text
+  const labelled = (t: number) => t === 0 || durationMs - t > durationMs * 0.05;
 
   const summary = `${bars.length} burned ${bars.length === 1 ? 'finding' : 'findings'} on the session's time axis${idles.length > 0 ? `, ${idles.length} idle ${idles.length === 1 ? 'gap' : 'gaps'}` : ''}${compactions.length > 0 ? `, ${compactions.length} ${compactions.length === 1 ? 'compaction' : 'compactions'}` : ''}, over the context size of ${waste.context.length} model calls`;
 
@@ -135,7 +138,11 @@ export function LeakRail({ run, waste }: { run: Run; waste: RunWaste }) {
     <div>
       <p className="flex justify-between micro-label text-text-faint">
         <span>Where it leaked · {formatDuration(durationMs)}</span>
-        <span>bar height = amount · click a bar to open the finding</span>
+        <span>
+          {bars.length > 0
+            ? 'bar height = amount · click a bar to open the finding'
+            : 'nothing burned to place · the curve is the context each call carried'}
+        </span>
       </p>
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -264,14 +271,16 @@ export function LeakRail({ run, waste }: { run: Run; waste: RunWaste }) {
               y2={BASE + 4}
               stroke="var(--color-border-slate)"
             />
-            <text
-              x={x(t).toFixed(1)}
-              y={BASE + 15}
-              textAnchor={t === 0 ? 'start' : 'middle'}
-              className="fill-text-faint font-mono text-[10px]"
-            >
-              {formatOffset(t)}
-            </text>
+            {labelled(t) && (
+              <text
+                x={x(t).toFixed(1)}
+                y={BASE + 15}
+                textAnchor={t === 0 ? 'start' : 'middle'}
+                className="fill-text-faint font-mono text-[10px]"
+              >
+                {formatOffset(t)}
+              </text>
+            )}
           </g>
         ))}
         <text
@@ -284,24 +293,30 @@ export function LeakRail({ run, waste }: { run: Run; waste: RunWaste }) {
         </text>
       </svg>
       <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-label text-text-dim">
-        <span className="inline-flex items-center gap-1.5">
-          <i
-            aria-hidden
-            className="inline-block h-2.5 w-1 rounded-[1px] bg-heat-2"
-          />
-          burned · height is the amount
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <i
-            aria-hidden
-            className="inline-block h-2.5 w-0.5 bg-cache-savings"
-          />
-          compaction · new prefix written once
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <i aria-hidden className="inline-block h-2.5 w-2.5 bg-heat-1/25" />
-          idle gap · cache expired
-        </span>
+        {bars.length > 0 && (
+          <span className="inline-flex items-center gap-1.5">
+            <i
+              aria-hidden
+              className="inline-block h-2.5 w-1 rounded-[1px] bg-heat-2"
+            />
+            burned · height is the amount
+          </span>
+        )}
+        {compactions.length > 0 && (
+          <span className="inline-flex items-center gap-1.5">
+            <i
+              aria-hidden
+              className="inline-block h-2.5 w-0.5 bg-cache-savings"
+            />
+            compaction · new prefix written once
+          </span>
+        )}
+        {idles.length > 0 && (
+          <span className="inline-flex items-center gap-1.5">
+            <i aria-hidden className="inline-block h-2.5 w-2.5 bg-heat-1/25" />
+            idle gap · cache expired
+          </span>
+        )}
         <span className="inline-flex items-center gap-1.5">
           <i aria-hidden className="inline-block h-2.5 w-2.5 bg-brand/30" />
           context size per call

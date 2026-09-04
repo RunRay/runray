@@ -232,5 +232,12 @@ describe('lib/waste', () => {
     });
     expect(leadSentence(w, 'otlp')?.lever).toContain('~200k tokens');
     expect(leadSentence(runWaste(run([], 0)), 'claude-code')).toBeNull();
+    // evidence that does not resolve: no shape to word, still a sentence
+    const shapeless = runWaste(
+      run([finding('i1', 'cache-prefix-break', ['nope', 'nope2'], 4)], 4),
+    );
+    expect(leadSentence(shapeless, 'claude-code')?.what).toBe(
+      '1 cache break re-wrote already-cached content at the write premium — $4.00.',
+    );
   });
 });
