@@ -512,8 +512,8 @@ run summary SHALL take the triage's tone.
 - THEN it says the person declined the call and shows no playbook
 
 ### Requirement: Waste tab
-The run view SHALL offer a Waste tab (`#/run/:id/waste`) beside Overview,
-Timeline Explorer, Time and Errors, rendered from the core waste grouping
+The run view SHALL offer a Waste tab (`#/run/:id/waste`) between Time and
+Errors, rendered from the core waste grouping
 (waste-grouping capability) and never from a UI-side arrangement. The tab
 SHALL open with two figures kept apart — the burned amount (the run's
 capped wasted estimate) with its share of the run's cost, and the

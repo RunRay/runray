@@ -17,8 +17,8 @@ import { WasteView } from './WasteView';
 import { Waterfall } from './Waterfall';
 
 /**
- * Center pane: run header + Overview | Timeline Explorer | Time | Errors |
- * Waste tab switch (hash-driven).
+ * Center pane: run header + Overview | Timeline Explorer | Time | Waste |
+ * Errors tab switch (hash-driven).
  */
 export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
@@ -139,20 +139,6 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
       active: view === 'time',
     },
     {
-      label: 'Errors',
-      route: { view: 'errors', runId },
-      active: view === 'errors',
-      ...(pill === null || pill.tone === 'none'
-        ? {}
-        : {
-            badge: {
-              text: pill.label.split(' ')[0] ?? '',
-              tone: pill.tone,
-              title: `${pill.label} — ${pill.title}`,
-            },
-          }),
-    },
-    {
       label: 'Waste',
       route: { view: 'waste', runId },
       active: view === 'waste',
@@ -163,6 +149,20 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
               text: burned.text,
               tone: burned.tone,
               title: burned.title,
+            },
+          }),
+    },
+    {
+      label: 'Errors',
+      route: { view: 'errors', runId },
+      active: view === 'errors',
+      ...(pill === null || pill.tone === 'none'
+        ? {}
+        : {
+            badge: {
+              text: pill.label.split(' ')[0] ?? '',
+              tone: pill.tone,
+              title: `${pill.label} — ${pill.title}`,
             },
           }),
     },
