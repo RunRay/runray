@@ -90,6 +90,8 @@ The strip above the timeline lists findings ranked by amount; evidence rows in t
 
 Failed tool calls get the same treatment. The **Errors** tab of a session groups them by *who can act* — yours to fix (a missing binary, a shell the agent misread), tooling (a stuck browser pane, an MCP server), the agent's own slips, failed model calls, and the expected feedback of a test that did not pass yet — with the error text, whether the tool came back, what the reaction cost, and what you can do in your tool. The errors pill turns red only when a failure is yours to fix or the session never got past one; a run whose slips the agent fixed itself reads neutral.
 
+The **Waste** tab keeps two figures apart — what a session *burned* (retries, cache re-writes, idle gaps: money already spent on nothing) and what a different setup could have saved, as upper bounds — names the one change that would have kept most of the burn, and places every burn on the session's clock over the context size it happened in. Findings are grouped by rule and graded as groups, so eighteen small cache breaks read as the 12% of the session they add up to, and thirteen re-reads worth cents take one line.
+
 ---
 
 ## What ships in the alpha

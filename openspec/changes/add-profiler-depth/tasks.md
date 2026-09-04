@@ -443,5 +443,5 @@ automatically extends its fixture-parameterized equivalence matrix.
       what-if panel leave the Overview for the Waste tab; the strip shows the
       five largest findings and a "+N more in Waste" control; tour, hints and
       tests follow.
-- [ ] 13.5 A+B Docs and changeset (W4): docs/08 "Where findings appear",
+- [x] 13.5 A+B Docs and changeset (W4): docs/08 "Where findings appear",
       docs/05 §2.5 and §4, README, one `minor` changeset.
