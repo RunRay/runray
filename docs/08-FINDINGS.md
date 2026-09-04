@@ -15,7 +15,7 @@ Before you read the estimate, two questions decide how to treat it.
 
 | class | meaning | where it shows up |
 |---|---|---|
-| **burned** | Spend that bought nothing: retries, cache re-writes, redundant reads, the tail after a fatal error. | Adds up to the run's **wasted** figure — the *Status / Waste* tile above the timeline and *already burned* on the dashboard. Capped at what the run actually cost. |
+| **burned** | Spend that bought nothing: retries, cache re-writes, redundant reads, the tail after a fatal error. | Adds up to the run's **burned** figure — the *Burned* tile above the timeline (with the opportunities as a second, "up to" line) and *already burned* on the dashboard. Capped at what the run actually cost. |
 | **opportunity** | Spend that did buy something but could have been cheaper: a heavy fixed context, a model tier above the task, a cold cache. | Ranked and summed as *efficiency opportunities* on the dashboard. Never added to the wasted figure, so a hypothetical saving is never reported as a loss. |
 
 The class is a property of the rule (see the table below): a retry loop is always burned money, a wrong model tier is always an opportunity.

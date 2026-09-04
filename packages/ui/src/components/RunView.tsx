@@ -7,7 +7,7 @@ import {
 } from '../lib/format';
 import { type Route, type RunViewName, toHash } from '../lib/router';
 import { errorPill } from '../lib/triage';
-import { wasteBadge } from '../lib/waste';
+import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
 import { CostView } from './CostView';
 import { ErrorsView } from './ErrorsView';
@@ -23,7 +23,11 @@ import { Waterfall } from './Waterfall';
 export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const inspectorOpen = useAppStore((s) => s.ui.inspectorOpen);
+  // the header keeps the two figures apart the way the dashboard and the
+  // Waste tab do: burned is the engine's waste-class total, opportunities
+  // are upper bounds that never add to it
   const wasted = run.totals.costUSD.wastedEstimate;
+  const opportunity = runWaste(run).opportunityUSD;
 
   return (
     <div className="flex h-full min-w-0 flex-col">
@@ -75,12 +79,23 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
             </p>
           </div>
           <div>
-            <p className="micro-label text-text-faint">Status / Waste</p>
+            <p className="micro-label text-text-faint">
+              Burned / Opportunities
+            </p>
             <p
               className={`font-mono text-body font-semibold ${wasted > 0 ? 'text-heat-2' : 'text-text-dim'}`}
             >
-              {wasted > 0 ? `${formatUSD(wasted)} wasted` : 'Clean run'}
+              {wasted > 0
+                ? `${formatUSD(wasted)} burned`
+                : opportunity > 0
+                  ? 'Nothing burned'
+                  : 'Clean run'}
             </p>
+            {opportunity > 0 && (
+              <p className="font-mono text-label text-text-faint">
+                up to {formatUSD(opportunity)} if you change the setup
+              </p>
+            )}
           </div>
         </div>
 
