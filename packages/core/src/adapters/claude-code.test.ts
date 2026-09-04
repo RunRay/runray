@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Candidate, RawRun } from '../adapter.js';
+import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { priceRun } from '../pricing/index.js';
@@ -994,5 +995,141 @@ describe('claude-code adapter — where a failure is named, exit codes, declined
     expect(edit?.content).toEqual({ outputPreview: null });
     const bash = run.spans.find((s) => s.id === 'tu_bash');
     expect(bash?.tool?.exitCode).toBe(1);
+  });
+});
+
+describe('claude-code adapter — records repeated after a bridge-session', () => {
+  const jsonl = (lines: unknown[]) =>
+    `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`;
+  const bash = (id: string) => ({
+    type: 'tool_use',
+    id,
+    name: 'Bash',
+    input: { command: 'pnpm test' },
+  });
+  const failed = (uuid: string, ts: string, toolUseId: string) => ({
+    ...toolResult(uuid, ts, toolUseId),
+    message: {
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          tool_use_id: toolUseId,
+          is_error: true,
+          content: [{ type: 'text', text: 'FAIL 1 test' }],
+        },
+      ],
+    },
+  });
+  const noUuid = (ts: string) => ({
+    type: 'assistant',
+    timestamp: ts,
+    message: {
+      role: 'assistant',
+      model: 'claude-sonnet-4-6',
+      usage: { input_tokens: 1, output_tokens: 1 },
+      content: [{ type: 'text', text: 'no uuid' }],
+    },
+  });
+  // three consecutive failures of one tool: exactly one retry-loop cluster
+  const original = [
+    {
+      type: 'user',
+      uuid: 'u1',
+      sessionId: 'sess-dup',
+      timestamp: '2026-09-03T18:38:10Z',
+      cwd: '/home/user/project/x',
+      message: { role: 'user', content: 'run the tests' },
+    },
+    assistant('a1', 'u1', 'm1', '2026-09-03T18:38:12Z', [bash('t1')]),
+    failed('r1', '2026-09-03T18:38:15Z', 't1'),
+    assistant('a2', 'r1', 'm2', '2026-09-03T18:38:20Z', [bash('t2')]),
+    failed('r2', '2026-09-03T18:38:22Z', 't2'),
+    assistant('a3', 'r2', 'm3', '2026-09-03T18:38:30Z', [bash('t3')]),
+    failed('r3', '2026-09-03T18:38:32Z', 't3'),
+    assistant('a4', 'r3', 'm4', '2026-09-03T18:38:40Z', [
+      { type: 'text', text: 'gave up' },
+    ]),
+  ];
+  // the desktop app re-appends the whole transcript after a bridge: the
+  // same uuids and ids on later lines, with a newer version and a slug
+  const copies = original.map((r) => ({
+    ...r,
+    version: '2.1.258',
+    slug: 'copy',
+  }));
+  let run: RawRun;
+
+  beforeAll(async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-dup-'));
+    try {
+      const proj = join(dir, 'proj');
+      mkdirSync(proj, { recursive: true });
+      writeFileSync(
+        join(proj, 'sess-dup.jsonl'),
+        jsonl([
+          ...original, // lines 1–8
+          {
+            type: 'bridge-session',
+            sessionId: 'sess-dup',
+            bridgeSessionId: 'cse_1',
+          },
+          ...copies, // lines 10–17
+          // fresh uuids re-registering a known tool_use and its result: the
+          // block is not pushed again and the first result (the failure)
+          // keeps deciding the span
+          assistant('a1-again', 'u1', 'm1', '2026-09-03T18:38:12Z', [
+            bash('t1'),
+          ]),
+          toolResult('r1-again', '2026-09-03T18:39:00Z', 't1'),
+          // records without a uuid are never deduplicated
+          noUuid('2026-09-03T18:39:10Z'),
+          noUuid('2026-09-03T18:39:11Z'),
+        ]),
+      );
+      const candidates = await claudeCodeAdapter.detect([dir]);
+      expect(candidates).toHaveLength(1);
+      run = await claudeCodeAdapter.parse(candidates[0] as Candidate, {
+        redact: false,
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps the first copy of every record and counts the session once', () => {
+    const spans = (id: string) => run.spans.filter((s) => s.id === id);
+    const ids = run.spans.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ['m1', 'm2', 'm3', 'm4', 't1', 't2', 't3']) {
+      expect(spans(id)).toHaveLength(1);
+    }
+    // provenance stays on the lines written live, never past the bridge
+    expect(spans('m1')[0]?.provenance.line).toBe(2);
+    expect(spans('t1')[0]?.provenance.line).toBe(2);
+    expect(spans('m4')[0]?.provenance.line).toBe(8);
+    expect(spans('m1')[0]?.content?.promptPreview).toBe('run the tests');
+    // the first tool_result wins over the re-registered success
+    const t1 = spans('t1')[0];
+    expect(t1?.status).toBe('error');
+    expect(t1?.endedAt).toBe('2026-09-03T18:38:15Z');
+    expect(t1?.content?.outputPreview).toBe('FAIL 1 test');
+    // counts match a single copy: 4 calls plus the two uuid-less records,
+    // 3 tool calls, all failed
+    const llm = run.spans.filter((s) => s.kind === 'llm_call');
+    expect(llm).toHaveLength(6);
+    expect(llm.filter((s) => s.id.startsWith('rec-'))).toHaveLength(2);
+    const tools = run.spans.filter((s) => s.tool !== undefined);
+    expect(tools).toHaveLength(3);
+    expect(tools.filter((s) => s.status === 'error')).toHaveLength(3);
+  });
+
+  it('manufactures no second retry-loop cluster from the copies', () => {
+    const loops = applyInsights(normalize(run)).insights.filter(
+      (i) => i.ruleId === 'retry-loop',
+    );
+    expect(loops).toHaveLength(1);
+    expect(loops[0]?.spanIds).toEqual(['t1', 't2', 't3']);
+    expect(loops[0]?.title).toBe('Bash failed 3× in a row');
   });
 });
