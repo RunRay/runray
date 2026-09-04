@@ -375,12 +375,14 @@ automatically extends its fixture-parameterized equivalence matrix.
       OpenCode "The user rejected permission…") is `cancelled` +
       `statusReason: user-rejected`, out of `toolErrors` and the failure
       rules. Goldens regenerated in a dedicated commit. Added 2026-09-03.
-- [ ] 12.2 A Duplicate transcript records (E0, separate branch): the
-      claude-code adapter keeps the first copy of each record uuid — a
-      desktop `bridge-session` re-appends the history and doubled every tool
-      span before it (4 of the user's 70 sessions, phantom retry-loop
-      findings). Owned by the spawned session on
-      `claude/suspicious-ellis-0abbbd`. Added 2026-09-03.
+- [x] 12.2 A Duplicate transcript records (E0, spec: trace-ingestion
+      "Duplicate transcript records"): the claude-code adapter keeps the
+      first copy of each record uuid and never registers a tool_use id or a
+      tool_result twice — a desktop `bridge-session` re-appends the history
+      and doubled every tool span before it (4 of the user's 70 sessions,
+      phantom retry-loop findings). Fixture `claude-code/duplicate-records`
+      + golden. Done on `claude/suspicious-ellis-0abbbd`, merged as 2c57268.
+      Added 2026-09-03.
 - [x] 12.3 A Error triage in core (E1, spec: error-triage "Error
       classification", "Error clusters, reaction cost and recovery",
       "Attention signal", "Error-class playbooks"): browser-safe
