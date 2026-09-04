@@ -91,6 +91,14 @@ function persistLimit(key: string, value: string | null): void {
   else localStorage.setItem(key, value);
 }
 
+/** The navigation rail's collapsed state persists like the theme. */
+const NAV_COLLAPSED_KEY = 'runray.navCollapsed';
+
+function storedNavCollapsed(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem(NAV_COLLAPSED_KEY) === 'on';
+}
+
 export interface OnboardingState {
   enabled: boolean;
   loaded: boolean;
@@ -143,6 +151,8 @@ export interface AppState {
   };
   ui: {
     inspectorOpen: boolean;
+    /** The navigation rail shows icons only; persisted. */
+    navCollapsed: boolean;
     /** Keyboard-shortcut help sheet — the ? key and the TopBar button
      * share this one path (D7). */
     helpOpen: boolean;
@@ -211,6 +221,8 @@ export interface AppState {
   /** Stage an insight to activate once the target run's route lands. */
   stageInsight(insight: Insight): void;
   toggleInspector(): void;
+  /** Collapse the navigation rail to icons, or expand it back. */
+  toggleNav(): void;
   /** Toggle the help sheet; pass a boolean to force a state. */
   toggleHelp(open?: boolean): void;
   toggleCollapsed(spanId: string): void;
@@ -263,6 +275,7 @@ export const useAppStore = create<AppState>()((set) => ({
   selection: { spanId: null, insightId: null, focus: 'span' },
   ui: {
     inspectorOpen: true,
+    navCollapsed: storedNavCollapsed(),
     helpOpen: false,
     collapsed: new Set(),
     highlighted: new Set(),
@@ -463,6 +476,12 @@ export const useAppStore = create<AppState>()((set) => ({
     })),
   toggleInspector: () =>
     set((s) => ({ ui: { ...s.ui, inspectorOpen: !s.ui.inspectorOpen } })),
+  toggleNav: () =>
+    set((s) => {
+      const navCollapsed = !s.ui.navCollapsed;
+      persistLimit(NAV_COLLAPSED_KEY, navCollapsed ? 'on' : 'off');
+      return { ui: { ...s.ui, navCollapsed } };
+    }),
   toggleHelp: (open) =>
     set((s) => ({ ui: { ...s.ui, helpOpen: open ?? !s.ui.helpOpen } })),
   toggleCollapsed: (spanId) =>
