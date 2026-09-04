@@ -1,16 +1,23 @@
 import type { Insight, Run } from '@runray/schema';
 import { formatUSD } from '../lib/format';
 import { rankInsights } from '../lib/insight-order';
-import type { RunViewName } from '../lib/router';
+import { type RunViewName, toHash } from '../lib/router';
 import { tourAttr } from '../lib/tour-attr';
 import { useAppStore } from '../store';
 
 /**
- * Insights strip (03-design.md §4.2): one pill per finding, ranked by
- * estimated waste — severity color, title, waste $. Activating highlights the evidence spans in the
- * waterfall and opens the insight in the Inspector; from the Cost view it
- * first jumps to the Timeline.
+ * Insights strip (03-design.md §4.2): the five largest findings, ranked by
+ * estimated waste — severity color, title, waste $ — and a way to the
+ * rest on the Waste tab, where they are grouped instead of listed.
+ * Activating a pill highlights the evidence spans in the waterfall and
+ * opens the insight in the Inspector; from the Cost view it first jumps
+ * to the Timeline.
  */
+
+/** Pills shown before the strip hands over to the Waste tab: a session
+ * with thirty findings is eighteen cache breaks and thirteen re-reads,
+ * which the tab groups and the strip cannot. */
+const STRIP_MAX = 5;
 
 const SEVERITY_PILL: Record<Insight['severity'], string> = {
   info: 'border-border text-text-dim',
@@ -22,6 +29,9 @@ export function InsightsStrip({ run, view }: { run: Run; view: RunViewName }) {
   const activeId = useAppStore((s) => s.selection.insightId);
   const activateInsight = useAppStore((s) => s.activateInsight);
   if (run.insights.length === 0) return null;
+  const ranked = rankInsights(run.insights);
+  const shown = ranked.slice(0, STRIP_MAX);
+  const hidden = ranked.length - shown.length;
 
   const onActivate = (insight: Insight) => {
     activateInsight(insight);
@@ -37,7 +47,7 @@ export function InsightsStrip({ run, view }: { run: Run; view: RunViewName }) {
       aria-label="Findings"
       className="flex items-center gap-1.5 overflow-x-auto border-b border-border px-4 py-2"
     >
-      {rankInsights(run.insights).map((insight) => {
+      {shown.map((insight) => {
         const active = insight.id === activeId;
         return (
           <button
@@ -59,6 +69,15 @@ export function InsightsStrip({ run, view }: { run: Run; view: RunViewName }) {
           </button>
         );
       })}
+      {hidden > 0 && (
+        <a
+          href={toHash({ view: 'waste', runId: run.id })}
+          aria-label={`${hidden} more ${hidden === 1 ? 'finding' : 'findings'}, grouped on the Waste tab`}
+          className="flex shrink-0 items-center rounded-control border border-dashed border-border-slate bg-surface px-2.5 py-1 text-label text-text-dim transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg"
+        >
+          +{hidden} more in Waste
+        </a>
+      )}
     </div>
   );
 }

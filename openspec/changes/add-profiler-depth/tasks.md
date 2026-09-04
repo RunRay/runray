@@ -416,3 +416,40 @@ automatically extends its fixture-parameterized equivalence matrix.
       under "Where findings appear"; docs/05 §2.5 error triage and §4 UI
       surfaces; README sentence; one `minor` changeset covering E0–E3.
       Added 2026-09-03.
+
+## 13. Waste tab (post-analysis addition, spec: waste-grouping capability; visualizer "Waste tab", "Cost breakdown view" and "Insights strip" amended)
+
+- [x] 13.1 A Waste grouping in core (W0, spec: waste-grouping "Findings
+      grouped by rule and class", "Group severity", "Cent-level groups
+      fold", "Leak events on the session's clock", "One shape for a cache
+      break"): browser-safe `@runray/core/waste` — `wasteRun` (groups per
+      rule split burned / opportunities, graded on the group sum by the
+      engine's own `gradeSeverity`, folded when every finding is under the
+      warning floor, cache breaks read by shape from their two evidence
+      calls, leak events and per-call context points); `gradeSeverity` and
+      the break shape moved to pure modules shared with the engine. Analysed
+      on the user's 72 real sessions. Added 2026-09-04.
+- [x] 13.2 B [UI → /frontend-design] Waste tab (W1, spec: visualizer "Waste
+      tab"): route `#/run/:id/waste`, `WasteView` (two headline figures and
+      the lead sentence, burned and opportunity groups with occurrences,
+      shape split, playbook per group, folded cents, empty state), tab badge
+      with the burned amount, palette entry, contextual hint, `lib/waste.ts`.
+- [x] 13.3 B [UI → /frontend-design] Leak rail (W2, spec: visualizer "Waste
+      tab" — "Leaks on the clock"): context curve per model call, one bar
+      per burned event sized by amount, idle bands, compaction marks, a 200k
+      guide; a bar opens the timeline on its span.
+- [x] 13.4 B [UI → /frontend-design] Re-homing (W3, spec: visualizer "Cost
+      breakdown view" and "Insights strip" amended): the waste table and the
+      what-if panel leave the Overview for the Waste tab; the strip shows the
+      five largest findings and a "+N more in Waste" control; tour, hints and
+      tests follow.
+- [x] 13.5 A+B Docs and changeset (W4): docs/08 "Where findings appear",
+      docs/05 §2.5 and §4, README, one `minor` changeset.
+- [x] 13.6 A+B How Growing context is counted (spec: cost-engine "Context
+      ceiling estimates", visualizer "Waste tab" amended): the context-excess
+      formula moves to browser-safe `insights/context-excess.ts` (the rule
+      calls it; `contextCapEstimates` re-runs it with 100k / 200k / 400k
+      ceilings, exported from `@runray/core/waste`); the open Growing
+      context row explains the baseline, the calls counted, the excess and
+      the rate as an upper bound, and lists what each ceiling would have
+      saved. Asked by the user after seeing $659 of $808. Added 2026-09-04.

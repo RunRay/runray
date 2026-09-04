@@ -1,137 +1,120 @@
 # RunRay
 
-**Zero-config, local-first observability for AI coding agents.** Reads the session logs your agents already write to disk and turns them into actionable insights — no database, no collectors, no setup.
+RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs on your machine and talks to nothing.
 
 ```bash
-npx runray demo   # see it on a bundled sample session
-npx runray view   # see your own sessions
+npx runray demo   # a scrubbed sample session, no agent data needed
+npx runray view   # your own sessions
 ```
 
-> **Status: alpha, and installable today.** `0.1.0-alpha.1` is on npm — everything described below works. It is an alpha because it has been exercised by its authors and a handful of fixtures, not by a hundred real machines: agent log formats are undocumented and drift with every CLI release, so the honest expectation is that some session somewhere parses oddly. If one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the source agent — that feedback is exactly what the alpha is for.
+![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/runray/runray/main/docs/images/dashboard.png)
 
----
+**Status: alpha.** `runray@0.1.0-alpha.2` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
 
-## What is this?
+## Why
 
-RunRay is a local-first CLI that reads session data your AI coding agents (Claude Code, OpenCode) **already store on disk**, normalizes it into one schema, and opens an instant dashboard: the full delegation tree, where the time went, where the money went — and what to change.
+Usage trackers tell you how many tokens you spent this week. That number is easy to get and hard to act on. RunRay works one session at a time and answers a different question: where did the money go inside this run, and which part of it was avoidable? "Bash failed three times in a row and the retries cost $0.09" is something you can fix. "138k tokens" is not.
 
-**Core hypothesis:** raw usage numbers are a solved problem (plenty of free tools aggregate them). What developers lack is *actionable insight* — "Bash failed 3× in a row and burned $0.09 in retries" beats "you used 138k tokens."
+## What you get
 
----
+- **A dashboard across sessions.** Spend by day, by project, by model and by tool, with a potential-savings panel that keeps two figures apart: money already burned (retries, cache re-writes, dead ends) and savings a different setup would bring.
+- **Overview of a session.** Total cost, the tool spend leaderboard, cost by model over time, and a map of what each subagent subtree cost.
+- **Timeline Explorer.** The full execution tree as a waterfall: delegation nesting, parallel calls on their own lanes, error marks, and a cumulative-cost gutter you can click to jump to any moment.
+- **Time.** Where the wall clock went: model wait, tool execution, coordination, idle gaps.
+- **Waste.** What the session burned and what it could have saved, with every burn placed on the session's clock over the context size it happened in.
+- **Errors.** Failed calls grouped by who can act on them, with the error text and what to do in your tool.
+- **A single-file report.** `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread.
 
-## What it does
+### Waste
 
-- **Zero-config** — reads logs that already exist (`~/.claude/projects`, OpenCode's data dir). No env vars, no collector, no account. Pass a path to override auto-detection.
-- **Format-agnostic adapters** — Claude Code JSONL (incl. subagent sidechains); OpenCode across both of its storage eras (legacy file storage *and* SQLite) plus `opencode export` JSON; OTLP/JSON import for custom or hook-instrumented agents.
-- **Actionable insights, not just telemetry** — twelve rules flag retry loops, cache-prefix breaks, idle cache expiry, duplicate file reads, context bloat, wrong model tiers, expensive subagents, dead-end runs and more — each with evidence spans, an estimated USD figure, and one concrete suggestion. Every finding says whether that money is already **burned** or an **opportunity**, and how big it is in *that* run ([how findings are graded](https://github.com/apitome-app/runray/blob/main/docs/08-FINDINGS.md)).
-- **Timeline waterfall** — the execution tree with parallel vs sequential lanes, error marking, and the **Spend Spine**: a cumulative-cost gutter showing money accrete through the session.
-- **Cost breakdown** — per-model, per-tool, cache-aware; explicit wasted-spend table.
-- **Single-file export** — `runray export -o report.html` produces one self-contained HTML you can drop into Slack or a PR.
-- **Private by design** — 100% local; zero network calls at runtime (the only exception: explicit `pricing --refresh`); `--redact` strips prompt text while keeping structure and token counts.
+![The Waste tab: burned and opportunity figures, the leak rail over the context curve, and findings grouped by rule](https://raw.githubusercontent.com/runray/runray/main/docs/images/waste.png)
 
----
+Twelve rules look at each session: retry loops, cache-prefix breaks, cache expiry after an idle gap, duplicate file reads, growing context, heavy fixed context, wrong model tier, expensive subagents, dead-end runs, scattered tool failures, oversized tool outputs, low cache hit-rate. Every finding points at its evidence spans, carries an amount, and ends with one suggestion written for you, not for the model.
 
-## Architecture
+Two things matter about the amounts. First, a finding is either *burned* (the money is gone) or an *opportunity* (an upper bound on what a different setup would have saved), and the two are never added into one number. Second, severity is not a property of the rule. The engine grades each finding by its share of that run's cost, so a $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. The Waste tab groups findings by rule and grades the groups the same way, so eighteen small cache breaks read as the 12% they add up to.
 
+The largest opportunity, growing context, deserves a caveat: its estimate assumes the whole session could have run at its opening context size. The tab says so, and shows what keeping the context under 100k, 200k or 400k tokens would have saved instead. Rule formulas, examples and the threshold keys are in [docs/08-FINDINGS.md](https://github.com/runray/runray/blob/main/docs/08-FINDINGS.md).
+
+### Errors
+
+![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](https://raw.githubusercontent.com/runray/runray/main/docs/images/errors.png)
+
+A failed tool call is not one thing. On real sessions about a third of them are the agent's own check-and-fix loop, a third are slips the model corrected on the next call, and fewer than one in ten are something you can act on. The Errors tab reads a class from each failure's text and groups them by owner: yours to fix (a shell the agent misread, a missing binary), tooling (a stuck browser pane, an MCP server), the agent's slips, failed model calls, and the expected feedback of a test that did not pass yet. Each group shows the error text, whether the tool came back, what the reaction cost, and the levers you have in your own tool. The error count in the session list turns red only when a failure is yours or the session never got past one.
+
+### Timeline Explorer
+
+![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](https://raw.githubusercontent.com/runray/runray/main/docs/images/timeline.png)
+
+## Where the data comes from
+
+RunRay does not instrument anything and runs no collector. It reads what the agents write:
+
+| Source | What it reads | Notes |
+|---|---|---|
+| Claude Code | `~/.claude/projects/**/*.jsonl` | Subagent sidechains included. Records a desktop bridge session re-appends are deduplicated. |
+| OpenCode | file storage, `opencode.db` (opened read-only), `opencode export` JSON | OpenCode stores `cost: 0`, so the cost engine prices every call from token counts. |
+| OTLP/JSON | exported OpenTelemetry traces | For custom agents and Claude Code's native traces. Import only, best effort. |
+
+Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network. A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated. Costs are computed from the transcript, which makes them a lower bound: utility calls, unlogged retries and web-search fees never reach the log.
+
+## Privacy
+
+Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account. `--redact` strips prompt and output text in the parser and keeps structure and counts, and `runray export` asks for confirmation before it writes an unredacted file.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
+| `runray list [path] --json` | The same discovery as a machine-readable list. |
+| `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--json out.json` also writes the normalized trace. |
+| `runray demo` | The dashboard on a bundled, scrubbed sample. |
+| `runray diff <runA> <runB>` | Two runs side by side: cost, tokens, errors, alignment. `--json` prints the diff for scripts. |
+| `runray pricing [--refresh]` | Show the pricing snapshot, or fetch a current one. |
+
+Thresholds for the rules live in `runray.config.json`, read from the current directory and then from `~/.config/runray/`. Set only the keys you want to change:
+
+```json
+{
+  "insights": {
+    "thresholds": {
+      "retryLoop": { "minFailures": 3 },
+      "severity": { "warningShare": 0.02, "criticalShare": 0.1 }
+    }
+  }
+}
 ```
- ~/.claude/projects/**.jsonl ─┐
- opencode storage / .db ──────┼─▶ adapters ─▶ normalize ─▶ TraceFile ─▶ cost engine ─▶ insights
- OTLP JSON export ────────────┘                             (JSON)                        │
-                                                     ┌────────────────┬───────────────────┤
-                                                     ▼                ▼                   ▼
-                                              local dashboard    report.html          --json
-                                              (127.0.0.1)       (single file)        (stdout)
-```
 
-| Component | Description |
-|-----------|-------------|
-| **Adapters** (`packages/core`) | Pluggable per-source parsers (`detect()` / `parse()`). Golden-fixture contract tests absorb vendor format churn — OpenCode is mid-migration to SQLite as we write this. |
-| **Schema** (`packages/schema`) | One versioned `TraceFile` JSON Schema — the contract between CLI and UI. UI never touches raw logs. |
-| **Cost engine** (`packages/core`) | Offline pricing snapshot; cache read/write priced at their own rates; unknown models surfaced, never silently priced. |
-| **Insights** (`packages/core`) | Twelve rules; severity graded by the engine from each finding's share of the run's cost; thresholds configurable via `runray.config.json`. |
-| **CLI** (`packages/cli`) | `view · list · export · demo · pricing · diff`. Serves the embedded dashboard on 127.0.0.1 only. |
-| **Visualizer** (`packages/ui`) | Vite + React + Tailwind; virtualized waterfall; ships as prebuilt static assets inside the npm package. |
+## Compared with usage trackers
 
----
+ccusage and similar tools answer "how much did I use?" across days and projects. RunRay answers "what happened inside this run, and what should I change?" with evidence you can click through to. Use both.
 
-## Usage
+## What is next
+
+`runray ci`: a budget and cost-regression gate with a GitHub Action, so a pull request can fail on a spend regression the way it fails on a broken test. Agents that keep no session logs on disk arrive through the OTLP path.
+
+Deliberately absent, and staying that way: databases, collectors, SDKs, cloud accounts, alerting.
+
+## Development
 
 ```bash
-# Instant demo on a bundled, anonymized session — no agent data needed
-npx runray demo
-
-# Auto-detect and browse your sessions (Claude Code + OpenCode)
-runray view
-
-# A specific folder or file
-runray view ./traces/session-2026-07-01.jsonl
-
-# Machine-readable listing for scripts
-runray list --json
-
-# Self-contained shareable report (confirmation required unless --redact)
-runray export -o report.html --redact
+pnpm install
+pnpm lint && pnpm typecheck && pnpm test
+pnpm build
+node packages/cli/dist/bin.js demo
 ```
 
----
-
-## Dashboard views
-
-### Timeline
-Waterfall of the full execution tree: parent/child delegation with per-depth indenting, **parallel vs sequential** sibling spans on separate lanes, duration bars colored by span kind, error notches, expandable details (tokens, cost, prompt preview), and the Spend Spine cumulative-cost gutter — click a point to jump to that moment.
-
-### Cost breakdown
-Total session cost, cost stacked by model over time, a treemap by tool/agent subtree (cell intensity = spend), cache hit-rate, and a wasted-spend table linking every finding to its evidence spans.
-
-### Findings
-Every finding answers two questions. **Is the money gone?** — *burned* findings (retry loops, cache breaks, duplicate reads, dead ends) add up to the run's **wasted** figure; *opportunity* findings (heavy fixed context, wrong model tier, low cache hit-rate) are savings you could still make and never inflate it. **How big is it here?** — severity is not a property of the rule: the engine grades each finding by its share of *that run's* cost (by default `warning` from 2% and $0.05, `critical` from 10% and $1), so the same $0.60 retry loop is a warning in a $0.65 run and a footnote in a $600 one.
-
-The strip above the timeline lists findings ranked by amount; evidence rows in the waterfall carry a severity notch and a ⚠ chip, and the Inspector switches between an activity and the finding it belongs to. Every suggestion is addressed to you, not to the model, and the Inspector shows the rule's playbook for your tool under *How to fix*. Full rule list, formulas and threshold keys: [docs/08-FINDINGS.md](https://github.com/apitome-app/runray/blob/main/docs/08-FINDINGS.md).
-
-Failed tool calls get the same treatment. The **Errors** tab of a session groups them by *who can act* — yours to fix (a missing binary, a shell the agent misread), tooling (a stuck browser pane, an MCP server), the agent's own slips, failed model calls, and the expected feedback of a test that did not pass yet — with the error text, whether the tool came back, what the reaction cost, and what you can do in your tool. The errors pill turns red only when a failure is yours to fix or the session never got past one; a run whose slips the agent fixed itself reads neutral.
-
----
-
-## What ships in the alpha
-
-Everything the PoC set out to build is in `0.1.0-alpha.1`:
-
-- Claude Code JSONL adapter, including subagent sidechains
-- OpenCode adapter across all three eras: file storage, SQLite, `opencode export` JSON
-- OTLP/JSON import for anything else that can emit OpenTelemetry
-- Normalization to the versioned schema; offline, cache-aware cost engine
-- Twelve insight rules (retry loops, cache-prefix breaks, idle cache expiry, duplicate reads, context bloat, fixed-context overhead, wrong model tier, expensive subagents, dead-end runs, scattered tool failures, oversized outputs, low cache hit-rate), each classed burned/opportunity and graded by its share of the run
-- Timeline waterfall, cost breakdown, sessions overview, span inspector
-- `demo`, `list --json`, single-file `export`, `--redact`, and `diff` between two runs
-
-**Deliberately absent, and staying that way:** databases, external collectors, SDKs, cloud deployment, accounts, alerting. Nothing here phones home.
-
-**Next:** `runray ci` — a budget and cost-regression gate with a GitHub Action, so a pull request can fail on a spend regression the way it fails on a broken test. Cursor and other hook-instrumented agents keep no zero-config session logs on disk, so they arrive through the OTLP path rather than as native adapters.
-
----
-
-## How is this different from ccusage?
-
-ccusage and friends answer *"how much did I use this week?"* — aggregate usage reports. RunRay answers *"what happened inside this run, and what should I change?"* — per-run forensics with evidence-linked findings. Use both.
-
----
-
-## Project structure
-
 ```
-runray/
-├── packages/
-│   ├── schema/     # zod types → JSON Schema (the CLI↔UI contract)
-│   ├── core/       # adapters, normalizer, cost engine, insights
-│   ├── cli/        # commands + local server; embeds UI dist
-│   └── ui/         # Vite React dashboard
-├── fixtures/       # scrubbed sample logs per source × variant + golden outputs
-├── openspec/       # spec-driven development artifacts
-└── .github/        # CI: lint, typecheck, tests, schema validation, build
+packages/schema   the versioned TraceFile contract (zod types, JSON Schema)
+packages/core     adapters, normalizer, cost engine, findings, triage
+packages/cli      commands and the local server; embeds the built UI
+packages/ui       the dashboard (Vite, React, Tailwind)
+fixtures/         scrubbed sample logs per source and their normalized goldens
+openspec/         specs and the change history behind every feature
 ```
 
----
+Work follows the specs in `openspec/`: a change starts with a spec delta, fixtures are never edited by hand, and the golden outputs must stay byte-identical unless a commit regenerates them on purpose.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The published package carries the same grant.
+MIT. See [LICENSE](LICENSE).

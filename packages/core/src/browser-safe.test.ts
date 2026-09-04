@@ -18,6 +18,7 @@ const BROWSER_SAFE_ENTRYPOINTS = [
   'insights/meta.ts',
   'diff/index.ts',
   'triage/index.ts',
+  'waste/index.ts',
 ];
 
 /** Runtime import/export specifiers of one source file (type-only skipped). */
@@ -65,5 +66,6 @@ describe('browser-safe subpath purity', () => {
     expect(published).toContain('./dist/insights/meta.js');
     expect(published).toContain('./dist/diff/index.js');
     expect(published).toContain('./dist/triage/index.js');
+    expect(published).toContain('./dist/waste/index.js');
   });
 });
