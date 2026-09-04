@@ -41,7 +41,7 @@ export interface ErrorOwnerMeta {
 
 export const ERROR_OWNER_META: Readonly<Record<ErrorOwner, ErrorOwnerMeta>> = {
   you: {
-    label: 'Needs you',
+    label: 'Yours to fix',
     meaning:
       'something in your environment or configuration; the agent cannot fix it alone',
   },

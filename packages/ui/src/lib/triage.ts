@@ -48,7 +48,7 @@ export const OWNER_FILL: Readonly<Record<ErrorOwner, string>> = {
 };
 
 export interface ErrorPill {
-  /** e.g. "13 errors · 1 needs you" */
+  /** e.g. "13 errors · 1 yours to fix" */
   label: string;
   /** The count alone, e.g. "13 errors" — for the narrow sessions rail. */
   count: string;
@@ -60,7 +60,7 @@ export interface ErrorPill {
 /**
  * The errors pill for a sessions list: the count stays, the tone comes from
  * the triage (alarm only when something is for the person or the session
- * never got past a failure), and a "· N need you" suffix names the reason
+ * never got past a failure), and a "· N yours to fix" suffix names the reason
  * when there is one — the wide sessions table shows it, the rail shows
  * `count` alone and keeps the breakdown in the tooltip. Null when the run
  * has no failed calls.
@@ -74,10 +74,7 @@ export function errorPill(run: Run): ErrorPill | null {
     t.toolErrors > 0
       ? `${t.toolErrors} errors`
       : `${t.modelErrors} model error${t.modelErrors === 1 ? '' : 's'}`;
-  const label =
-    needsYou > 0
-      ? `${head} · ${needsYou} need${needsYou === 1 ? 's' : ''} you`
-      : head;
+  const label = needsYou > 0 ? `${head} · ${needsYou} yours to fix` : head;
   const parts: string[] = [];
   for (const owner of Object.keys(t.byOwner) as ErrorOwner[]) {
     const n = t.byOwner[owner];

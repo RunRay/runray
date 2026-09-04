@@ -402,7 +402,7 @@ automatically extends its fixture-parameterized equivalence matrix.
       feedback collapsed and dimmed; empty and redacted states), Errors tab
       with count in the triage tone, `lib/triage.ts` (WeakMap-cached
       `runTriage`, `errorPill`), pills in the sessions table and rail tinted
-      by `triageTone` with "· N need you", palette entry, contextual hint,
+      by `triageTone` with "· N yours to fix", palette entry, contextual hint,
       shared `PlaybookSteps`. Added 2026-09-03.
 - [x] 12.5 B [UI → /frontend-design] Inspector error sections (E3, spec:
       visualizer "Inspector error sections"): `ErrorTriageSections` after
