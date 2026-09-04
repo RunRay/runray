@@ -1,0 +1,23 @@
+/**
+ * Waste grouping (waste-grouping capability): a session's findings by
+ * rule and class, graded as groups, with the burned ones on the session's
+ * clock. Browser-safe subpath `@runray/core/waste` — the visualizer
+ * renders the Waste tab from these functions, never from a copy.
+ */
+export {
+  type BreakShape,
+  type BreakShapeThresholds,
+  breakShape,
+  contextTokens,
+  DEFAULT_BREAK_SHAPE,
+} from '../insights/cache-shape.js';
+export {
+  type ContextPoint,
+  type LeakEvent,
+  type LeakKind,
+  type RunWaste,
+  type WasteGroup,
+  type WasteOccurrence,
+  type WasteOptions,
+  wasteRun,
+} from './group.js';

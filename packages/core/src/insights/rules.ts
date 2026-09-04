@@ -9,6 +9,7 @@ import {
   round6,
   suggestedDowngrade,
 } from '../pricing/engine.js';
+import { breakShape, contextTokens } from './cache-shape.js';
 import {
   buildScopeIndex,
   chronological,
@@ -318,13 +319,6 @@ function lowCacheHitSuggestion(
 function median3(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[1] ?? 0;
-}
-
-/** Input-class tokens of one call: what the model had in front of it,
- * whichever rate each part was billed at. */
-function contextTokens(s: Span): number {
-  const t = s.llm?.tokens;
-  return t === undefined ? 0 : t.input + t.cacheRead + t.cacheWrite;
 }
 
 /** What one input-class token of this call cost on average: its input,
@@ -810,27 +804,6 @@ function isIdleExpiryPair(
     gapMs >= ttlMinutes * 60_000 &&
     (b.llm?.tokens.cacheWrite ?? 0) >= cfg.rewriteFloorTokens
   );
-}
-
-/** What survived a prefix break, from the two calls' token shapes:
- * `compaction` when the breaking call's context shrank below the ratio
- * (the history was summarized and written once as a new prefix), `front`
- * when fewer than the base tokens stayed cached (the tool list, system
- * prompt or a setting changed — everything from the front was written
- * again), else `history` (the fixed front stayed cached; the conversation
- * after it was written again). The estimate never depends on the shape;
- * the copy does, because the lever differs. */
-type BreakShape = 'compaction' | 'front' | 'history';
-function breakShape(
-  a: Span,
-  b: Span,
-  cfg: Thresholds['cachePrefixBreak'],
-): BreakShape {
-  if (contextTokens(b) < cfg.shrinkRatio * contextTokens(a)) {
-    return 'compaction';
-  }
-  if ((b.llm?.tokens.cacheRead ?? 0) < cfg.baseRetainedTokens) return 'front';
-  return 'history';
 }
 
 const cachePrefixBreak: InsightRule = {

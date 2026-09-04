@@ -121,3 +121,18 @@ export {
   triageRun,
   triageTone,
 } from './triage/index.js';
+export {
+  type BreakShape,
+  type BreakShapeThresholds,
+  breakShape,
+  type ContextPoint,
+  contextTokens,
+  DEFAULT_BREAK_SHAPE,
+  type LeakEvent,
+  type LeakKind,
+  type RunWaste,
+  type WasteGroup,
+  type WasteOccurrence,
+  type WasteOptions,
+  wasteRun,
+} from './waste/index.js';

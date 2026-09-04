@@ -1,8 +1,14 @@
 import type { Insight, Run } from '@runray/schema';
 import type { PricingTable } from '../pricing/engine.js';
 import { bundledPricing } from '../pricing/index.js';
+import { DEFAULT_BREAK_SHAPE } from './cache-shape.js';
 import { ruleClass } from './meta.js';
 import { V0_RULES } from './rules.js';
+import {
+  DEFAULT_SEVERITY_THRESHOLDS,
+  gradeSeverity,
+  type SeverityThresholds,
+} from './severity.js';
 
 /**
  * Insight rule engine (tasks 4.1/4.2, 05-ARCHITECTURE §2.4). Rules are pure
@@ -61,17 +67,6 @@ export interface Thresholds {
   severity: SeverityThresholds;
 }
 
-/**
- * Severity tiers as a share of the run's `costUSD.total`, each with an
- * absolute floor so cents in a tiny run never read as critical.
- */
-export interface SeverityThresholds {
-  warningShare: number;
-  warningFloorUSD: number;
-  criticalShare: number;
-  criticalFloorUSD: number;
-}
-
 export const DEFAULT_THRESHOLDS: Thresholds = {
   retryLoop: { minFailures: 3, maxGapToolCalls: 3 },
   lowCacheHit: {
@@ -91,20 +86,14 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
     minPrefixTokens: 20_000,
     collapseRatio: 0.2,
     rewriteFloorTokens: 10_000,
-    baseRetainedTokens: 5_000,
-    shrinkRatio: 0.6,
+    ...DEFAULT_BREAK_SHAPE,
   },
   idleCacheExpiry: { minIdleMinutes: 5, rewriteFloorTokens: 10_000 },
   fixedContextOverhead: { floorTokens: 20_000, minLlmCalls: 5 },
   duplicateRead: { minRepeats: 3 },
   scatteredToolFailures: { minFailures: 5, minErrorShare: 0.2 },
   oversizedOutput: { minOutputBytes: 100_000, topOffenders: 5 },
-  severity: {
-    warningShare: 0.02,
-    warningFloorUSD: 0.05,
-    criticalShare: 0.1,
-    criticalFloorUSD: 1,
-  },
+  severity: DEFAULT_SEVERITY_THRESHOLDS,
 };
 
 export type ThresholdOverrides = {
@@ -185,27 +174,6 @@ export function resolveThresholds(
  * engine grades that from the estimate's share of the run (`gradeSeverity`).
  */
 export type Finding = Omit<Insight, 'id' | 'severity'>;
-
-/**
- * Severity from magnitude alone: the estimate's share of the run's priced
- * cost, gated by an absolute floor per tier. No estimate, or a run with no
- * priced cost, cannot be sized and grades `info` — never a guess.
- */
-export function gradeSeverity(
-  estimatedWasteUSD: number | undefined,
-  runCostUSD: number,
-  t: SeverityThresholds = DEFAULT_THRESHOLDS.severity,
-): Insight['severity'] {
-  if (estimatedWasteUSD === undefined || !(runCostUSD > 0)) return 'info';
-  const share = estimatedWasteUSD / runCostUSD;
-  if (share >= t.criticalShare && estimatedWasteUSD >= t.criticalFloorUSD) {
-    return 'critical';
-  }
-  if (share >= t.warningShare && estimatedWasteUSD >= t.warningFloorUSD) {
-    return 'warning';
-  }
-  return 'info';
-}
 
 /**
  * Everything a rule may consult (C3). `pricing` is the same effective table
@@ -304,3 +272,8 @@ export {
   replacePlaybooksBlock,
 } from './playbook-markdown.js';
 export { V0_RULES } from './rules.js';
+export {
+  DEFAULT_SEVERITY_THRESHOLDS,
+  gradeSeverity,
+  type SeverityThresholds,
+} from './severity.js';
