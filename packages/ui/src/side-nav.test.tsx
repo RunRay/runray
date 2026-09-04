@@ -29,6 +29,11 @@ describe('NavRail', () => {
     expect(html).toContain('Local · Offline');
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain('aria-label="Collapse the navigation"');
+    // an icon-only control in the header row, before the destinations
+    expect(html.indexOf('aria-label="Collapse the navigation"')).toBeLessThan(
+      html.indexOf('href="#/sessions"'),
+    );
+    expect(html).not.toContain('>Collapse<');
     expect(html).not.toContain('data-collapsed');
     expect(html).toContain('w-60');
   });
