@@ -528,7 +528,14 @@ amount — each a control that opens the finding in the Inspector with its
 evidence selected on the Timeline Explorer; a cache-prefix-break group's
 split by shape; and the rule's playbook for the run's own source. A folded
 group SHALL render as one line saying its count and that each finding is
-under the warning floor. The tab's label SHALL carry the burned amount,
+under the warning floor. Between the figures and the groups the tab SHALL
+place the burned findings on the session's time axis — a bar per burned
+finding at the moment it happened, sized by its amount, over the context
+size each model call carried drawn as an area (a hole where no call
+happened), with idle gaps shaded, compactions marked apart, a guide at
+~200k tokens, and clock-friendly axis labels; a bar SHALL open its
+finding on the Timeline Explorer, and folded groups and burns under the
+warning floor SHALL stay off the rail. The tab's label SHALL carry the burned amount,
 tinted once the burned share reaches the warning share. A run without
 findings SHALL render an empty state naming what the rules checked and
 linking to the Overview. When any finding is unpriced the tab SHALL say
@@ -560,3 +567,12 @@ the amounts are lower bounds.
 - WHEN the Waste tab renders
 - THEN it says nothing leaked that the rules can see, names what was
   checked, and links to the Overview
+
+#### Scenario: Leaks on the clock
+- GIVEN a 20-hour run with fourteen history re-writes between 170k and
+  860k tokens of context, four compactions, two idle gaps and thirteen
+  duplicate-read findings worth cents
+- WHEN the Waste tab renders
+- THEN the rail shows fourteen bars whose heights follow the amounts, the
+  context area rising to each re-write, four compaction marks, two shaded
+  gaps and the 200k guide, and no bar for the re-reads
