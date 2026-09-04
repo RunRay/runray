@@ -16,7 +16,7 @@ export const ERROR_PREVIEW_CHARS = 200;
 /** A line that names a failure. Word-bounded on purpose: `tool_use_error`
  * and `ERR_MODULE_NOT_FOUND` are not matches, and those lines are kept by
  * the first-line fallback anyway. */
-const FAILURE_LINE = /\b(?:fail(?:ed|ure|ing)?|error|exception)\b/i;
+const FAILURE_LINE = /\b(?:fail(?:ed|ure|ing)?|errors?|exceptions?)\b/i;
 /** …unless the line says there was none. */
 const NEGATED_LINE =
   /\b(?:no|0|zero)\s+(?:errors?|failures?)\b|\bwithout\s+(?:errors?|failures?)\b|\b0\s+failed\b|\berrors?:\s*0\b/i;

@@ -135,8 +135,8 @@ Adapters SHALL keep 200 characters of a failed tool result's text as the
 tool span's `content.outputPreview`, under the same content contract as
 every other preview: present only when redaction is off, `null` under
 `--redact`. The preview SHALL start where the failure is named: at the last
-line that contains `failed`/`failure`/`failing`/`error`/`exception` as a
-word and does not negate it ("0 errors", "no failures"), else at the first
+line that contains `failed`/`failure`/`failing`/`error(s)`/`exception(s)`
+as a word and does not negate it ("0 errors", "no failures"), else at the first
 non-empty line that is not the shell wrapper's `Exit code N` line, else at
 the first non-empty line; the selection SHALL be a pure function of the
 text, shared by all adapters. The Claude Code adapter SHALL parse a leading

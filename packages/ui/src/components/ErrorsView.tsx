@@ -303,7 +303,7 @@ function Summary({ run, triage }: { run: Run; triage: RunTriage }) {
               className={`absolute ${OWNER_FILL[t.owner]} ${
                 t.model
                   ? 'top-[7px] h-2.5 w-2.5 -translate-x-[5px] rounded-full'
-                  : 'top-[3px] h-[18px] w-[3px] -translate-x-px rounded-px'
+                  : 'top-[3px] h-[18px] w-[3px] -translate-x-px rounded-[1px]'
               }`}
               style={{ left: `${t.left}%` }}
             />

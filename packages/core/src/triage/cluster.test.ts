@@ -178,6 +178,7 @@ describe('triageRun — clusters, reaction cost, recovery', () => {
     expect(path?.occurrences[0]?.recovery).toEqual({
       kind: 'ok',
       afterMs: 2000,
+      nextSpanId: 't1',
     });
     expect(path?.outcome).toBe('recovered');
     const edit = t.clusters.find((c) => c.classId === 'edit-anchor-miss');
@@ -249,6 +250,30 @@ describe('triageRun — clusters, reaction cost, recovery', () => {
     expect(t.clusters[0]?.owner).toBe('work');
     expect(t.clusters[0]?.outcome).toBe('unrecovered');
     expect(t.needsAttention).toBe(false);
+  });
+
+  it('does not call a class looping when other failures of the tool sit between its occurrences', () => {
+    const shell = "unexpected EOF while looking for matching `''";
+    const path = 'cd: x: No such file or directory';
+    const t = triageRun(
+      run([
+        llm('l1', 0, 0.1),
+        tool('e1', 1, 'Bash', 'error', 'l1', shell),
+        tool('f1', 2, 'Bash', 'error', 'l1', path),
+        tool('e2', 3, 'Bash', 'error', 'l1', shell),
+        tool('f2', 4, 'Bash', 'error', 'l1', path),
+        tool('e3', 5, 'Bash', 'error', 'l1', shell),
+        tool('t1', 6, 'Bash', 'ok', 'l1'),
+      ]),
+    );
+    const shellCluster = t.clusters.find((c) => c.classId === 'shell-syntax');
+    expect(shellCluster?.count).toBe(3);
+    expect(shellCluster?.occurrences[0]?.recovery).toEqual({
+      kind: 'error',
+      afterMs: 1000,
+      nextSpanId: 'f1',
+    });
+    expect(shellCluster?.outcome).toBe('recovered');
   });
 
   it('marks three consecutive failures of one tool as looping', () => {

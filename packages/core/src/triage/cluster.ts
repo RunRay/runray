@@ -37,7 +37,10 @@ export interface ErrorOccurrence {
   preview: string | null | undefined;
   /** Cost of the model call that reacted to this failure (0 when none or unpriced). */
   reactionUSD: number;
-  recovery: { kind: RecoveryKind; afterMs?: number };
+  /** What the next call of the same tool in the same scope did; `nextSpanId`
+   * names it so a streak can tell "the next call failed" from "the next
+   * failure of this class". */
+  recovery: { kind: RecoveryKind; afterMs?: number; nextSpanId?: string };
 }
 
 export type ClusterOutcome = 'recovered' | 'looping' | 'unrecovered';
@@ -176,6 +179,7 @@ export function triageRun(run: Run): RunTriage {
         : {
             kind: next.status === 'error' ? 'error' : 'ok',
             afterMs: Math.max(0, startMs(next) - startMs(s)),
+            nextSpanId: next.id,
           };
     if (recovery.kind === 'ok') recovered++;
 
@@ -230,12 +234,19 @@ export function triageRun(run: Run): RunTriage {
   for (const c of list) {
     byOwner[c.owner] += c.count;
     const last = c.occurrences[c.occurrences.length - 1];
-    // longest run of consecutive failures among this cluster's occurrences
+    // longest run of consecutive failures among this cluster's occurrences:
+    // the previous occurrence's next same-tool call must be THIS occurrence,
+    // so a failure of another class in between breaks the streak
     let streak = 1;
     let longest = 1;
     for (let i = 1; i < c.occurrences.length; i++) {
       const prev = c.occurrences[i - 1];
-      streak = prev?.recovery.kind === 'error' ? streak + 1 : 1;
+      const cur = c.occurrences[i];
+      streak =
+        prev?.recovery.kind === 'error' &&
+        prev.recovery.nextSpanId === cur?.spanId
+          ? streak + 1
+          : 1;
       longest = Math.max(longest, streak);
     }
     const looping =
