@@ -429,7 +429,7 @@ automatically extends its fixture-parameterized equivalence matrix.
       calls, leak events and per-call context points); `gradeSeverity` and
       the break shape moved to pure modules shared with the engine. Analysed
       on the user's 72 real sessions. Added 2026-09-04.
-- [ ] 13.2 B [UI → /frontend-design] Waste tab (W1, spec: visualizer "Waste
+- [x] 13.2 B [UI → /frontend-design] Waste tab (W1, spec: visualizer "Waste
       tab"): route `#/run/:id/waste`, `WasteView` (two headline figures and
       the lead sentence, burned and opportunity groups with occurrences,
       shape split, playbook per group, folded cents, empty state), tab badge

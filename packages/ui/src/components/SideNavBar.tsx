@@ -9,7 +9,8 @@ export function SideNavBar() {
     route.view === 'timeline' ||
     route.view === 'cost' ||
     route.view === 'time' ||
-    route.view === 'errors';
+    route.view === 'errors' ||
+    route.view === 'waste';
 
   return (
     <nav

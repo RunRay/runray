@@ -109,6 +109,14 @@ function buildCommands(
       keywords: 'errors failures triage who can act tool error current run',
       perform: nav({ view: 'errors', runId: activeRunId }),
     });
+    cmds.push({
+      id: 'view:waste',
+      group: 'Switch view',
+      label: 'Waste view',
+      keywords:
+        'waste burned savings opportunities findings cache retry current run',
+      perform: nav({ view: 'waste', runId: activeRunId }),
+    });
   }
 
   for (const run of runs) {

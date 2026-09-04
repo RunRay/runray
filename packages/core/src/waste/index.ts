@@ -12,6 +12,11 @@ export {
   DEFAULT_BREAK_SHAPE,
 } from '../insights/cache-shape.js';
 export {
+  DEFAULT_SEVERITY_THRESHOLDS,
+  gradeSeverity,
+  type SeverityThresholds,
+} from '../insights/severity.js';
+export {
   type ContextPoint,
   type LeakEvent,
   type LeakKind,
