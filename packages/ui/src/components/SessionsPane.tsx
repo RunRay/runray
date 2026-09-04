@@ -1,6 +1,8 @@
 import type { Run } from '@runray/schema';
+import { useEffect, useRef } from 'react';
 import { formatDateTime, formatUSD } from '../lib/format';
 import { toHash } from '../lib/router';
+import { errorPill } from '../lib/triage';
 import { useAppStore } from '../store';
 
 /**
@@ -10,6 +12,15 @@ import { useAppStore } from '../store';
 export function SessionsPane({ runs }: { runs: Run[] }) {
   const route = useAppStore((s) => s.route);
   const activeRunId = 'runId' in route ? route.runId : null;
+
+  // A deep link (dashboard evidence, palette, shared hash) can land on a
+  // run far down the rail — keep the active row in view so the rail agrees
+  // with the header about which session this is.
+  const activeRef = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    if (activeRunId === null) return;
+    activeRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [activeRunId]);
 
   return (
     <nav
@@ -25,8 +36,12 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {runs.map((run) => {
           const active = run.id === activeRunId;
+          // the count alone (the rail is narrow); the tone is the triage's —
+          // red only when something is for the person or the session never
+          // got past it — and the tooltip carries the owner breakdown
+          const pill = errorPill(run);
           return (
-            <li key={run.id}>
+            <li key={run.id} ref={active ? activeRef : undefined}>
               <a
                 href={toHash({ view: 'cost', runId: run.id })}
                 aria-current={active ? 'page' : undefined}
@@ -48,9 +63,16 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
                   <span className="font-mono">
                     {formatDateTime(run.startedAt)}
                   </span>
-                  {run.totals.counts.toolErrors > 0 && (
-                    <span className="text-span-error">
-                      {run.totals.counts.toolErrors} errors
+                  {pill !== null && (
+                    <span
+                      title={pill.title}
+                      className={
+                        pill.tone === 'alarm'
+                          ? 'text-span-error'
+                          : 'text-text-dim'
+                      }
+                    >
+                      {pill.count}
                     </span>
                   )}
                 </span>

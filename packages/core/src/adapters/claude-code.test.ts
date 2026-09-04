@@ -4,7 +4,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Candidate, RawRun } from '../adapter.js';
+import { applyInsights } from '../insights/index.js';
+import { normalize } from '../normalize.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import { priceRun } from '../pricing/index.js';
 import { claudeCodeAdapter } from './claude-code.js';
 
 const fixtureDir = fileURLToPath(
@@ -792,5 +795,341 @@ describe('claude-code adapter — meta.json sidecar adoption', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('claude-code adapter — error text on failed tool spans', () => {
+  const toolErrorsDir = join(fixtureDir, '..', 'tool-errors');
+  async function toolErrorsRun(redact: boolean) {
+    const candidates = await claudeCodeAdapter.detect([toolErrorsDir]);
+    const candidate = candidates.find((c) =>
+      c.runRef.endsWith('tool-errors.jsonl'),
+    );
+    expect(candidate).toBeDefined();
+    if (!candidate) throw new Error('tool-errors fixture not found');
+    return claudeCodeAdapter.parse(candidate, { redact });
+  }
+
+  it('keeps the first 200 chars of a failed result as the tool span preview', async () => {
+    const run = await toolErrorsRun(false);
+    const failed = run.spans.filter(
+      (s) =>
+        s.kind !== 'llm_call' && s.status === 'error' && s.tool !== undefined,
+    );
+    expect(failed.length).toBeGreaterThan(0);
+    const withText = failed.filter(
+      (s) => typeof s.content?.outputPreview === 'string',
+    );
+    expect(withText.length).toBeGreaterThan(0);
+    for (const s of withText) {
+      expect((s.content?.outputPreview ?? '').length).toBeLessThanOrEqual(200);
+    }
+    // successful tool spans carry no preview: outputs are sized, not quoted
+    for (const s of run.spans) {
+      if (s.tool !== undefined && s.status === 'ok') {
+        expect(s.content).toBeUndefined();
+      }
+    }
+  });
+
+  it('nulls the error text under redaction, like every other preview', async () => {
+    const run = await toolErrorsRun(true);
+    const failed = run.spans.filter(
+      (s) => s.tool !== undefined && s.status === 'error',
+    );
+    expect(failed.length).toBeGreaterThan(0);
+    for (const s of failed) {
+      expect(s.content?.outputPreview).toBeNull();
+    }
+  });
+});
+
+describe('claude-code adapter — where a failure is named, exit codes, declined calls', () => {
+  const BATCH_LOG = [
+    '[navigate] navigated to http://localhost:4326',
+    '',
+    'Tab Context:',
+    '- Executed on tabId: seed',
+    '',
+    '[computer:screenshot] Screenshot size: 800x450',
+    '',
+    'actions[2] (computer:screenshot) failed: screenshot failed: Screenshot timed out after 5s: the page did not finish rendering in time. (2 completed, 0 remaining)',
+  ].join('\n');
+  const REJECTION =
+    "The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.";
+
+  function failedResult(
+    uuid: string,
+    ts: string,
+    toolUseId: string,
+    text: string,
+  ) {
+    return {
+      type: 'user',
+      uuid,
+      sessionId: 'sess-e0',
+      timestamp: ts,
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: toolUseId,
+            is_error: true,
+            content: [{ type: 'text', text }],
+          },
+        ],
+      },
+    };
+  }
+
+  async function parseSession(redact: boolean): Promise<RawRun> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-e0-'));
+    try {
+      const proj = join(dir, 'proj');
+      mkdirSync(proj, { recursive: true });
+      const lines = [
+        {
+          type: 'user',
+          uuid: 'u1',
+          sessionId: 'sess-e0',
+          timestamp: '2026-09-03T10:00:00Z',
+          cwd: '/home/user/project/x',
+          message: { role: 'user', content: 'fix it' },
+        },
+        {
+          ...assistant('a1', 'u1', 'msg_e0', '2026-09-03T10:00:01Z', [
+            {
+              type: 'tool_use',
+              id: 'tu_bash',
+              name: 'Bash',
+              input: { command: 'cd packages/ui/src && ls' },
+            },
+            {
+              type: 'tool_use',
+              id: 'tu_batch',
+              name: 'mcp__Claude_Browser__browser_batch',
+              input: { actions: [] },
+            },
+            {
+              type: 'tool_use',
+              id: 'tu_edit',
+              name: 'Edit',
+              input: {
+                file_path: '/home/user/project/x/a.ts',
+                old_string: 'a',
+                new_string: 'b',
+              },
+            },
+          ]),
+          sessionId: 'sess-e0',
+        },
+        failedResult(
+          'u2',
+          '2026-09-03T10:00:02Z',
+          'tu_bash',
+          'Exit code 1\n/usr/bin/bash: line 1: cd: packages/ui/src: No such file or directory',
+        ),
+        failedResult('u3', '2026-09-03T10:00:03Z', 'tu_batch', BATCH_LOG),
+        failedResult('u4', '2026-09-03T10:00:04Z', 'tu_edit', REJECTION),
+      ];
+      writeFileSync(
+        join(proj, 'sess-e0.jsonl'),
+        `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+      );
+      const candidates = await claudeCodeAdapter.detect([dir]);
+      const candidate = candidates.find((c) =>
+        c.runRef.endsWith('sess-e0.jsonl'),
+      );
+      if (!candidate) throw new Error('synthetic session not detected');
+      // awaited inside the try: the finally below deletes the transcript
+      return await claudeCodeAdapter.parse(candidate, { redact });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('parses the Exit code line into tool.exitCode and previews the message after it', async () => {
+    const run = await parseSession(false);
+    const bash = run.spans.find((s) => s.id === 'tu_bash');
+    expect(bash?.status).toBe('error');
+    expect(bash?.tool?.exitCode).toBe(1);
+    expect(bash?.tool?.isError).toBe(true);
+    expect(bash?.content?.outputPreview).toBe(
+      '/usr/bin/bash: line 1: cd: packages/ui/src: No such file or directory',
+    );
+  });
+
+  it('starts a batch log preview at the failing step', async () => {
+    const run = await parseSession(false);
+    const batch = run.spans.find((s) => s.id === 'tu_batch');
+    expect(batch?.kind).toBe('mcp_call');
+    expect(batch?.tool?.exitCode).toBeUndefined();
+    expect(
+      batch?.content?.outputPreview?.startsWith(
+        'actions[2] (computer:screenshot) failed:',
+      ),
+    ).toBe(true);
+  });
+
+  it('marks a declined call cancelled, not failed, and keeps its message', async () => {
+    const run = await parseSession(false);
+    const edit = run.spans.find((s) => s.id === 'tu_edit');
+    expect(edit?.status).toBe('cancelled');
+    expect(edit?.statusReason).toBe('user-rejected');
+    expect(edit?.tool?.isError).toBe(false);
+    expect(edit?.tool?.linesAdded).toBeUndefined();
+    expect(
+      edit?.content?.outputPreview?.startsWith("The user doesn't want"),
+    ).toBe(true);
+    // the normalizer counts failures by status, so a decision is not one
+    const normalized = normalize(priceRun(run), { baseDir: '/' });
+    expect(normalized.totals.counts.toolErrors).toBe(2);
+    expect(normalized.totals.counts.toolCalls).toBe(3);
+  });
+
+  it('nulls the declined call message under redaction too', async () => {
+    const run = await parseSession(true);
+    const edit = run.spans.find((s) => s.id === 'tu_edit');
+    expect(edit?.status).toBe('cancelled');
+    expect(edit?.content).toEqual({ outputPreview: null });
+    const bash = run.spans.find((s) => s.id === 'tu_bash');
+    expect(bash?.tool?.exitCode).toBe(1);
+  });
+});
+
+describe('claude-code adapter — records repeated after a bridge-session', () => {
+  const jsonl = (lines: unknown[]) =>
+    `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`;
+  const bash = (id: string) => ({
+    type: 'tool_use',
+    id,
+    name: 'Bash',
+    input: { command: 'pnpm test' },
+  });
+  const failed = (uuid: string, ts: string, toolUseId: string) => ({
+    ...toolResult(uuid, ts, toolUseId),
+    message: {
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          tool_use_id: toolUseId,
+          is_error: true,
+          content: [{ type: 'text', text: 'FAIL 1 test' }],
+        },
+      ],
+    },
+  });
+  const noUuid = (ts: string) => ({
+    type: 'assistant',
+    timestamp: ts,
+    message: {
+      role: 'assistant',
+      model: 'claude-sonnet-4-6',
+      usage: { input_tokens: 1, output_tokens: 1 },
+      content: [{ type: 'text', text: 'no uuid' }],
+    },
+  });
+  // three consecutive failures of one tool: exactly one retry-loop cluster
+  const original = [
+    {
+      type: 'user',
+      uuid: 'u1',
+      sessionId: 'sess-dup',
+      timestamp: '2026-09-03T18:38:10Z',
+      cwd: '/home/user/project/x',
+      message: { role: 'user', content: 'run the tests' },
+    },
+    assistant('a1', 'u1', 'm1', '2026-09-03T18:38:12Z', [bash('t1')]),
+    failed('r1', '2026-09-03T18:38:15Z', 't1'),
+    assistant('a2', 'r1', 'm2', '2026-09-03T18:38:20Z', [bash('t2')]),
+    failed('r2', '2026-09-03T18:38:22Z', 't2'),
+    assistant('a3', 'r2', 'm3', '2026-09-03T18:38:30Z', [bash('t3')]),
+    failed('r3', '2026-09-03T18:38:32Z', 't3'),
+    assistant('a4', 'r3', 'm4', '2026-09-03T18:38:40Z', [
+      { type: 'text', text: 'gave up' },
+    ]),
+  ];
+  // the desktop app re-appends the whole transcript after a bridge: the
+  // same uuids and ids on later lines, with a newer version and a slug
+  const copies = original.map((r) => ({
+    ...r,
+    version: '2.1.258',
+    slug: 'copy',
+  }));
+  let run: RawRun;
+
+  beforeAll(async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-dup-'));
+    try {
+      const proj = join(dir, 'proj');
+      mkdirSync(proj, { recursive: true });
+      writeFileSync(
+        join(proj, 'sess-dup.jsonl'),
+        jsonl([
+          ...original, // lines 1–8
+          {
+            type: 'bridge-session',
+            sessionId: 'sess-dup',
+            bridgeSessionId: 'cse_1',
+          },
+          ...copies, // lines 10–17
+          // fresh uuids re-registering a known tool_use and its result: the
+          // block is not pushed again and the first result (the failure)
+          // keeps deciding the span
+          assistant('a1-again', 'u1', 'm1', '2026-09-03T18:38:12Z', [
+            bash('t1'),
+          ]),
+          toolResult('r1-again', '2026-09-03T18:39:00Z', 't1'),
+          // records without a uuid are never deduplicated
+          noUuid('2026-09-03T18:39:10Z'),
+          noUuid('2026-09-03T18:39:11Z'),
+        ]),
+      );
+      const candidates = await claudeCodeAdapter.detect([dir]);
+      expect(candidates).toHaveLength(1);
+      run = await claudeCodeAdapter.parse(candidates[0] as Candidate, {
+        redact: false,
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps the first copy of every record and counts the session once', () => {
+    const spans = (id: string) => run.spans.filter((s) => s.id === id);
+    const ids = run.spans.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ['m1', 'm2', 'm3', 'm4', 't1', 't2', 't3']) {
+      expect(spans(id)).toHaveLength(1);
+    }
+    // provenance stays on the lines written live, never past the bridge
+    expect(spans('m1')[0]?.provenance.line).toBe(2);
+    expect(spans('t1')[0]?.provenance.line).toBe(2);
+    expect(spans('m4')[0]?.provenance.line).toBe(8);
+    expect(spans('m1')[0]?.content?.promptPreview).toBe('run the tests');
+    // the first tool_result wins over the re-registered success
+    const t1 = spans('t1')[0];
+    expect(t1?.status).toBe('error');
+    expect(t1?.endedAt).toBe('2026-09-03T18:38:15Z');
+    expect(t1?.content?.outputPreview).toBe('FAIL 1 test');
+    // counts match a single copy: 4 calls plus the two uuid-less records,
+    // 3 tool calls, all failed
+    const llm = run.spans.filter((s) => s.kind === 'llm_call');
+    expect(llm).toHaveLength(6);
+    expect(llm.filter((s) => s.id.startsWith('rec-'))).toHaveLength(2);
+    const tools = run.spans.filter((s) => s.tool !== undefined);
+    expect(tools).toHaveLength(3);
+    expect(tools.filter((s) => s.status === 'error')).toHaveLength(3);
+  });
+
+  it('manufactures no second retry-loop cluster from the copies', () => {
+    const loops = applyInsights(normalize(run)).insights.filter(
+      (i) => i.ruleId === 'retry-loop',
+    );
+    expect(loops).toHaveLength(1);
+    expect(loops[0]?.spanIds).toEqual(['t1', 't2', 't3']);
+    expect(loops[0]?.title).toBe('Bash failed 3× in a row');
   });
 });

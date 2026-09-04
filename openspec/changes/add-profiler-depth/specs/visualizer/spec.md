@@ -97,8 +97,10 @@ collapsed.
   unpriced count
 
 ### Requirement: Cost breakdown view
-The system SHALL provide a per-run cost view with totals, cost-over-time by
-model, a hierarchical agent-subtree map, and the waste table. The subtree
+The system SHALL provide a per-run cost view with totals, the tool spend
+leaderboard, cost-over-time by model and a hierarchical agent-subtree map —
+where the money went; what could have been kept (the findings and the
+what-if repricing) lives on the Waste tab, not here. The subtree
 map SHALL nest delegated subagents inside their delegating subagent (never
 flattening nested delegation into innermost-only attribution), SHALL derive
 each node's own value from the cost-engine's canonical attribution cells so
@@ -151,7 +153,7 @@ rule fired it SHALL state that explicitly rather than hiding.
 - THEN it states that the rules found nothing to save in this period
 
 ### Requirement: What-if repricing panel
-The run Cost view SHALL provide a what-if panel: a target-tier selector (the
+The run's Waste tab SHALL provide a what-if panel: a target-tier selector (the
 suggested downgrade preselected, any model from the delivered pricing table
 selectable), a per-subtree table of current cost, repriced cost, and delta
 with risk flags rendered as named badges, and a total line showing both the
@@ -171,7 +173,7 @@ cost-engine primitive, never a UI reimplementation.
 
 #### Scenario: No pricing payload
 - GIVEN an exported report produced without an embedded pricing payload
-- WHEN the Cost view renders
+- WHEN the Waste tab renders
 - THEN the panel shows a notice explaining repricing is unavailable and no
   fabricated rates are used
 
@@ -356,3 +358,258 @@ hover, focus-visible, and active states.
 - GIVEN any view
 - WHEN the user activates the top-bar help button
 - THEN the help sheet opens, and Escape or the button closes it
+
+### Requirement: Finding markers and the Inspector detail switch
+The system SHALL mark every waterfall row that is evidence of a finding — a
+severity-tinted notch in the row gutter and a chip after the label carrying
+the finding count when the span sits under several findings — independent
+of which finding is active; the marker SHALL never be color-alone (the
+row's accessible name and tooltip list the findings). Activating a row's
+marker SHALL select that span and open its worst finding in the Inspector.
+When the selected span is evidence of at least one finding, the Inspector
+SHALL offer an Activity | Finding switch between the span detail and the
+finding detail without losing either selection; a span under several
+findings SHALL let the user pick which one to show.
+
+#### Scenario: Evidence rows are marked while no finding is active
+- GIVEN a run with a retry-loop finding over three tool calls
+- WHEN the timeline renders with no finding activated
+- THEN those three rows carry the finding marker and the other rows do not
+
+#### Scenario: Marker opens the finding
+- GIVEN a marked row
+- WHEN the user activates its marker
+- THEN the span is selected, the finding's evidence is highlighted, and the
+  Inspector shows the finding
+
+#### Scenario: Switching between activity and finding
+- GIVEN a finding is active and one of its evidence spans is selected
+- WHEN the user switches the Inspector to Activity and back to Finding
+- THEN the span detail and the finding detail alternate, the span stays
+  selected, and the evidence highlight stays
+
+#### Scenario: A span under several findings
+- GIVEN a span that is evidence of two findings
+- WHEN its finding detail is shown
+- THEN both findings are offered and picking the other one shows it with its
+  own evidence highlighted
+
+### Requirement: Finding playbook in the Inspector
+When the Inspector shows a finding, it SHALL render, after the finding's
+suggestion, the rule's playbook actions for the run's own source (Claude
+Code, OpenCode, or the custom-agent playbook for other sources) as a
+numbered list in the order the registry gives them, with commands, keys and
+file names set apart from prose; the causes and the limits SHALL be
+available behind one disclosure that is keyboard-operable and announces its
+state. The dashboard's savings groups SHALL describe a rule with the rule's
+own explanation, never with one finding's suggestion.
+
+#### Scenario: Levers for the session's source
+- GIVEN a Claude Code run with a fixed-context-overhead finding shown in the
+  Inspector
+- WHEN the finding view renders
+- THEN a "How to fix · Claude Code" section lists that rule's Claude Code
+  actions, numbered, and the disclosure reveals "Why it happens" and "Out
+  of your hands"
+
+#### Scenario: Custom-agent fallback
+- GIVEN a run whose source is OTLP
+- WHEN a finding is shown
+- THEN the section is labelled for a custom agent and lists the
+  custom-agent actions
+
+### Requirement: Errors tab
+The run view SHALL offer an Errors tab (`#/run/:id/errors`) beside
+Overview, Timeline Explorer and Time, rendered from the core error triage
+(error-triage capability) and never from a UI-side classification. The tab
+SHALL open with a summary — failed tool calls, failed model calls, how many
+need the person, how many recovered on the next call, the reaction cost —
+a strip of failures by owner, and the failures placed on the session's time
+axis; then the clusters grouped by owner in triage order (yours to fix,
+tooling, agent slips, model calls, expected feedback, unclassified), each
+group carrying its meaning, count and reaction cost. A cluster row SHALL
+show the tool, the class, the first line of its latest failure text, its
+count and time span, its outcome and its reaction cost, and SHALL open to
+the failure text, one control per occurrence that selects the span and
+opens the Timeline Explorer on it, the findings that cite the cluster (each
+opening the finding), and the class playbook for the run's own source. The
+playbook's actions SHALL show for owners you, tooling, model and
+unclassified, and for agent slips only when the cluster repeated or never
+recovered; expected feedback SHALL show only its explanation, and its group
+SHALL start collapsed and dimmed. Filter controls SHALL narrow the groups to
+one owner. The tab's label in the tab bar SHALL carry the failure count in
+the triage's tone. Hue SHALL encode the owner, never severity; a run with
+no failures SHALL render an empty state that points to the Overview. Under
+redaction the tab SHALL say that classes are read from the tool alone.
+
+#### Scenario: Owner groups in triage order
+- GIVEN a Claude Code run with a shell-syntax failure, a path-not-found
+  slip that recovered and a failed test run
+- WHEN the Errors tab renders
+- THEN "Yours to fix" comes first with the shell failure open, showing its
+  text and the Claude Code playbook; "Agent slips" follows; "Expected
+  feedback" is last, collapsed, with a control to show it
+
+#### Scenario: Occurrence opens the timeline
+- GIVEN an open cluster with two occurrences
+- WHEN the person activates the second occurrence
+- THEN that span is selected and the Timeline Explorer opens scrolled to it
+
+#### Scenario: No failures
+- GIVEN a run whose calls all succeeded
+- WHEN the Errors tab renders
+- THEN it says there were no failed calls and links to the Overview
+
+### Requirement: Error triage in the sessions lists
+The sessions table, the sessions rail and the run header's tab bar SHALL
+keep showing a run's failure count, but SHALL tint it by the triage's
+attention signal — alarm when the run needs the person or never got past a
+failure, neutral otherwise. The sessions table SHALL append "· N yours to
+fix" when clusters owned by the person exist; the narrow sessions rail and
+the tab bar SHALL show the count alone. A run whose only failures are
+model-call failures SHALL show a model-error count instead of nothing. The
+tooltip SHALL name the owner breakdown.
+
+#### Scenario: Recovered slips read neutral
+- GIVEN a run with three path-not-found slips each followed by a
+  successful call of the same tool
+- WHEN the sessions table renders
+- THEN the pill reads "3 errors" in the neutral tone and its tooltip says
+  the agent handled them
+
+#### Scenario: A shell failure reads as the person's
+- GIVEN a run with one shell-syntax failure
+- WHEN the sessions rail renders
+- THEN the rail's pill reads "1 errors" in the alarm tone, its tooltip
+  names the owner breakdown, and the sessions table's pill reads
+  "1 errors · 1 yours to fix"
+
+### Requirement: Inspector error sections
+When the Inspector shows a failed span, it SHALL render after the Output
+section a "What this is" section — the owner and class from the run's
+triage, the class explanation, and what happened to this occurrence
+(whether the next call of the same tool succeeded and after how long, what
+the reacting model call cost) — and a "What you can do" section with the
+class playbook's actions for the run's own source, under the same
+visibility rule as the Errors tab (always for owners you, tooling, model
+and unclassified; for agent slips only when the cluster repeated or never
+recovered; otherwise the explanation only). Both SHALL read from the same
+triage the Errors tab renders, and a control SHALL open the Errors tab.
+A cancelled span SHALL get one sentence saying the person declined the
+call and it is not counted as an error. The "tool errors" count in the
+run summary SHALL take the triage's tone.
+
+#### Scenario: A failed shell call in the Inspector
+- GIVEN a selected Bash span whose failure is classified shell-syntax
+- WHEN the Inspector renders it
+- THEN "What this is" says "Yours to fix · Shell syntax", reports that the
+  next Bash call succeeded and what the reaction cost, and "What you can
+  do · Claude Code" lists the class's Claude Code actions
+
+#### Scenario: A declined call
+- GIVEN a selected span with status cancelled
+- WHEN the Inspector renders it
+- THEN it says the person declined the call and shows no playbook
+
+### Requirement: Waste tab
+The run view SHALL offer a Waste tab (`#/run/:id/waste`) between Time and
+Errors, rendered from the core waste grouping
+(waste-grouping capability) and never from a UI-side arrangement. The tab
+SHALL open with two figures kept apart — the burned amount (the run's
+capped wasted estimate) with its share of the run's cost, and the
+opportunity amount labelled as upper bounds that do not add up — and one
+sentence that names the largest burned group, what it was, and the lever
+the person has for it in the run's own source. Then the burned groups in a
+"Burned" section and the opportunity groups in an "Opportunities" section,
+largest first, each row showing the rule's label and id, the count, the
+group's share of the run, the group's grade as the severity pill, and the
+group's amount. A row SHALL open to its occurrences largest first — the
+moment on the session's clock, the cached and re-written tokens for cache
+findings or the finding's title otherwise, the model or the tool, the
+amount — each a control that opens the finding in the Inspector with its
+evidence selected on the Timeline Explorer; a cache-prefix-break group's
+split by shape; and the rule's playbook for the run's own source. A context-bloat group
+SHALL open to how its estimate is counted — the baseline (the median
+context of the first three main-scope calls), the calls counted, the
+excess tokens and, when priced, the blended rate — SHALL say it is an
+upper bound against the session's opening context that assumes nothing
+about compacting at any size, and SHALL show, from the core context
+ceiling estimates, what the same calls would have saved had the context
+never passed 100k, 200k and 400k tokens, with amounts only when a pricing
+table is delivered. A folded
+group SHALL render as one line saying its count and that each finding is
+under the warning floor. Between the figures and the groups the tab SHALL
+place the burned findings on the session's time axis — a bar per burned
+finding at the moment it happened, sized by its amount, over the context
+size each model call carried drawn as an area (a hole where no call
+happened), with idle gaps shaded, compactions marked apart, a guide at
+~200k tokens, and clock-friendly axis labels; a bar SHALL open its
+finding on the Timeline Explorer, and folded groups and burns under the
+warning floor SHALL stay off the rail. The tab's label SHALL carry the burned amount in whole dollars,
+tinted once the burned share reaches the warning share. A run without
+findings SHALL render an empty state naming what the rules checked and
+linking to the Overview. When any finding is unpriced the tab SHALL say
+the amounts are lower bounds.
+
+#### Scenario: Two figures, never one
+- GIVEN a run whose wasted estimate is $111.04 and whose opportunity
+  findings sum to $697.57
+- WHEN the Waste tab renders
+- THEN it shows "$111.04" as burned with its share and "up to $697.57" as
+  opportunities, and no figure adds the two
+
+#### Scenario: A group opens to its occurrences and playbook
+- GIVEN a Claude Code run with eighteen cache-prefix-break findings, four of
+  them compactions
+- WHEN the Waste tab renders
+- THEN the cache-prefix-break row is open, shows "14 re-writes of the
+  conversation" and "4 compactions" with their amounts, lists the largest
+  occurrences with their tokens, and shows "What you can do · Claude Code"
+
+#### Scenario: Cents fold
+- GIVEN thirteen duplicate-read findings each under $0.05
+- WHEN the Waste tab renders
+- THEN the duplicate-read row reads "13 findings, each under $0.05" as one
+  line
+
+#### Scenario: Nothing found
+- GIVEN a run without findings
+- WHEN the Waste tab renders
+- THEN it says nothing leaked that the rules can see, names what was
+  checked, and links to the Overview
+
+#### Scenario: How Growing context is counted
+- GIVEN a $808 run whose context-bloat estimate is $659 against a 51k
+  baseline
+- WHEN its Growing context row is open
+- THEN it says the baseline is 51k tokens, names the calls counted and the
+  excess tokens, calls the figure an upper bound that assumes nothing about
+  compacting, and lists what ceilings of 100k, 200k and 400k would have
+  saved ($585, $448, $236) with their shares of the session
+
+#### Scenario: Leaks on the clock
+- GIVEN a 20-hour run with fourteen history re-writes between 170k and
+  860k tokens of context, four compactions, two idle gaps and thirteen
+  duplicate-read findings worth cents
+- WHEN the Waste tab renders
+- THEN the rail shows fourteen bars whose heights follow the amounts, the
+  context area rising to each re-write, four compaction marks, two shaded
+  gaps and the 200k guide, and no bar for the re-reads
+
+### Requirement: Findings strip hands over to the Waste tab
+The findings strip above a run's views SHALL show at most the five largest
+findings ranked by estimated waste, and when more exist SHALL end with a
+control reading "+N more in Waste" that opens the Waste tab, where the rest
+are grouped by rule rather than listed. Activating a pill SHALL keep
+highlighting its evidence and opening the finding in the Inspector.
+
+#### Scenario: Thirty-six findings, five pills
+- GIVEN a run with thirty-six findings
+- WHEN the strip renders
+- THEN it shows the five largest and "+31 more in Waste", which opens
+  `#/run/:id/waste`
+
+#### Scenario: Few findings, no hand-over
+- GIVEN a run with three findings
+- WHEN the strip renders
+- THEN it shows all three and no hand-over control

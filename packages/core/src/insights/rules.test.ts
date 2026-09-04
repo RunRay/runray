@@ -180,7 +180,6 @@ describe('low-cache-hit', () => {
     const run = applyInsights(coldRun());
     const finding = run.insights.find((i) => i.ruleId === 'low-cache-hit');
     expect(finding).toBeDefined();
-    expect(finding?.severity).toBe('info');
     const expected =
       Math.round(
         0.6 * 500_000 * (sonnet.inputPerMTok - sonnet.cacheReadPerMTok),
@@ -299,7 +298,6 @@ describe('expensive-subagent', () => {
     const finding = run.insights.find((i) => i.ruleId === 'expensive-subagent');
     expect(finding).toBeDefined();
     expect(finding?.spanIds).toEqual(['sub1']);
-    expect(finding?.severity).toBe('info');
     // quantified via the repricing primitive (4.5): sonnet subtree at the
     // haiku tier — a positive saving that never enters the waste rollup
     expect(finding?.estimatedWasteUSD).toBeGreaterThan(0);
@@ -350,12 +348,13 @@ describe('dead-end-run', () => {
     );
     const finding = run.insights.find((i) => i.ruleId === 'dead-end-run');
     expect(finding).toBeDefined();
-    expect(finding?.severity).toBe('warning'); // ≤ $1
+    // graded by the engine: 100% of a $0.50 run, but under the $1 critical floor
+    expect(finding?.severity).toBe('warning');
     expect(finding?.estimatedWasteUSD).toBe(0.5);
     expect(run.totals.costUSD.wastedEstimate).toBe(0.5);
   });
 
-  it('escalates to critical above $1 and stays silent on a clean run', () => {
+  it('grades critical when the tail is ≥10% of the run and ≥ $1, and stays silent on a clean run', () => {
     const costly = applyInsights(
       mkRun([
         root(),

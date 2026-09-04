@@ -5,27 +5,29 @@ import {
   formatTokens,
   formatUSD,
 } from '../lib/format';
-import { type Route, toHash } from '../lib/router';
+import { type Route, type RunViewName, toHash } from '../lib/router';
+import { errorPill } from '../lib/triage';
+import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
 import { CostView } from './CostView';
+import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
+import { WasteView } from './WasteView';
 import { Waterfall } from './Waterfall';
 
 /**
- * Center pane: run header + Timeline|Cost tab switch (hash-driven). The
- * actual views are placeholders until tasks 3.3–3.7 fill them in.
+ * Center pane: run header + Overview | Timeline Explorer | Time | Waste |
+ * Errors tab switch (hash-driven).
  */
-export function RunView({
-  run,
-  view,
-}: {
-  run: Run;
-  view: 'timeline' | 'cost' | 'time';
-}) {
+export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const inspectorOpen = useAppStore((s) => s.ui.inspectorOpen);
+  // the header keeps the two figures apart the way the dashboard and the
+  // Waste tab do: burned is the engine's waste-class total, opportunities
+  // are upper bounds that never add to it
   const wasted = run.totals.costUSD.wastedEstimate;
+  const opportunity = runWaste(run).opportunityUSD;
 
   return (
     <div className="flex h-full min-w-0 flex-col min-h-0">
@@ -77,17 +79,28 @@ export function RunView({
             </p>
           </div>
           <div>
-            <p className="micro-label text-text-faint">Status / Waste</p>
+            <p className="micro-label text-text-faint">
+              Burned / Opportunities
+            </p>
             <p
               className={`font-mono text-body font-semibold ${wasted > 0 ? 'text-heat-2' : 'text-text-dim'}`}
             >
-              {wasted > 0 ? `${formatUSD(wasted)} wasted` : 'Clean run'}
+              {wasted > 0
+                ? `${formatUSD(wasted)} burned`
+                : opportunity > 0
+                  ? 'Nothing burned'
+                  : 'Clean run'}
             </p>
+            {opportunity > 0 && (
+              <p className="font-mono text-label text-text-faint">
+                up to {formatUSD(opportunity)} if you change the setup
+              </p>
+            )}
           </div>
         </div>
 
         <div className="mt-3">
-          <ViewTabs runId={run.id} view={view} />
+          <ViewTabs run={run} view={view} />
         </div>
       </div>
 
@@ -98,6 +111,12 @@ export function RunView({
           <Waterfall run={run} />
         ) : view === 'time' ? (
           <TimeView run={run} />
+        ) : view === 'errors' ? (
+          // keyed by run: the tab's open/filter state is per session, and a
+          // back/forward or deep link can swap the run under the same view
+          <ErrorsView key={run.id} run={run} />
+        ) : view === 'waste' ? (
+          <WasteView key={run.id} run={run} />
         ) : (
           <CostView run={run} />
         )}
@@ -106,14 +125,19 @@ export function RunView({
   );
 }
 
-function ViewTabs({
-  runId,
-  view,
-}: {
-  runId: string;
-  view: 'timeline' | 'cost' | 'time';
-}) {
-  const tabs: { label: string; route: Route; active: boolean }[] = [
+function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
+  const runId = run.id;
+  // the Errors tab carries its count with the triage's tone, so the tab
+  // bar already says whether the failures are the person's problem; the
+  // Waste tab carries the burned amount in the engine's tone
+  const pill = errorPill(run);
+  const burned = wasteBadge(run);
+  const tabs: {
+    label: string;
+    route: Route;
+    active: boolean;
+    badge?: { text: string; tone: 'alarm' | 'quiet'; title: string };
+  }[] = [
     {
       label: 'Overview',
       route: { view: 'cost', runId },
@@ -129,17 +153,46 @@ function ViewTabs({
       route: { view: 'time', runId },
       active: view === 'time',
     },
+    {
+      label: 'Waste',
+      route: { view: 'waste', runId },
+      active: view === 'waste',
+      ...(burned === null
+        ? {}
+        : {
+            badge: {
+              text: burned.text,
+              tone: burned.tone,
+              title: burned.title,
+            },
+          }),
+    },
+    {
+      label: 'Errors',
+      route: { view: 'errors', runId },
+      active: view === 'errors',
+      ...(pill === null || pill.tone === 'none'
+        ? {}
+        : {
+            badge: {
+              text: pill.label.split(' ')[0] ?? '',
+              tone: pill.tone,
+              title: `${pill.label} — ${pill.title}`,
+            },
+          }),
+    },
   ];
   return (
     <nav
       aria-label="Run views"
       className="flex overflow-hidden rounded border border-border-slate"
     >
-      {tabs.map(({ label, route, active }) => (
+      {tabs.map(({ label, route, active, badge }) => (
         <a
           key={label}
           href={toHash(route)}
           aria-current={active ? 'page' : undefined}
+          title={badge?.title}
           className={`px-3 py-1 text-label transition-colors duration-150 ease-out ${
             active
               ? 'bg-surface-variant text-on-surface font-semibold'
@@ -147,6 +200,15 @@ function ViewTabs({
           }`}
         >
           {label}
+          {badge !== undefined && (
+            <span
+              className={`ml-1.5 font-mono text-[11px] font-normal ${
+                badge.tone === 'alarm' ? 'text-span-error' : 'text-text-faint'
+              }`}
+            >
+              {badge.text}
+            </span>
+          )}
         </a>
       ))}
     </nav>

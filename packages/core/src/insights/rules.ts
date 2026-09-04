@@ -1,14 +1,21 @@
 import type { Run, Span } from '@runray/schema';
-import type { PricingEntry, PricingTable } from '../pricing/engine.js';
 import {
   cacheWrite1hTokens,
-  effectiveCacheWriteRate,
   matchModel,
   repriceRun,
   repriceSpans,
   round6,
   suggestedDowngrade,
 } from '../pricing/engine.js';
+import { breakShape, contextTokens } from './cache-shape.js';
+import {
+  contextExcess,
+  dominantModel,
+  dominantModelEntry,
+  mainScopeLlmCalls,
+  median3,
+  spanCacheWriteRate,
+} from './context-excess.js';
 import {
   buildScopeIndex,
   chronological,
@@ -31,12 +38,20 @@ import type { Finding, InsightRule, RuleContext, Thresholds } from './index.js';
  * `suggestion`; findings are constructed in schema field order (golden
  * stability) and emitted in first-evidence chronological order. Every rule
  * registers presentation metadata in `meta.ts` (test-enforced).
+ *
+ * Suggestions address the PERSON running the agent, never the model: they
+ * name a lever that person has (a command, a config key, an instructions
+ * file), carry the finding's own numbers where they change the decision,
+ * and pick the lever by `run.source.tool` — the same problem is fixed in a
+ * different place in Claude Code, OpenCode and a custom OTLP agent. Static
+ * how-to detail lives in the rule playbooks (`meta.ts`), not here.
  */
 
 function usd(x: number): string {
   return `$${x.toFixed(2)}`;
 }
 function tok(n: number): string {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`;
 }
 function ms(iso: string): number {
@@ -44,28 +59,63 @@ function ms(iso: string): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-/** Rate card for waste estimates: the run's dominant model (most input tokens). */
-function dominantModel(spans: readonly Span[]): string | undefined {
-  const byModel = new Map<string, number>();
-  for (const s of spans) {
-    if (s.kind !== 'llm_call' || !s.llm) continue;
-    byModel.set(
-      s.llm.model,
-      (byModel.get(s.llm.model) ?? 0) +
-        s.llm.tokens.input +
-        s.llm.tokens.cacheRead,
-    );
+/** Where the person keeps standing instructions for this source's agent. */
+function instructionsFile(run: Run): string {
+  switch (run.source.tool) {
+    case 'claude-code':
+      return 'CLAUDE.md';
+    case 'opencode':
+      return 'AGENTS.md';
+    default:
+      return "your agent's system prompt";
   }
-  return [...byModel.entries()].sort(
-    (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
-  )[0]?.[0];
 }
 
-function dominantModelEntry(run: Run, pricing: PricingTable) {
-  const dominant = dominantModel(run.spans);
-  return dominant === undefined ? undefined : matchModel(pricing, dominant);
+/** "A", "A and B", "A, B and C". */
+function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
+/** MCP servers the run actually called — tool identity, present in both
+ * redaction modes; sorted so the copy is byte-stable. */
+function mcpServersCalled(run: Run): string[] {
+  const names = new Set<string>();
+  for (const s of run.spans) {
+    if (s.tool?.mcpServer !== undefined) names.add(s.tool.mcpServer);
+  }
+  return [...names].sort();
+}
+
+/** The `/model` alias Claude Code accepts for a ladder target, if any. */
+function claudeModelAlias(target: string): string | undefined {
+  return /claude-(fable|opus|sonnet|haiku)/.exec(target)?.[1];
+}
+
+type ToolClass = 'shell' | 'edit' | 'mcp' | 'other';
+const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'bash']);
+const EDIT_TOOLS = new Set([
+  'Edit',
+  'MultiEdit',
+  'Write',
+  'NotebookEdit',
+  'edit',
+  'write',
+  'patch',
+  'apply_patch',
+]);
+
+/** What kind of lever a failing tool points at: the environment (shell),
+ * the file under the agent (edit), a server (mcp), or the agent itself. */
+function toolClassOf(span: Span): ToolClass {
+  if (span.kind === 'mcp_call' || span.tool?.mcpServer !== undefined)
+    return 'mcp';
+  if (SHELL_TOOLS.has(span.name)) return 'shell';
+  if (EDIT_TOOLS.has(span.name)) return 'edit';
+  return 'other';
+}
+
+/** Rate card for waste estimates: the run's dominant model (most input tokens). */
 /** The llm calls a retry cluster bills: parents of the failures plus
  * same-scope llm calls inside the first→last failure window (B6 — parallel
  * sibling subtrees are never billed for a loop they did not run). */
@@ -103,6 +153,21 @@ function claimedLlmIds(
   return out;
 }
 
+/** The one line of a failed tool span's error worth quoting: the first
+ * non-empty line of the preview the adapters keep on error results,
+ * whitespace collapsed, capped at 120 chars. Absent under redaction (the
+ * preview is null) and for sources that carry no error text. */
+function errorSnippet(span: Span): string | undefined {
+  const preview = span.content?.outputPreview;
+  if (typeof preview !== 'string') return undefined;
+  const line = preview
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .find((l) => l.length > 0);
+  if (line === undefined) return undefined;
+  return line.length > 120 ? `${line.slice(0, 119)}…` : line;
+}
+
 const retryLoop: InsightRule = {
   id: 'retry-loop',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
@@ -127,14 +192,34 @@ const retryLoop: InsightRule = {
       }
       wasted = round6(wasted);
       const n = cluster.failures.length;
+      // the lever depends on what kept failing: the environment the agent
+      // does not know about (shell), the file changing under it (edit), a
+      // server (mcp), or simply stopping the loop sooner (anything else)
+      const perLoop = wasted > 0 ? ` at ${usd(wasted)} a loop` : '';
+      const lastError = errorSnippet(
+        cluster.failures[cluster.failures.length - 1] as Span,
+      );
+      const quoted =
+        lastError === undefined ? '' : ` (last error: “${lastError}”)`;
+      const suggestion = ((): string => {
+        switch (toolClassOf(first)) {
+          case 'shell':
+            return `Record the environment fact the agent kept missing (shell version, a missing binary, a sandbox limit) in ${instructionsFile(run)} — the next session will not rediscover it${perLoop}.`;
+          case 'edit':
+            return `Find what changed the file under the agent — a formatter on save or a concurrent edit makes every ${first.name} miss its anchor text; pause it while the agent works.`;
+          case 'mcp':
+            return `Check the ${first.tool?.mcpServer ?? first.name} MCP server — ${n} failures in a row usually mean it is down, timing out or rejecting the arguments, and every retry re-bills the full context.`;
+          default:
+            return `Interrupt the agent when the same ${first.name} call fails twice — each further attempt re-billed the full context${wasted > 0 ? `, ${usd(wasted)} across this loop` : ''}.`;
+        }
+      })();
       return {
         ruleId: 'retry-loop',
-        severity: 'warning' as const,
         title: `${first.name} failed ${n}× in a row`,
-        detail: `The same ${first.name} call failed ${n} consecutive attempts, driving ~${usd(wasted)} of same-scope model calls between the first and last attempt.`,
+        detail: `${n} consecutive ${first.name} calls failed${quoted}, driving ~${usd(wasted)} of model calls in the same scope between the first and the last attempt.`,
         spanIds: cluster.failures.map((s) => s.id),
         estimatedWasteUSD: wasted,
-        suggestion: `Fix the failing ${first.name} invocation before retrying — each repeat re-bills the full context.`,
+        suggestion,
       };
     });
   },
@@ -184,33 +269,50 @@ const lowCacheHit: InsightRule = {
     return [
       {
         ruleId: 'low-cache-hit',
-        severity: 'info',
         title: `Cache hit-rate at ${(hitRate * 100).toFixed(1)}%`,
         detail: `Only ${tok(cacheRead)} of ${tok(cacheRead + input)} input-class tokens were served from cache; a stable session prefix would have converted most of the ${tok(input)} input tokens to cache reads.`,
         spanIds: evidence,
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion:
-          'Resume the same session for follow-up prompts instead of starting fresh.',
+        suggestion: lowCacheHitSuggestion(run, t.targetHitRate, waste),
       },
     ];
   },
 };
 
-function median3(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[1] ?? 0;
+/** A low hit-rate has a different cause per source: Claude Code caches on
+ * its own (so the prefix must be changing), OpenCode inherits whatever the
+ * provider does, a custom agent has to mark the prefix itself. */
+function lowCacheHitSuggestion(
+  run: Run,
+  targetHitRate: number,
+  waste: number | undefined,
+): string {
+  const tail =
+    waste === undefined
+      ? ''
+      : ` — at a ${Math.round(targetHitRate * 100)}% hit-rate this run would have cost ~${usd(waste)} less`;
+  switch (run.source.tool) {
+    case 'claude-code':
+      return `Claude Code caches automatically, so a hit-rate this low means the prefix kept changing — check this run for cache-prefix-break findings first${tail}.`;
+    case 'opencode':
+      return `Check that your provider and model support prompt caching — OpenCode adds no cache settings of its own${tail}.`;
+    default:
+      return `Mark a stable prefix for caching in your agent's requests (system prompt, tool definitions, early turns)${tail}.`;
+  }
 }
 
 const contextBloat: InsightRule = {
   id: 'context-bloat',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
     const cfg = ctx.thresholds;
-    const llms = run.spans.filter((s) => s.kind === 'llm_call' && s.llm);
+    // main session only, like fixed-context-overhead: a subagent runs its
+    // own context, and its small calls would drag the session's medians
+    const llms = mainScopeLlmCalls(run);
     if (llms.length < 6) return [];
-    const inputs = llms.map((s) => s.llm?.tokens.input ?? 0);
-    const first = median3(inputs.slice(0, 3));
+    const contexts = llms.map(contextTokens);
+    const first = median3(contexts.slice(0, 3));
     const last3 = llms.slice(-3);
-    const last = median3(inputs.slice(-3));
+    const last = median3(contexts.slice(-3));
     const t = cfg.contextBloat;
     if (last <= t.multiplier * first || last <= t.minMedianInputTokens)
       return [];
@@ -227,26 +329,27 @@ const contextBloat: InsightRule = {
           (a.id < b.id ? -1 : 1),
       )
       .slice(0, t.topCulprits);
-    const entry = dominantModelEntry(run, ctx.pricing);
-    // cumulative excess beyond the opening baseline (B5) — the old
-    // trailing-window approximation understated by ~(llmCalls/3)×
-    const excessTokens = inputs
-      .slice(3)
-      .reduce((acc, v) => acc + Math.max(0, v - first), 0);
-    const waste =
-      entry === undefined
-        ? undefined
-        : round6((excessTokens * entry.inputPerMTok) / 1e6);
+    // cumulative excess beyond the opening baseline (B5), each call's share
+    // priced at what that call actually paid per input-class token — the
+    // shared formula the Waste tab re-runs with a ceiling for the baseline
+    const { tokens: excessTokens, usd: excessUSD } = contextExcess(
+      llms,
+      first,
+      ctx.pricing,
+      dominantModelEntry(run, ctx.pricing),
+    );
+    const waste = excessUSD === undefined ? undefined : round6(excessUSD);
     return [
       {
         ruleId: 'context-bloat',
-        severity: 'warning',
-        title: `Context grew from ${tok(first)} to ${tok(last)} input tokens`,
-        detail: `The median input of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input tokens were re-paid beyond the opening baseline. The largest tool outputs listed in evidence are the likely culprits.`,
+        title: `Context grew from ${tok(first)} to ${tok(last)} tokens`,
+        detail: `The median context of the last three model calls (${tok(last)}) is over ${t.multiplier}× the median of the first three (${tok(first)}); ~${tok(excessTokens)} cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.`,
         spanIds: [...last3.map((s) => s.id), ...culprits.map((s) => s.id)],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
         suggestion:
-          'Trim or paginate large tool outputs before they land in the context window.',
+          run.source.tool === 'otlp'
+            ? `Summarize or drop history your agent re-sends once it stops being needed — the context grown since the start was re-paid on every later call, ~${tok(excessTokens)} tokens in total.`
+            : `Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~${tok(excessTokens)} tokens in total.`,
       },
     ];
   },
@@ -350,9 +453,26 @@ const expensiveSubagent: InsightRule = {
         sugg === undefined
           ? 'No cheaper same-family tier resolves in the pricing table, so no saving estimate is available.'
           : `A cheaper tier (${sugg.target}) resolves, but the subtree's calls could not be repriced cheaper (unpriced or already at/below that rate), so no saving estimate is available.`;
+      // where the person sets a subagent's model in this source
+      const target = sugg?.target;
+      const how = ((): string => {
+        switch (run.source.tool) {
+          case 'claude-code':
+            return target === undefined
+              ? `the model: field in the ${name} agent's frontmatter`
+              : `model: ${target} in the ${name} agent's frontmatter`;
+          case 'opencode':
+            return target === undefined
+              ? `agent.${name}.model in opencode.json`
+              : `agent.${name}.model = ${target} in opencode.json`;
+          default:
+            return target === undefined
+              ? `a cheaper model for ${name}`
+              : `${target} for ${name}`;
+        }
+      })();
       return {
         ruleId: 'expensive-subagent',
-        severity: 'info' as const,
         title: `Subagent ${name} consumed ${share}% of the run`,
         detail:
           saving === undefined
@@ -362,8 +482,10 @@ const expensiveSubagent: InsightRule = {
         ...(saving === undefined ? {} : { estimatedWasteUSD: saving }),
         suggestion:
           saving === undefined
-            ? `Delegate ${name} to a cheaper model — its subtree dominates the run's spend.`
-            : `Delegating ${name} to ${sugg?.target} would have cost ~${usd(saving)} less (−${Math.round((saving / cost) * 100)}%), assuming identical token usage.`,
+            ? sugg === undefined
+              ? `Give ${name} a cheaper model (${how}) — its subtree is ${share}% of this run; no priced cheaper tier resolves for it, so the saving is not estimated.`
+              : `Give ${name} a cheaper model (${how}) — a cheaper tier (${sugg.target}) exists, but this subtree's calls could not be repriced cheaper (unpriced, or already at or below that rate), so the saving is not estimated.`
+            : `Give ${name} a cheaper model (${how}) — the same tokens would have cost ~${usd(saving)} less (−${Math.round((saving / cost) * 100)}%).`,
       };
     });
   },
@@ -396,10 +518,18 @@ const deadEndRun: InsightRule = {
     );
     const marker = markers[markers.length - 1];
 
+    // the reason, when the trace holds one: a machine-ish statusReason, or
+    // the first line of the failure's own text
+    const snippet = errorSnippet(terminal);
+    const why =
+      terminal.statusReason !== undefined
+        ? ` (${terminal.statusReason})`
+        : snippet !== undefined
+          ? ` (“${snippet}”)`
+          : '';
     let waste = total;
-    let detail = `The session terminated on a failing ${terminal.name} (${terminal.statusReason ?? 'error'}) after spending ${usd(total)} with no completed outcome.`;
-    let suggestion =
-      'Fix the terminal failure and rerun — the whole spend produced no result.';
+    let detail = `The session terminated on a failing ${terminal.name}${why} after spending ${usd(total)} with no completed outcome.`;
+    let suggestion = `Deal with the failing ${terminal.name} before running this again — nothing was produced, so a plain rerun spends the ${usd(total)} a second time.`;
     if (marker !== undefined) {
       const markerT = ms(marker.startedAt);
       const llms = chronological(
@@ -422,17 +552,12 @@ const deadEndRun: InsightRule = {
           tail.reduce((acc, l) => acc + (l.llm?.costUSD ?? 0), 0),
         ),
       );
-      detail = `The session terminated on a failing ${terminal.name} (${terminal.statusReason ?? 'error'}); ~${usd(waste)} of model calls after the last completed code change (${marker.name}) produced no result.`;
-      suggestion =
-        'Fix the terminal failure and rerun the failed tail — the spend before the last completed change is not lost.';
+      detail = `The session terminated on a failing ${terminal.name}${why}; ~${usd(waste)} of model calls after the last completed code change (${marker.name}) produced no result.`;
+      suggestion = `Resume the session and deal with the failing ${terminal.name} first — everything up to the last completed change (${marker.name}) is intact; only the ~${usd(waste)} tail after it needs redoing.`;
     }
     return [
       {
         ruleId: 'dead-end-run',
-        severity:
-          waste > ctx.thresholds.deadEndRun.criticalCostUSD
-            ? 'critical'
-            : 'warning',
         title: 'Run ended in an error',
         detail,
         spanIds: [terminal.id],
@@ -530,14 +655,21 @@ const modelMismatch: InsightRule = {
           ? [`${delegated} subtree(s) covered by the delegation finding`]
           : []),
       ];
+      // where the person switches model in this source
+      const alias = claudeModelAlias(sugg.target);
+      const hint =
+        run.source.tool === 'claude-code' && alias !== undefined
+          ? ` (/model ${alias} switches mid-session)`
+          : run.source.tool === 'opencode'
+            ? ' (/models, or the model key in opencode.json)'
+            : '';
       findings.push({
         ruleId: 'model-mismatch',
-        severity: 'info',
         title: `${modelSpans.length} calls on ${model} could run on ${sugg.target}`,
         detail: `${modelSpans.length} llm calls ran on ${model}; at ${sugg.target} rates the risk-free portion would cost ${usd(round6(safeCurrent - saving))} instead of ${usd(safeCurrent)} (−${usd(saving)}), estimated on identical token usage.${notes.length > 0 ? ` ${notes.join('; ')}.` : ''}`,
         spanIds: evidence,
         estimatedWasteUSD: saving,
-        suggestion: `Try ${sugg.target} for this work — the risk-free portion reprices ${usd(saving)} cheaper.`,
+        suggestion: `Run the low-risk stretches of this work on ${sugg.target}${hint} — the risk-free portion reprices ${usd(saving)} cheaper; risky subtrees are already excluded.`,
       });
     }
     // first-evidence chronological order (engine contract) — the model loop
@@ -554,15 +686,6 @@ const modelMismatch: InsightRule = {
     );
   },
 };
-
-/** Effective cache-write rate of one span's write at this entry's rates:
- * the 5m/1h blend from the adapter-recorded TTL split — the SAME math the
- * cost engine billed, so waste dollars reconcile with span costUSD. */
-function spanCacheWriteRate(entry: PricingEntry, s: Span): number {
-  const t = s.llm?.tokens;
-  if (t === undefined) return entry.cacheWritePerMTok;
-  return effectiveCacheWriteRate(entry, t, cacheWrite1hTokens(s.attributes, t));
-}
 
 /**
  * Per llm span: was the LIVE cache at that point written with a
@@ -650,15 +773,30 @@ const cachePrefixBreak: InsightRule = {
                 (spanCacheWriteRate(entry, b) - entry.cacheReadPerMTok)) /
                 1e6,
             );
+      const shape = breakShape(a, b, cfg);
+      const costNote =
+        waste === undefined
+          ? `${tok(rewritten)} tokens were written again here`
+          : `this break cost ${usd(waste)}`;
+      const shapeNote =
+        shape === 'compaction'
+          ? ` The context shrank from ${tok(contextTokens(a))} to ${tok(contextTokens(b))} tokens: the history was compacted and the summary written once as a new prefix.`
+          : shape === 'front'
+            ? ` Only ${tok(bRead)} tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.`
+            : ` The first ${tok(bRead)} tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.`;
+      const suggestion =
+        shape === 'compaction'
+          ? `This is the price of compaction — the shortened history is a new prefix, written once; compact earlier, while there is less to summarize, or start a new session per task; ${costNote}.`
+          : shape === 'front'
+            ? `Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; ${costNote}.`
+            : `The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; ${costNote}.`;
       findings.push({
         ruleId: 'cache-prefix-break',
-        severity: 'warning',
         title: `Cache prefix broke mid-session (${tok(aRead)} → ${tok(bRead)} cached)`,
-        detail: `Between two consecutive ${b.llm?.model} calls the cache read collapsed from ${tok(aRead)} to ${tok(bRead)} tokens while ${tok(bWrite)} tokens were re-written — content that was already cached was paid for again at the write premium.`,
+        detail: `Between two consecutive ${b.llm?.model} calls the cache read collapsed from ${tok(aRead)} to ${tok(bRead)} tokens while ${tok(bWrite)} tokens were re-written — content that was already cached was paid for again at the write premium.${shapeNote}`,
         spanIds: [a.id, b.id],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion:
-          'Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache.',
+        suggestion,
       });
     }
     return findings;
@@ -690,15 +828,31 @@ const idleCacheExpiry: InsightRule = {
       const gapMin = Math.round(
         (ms(b.startedAt) - ms(a.endedAt ?? a.startedAt)) / 60_000,
       );
+      // the cost that keeps running: every later call in this context reads
+      // the whole prefix from cache — often the stronger reason to start a
+      // new session than the one-off re-write
+      const perCallUSD =
+        entry === undefined ? 0 : (lost * entry.cacheReadPerMTok) / 1e6;
+      const perCall =
+        perCallUSD >= 0.005
+          ? `, and every further call in this context costs ${usd(perCallUSD)} in cache reads alone`
+          : '';
+      // a 5-minute cache on Claude Code means an API key, where the TTL is
+      // a setting; on a subscription the cache already lives an hour
+      const ttlHint =
+        run.source.tool === 'claude-code' && !live1h.has(a.id)
+          ? ', or set promptCacheTtl to "1h" if you are on an API key'
+          : '';
       findings.push({
         ruleId: 'idle-cache-expiry',
-        severity: 'info',
         title: `Idle gap of ${gapMin}m expired the cache`,
         detail: `After ${gapMin} minutes of inactivity the provider cache TTL lapsed; the next ${b.llm?.model} call re-wrote ${tok(bWrite)} tokens of prefix that had been cached before the gap.`,
         spanIds: [a.id, b.id],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
         suggestion:
-          'Batch prompts or close the session instead of leaving it idle past the cache TTL.',
+          gapMin >= 60
+            ? `Compact before a long break, or start the next task in a new session — resuming after ${gapMin} minutes re-wrote ${tok(lost)} tokens at the write premium${perCall}.`
+            : `Compact before stepping away${ttlHint} — a ${gapMin}-minute pause re-wrote ${tok(lost)} tokens at the write premium${perCall}.`,
       });
     }
     return findings;
@@ -713,11 +867,7 @@ const fixedContextOverhead: InsightRule = {
     // calls neither carry nor re-read the session's opening footprint. Counting
     // them inflated both the footprint owner (llms[0]) and the re-read
     // multiplier (llms.length − 1).
-    const scope = buildScopeIndex(run);
-    const scopeKind = new Map(run.spans.map((s) => [s.id, s.kind]));
-    const llms = chronologicalLlmCalls(run).filter(
-      (l) => scopeKind.get(scope.get(l.id) ?? '') !== 'subagent',
-    );
+    const llms = mainScopeLlmCalls(run);
     const first = llms[0];
     if (first?.llm === undefined || llms.length < cfg.minLlmCalls) return [];
     const t = first.llm.tokens;
@@ -743,17 +893,39 @@ const fixedContextOverhead: InsightRule = {
     return [
       {
         ruleId: 'fixed-context-overhead',
-        severity: 'info',
         title: `Session starts with a ${tok(footprint)}-token context footprint`,
         detail: `The first model call already carried ${tok(footprint)} input-class tokens (tool definitions, project instructions, attachments); ${tok(overhead)} tokens above the ${tok(cfg.floorTokens)} floor were written once and re-read on each of the ${llms.length - 1} later calls.`,
         spanIds: [first.id],
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion:
-          'Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session.',
+        suggestion: fixedContextSuggestion(run, overhead, llms.length - 1),
       },
     ];
   },
 };
+
+/** The footprint's composition is invisible to the adapters, so the copy
+ * lists the candidates the person controls in this source and states the
+ * one fact the data does hold: which MCP servers were actually called. */
+function fixedContextSuggestion(
+  run: Run,
+  overhead: number,
+  reReads: number,
+): string {
+  const servers = mcpServersCalled(run);
+  const called =
+    servers.length === 0
+      ? 'no MCP server was called in this session'
+      : `only ${listNames(servers)} ${servers.length === 1 ? 'was' : 'were'} called in this session`;
+  const tail = `${tok(overhead)} tokens above the floor were re-read ${reReads} times`;
+  switch (run.source.tool) {
+    case 'claude-code':
+      return `Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (${called}) — ${tail}.`;
+    case 'opencode':
+      return `Trim what every call carries: AGENTS.md and instructions files, and MCP servers this project does not need (${called}; mcp.<name>.enabled: false) — ${tail}.`;
+    default:
+      return `Trim the fixed part of every request: system prompt, tool definitions, attachments — ${tail}.`;
+  }
+}
 
 const duplicateRead: InsightRule = {
   id: 'duplicate-read',
@@ -844,15 +1016,14 @@ const duplicateRead: InsightRule = {
       // changes" with the total count would be factually wrong then
       findings.push({
         ruleId: 'duplicate-read',
-        severity: 'warning',
         title: `Same file re-read ${wasted.length}× without changes`,
         detail: `${display === undefined ? 'The same target' : `“${display}”`} was read ${reads.length} times; ${wasted.length} of those read(s) had no write in between and re-entered ≈${tok(Math.round(wastedBytes / 4))} tokens of unchanged content into the context.`,
         // evidence: the reference read + the redundant ones (legitimate
         // post-write reads are not part of the claim)
         spanIds: [reads[0] as Span, ...wasted].slice(0, 10).map((s) => s.id),
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion:
-          'Reference the earlier read instead — the file did not change between reads.',
+        // honest about the lever: this is agent behaviour, not a setting
+        suggestion: `Nothing to configure here — the agent re-read ${display === undefined ? 'the file' : `“${display}”`} after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read.`,
       });
     }
     return findings.sort((a, b) => {
@@ -923,19 +1094,26 @@ const scatteredToolFailures: InsightRule = {
     );
     const byName = new Map<string, number>();
     for (const f of failures) byName.set(f.name, (byName.get(f.name) ?? 0) + 1);
-    const dominant = [...byName.entries()].sort(
+    const [dominant, dominantCount] = [...byName.entries()].sort(
       (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
-    )[0]?.[0];
+    )[0] ?? ['tool', 0];
     const share = Math.round((failures.length / toolCalls) * 100);
+    const recent = [...failures]
+      .reverse()
+      .map((f) => (f.name === dominant ? errorSnippet(f) : undefined))
+      .find((s) => s !== undefined);
+    const quoted =
+      recent === undefined
+        ? ''
+        : ` Most recent ${dominant} error: “${recent}”.`;
     return [
       {
         ruleId: 'scattered-tool-failures',
-        severity: 'warning',
         title: `${failures.length} scattered tool failures outside retry loops`,
-        detail: `${failures.length} of ${toolCalls} tool calls (${share}%) failed outside any retry loop; the model calls reacting to them cost ~${usd(waste)}.`,
+        detail: `${failures.length} of ${toolCalls} tool calls (${share}%) failed outside any retry loop; the model calls reacting to them cost ~${usd(waste)}.${quoted}`,
         spanIds: failures.slice(0, 10).map((s) => s.id),
         estimatedWasteUSD: waste,
-        suggestion: `Investigate ${dominant} — it accounts for the largest share of the scattered failures.`,
+        suggestion: `Look at why ${dominant} kept failing (${dominantCount} of the ${failures.length}) and record the fix in ${instructionsFile(run)} — each failure cost a model call to recover from, ~${usd(waste)} in total.`,
       },
     ];
   },
@@ -970,13 +1148,11 @@ const oversizedOutput: InsightRule = {
     return [
       {
         ruleId: 'oversized-output',
-        severity: 'info',
         title: `${offenders.length} oversized tool output${offenders.length === 1 ? '' : 's'} entered the context`,
         detail: `${offenders.length} tool call(s) returned ≥${tok(cfg.minOutputBytes)} bytes (largest: ${top?.name} at ${tok(top?.tool?.outputBytes ?? 0)} bytes); ≈${tok(Math.round(totalBytes / 4))} tokens of tool output entered the context. Output utility is unknowable, so this is an opportunity, never burned waste.`,
         spanIds: offenders.slice(0, cfg.topOffenders).map((s) => s.id),
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion:
-          'Paginate or filter large tool outputs before they land in the context window.',
+        suggestion: `Ask for less of it — ${top?.name} returned ${tok(top?.tool?.outputBytes ?? 0)} bytes in one go; slice files with offset and limit, filter command output, and page MCP results before they enter the context.`,
       },
     ];
   },

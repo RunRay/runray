@@ -117,6 +117,21 @@ function buildCommands(
       keywords: 'time wall clock idle model wait breakdown current run',
       perform: nav({ view: 'time', runId: activeRunId }),
     });
+    cmds.push({
+      id: 'view:waste',
+      group: 'Switch view',
+      label: 'Waste view',
+      keywords:
+        'waste burned savings opportunities findings cache retry current run',
+      perform: nav({ view: 'waste', runId: activeRunId }),
+    });
+    cmds.push({
+      id: 'view:errors',
+      group: 'Switch view',
+      label: 'Errors view',
+      keywords: 'errors failures triage who can act tool error current run',
+      perform: nav({ view: 'errors', runId: activeRunId }),
+    });
   }
 
   for (const run of runs) {

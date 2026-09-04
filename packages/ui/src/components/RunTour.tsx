@@ -8,6 +8,7 @@ import {
   useFloating,
 } from '@floating-ui/react';
 import { useCallback, useEffect, useState } from 'react';
+import { rankInsights } from '../lib/insight-order';
 import { useTourAnchors } from '../lib/use-tour-anchors';
 import { selectActiveRun, useAppStore } from '../store';
 
@@ -52,7 +53,11 @@ export default function RunTour() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
 
   const isRunRoute =
-    route.view === 'timeline' || route.view === 'cost' || route.view === 'time';
+    route.view === 'timeline' ||
+    route.view === 'cost' ||
+    route.view === 'time' ||
+    route.view === 'errors' ||
+    route.view === 'waste';
 
   const isOfferable =
     onboarding.enabled &&
@@ -160,8 +165,10 @@ export default function RunTour() {
   const handleNext = () => {
     if (isLastStep) {
       // Step 3 (or last available step) advance
-      if (currentStep?.id === 'insights-strip' && activeRun?.insights?.[0]) {
-        activateInsight(activeRun.insights[0]);
+      // the same first pill the strip shows (ranked by waste), not rule order
+      const first = activeRun ? rankInsights(activeRun.insights)[0] : undefined;
+      if (currentStep?.id === 'insights-strip' && first !== undefined) {
+        activateInsight(first);
       }
       setInTour(false);
       setTourStatus('run', 'completed');

@@ -17,6 +17,7 @@ Fields to expect per record (verify on your data — this drives the adapter):
 Generate missing variants deliberately:
 - **subagents:** run a session that spawns a subagent via the `Agent` tool (`Task` in older versions) — e.g. ask Claude Code to "use a subagent to review this file". Copy the session `.jsonl` **and** its `<session-uuid>/subagents/` subtree; scrub every file (the scrub script works per file).
 - **tool-errors:** ask for a command that fails 3× (e.g. run a test that doesn't exist, insist it retries).
+- **duplicate-records:** a desktop-app session that was bridged (the transcript carries `bridge-session` records) and re-appended from the start afterwards — every record before the bridge appears a second time with the same `uuid`, later in the file. Slice a few original stretches plus their later copies (keep the `bridge-session` record between them) and scrub; the adapter must emit each span once.
 
 ## 2. OpenCode (priority 2)
 

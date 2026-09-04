@@ -151,7 +151,6 @@ describe('model-mismatch', () => {
     expect(finding).toBeDefined();
     expect(finding?.title).toContain('claude-sonnet-5');
     expect(finding?.estimatedWasteUSD).toBeGreaterThan(0.5);
-    expect(finding?.severity).toBe('info');
     expect(run.totals.costUSD.wastedEstimate).toBe(0);
   });
 
@@ -469,7 +468,6 @@ describe('oversized-output', () => {
     const finding = run.insights.find((i) => i.ruleId === 'oversized-output');
     expect(finding).toBeDefined();
     expect(finding?.spanIds).toEqual(['big1', 'big2']);
-    expect(finding?.severity).toBe('info');
     expect(finding?.estimatedWasteUSD).toBeGreaterThan(0);
     expect(finding?.detail).toContain('≈');
     expect(run.totals.costUSD.wastedEstimate).toBe(0);

@@ -57,7 +57,7 @@ TraceFile
 | `llm?` | object | Only for `llm_call`: `provider`, `model`, `tokens {input, output, cacheRead, cacheWrite, reasoning?}`, `costUSD?`, `costSource: reported\|computed\|unknown`, `stopReason?`. |
 | `tool?` | object | Only for `tool_call`/`mcp_call`: `name`, `mcpServer?`, `isError`, `exitCode?`, `outputBytes?`, `linesAdded?`, `linesRemoved?` (file-modifying tools only, when derivable from the source record). |
 | `agent?` | object | For `subagent`/`session`: `{ name?, sessionId? }`. |
-| `content?` | object | `{ promptPreview?, outputPreview?, delegationReason? }` — all prompt-derived text lives here and is nulled by `--redact`; previews are first N chars; `delegationReason` (subagent spans) is the Task description. |
+| `content?` | object | `{ promptPreview?, outputPreview?, delegationReason? }` — all prompt-derived text lives here and is nulled by `--redact`; previews are first N chars; `delegationReason` (subagent spans) is the Task description; tool spans carry `outputPreview` only for a failed or user-rejected result (N chars of its text starting at the line that names the failure). A user-rejected call has `status: cancelled` + `statusReason: user-rejected`, never `error`. |
 | `attributes` | object | Passthrough bag; prefer `gen_ai.*` keys where applicable. |
 | `provenance` | object | `{ file, line?, recordId? }`. |
 
@@ -79,7 +79,7 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 |---|---|---|
 | `id` | string | Unique per run. |
 | `ruleId` | string | Open registry; v0 set: `retry-loop` \| `low-cache-hit` \| `context-bloat` \| `expensive-subagent` \| `dead-end-run`. New rules land in minor schema versions. |
-| `severity` | enum | `info` \| `warning` \| `critical` |
+| `severity` | enum | `info` \| `warning` \| `critical` — graded by the engine from `estimatedWasteUSD` as a share of the run's `costUSD.total` (defaults: warning ≥ 2% and ≥ $0.05, critical ≥ 10% and ≥ $1; no estimate or unpriced run ⇒ `info`). Independent of the rule's waste/opportunity class. |
 | `title` / `detail` | string | Human-readable; `detail` must cite concrete numbers. |
 | `spanIds[]` | string | Evidence — UI highlights these in the waterfall. |
 | `estimatedWasteUSD?` | number | Where computable. |
