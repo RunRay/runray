@@ -8,7 +8,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { hasPathShape } from '@runray/core';
+import { findPathShapes } from '@runray/core';
 import type { TraceFile } from '@runray/schema';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { buildTraceFile } from './discover.js';
@@ -584,9 +584,18 @@ describe.skipIf(resolveExportTemplate() === undefined)(
         'metadata-only',
       );
 
-      // Sanitized and metadata-only HTML bytes carry no path shape
-      expect(hasPathShape(htmlSanitized)).toBe(false);
-      expect(hasPathShape(htmlMeta)).toBe(false);
+      // Sanitized and metadata-only HTML bytes carry no path shape that the
+      // export itself introduced. The shipped UI bundle is a constant and
+      // carries no trace data, but its own copy may quote a path shape (the
+      // Browser-pane playbook names a `file://` page), so shapes already
+      // present in the pristine template are not the export's leak.
+      const templateShapes = new Set(
+        findPathShapes(readFileSync(resolveExportTemplate() ?? '', 'utf8')),
+      );
+      const introduced = (html: string) =>
+        findPathShapes(html).filter((shape) => !templateShapes.has(shape));
+      expect(introduced(htmlSanitized)).toEqual([]);
+      expect(introduced(htmlMeta)).toEqual([]);
     });
   },
 );
