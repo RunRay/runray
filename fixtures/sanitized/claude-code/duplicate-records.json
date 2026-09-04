@@ -1,0 +1,318 @@
+{
+  "id": "run_ecd496d8e343e607",
+  "source": {
+    "tool": "claude-code",
+    "format": "claude-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-03T11:34:16.175Z",
+  "endedAt": "2026-09-03T17:22:55.809Z",
+  "durationMs": 20919634,
+  "spans": [
+    {
+      "id": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:34:16.175Z",
+      "endedAt": "2026-09-03T17:22:55.809Z",
+      "durationMs": 20919634,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ed1bef26-fc12-4296-9dcf-19fc7063111e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 1
+      }
+    },
+    {
+      "id": "msg_011CegSAnUAxUhHmEWe7uFGd",
+      "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "kind": "llm_call",
+      "name": "claude-fable-5-1",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:34:16.175Z",
+      "endedAt": "2026-09-03T11:34:17.986Z",
+      "durationMs": 1811,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-fable-5-1",
+        "tokens": {
+          "input": 56,
+          "output": 505,
+          "cacheRead": 84167,
+          "cacheWrite": 2544
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.160857
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 2544
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    },
+    {
+      "id": "toolu_01WpjeAJTJEeDe9vZExmxoQm",
+      "parentId": "msg_011CegSAnUAxUhHmEWe7uFGd",
+      "kind": "tool_call",
+      "name": "Bash",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:34:17.986Z",
+      "endedAt": "2026-09-03T11:34:18.707Z",
+      "durationMs": 721,
+      "depth": 2,
+      "tool": {
+        "name": "Bash",
+        "isError": false,
+        "outputBytes": 1551
+      },
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 3
+      }
+    },
+    {
+      "id": "msg_011CegSBNjhFNqDPQ7bxdzzP",
+      "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "kind": "llm_call",
+      "name": "claude-fable-5-1",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:34:25.640Z",
+      "endedAt": "2026-09-03T11:34:26.840Z",
+      "durationMs": 1200,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-fable-5-1",
+        "tokens": {
+          "input": 86,
+          "output": 445,
+          "cacheRead": 86711,
+          "cacheWrite": 1359
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.137001
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 1359
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 8
+      }
+    },
+    {
+      "id": "toolu_01XceptYkkfgcQhodSE2MwKN",
+      "parentId": "msg_011CegSBNjhFNqDPQ7bxdzzP",
+      "kind": "tool_call",
+      "name": "Bash",
+      "status": "error",
+      "startedAt": "2026-09-03T11:34:26.840Z",
+      "endedAt": "2026-09-03T11:34:27.025Z",
+      "durationMs": 185,
+      "depth": 2,
+      "tool": {
+        "name": "Bash",
+        "isError": true,
+        "outputBytes": 81
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command"
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 10
+      }
+    },
+    {
+      "id": "msg_011CegSWZhXg6JSVkzEdPNnQ",
+      "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "kind": "llm_call",
+      "name": "claude-fable-5-1",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:39:04.109Z",
+      "endedAt": "2026-09-03T11:39:05.166Z",
+      "durationMs": 1057,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-fable-5-1",
+        "tokens": {
+          "input": 86,
+          "output": 1631,
+          "cacheRead": 127207,
+          "cacheWrite": 8985
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.389317
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 8985
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 18
+      }
+    },
+    {
+      "id": "toolu_01L86pcgn3GA79MRyd2Azm94",
+      "parentId": "msg_011CegSWZhXg6JSVkzEdPNnQ",
+      "kind": "mcp_call",
+      "name": "mcp__Claude_Browser__navigate",
+      "status": "error",
+      "startedAt": "2026-09-03T11:39:05.166Z",
+      "endedAt": "2026-09-03T11:39:07.108Z",
+      "durationMs": 1942,
+      "depth": 2,
+      "tool": {
+        "name": "mcp__Claude_Browser__navigate",
+        "isError": true,
+        "mcpServer": "Claude_Browser",
+        "outputBytes": 206
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 20
+      }
+    },
+    {
+      "id": "msg_011CegtkqZgmNHGvDQhcRxWN",
+      "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "kind": "llm_call",
+      "name": "claude-fable-5-1",
+      "status": "ok",
+      "startedAt": "2026-09-03T17:22:53.788Z",
+      "endedAt": "2026-09-03T17:22:55.702Z",
+      "durationMs": 1914,
+      "depth": 1,
+      "llm": {
+        "provider": "anthropic",
+        "model": "claude-fable-5-1",
+        "tokens": {
+          "input": 2,
+          "output": 142,
+          "cacheRead": 159513,
+          "cacheWrite": 11976
+        },
+        "costSource": "computed",
+        "stopReason": "tool_use",
+        "costUSD": 0.406153
+      },
+      "content": {
+        "promptPreview": null,
+        "outputPreview": null
+      },
+      "attributes": {
+        "tracepulse.cacheWrite1hTokens": 11976
+      },
+      "provenance": {
+        "file": "transcript-1",
+        "line": 27
+      }
+    },
+    {
+      "id": "toolu_01TAgANsP375STsTx4YvVt3w",
+      "parentId": "msg_011CegtkqZgmNHGvDQhcRxWN",
+      "kind": "tool_call",
+      "name": "Skill",
+      "status": "ok",
+      "startedAt": "2026-09-03T17:22:55.702Z",
+      "endedAt": "2026-09-03T17:22:55.809Z",
+      "durationMs": 107,
+      "depth": 2,
+      "tool": {
+        "name": "Skill",
+        "isError": false,
+        "outputBytes": 32
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 29
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 230,
+      "output": 2723,
+      "cacheRead": 457598,
+      "cacheWrite": 24864,
+      "reasoning": 0,
+      "total": 485415
+    },
+    "costUSD": {
+      "total": 1.093328,
+      "wastedEstimate": 0.227544,
+      "byModel": {
+        "claude-fable-5-1": 1.093328
+      }
+    },
+    "counts": {
+      "llmCalls": 4,
+      "toolCalls": 4,
+      "toolErrors": 2,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.9995
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "idle-cache-expiry",
+      "severity": "warning",
+      "title": "Idle gap of 344m expired the cache",
+      "detail": "After 344 minutes of inactivity the provider cache TTL lapsed; the next claude-fable-5-1 call re-wrote 12.0k tokens of prefix that had been cached before the gap.",
+      "spanIds": [
+        "msg_011CegSWZhXg6JSVkzEdPNnQ",
+        "msg_011CegtkqZgmNHGvDQhcRxWN"
+      ],
+      "estimatedWasteUSD": 0.227544,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium, and every further call in this context costs $0.01 in cache reads alone."
+    }
+  ]
+}

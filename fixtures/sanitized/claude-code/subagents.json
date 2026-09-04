@@ -409,6 +409,9 @@
         "isError": true,
         "outputBytes": 57
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command"
@@ -1240,6 +1243,9 @@
         "isError": true,
         "outputBytes": 90
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "f69559477eacbf0e",
         "runray.targetKind": "file-read"
@@ -1897,6 +1903,9 @@
         "name": "Read",
         "isError": true,
         "outputBytes": 197
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {
         "runray.targetKey": "1bb7f82d71a7c6c5",
@@ -18598,6 +18607,9 @@
         "isError": true,
         "outputBytes": 169
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command"
@@ -23797,6 +23809,9 @@
         "isError": true,
         "outputBytes": 295
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command"
@@ -25467,6 +25482,9 @@
         "name": "Bash",
         "isError": true,
         "outputBytes": 41
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
@@ -27760,6 +27778,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "dd8050e57701463e",
         "runray.targetKind": "file-write"
@@ -28086,6 +28107,9 @@
         "isError": true,
         "outputBytes": 1725
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command"
@@ -28294,6 +28318,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {},
       "provenance": {
         "file": "transcript-1",
@@ -28314,6 +28341,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {},
       "provenance": {
@@ -28336,6 +28366,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {},
       "provenance": {
         "file": "transcript-1",
@@ -28356,6 +28389,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {},
       "provenance": {
@@ -28378,6 +28414,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {},
       "provenance": {
         "file": "transcript-1",
@@ -28398,6 +28437,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {},
       "provenance": {
@@ -28420,6 +28462,9 @@
         "isError": true,
         "outputBytes": 73
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {},
       "provenance": {
         "file": "transcript-1",
@@ -28440,6 +28485,9 @@
         "name": "TaskStop",
         "isError": true,
         "outputBytes": 73
+      },
+      "content": {
+        "outputPreview": null
       },
       "attributes": {},
       "provenance": {
@@ -34062,6 +34110,9 @@
         "isError": true,
         "outputBytes": 88
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "ab7e2a13e2697669",
         "runray.targetKind": "file-read"
@@ -36855,6 +36906,9 @@
         "isError": true,
         "outputBytes": 96
       },
+      "content": {
+        "outputPreview": null
+      },
       "attributes": {
         "runray.targetKey": "3819de4807f6444e",
         "runray.targetKind": "file-write"
@@ -39204,9 +39258,9 @@
     {
       "id": "i1",
       "ruleId": "retry-loop",
-      "severity": "warning",
+      "severity": "info",
       "title": "TaskStop failed 8× in a row",
-      "detail": "The same TaskStop call failed 8 consecutive attempts, driving ~$0.07 of same-scope model calls between the first and last attempt.",
+      "detail": "8 consecutive TaskStop calls failed, driving ~$0.07 of model calls in the same scope between the first and the last attempt.",
       "spanIds": [
         "toolu_01S5c9G5vg3dgurKHYu6xwJW",
         "toolu_01GNn79dmiEtr6CMjBgofxtU",
@@ -39218,128 +39272,145 @@
         "toolu_01Y4BKE9v6cvJ8G79K6yntNc"
       ],
       "estimatedWasteUSD": 0.065026,
-      "suggestion": "Fix the failing TaskStop invocation before retrying — each repeat re-bills the full context."
+      "suggestion": "Interrupt the agent when the same TaskStop call fails twice — each further attempt re-billed the full context, $0.07 across this loop."
     },
     {
       "id": "i2",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 65.9k to 533.0k tokens",
+      "detail": "The median context of the last three model calls (533.0k) is over 2× the median of the first three (65.9k); ~52.2M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "msg_01EZjdJE5dPATXMDgBTyECan",
+        "msg_01XfXNjEJBVWNu8SCAMWy5GZ",
+        "msg_01GZkS2itGHfACKffHH9hCj2",
+        "toolu_018x4twJQ7RFuKYWiFgbFw23",
+        "toolu_01Axj3keuDxADYdDKm5JszRo",
+        "toolu_01FBXTX8CX72JnXGKcCqcTmn"
+      ],
+      "estimatedWasteUSD": 45.602816,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~52.2M tokens in total."
+    },
+    {
+      "id": "i3",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (165.4k → 29.6k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 29.6k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
         "msg_01JaXbWHz9G9tXctAXso7mZB",
         "msg_0151uaBY7CEKM5CjNgq7MyhZ"
       ],
       "estimatedWasteUSD": 1.570882,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $1.57."
     },
     {
-      "id": "i3",
+      "id": "i4",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (35.3k → 0 cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
       "spanIds": [
         "msg_018DvN8RwU8XuSUSiLJUTUrN",
         "msg_01NuwZbtc7FVNDUBbMLmpNFb"
       ],
       "estimatedWasteUSD": 0.202929,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.20."
     },
     {
-      "id": "i4",
+      "id": "i5",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (172.6k → 0 cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
       "spanIds": [
         "msg_01HWAMnM4EMj8D6MUAQpFPfw",
         "msg_01DTkrzAPXprrr6K9ZSWS9Ud"
       ],
       "estimatedWasteUSD": 0.992646,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.99."
     },
     {
-      "id": "i5",
+      "id": "i6",
       "ruleId": "cache-prefix-break",
-      "severity": "warning",
+      "severity": "info",
       "title": "Cache prefix broke mid-session (399.1k → 29.6k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium. The context shrank from 399.8k to 60.7k tokens: the history was compacted and the summary written once as a new prefix.",
       "spanIds": [
         "msg_017UEqenYdNEuBsvrqvdHUrd",
         "msg_01JToRg7VVVeRjoYyRhmYaHq"
       ],
       "estimatedWasteUSD": 0.161196,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
-    },
-    {
-      "id": "i6",
-      "ruleId": "cache-prefix-break",
-      "severity": "warning",
-      "title": "Cache prefix broke mid-session (343.7k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 343.7k to 32.7k tokens while 313.5k tokens were re-written — content that was already cached was paid for again at the write premium.",
-      "spanIds": [
-        "msg_01BJsc4QxG4f1VqT6Ndvwc3Q",
-        "msg_01KG56VMAcCPzS4cELMEfuW7"
-      ],
-      "estimatedWasteUSD": 2.978421,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "This is the price of compaction — the shortened history is a new prefix, written once; compact earlier, while there is less to summarize, or start a new session per task; this break cost $0.16."
     },
     {
       "id": "i7",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
-      "title": "Cache prefix broke mid-session (410.8k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 410.8k to 32.7k tokens while 380.8k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (343.7k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 343.7k to 32.7k tokens while 313.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
-        "msg_01AW6khvQmje1jk45zfzwNRT",
-        "msg_01WR5sYLzWAaMFjLBKCBdNxU"
+        "msg_01BJsc4QxG4f1VqT6Ndvwc3Q",
+        "msg_01KG56VMAcCPzS4cELMEfuW7"
       ],
-      "estimatedWasteUSD": 3.617496,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "estimatedWasteUSD": 2.978421,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $2.98."
     },
     {
       "id": "i8",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
-      "title": "Cache prefix broke mid-session (467.3k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 467.3k to 32.7k tokens while 437.8k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "title": "Cache prefix broke mid-session (410.8k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 410.8k to 32.7k tokens while 380.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
-        "msg_019CbULpMw6Whz71BC4LcwsR",
-        "msg_01YcJnnMHAJ3A7VkMouGoxXJ"
+        "msg_01AW6khvQmje1jk45zfzwNRT",
+        "msg_01WR5sYLzWAaMFjLBKCBdNxU"
       ],
-      "estimatedWasteUSD": 4.159233,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "estimatedWasteUSD": 3.617496,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $3.62."
     },
     {
       "id": "i9",
       "ruleId": "cache-prefix-break",
       "severity": "warning",
+      "title": "Cache prefix broke mid-session (467.3k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 467.3k to 32.7k tokens while 437.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "msg_019CbULpMw6Whz71BC4LcwsR",
+        "msg_01YcJnnMHAJ3A7VkMouGoxXJ"
+      ],
+      "estimatedWasteUSD": 4.159233,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.16."
+    },
+    {
+      "id": "i10",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
       "title": "Cache prefix broke mid-session (526.9k → 32.7k cached)",
-      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 526.9k to 32.7k tokens while 497.3k tokens were re-written — content that was already cached was paid for again at the write premium.",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 526.9k to 32.7k tokens while 497.3k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
       "spanIds": [
         "msg_012pWTS9D9ckFBJdQBPnzTFA",
         "msg_01EZjdJE5dPATXMDgBTyECan"
       ],
       "estimatedWasteUSD": 4.724236,
-      "suggestion": "Keep the session prefix stable — editing early context or reconfiguring tools mid-session invalidates the cache."
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.72."
     },
     {
-      "id": "i10",
+      "id": "i11",
       "ruleId": "fixed-context-overhead",
-      "severity": "info",
+      "severity": "warning",
       "title": "Session starts with a 61.2k-token context footprint",
       "detail": "The first model call already carried 61.2k input-class tokens (tool definitions, project instructions, attachments); 41.2k tokens above the 20.0k floor were written once and re-read on each of the 200 later calls.",
       "spanIds": [
         "msg_014jjwy48BhMc281zD2rRgN9"
       ],
       "estimatedWasteUSD": 4.52672,
-      "suggestion": "Trim MCP tool definitions and project instructions — fixed context is re-paid by every call in every session."
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only ccd_session was called in this session) — 41.2k tokens above the floor were re-read 200 times."
     },
     {
-      "id": "i11",
+      "id": "i12",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈714 tokens of unchanged content into the context.",
       "spanIds": [
@@ -39348,12 +39419,12 @@
         "toolu_0187fp8t82Rwz5kVWZHvn6Ke"
       ],
       "estimatedWasteUSD": 0.003571,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i12",
+      "id": "i13",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 3× without changes",
       "detail": "The same target was read 5 times; 3 of those read(s) had no write in between and re-entered ≈5.3k tokens of unchanged content into the context.",
       "spanIds": [
@@ -39363,12 +39434,12 @@
         "toolu_01F5g6TPeNcszTDdUWDdMiKZ"
       ],
       "estimatedWasteUSD": 0.026396,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i13",
+      "id": "i14",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈581 tokens of unchanged content into the context.",
       "spanIds": [
@@ -39377,12 +39448,12 @@
         "toolu_017q2TcEkk3xDCSgkcPXFJLS"
       ],
       "estimatedWasteUSD": 0.002906,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     },
     {
-      "id": "i14",
+      "id": "i15",
       "ruleId": "duplicate-read",
-      "severity": "warning",
+      "severity": "info",
       "title": "Same file re-read 2× without changes",
       "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈169 tokens of unchanged content into the context.",
       "spanIds": [
@@ -39391,7 +39462,7 @@
         "toolu_01CFVLCpwKRyZxKjEgxbQbCT"
       ],
       "estimatedWasteUSD": 0.000843,
-      "suggestion": "Reference the earlier read instead — the file did not change between reads."
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
     }
   ]
 }
