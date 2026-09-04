@@ -159,4 +159,61 @@ describe('Export provenance strip (Task 7.4)', () => {
       'Generated locally from agent session logs. Nothing in this file was uploaded anywhere.',
     );
   });
+
+  it('names profile and independent facts from manifest (Task 5.1, D6)', () => {
+    const file = stubTraceFile([stubRun('r1', null)]);
+    const html = renderToStaticMarkup(
+      React.createElement(ProvenanceStrip, {
+        traceFile: file,
+        manifest: {
+          profile: 'sanitized',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      }),
+    );
+
+    expect(html).toContain('profile: sanitized');
+    expect(html).toContain('prompt text redacted');
+    expect(html).toContain('identifiers scrubbed');
+    expect(html).not.toContain('spans pruned');
+
+    const metaHtml = renderToStaticMarkup(
+      React.createElement(ProvenanceStrip, {
+        traceFile: file,
+        manifest: {
+          profile: 'metadata-only',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: true,
+        },
+      }),
+    );
+    expect(metaHtml).toContain('profile: metadata-only');
+    expect(metaHtml).toContain('spans pruned');
+  });
+
+  it('cross-checks manifest against actual span content: over-claiming manifest is overridden (D6)', () => {
+    const unredactedFile = stubTraceFile([
+      stubRun('r1', 'Secret prompt text that was not redacted'),
+    ]);
+    const html = renderToStaticMarkup(
+      React.createElement(ProvenanceStrip, {
+        traceFile: unredactedFile,
+        manifest: {
+          profile: 'sanitized',
+          textRedacted: true,
+          pathsScrubbed: true,
+          spansPruned: false,
+        },
+      }),
+    );
+
+    // Overridden by cross-check: must show warning treatment and state "contains prompt text"
+    expect(html).toContain('contains prompt text');
+    expect(html).not.toContain('prompt text redacted');
+    expect(html).toContain('bg-heat-2');
+    expect(html).toContain('text-heat-2');
+  });
 });

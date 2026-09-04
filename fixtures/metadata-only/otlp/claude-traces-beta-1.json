@@ -1,0 +1,62 @@
+{
+  "id": "run_8dc308a14d035ebd",
+  "source": {
+    "tool": "otlp",
+    "format": "otlp-json",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "startedAt": "2026-07-07T12:01:25.369Z",
+  "endedAt": "2026-07-07T12:01:37.810Z",
+  "durationMs": 12441,
+  "spans": [
+    {
+      "id": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-07-07T12:01:25.369Z",
+      "endedAt": "2026-07-07T12:01:37.810Z",
+      "durationMs": 12441,
+      "depth": 0,
+      "agent": {
+        "sessionId": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "c49f23a4-0e3a-4ef9-be02-1b115c13a98e"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 5127,
+      "output": 823,
+      "cacheRead": 45403,
+      "cacheWrite": 9823,
+      "reasoning": 0,
+      "total": 61176
+    },
+    "costUSD": {
+      "total": 0.000607,
+      "wastedEstimate": 0,
+      "byModel": {
+        "claude-haiku-4-5-20251001": 0.000607
+      }
+    },
+    "counts": {
+      "llmCalls": 3,
+      "toolCalls": 2,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8985
+    }
+  },
+  "insights": []
+}

@@ -41,7 +41,15 @@ const CATEGORY_DOT: Record<TimeCategory, string> = {
 
 const ORDER: TimeCategory[] = ['model', 'tool', 'coordination', 'idle'];
 
-export function TimeView({ run }: { run: Run }) {
+export function TimeView({
+  run,
+  manifest: propManifest,
+}: {
+  run: Run;
+  manifest?: import('../lib/load').SanitizationManifest;
+}) {
+  const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
+  const manifest = propManifest ?? storeManifest;
   const breakdown = useMemo(() => timeBreakdown(run), [run]);
   const tools = useMemo(() => toolDurationStats(run).slice(0, 8), [run]);
   const idleFindings = useMemo(
@@ -189,6 +197,17 @@ export function TimeView({ run }: { run: Run }) {
           </table>
         </section>
       )}
+
+      {tools.length === 0 &&
+        (manifest?.profile === 'metadata-only' || manifest?.spansPruned) && (
+          <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
+            <p className="text-label text-text-faint">
+              Turn and tool breakdowns are omitted under the{' '}
+              <code className="font-mono text-text-dim">metadata-only</code>{' '}
+              profile.
+            </p>
+          </section>
+        )}
     </div>
   );
 }

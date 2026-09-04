@@ -59,5 +59,13 @@ export default defineConfig({
   test: {
     include: ['packages/*/src/**/*.test.{ts,tsx}'],
     environment: 'node',
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 4,
+      },
+    },
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
 });

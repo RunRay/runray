@@ -12,22 +12,30 @@ function asOf(generatedAt: string): string {
 
 import { FilterBar } from './FilterBar';
 
-export function TopBar() {
+export interface TopBarProps {
+  live?: boolean;
+  status?: string;
+}
+
+export function TopBar(props: TopBarProps = {}) {
+  const { live: propLive, status: propStatus } = props;
   const data = useAppStore((s) => s.data);
   const streamConnected = useAppStore((s) => s.streamConnected);
   const visible = useVisibleRuns();
   const helpOpen = useAppStore((s) => s.ui.helpOpen);
   const toggleHelp = useAppStore((s) => s.toggleHelp);
+  const isReady = propStatus ? propStatus === 'ready' : data.status === 'ready';
+  const isLive = propLive ?? (data.status === 'ready' && data.live);
 
   return (
-    <header className="bg-surface text-text font-sans sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4 transition-all duration-200">
+    <header className="bg-surface text-text font-sans shrink-0 sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4 transition-all duration-200">
       <div className="flex items-center gap-6">
         <FilterBar />
       </div>
       <div className="flex items-center gap-4 text-on-surface-variant">
-        {data.status === 'ready' && (
+        {isReady && (
           <p className="text-[12px] text-outline flex items-center gap-1.5 font-data-mono">
-            {data.live ? (
+            {isLive ? (
               <>
                 {/* pulse only when the event stream is actually connected
                     (i.e. --watch) — a plain view is a static snapshot */}
@@ -47,21 +55,49 @@ export function TopBar() {
               │
             </span>
             {/* freshness (A8): snapshot time, re-rendered on SSE refetch */}
-            <span title={data.traceFile.generatedAt}>
-              as of {asOf(data.traceFile.generatedAt)}
+            <span
+              title={data.status === 'ready' ? data.traceFile.generatedAt : ''}
+            >
+              as of{' '}
+              {data.status === 'ready' ? asOf(data.traceFile.generatedAt) : ''}
             </span>
             <span className="mx-1 text-outline-variant" aria-hidden>
               │
             </span>
             <span>
-              {visible.length === data.traceFile.runs.length
-                ? `${data.traceFile.runs.length} runs`
-                : `${visible.length} of ${data.traceFile.runs.length} runs`}
+              {data.status === 'ready' &&
+                (visible.length === data.traceFile.runs.length
+                  ? `${data.traceFile.runs.length} runs`
+                  : `${visible.length} of ${data.traceFile.runs.length} runs`)}
             </span>
           </p>
         )}
         <LimitModeToggle />
-        {/* Bell button removed */}
+        {isReady && isLive && (
+          <button
+            type="button"
+            data-testid="topbar-export-button"
+            onClick={() => useAppStore.getState().toggleExport()}
+            aria-label="Export report"
+            className="flex items-center gap-1.5 rounded-control border border-border bg-surface px-2.5 py-1 text-label font-medium text-text-dim transition-colors duration-150 ease-out hover:border-border-strong hover:bg-surface-2 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass active:bg-bg"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export
+          </button>
+        )}
         <button
           type="button"
           {...tourAttr('help-button')}

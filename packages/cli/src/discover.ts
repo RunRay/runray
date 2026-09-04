@@ -9,9 +9,14 @@ import { homedir } from 'node:os';
 import {
   adapters,
   applyInsights,
+  createIdentityTable,
   normalize,
   type PricingTable,
   priceRun,
+  pruneToMetadata,
+  resolveProfile,
+  type SanitizeProfile,
+  scrubIdentity,
   type ThresholdOverrides,
   unpricedCoverage,
   V0_RULES,
@@ -33,6 +38,12 @@ export interface DiscoverOptions {
   /** Only candidates modified within this window (ms). */
   sinceMs?: number;
   redact: boolean;
+  /** Explicit profile selection (or inferred from options). */
+  profile?: SanitizeProfile;
+  /** Scrub local identifiers (paths, project names, branch names). */
+  scrubPaths?: boolean;
+  /** Prune spans to container spans only. */
+  metadataOnly?: boolean;
   thresholds?: ThresholdOverrides;
   /** Effective pricing table (user override or bundled snapshot). */
   pricing?: PricingTable;
@@ -212,13 +223,40 @@ export async function buildTraceFile(
   const cutoff =
     options.sinceMs === undefined ? undefined : Date.now() - options.sinceMs;
 
+  const shouldStripText = Boolean(
+    options.redact ||
+      options.profile === 'sanitized' ||
+      options.profile === 'metadata-only' ||
+      options.metadataOnly,
+  );
+  const shouldScrubIdentity = Boolean(
+    options.scrubPaths ||
+      options.profile === 'sanitized' ||
+      options.profile === 'metadata-only' ||
+      options.metadataOnly,
+  );
+  const shouldPrune = Boolean(
+    options.metadataOnly || options.profile === 'metadata-only',
+  );
+  const effectiveProfile: SanitizeProfile =
+    options.profile ??
+    resolveProfile({
+      stripText: shouldStripText,
+      scrubIdentity: shouldScrubIdentity,
+      pruneSpans: shouldPrune,
+    });
+  const parseRedact =
+    shouldStripText ||
+    effectiveProfile === 'sanitized' ||
+    effectiveProfile === 'metadata-only';
+
   const scanRoots = resolveScanRoots(options.paths, options.source);
   const rootsScanned: ScannedRoot[] = scanRoots.map((path) => ({
     path,
     verdict: classifyRoot(path),
   }));
 
-  const runs: Run[] = [];
+  const parsedRuns: Run[] = [];
   const errors: DiscoveryResult['errors'] = [];
   let candidatesScanned = 0;
   for (const adapter of adapters.all()) {
@@ -230,16 +268,8 @@ export async function buildTraceFile(
       // one bad candidate (locked opencode.db, corrupt import file) must not
       // kill zero-config discovery — collect its error, keep the other runs
       try {
-        const raw = await adapter.parse(candidate, { redact: options.redact });
-        // the same effective table prices spans AND insight dollars (C3)
-        runs.push(
-          applyInsights(
-            normalize(priceRun(raw, options.pricing)),
-            options.thresholds ?? {},
-            V0_RULES,
-            options.pricing,
-          ),
-        );
+        const raw = await adapter.parse(candidate, { redact: parseRedact });
+        parsedRuns.push(normalize(priceRun(raw, options.pricing)));
       } catch (err) {
         errors.push({
           runRef: candidate.runRef,
@@ -247,6 +277,31 @@ export async function buildTraceFile(
         });
       }
     }
+  }
+
+  const identityTable =
+    shouldScrubIdentity ||
+    effectiveProfile === 'sanitized' ||
+    effectiveProfile === 'metadata-only'
+      ? createIdentityTable(parsedRuns)
+      : undefined;
+
+  const runs: Run[] = [];
+  for (const normalized of parsedRuns) {
+    const scrubbed = identityTable
+      ? scrubIdentity(normalized, identityTable)
+      : normalized;
+    const withInsights = applyInsights(
+      scrubbed,
+      options.thresholds ?? {},
+      V0_RULES,
+      options.pricing,
+    );
+    const finalRun =
+      shouldPrune || effectiveProfile === 'metadata-only'
+        ? pruneToMetadata(withInsights)
+        : withInsights;
+    runs.push(finalRun);
   }
   runs.sort((a, b) => {
     const diff = Date.parse(b.startedAt) - Date.parse(a.startedAt);

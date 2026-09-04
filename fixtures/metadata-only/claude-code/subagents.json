@@ -1,0 +1,734 @@
+{
+  "id": "run_a4d2a9f0b676def3",
+  "source": {
+    "tool": "claude-code",
+    "format": "claude-jsonl",
+    "files": [
+      "transcript-1",
+      "transcript-2",
+      "transcript-3",
+      "transcript-4",
+      "transcript-5",
+      "transcript-6",
+      "transcript-7",
+      "transcript-8",
+      "transcript-9",
+      "transcript-10",
+      "transcript-11",
+      "transcript-12",
+      "transcript-13",
+      "transcript-14",
+      "transcript-15",
+      "transcript-16",
+      "transcript-17",
+      "transcript-18",
+      "transcript-19",
+      "transcript-20",
+      "transcript-21",
+      "transcript-22",
+      "transcript-23",
+      "transcript-24",
+      "transcript-25",
+      "transcript-26",
+      "transcript-27",
+      "transcript-28",
+      "transcript-29",
+      "transcript-30",
+      "transcript-31",
+      "transcript-32",
+      "transcript-33",
+      "transcript-34",
+      "transcript-35",
+      "transcript-36",
+      "transcript-37",
+      "transcript-38",
+      "transcript-39",
+      "transcript-40",
+      "transcript-41",
+      "transcript-42",
+      "transcript-43",
+      "transcript-44",
+      "transcript-45",
+      "transcript-46"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-07-06T11:31:13.939Z",
+  "endedAt": "2026-07-06T15:05:36.396Z",
+  "durationMs": 12862457,
+  "warnings": [
+    {
+      "message": "34 subagent transcript(s) not linked by any tool result or .meta.json sidecar (workflow agents; skipped in v0.1)",
+      "file": "transcript-1"
+    }
+  ],
+  "spans": [
+    {
+      "id": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:31:13.939Z",
+      "endedAt": "2026-07-06T15:05:36.396Z",
+      "durationMs": 12862457,
+      "depth": 0,
+      "agent": {
+        "sessionId": "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 1
+      }
+    },
+    {
+      "id": "ad48207ee1f5ac6ad",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:Explore",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:34:28.257Z",
+      "endedAt": "2026-07-06T11:38:09.537Z",
+      "durationMs": 221280,
+      "depth": 3,
+      "agent": {
+        "name": "Explore",
+        "sessionId": "ad48207ee1f5ac6ad"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 37
+      }
+    },
+    {
+      "id": "aaf4ecf811a4f10b4",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:Explore",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:34:44.943Z",
+      "endedAt": "2026-07-06T11:37:27.009Z",
+      "durationMs": 162066,
+      "depth": 3,
+      "agent": {
+        "name": "Explore",
+        "sessionId": "aaf4ecf811a4f10b4"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 39
+      }
+    },
+    {
+      "id": "a3799e6e3eafb5135",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:Explore",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:35:03.004Z",
+      "endedAt": "2026-07-06T11:37:36.397Z",
+      "durationMs": 153393,
+      "depth": 3,
+      "agent": {
+        "name": "Explore",
+        "sessionId": "a3799e6e3eafb5135"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 41
+      }
+    },
+    {
+      "id": "ab923b187fc8c8b87",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:46:40.983Z",
+      "endedAt": "2026-07-06T11:52:48.590Z",
+      "durationMs": 367607,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "ab923b187fc8c8b87"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 111
+      }
+    },
+    {
+      "id": "aa6add2f11b977321",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:46:56.980Z",
+      "endedAt": "2026-07-06T11:51:26.146Z",
+      "durationMs": 269166,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "aa6add2f11b977321"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 113
+      }
+    },
+    {
+      "id": "a4d0725cbfa322d87",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:47:15.041Z",
+      "endedAt": "2026-07-06T11:53:45.996Z",
+      "durationMs": 390955,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "a4d0725cbfa322d87"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 115
+      }
+    },
+    {
+      "id": "a7879a373bd4d3082",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:47:30.210Z",
+      "endedAt": "2026-07-06T11:52:05.675Z",
+      "durationMs": 275465,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "a7879a373bd4d3082"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 117
+      }
+    },
+    {
+      "id": "a030e9fc2f571176a",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:47:46.544Z",
+      "endedAt": "2026-07-06T11:51:43.052Z",
+      "durationMs": 236508,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "a030e9fc2f571176a"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 119
+      }
+    },
+    {
+      "id": "ae41d06aac4c25b7d",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:02.048Z",
+      "endedAt": "2026-07-06T11:54:39.762Z",
+      "durationMs": 397714,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "ae41d06aac4c25b7d"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 121
+      }
+    },
+    {
+      "id": "toolu_01K72QriniBPYMh3Ys3kzNyU:agent",
+      "parentId": "ab923b187fc8c8b87",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:14.142Z",
+      "endedAt": "2026-07-06T11:48:16.867Z",
+      "durationMs": 2725,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-13",
+        "line": 77
+      }
+    },
+    {
+      "id": "ad4bc78e8eaafd12d",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:19.537Z",
+      "endedAt": "2026-07-06T11:52:01.657Z",
+      "durationMs": 222120,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "ad4bc78e8eaafd12d"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 123
+      }
+    },
+    {
+      "id": "toolu_01DtVgkJrazoa9iyxFaJ7yJp:agent",
+      "parentId": "ab923b187fc8c8b87",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:31.271Z",
+      "endedAt": "2026-07-06T11:48:32.938Z",
+      "durationMs": 1667,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-13",
+        "line": 79
+      }
+    },
+    {
+      "id": "add694d3b7a9193dc",
+      "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:36.165Z",
+      "endedAt": "2026-07-06T11:54:53.187Z",
+      "durationMs": 377022,
+      "depth": 3,
+      "agent": {
+        "name": "general-purpose",
+        "sessionId": "add694d3b7a9193dc"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 125
+      }
+    },
+    {
+      "id": "toolu_01HUHpFQTxvz9SAU14FUWRTi:agent",
+      "parentId": "ab923b187fc8c8b87",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:48:47.902Z",
+      "endedAt": "2026-07-06T11:48:50.392Z",
+      "durationMs": 2490,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-13",
+        "line": 81
+      }
+    },
+    {
+      "id": "toolu_012jeVSTmPYxm2SqPC5EFJvh:agent",
+      "parentId": "a4d0725cbfa322d87",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:49:12.189Z",
+      "endedAt": "2026-07-06T11:49:16.432Z",
+      "durationMs": 4243,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-6",
+        "line": 63
+      }
+    },
+    {
+      "id": "toolu_01616Wtfvgyws8k2WHv56iY6:agent",
+      "parentId": "ae41d06aac4c25b7d",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:49:13.596Z",
+      "endedAt": "2026-07-06T11:49:14.954Z",
+      "durationMs": 1358,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-18",
+        "line": 41
+      }
+    },
+    {
+      "id": "toolu_013N3Vq1FhckFb4Hr5aB8hF1:agent",
+      "parentId": "a4d0725cbfa322d87",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:49:24.943Z",
+      "endedAt": "2026-07-06T11:49:27.709Z",
+      "durationMs": 2766,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-6",
+        "line": 65
+      }
+    },
+    {
+      "id": "toolu_01YXrimA7wZXLeWKAQ4fvB4T:agent",
+      "parentId": "ae41d06aac4c25b7d",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:49:27.731Z",
+      "endedAt": "2026-07-06T11:49:33.251Z",
+      "durationMs": 5520,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-18",
+        "line": 43
+      }
+    },
+    {
+      "id": "toolu_01JPjYCzxYHFd8ZGH4HmYYDt:agent",
+      "parentId": "ae41d06aac4c25b7d",
+      "kind": "subagent",
+      "name": "subagent:general-purpose",
+      "status": "ok",
+      "startedAt": "2026-07-06T11:49:40.411Z",
+      "endedAt": "2026-07-06T11:49:42.279Z",
+      "durationMs": 1868,
+      "depth": 6,
+      "agent": {
+        "name": "general-purpose"
+      },
+      "content": {
+        "delegationReason": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-18",
+        "line": 45
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 222987,
+      "output": 580086,
+      "cacheRead": 85509840,
+      "cacheWrite": 4196495,
+      "reasoning": 0,
+      "total": 90509408
+    },
+    "costUSD": {
+      "total": 89.764363,
+      "wastedEstimate": 18.505781,
+      "byModel": {
+        "claude-haiku-4-5-20251001": 1.185521,
+        "claude-opus-4-8": 88.578842
+      }
+    },
+    "counts": {
+      "llmCalls": 528,
+      "toolCalls": 891,
+      "toolErrors": 18,
+      "subagents": 19,
+      "maxDepth": 6
+    },
+    "cache": {
+      "hitRate": 0.9974
+    },
+    "codeChanges": {
+      "linesAdded": 1485,
+      "linesRemoved": 383
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "retry-loop",
+      "severity": "info",
+      "title": "TaskStop failed 8× in a row",
+      "detail": "8 consecutive TaskStop calls failed, driving ~$0.07 of model calls in the same scope between the first and the last attempt.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 0.065026,
+      "suggestion": "Interrupt the agent when the same TaskStop call fails twice — each further attempt re-billed the full context, $0.07 across this loop."
+    },
+    {
+      "id": "i2",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 65.9k to 533.0k tokens",
+      "detail": "The median context of the last three model calls (533.0k) is over 2× the median of the first three (65.9k); ~52.2M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42",
+        "a3799e6e3eafb5135"
+      ],
+      "estimatedWasteUSD": 45.602816,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~52.2M tokens in total."
+    },
+    {
+      "id": "i3",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (165.4k → 29.6k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 165.4k to 29.6k tokens while 171.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 29.6k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 1.570882,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $1.57."
+    },
+    {
+      "id": "i4",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (35.3k → 0 cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 35.3k to 0 tokens while 45.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
+      "spanIds": [
+        "a7879a373bd4d3082"
+      ],
+      "estimatedWasteUSD": 0.202929,
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.20."
+    },
+    {
+      "id": "i5",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (172.6k → 0 cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 172.6k to 0 tokens while 176.0k tokens were re-written — content that was already cached was paid for again at the write premium. Only 0 tokens stayed cached, so the change sits at the very front of the prompt: the tool list, the system prompt or a setting.",
+      "spanIds": [
+        "ae41d06aac4c25b7d"
+      ],
+      "estimatedWasteUSD": 0.992646,
+      "suggestion": "Everything from the front was written again, so the tool list or a setting changed between the calls — connect or drop MCP servers and switch model or permission mode at a task boundary, not mid-session; this break cost $0.99."
+    },
+    {
+      "id": "i6",
+      "ruleId": "cache-prefix-break",
+      "severity": "info",
+      "title": "Cache prefix broke mid-session (399.1k → 29.6k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 399.1k to 29.6k tokens while 17.0k tokens were re-written — content that was already cached was paid for again at the write premium. The context shrank from 399.8k to 60.7k tokens: the history was compacted and the summary written once as a new prefix.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 0.161196,
+      "suggestion": "This is the price of compaction — the shortened history is a new prefix, written once; compact earlier, while there is less to summarize, or start a new session per task; this break cost $0.16."
+    },
+    {
+      "id": "i7",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (343.7k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 343.7k to 32.7k tokens while 313.5k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 2.978421,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $2.98."
+    },
+    {
+      "id": "i8",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (410.8k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 410.8k to 32.7k tokens while 380.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 3.617496,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $3.62."
+    },
+    {
+      "id": "i9",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (467.3k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 467.3k to 32.7k tokens while 437.8k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 4.159233,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.16."
+    },
+    {
+      "id": "i10",
+      "ruleId": "cache-prefix-break",
+      "severity": "warning",
+      "title": "Cache prefix broke mid-session (526.9k → 32.7k cached)",
+      "detail": "Between two consecutive claude-opus-4-8 calls the cache read collapsed from 526.9k to 32.7k tokens while 497.3k tokens were re-written — content that was already cached was paid for again at the write premium. The first 32.7k tokens (system prompt and tools) stayed cached; the conversation after them was written again at nearly its full size.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 4.724236,
+      "suggestion": "The system prompt and tools stayed cached, so the break sits in the conversation itself — an edited or regenerated turn, a cleared tool result, or a platform re-write of a very large history; keeping the context under a few hundred thousand tokens (compact, or a new session per task) is the one lever; this break cost $4.72."
+    },
+    {
+      "id": "i11",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 61.2k-token context footprint",
+      "detail": "The first model call already carried 61.2k input-class tokens (tool definitions, project instructions, attachments); 41.2k tokens above the 20.0k floor were written once and re-read on each of the 200 later calls.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 4.52672,
+      "suggestion": "Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (only ccd_session was called in this session) — 41.2k tokens above the floor were re-read 200 times."
+    },
+    {
+      "id": "i12",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 2× without changes",
+      "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈714 tokens of unchanged content into the context.",
+      "spanIds": [
+        "add694d3b7a9193dc"
+      ],
+      "estimatedWasteUSD": 0.003571,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    },
+    {
+      "id": "i13",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 3× without changes",
+      "detail": "The same target was read 5 times; 3 of those read(s) had no write in between and re-entered ≈5.3k tokens of unchanged content into the context.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 0.026396,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    },
+    {
+      "id": "i14",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 2× without changes",
+      "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈581 tokens of unchanged content into the context.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 0.002906,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    },
+    {
+      "id": "i15",
+      "ruleId": "duplicate-read",
+      "severity": "info",
+      "title": "Same file re-read 2× without changes",
+      "detail": "The same target was read 3 times; 2 of those read(s) had no write in between and re-entered ≈169 tokens of unchanged content into the context.",
+      "spanIds": [
+        "72de75e7-d5ab-4c07-a381-6539f4e34e42"
+      ],
+      "estimatedWasteUSD": 0.000843,
+      "suggestion": "Nothing to configure here — the agent re-read the file after losing track of it, usually after a compaction; if the same file keeps coming back across sessions, a shorter file cuts the cost of every read."
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import {
   formatTokens,
   formatUSD,
 } from '../lib/format';
+import type { SanitizationManifest } from '../lib/load';
 import { KIND_BG } from '../lib/span-kind';
 import { errorPill } from '../lib/triage';
 import { insightsBySpan } from '../lib/waterfall';
@@ -27,14 +28,32 @@ import { TranscriptPane } from './TranscriptPane';
  * `null` preview = redacted in core, never filtered here) · provenance
  * footer with a Show raw toggle over the normalized span record.
  */
-export function Inspector() {
-  const spanId = useAppStore((s) => s.selection.spanId);
-  const insightId = useAppStore((s) => s.selection.insightId);
+export interface InspectorProps {
+  run?: Run;
+  spanId?: string | null;
+  insightId?: string | null;
+  manifest?: SanitizationManifest;
+}
+
+export function Inspector(props: InspectorProps = {}) {
+  const {
+    run: propRun,
+    spanId: propSpanId,
+    insightId: propInsightId,
+    manifest: propManifest,
+  } = props;
+  const storeSpanId = useAppStore((s) => s.selection.spanId);
+  const storeInsightId = useAppStore((s) => s.selection.insightId);
   const focus = useAppStore((s) => s.selection.focus);
-  const run = useAppStore(selectActiveRun);
+  const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const showInsight = useAppStore((s) => s.showInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
+
+  const spanId = propSpanId !== undefined ? propSpanId : storeSpanId;
+  const insightId =
+    propInsightId !== undefined ? propInsightId : storeInsightId;
+  const run = propRun ?? storeRun;
 
   const span = useMemo(
     () => run?.spans.find((s) => s.id === spanId),
@@ -69,9 +88,9 @@ export function Inspector() {
   return (
     <aside
       aria-label="Inspector"
-      className="flex w-[360px] shrink-0 flex-col border-l border-border bg-surface"
+      className="flex w-[360px] shrink-0 h-full flex-col border-l border-border bg-surface min-h-0"
     >
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+      <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
         <p className="micro-label text-text-faint">Inspector</p>
         <button
           type="button"
@@ -82,7 +101,7 @@ export function Inspector() {
           ✕
         </button>
       </div>
-      <div className="p-2 pb-0">
+      <div className="shrink-0 p-2 pb-0">
         <ContextualHint hintKey="redact" />
       </div>
       {span !== undefined && spanFindings.length > 0 && (
@@ -108,7 +127,7 @@ export function Inspector() {
       ) : span !== undefined ? (
         <SpanDetail span={span} />
       ) : run !== undefined ? (
-        <RunSummary run={run} />
+        <RunSummary run={run} manifest={propManifest} />
       ) : (
         <div className="flex min-h-0 flex-1 items-center justify-center p-4">
           <p className="text-label text-text-faint">
@@ -256,8 +275,18 @@ function FindingChips({
 }
 
 /** Default content: the run at a glance — nothing selected is not nothing. */
-function RunSummary({ run }: { run: Run }) {
+function RunSummary({
+  run,
+  manifest: propManifest,
+}: {
+  run: Run;
+  manifest?: SanitizationManifest;
+}) {
   const selectSpan = useAppStore((s) => s.selectSpan);
+  const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
+  const manifest = propManifest ?? storeManifest;
+  const spansPruned =
+    manifest?.profile === 'metadata-only' || manifest?.spansPruned === true;
   const expensive = useMemo(
     () =>
       run.spans
@@ -306,7 +335,7 @@ function RunSummary({ run }: { run: Run }) {
           <Mono>{(cache.hitRate * 100).toFixed(1)}%</Mono>
         </Field>
       </Section>
-      {expensive.length > 0 && (
+      {expensive.length > 0 ? (
         <Section title="Most expensive calls">
           <ul className="space-y-0.5">
             {expensive.map((span) => (
@@ -331,7 +360,16 @@ function RunSummary({ run }: { run: Run }) {
             ))}
           </ul>
         </Section>
-      )}
+      ) : spansPruned ? (
+        <p
+          className="px-3 py-2 text-label text-text-faint"
+          data-testid="inspector-metadata-only-notice"
+        >
+          Individual LLM and tool calls omitted under the{' '}
+          <code className="font-mono text-text-dim">metadata-only</code>{' '}
+          profile. Aggregates above reflect full run totals.
+        </p>
+      ) : null}
       <p className="px-3 py-3 text-label text-text-faint">
         Select a span in the waterfall for full detail.
       </p>

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CommandPalette } from './components/CommandPalette';
 import { DashboardTourContainer } from './components/DashboardTourContainer';
 import { DiffView } from './components/DiffView';
+import { ExportDialog } from './components/ExportDialog';
 import { HelpSheet } from './components/HelpSheet';
 import { Inspector } from './components/Inspector';
 import { Overview } from './components/Overview';
@@ -56,6 +57,7 @@ export function App() {
   const filter = useAppStore((s) => s.filter);
   const clearFilter = useAppStore((s) => s.clearFilter);
   const helpOpen = useAppStore((s) => s.ui.helpOpen);
+  const exportOpen = useAppStore((s) => s.ui.exportOpen);
   const onboarding = useAppStore((s) => s.onboarding);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const gPressedAt = useRef(0);
@@ -192,20 +194,20 @@ export function App() {
           <ProvenanceStrip traceFile={data.traceFile} />
         )}
         <TopBar />
-        <div className="flex-1 flex min-h-0 relative">
+        <div className="flex-1 flex min-h-0 relative overflow-hidden">
           {data.status === 'loading' && (
-            <main className="flex-1">
+            <main className="flex-1 h-full min-h-0">
               <LoadingScreen />
             </main>
           )}
           {data.status === 'error' && (
-            <main className="flex-1">
+            <main className="flex-1 h-full min-h-0">
               <ErrorScreen message={data.message} />
             </main>
           )}
           {data.status === 'ready' &&
             (data.traceFile.runs.length === 0 ? (
-              <main className="flex-1">
+              <main className="flex-1 h-full min-h-0">
                 <EmptyScreen />
               </main>
             ) : route.view === 'dashboard' ? (
@@ -252,7 +254,7 @@ export function App() {
             ) : (
               <>
                 <SessionsPane runs={visibleRuns} />
-                <main className="min-w-0 flex-1">
+                <main className="min-w-0 flex-1 flex flex-col min-h-0 overflow-hidden">
                   {activeRun !== undefined ? (
                     <RunView run={activeRun} view={route.view} />
                   ) : (
@@ -266,6 +268,11 @@ export function App() {
       </div>
       {helpOpen && (
         <HelpSheet onClose={() => useAppStore.getState().toggleHelp(false)} />
+      )}
+      {exportOpen && data.status === 'ready' && data.live && (
+        <ExportDialog
+          onClose={() => useAppStore.getState().toggleExport(false)}
+        />
       )}
       {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
       {data.status === 'ready' &&

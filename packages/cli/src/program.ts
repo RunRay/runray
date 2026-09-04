@@ -27,6 +27,7 @@ import {
   exportConsent,
   injectGlobal,
   injectTraceData,
+  resolveExportSanitization,
   selectRun,
 } from './export.js';
 import { formatRunTable, summarizeRuns } from './list.js';
@@ -417,6 +418,19 @@ export function createProgram(): Command {
       'output html path (e.g. report.html)',
     )
     .option('--redact', 'strip prompt/output text; keep structure and counts')
+    .option('--redact-prompts', 'strip prompt/output text (alias of --redact)')
+    .option(
+      '--scrub-paths',
+      'pseudonymize project paths, branch names, and transcript file paths',
+    )
+    .option(
+      '--anonymize',
+      'strip prompt text and scrub paths (equivalent to --redact --scrub-paths)',
+    )
+    .option(
+      '--metadata-only',
+      'prune leaf spans, strip prompt text, and scrub paths',
+    )
     .option('--yes', 'bypass the unredacted-export confirmation prompt')
     .option(
       '--json <file>',
@@ -431,12 +445,20 @@ export function createProgram(): Command {
       async (target: string | undefined, opts: Record<string, unknown>) => {
         const globals = program.opts<{ config?: string }>();
         const config = loadConfig(globals.config);
-        const redact = Boolean(opts.redact ?? config.redact ?? false);
-        const yes = Boolean(opts.yes ?? false);
+        const sanitization = resolveExportSanitization(
+          {
+            redact: opts.redact as boolean | undefined,
+            redactPrompts: opts.redactPrompts as boolean | undefined,
+            scrubPaths: opts.scrubPaths as boolean | undefined,
+            anonymize: opts.anonymize as boolean | undefined,
+            metadataOnly: opts.metadataOnly as boolean | undefined,
+          },
+          config,
+        );
 
         const consent = exportConsent({
-          redact,
-          yes,
+          redact: sanitization.stripText,
+          yes: Boolean(opts.yes ?? false),
           interactive: Boolean(process.stdin.isTTY && process.stderr.isTTY),
         });
 
@@ -488,7 +510,10 @@ export function createProgram(): Command {
           ...(opts.since === undefined
             ? {}
             : { sinceMs: parseSince(opts.since as string) }),
-          redact,
+          redact: sanitization.stripText,
+          scrubPaths: sanitization.scrubIdentity,
+          metadataOnly: sanitization.pruneSpans,
+          profile: sanitization.profile,
           thresholds: config.insights?.thresholds ?? {},
           pricing: pricing.table,
           generatorVersion: cliVersion(),
@@ -530,9 +555,12 @@ export function createProgram(): Command {
             { origin: pricing.origin, table: pricing.table },
           ),
           '__RUNRAY_VIEW_CONFIG__',
-          config.limitWindow === undefined
-            ? {}
-            : { limitWindow: config.limitWindow },
+          {
+            ...(config.limitWindow === undefined
+              ? {}
+              : { limitWindow: config.limitWindow }),
+            manifest: sanitization.manifest,
+          },
         );
         writeFileSync(opts.output as string, html);
         if (opts.json !== undefined) {
@@ -542,8 +570,8 @@ export function createProgram(): Command {
           );
         }
         const kb = Math.round(Buffer.byteLength(html) / 1024);
-        console.log(
-          `wrote ${opts.output} (${selected.runs.length} run(s), ${kb} kB${redact ? ', redacted' : ''})${opts.json === undefined ? '' : ` and ${opts.json}`}`,
+        process.stderr.write(
+          `wrote ${opts.output} (${selected.runs.length} run(s), ${kb} kB, profile: ${sanitization.profile})${opts.json === undefined ? '' : ` and ${opts.json}`}\n`,
         );
       },
     );
