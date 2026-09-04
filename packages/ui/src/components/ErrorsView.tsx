@@ -50,7 +50,7 @@ export function ErrorsView({ run }: { run: Run }) {
   const total = triage.toolErrors + triage.modelErrors;
   if (total === 0) {
     return (
-      <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
+      <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1 [&>*]:shrink-0">
         <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
           <p className="text-body text-text">
             No failed calls in this session.
@@ -87,7 +87,7 @@ export function ErrorsView({ run }: { run: Run }) {
     });
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1">
+    <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto pr-1 [&>*]:shrink-0">
       <ContextualHint hintKey="errors-view" />
       <Summary run={run} triage={triage} />
 
@@ -131,7 +131,10 @@ export function ErrorsView({ run }: { run: Run }) {
             <section
               key={g.owner}
               aria-label={ERROR_OWNER_META[g.owner].label}
-              className={`overflow-hidden rounded border border-border-slate bg-surface ${dimmed ? 'opacity-80' : ''}`}
+              // shrink-0: inside the scrolling flex column an overflow-hidden
+              // item would otherwise be squeezed to the viewport and clip its
+              // rows instead of letting the tab scroll
+              className={`shrink-0 overflow-hidden rounded border border-border-slate bg-surface ${dimmed ? 'opacity-80' : ''}`}
             >
               <div className="grid grid-cols-[4px_1fr_auto] items-center gap-3 border-b border-border bg-surface-container-low py-2 pr-3">
                 <span
