@@ -137,60 +137,64 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
     waste.burnedShare < 0.1 ? 1 : 0,
   );
   return (
-    <section className="grid gap-x-7 gap-y-4 rounded border border-border-slate bg-surface-container-low p-4 shadow-card md:grid-cols-[auto_auto_minmax(0,1fr)]">
-      <div>
-        <p className="micro-label text-text-faint">Burned</p>
-        <p
-          className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.burnedUSD > 0 ? 'text-heat-2' : 'text-text-dim'}`}
-        >
-          {waste.burnedUSD > 0 ? formatUSD(waste.burnedUSD) : '$0.00'}
-        </p>
-        <p className="mt-1 text-label text-text-dim">
-          {waste.burnedUSD > 0 ? (
+    <section className="@container rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
+      <div className="grid gap-x-7 gap-y-4 @2xl:grid-cols-2 @5xl:grid-cols-[auto_auto_minmax(0,1fr)]">
+        <div>
+          <p className="micro-label text-text-faint">Burned</p>
+          <p
+            className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.burnedUSD > 0 ? 'text-heat-2' : 'text-text-dim'}`}
+          >
+            {waste.burnedUSD > 0 ? formatUSD(waste.burnedUSD) : '$0.00'}
+          </p>
+          <p className="mt-1 text-label text-text-dim">
+            {waste.burnedUSD > 0 ? (
+              <>
+                already spent on nothing ·{' '}
+                <span className="font-mono text-text">{share}%</span> of this
+                session ·{' '}
+                <span className="font-mono text-text">
+                  {waste.burned.length}
+                </span>{' '}
+                {waste.burned.length === 1 ? 'rule' : 'rules'}
+              </>
+            ) : (
+              'nothing burned that the rules can see'
+            )}
+          </p>
+        </div>
+        <div>
+          <p className="micro-label text-text-faint">Opportunities</p>
+          <p
+            className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.opportunityUSD > 0 ? 'text-cache-savings' : 'text-text-dim'}`}
+          >
+            {waste.opportunityUSD > 0
+              ? `up to ${formatUSD(waste.opportunityUSD)}`
+              : '$0.00'}
+          </p>
+          <p className="mt-1 text-label text-text-dim">
+            if you change the setup · upper bounds, not additive
+          </p>
+        </div>
+        <p className="self-center text-body leading-[1.5] text-text-dim @2xl:col-span-2 @5xl:col-span-1 @5xl:max-w-[58ch]">
+          {lead === null ? (
             <>
-              already spent on nothing ·{' '}
-              <span className="font-mono text-text">{share}%</span> of this
-              session ·{' '}
-              <span className="font-mono text-text">{waste.burned.length}</span>{' '}
-              {waste.burned.length === 1 ? 'rule' : 'rules'}
+              Nothing was burned.{' '}
+              {waste.opportunityUSD > 0 &&
+                'The opportunities below say what a different setup could have saved, each on its own.'}
             </>
           ) : (
-            'nothing burned that the rules can see'
+            <>
+              <span className="font-medium text-text">{lead.opening}</span>{' '}
+              {lead.what} <InlineCode line={lead.lever} />
+            </>
           )}
         </p>
-      </div>
-      <div>
-        <p className="micro-label text-text-faint">Opportunities</p>
-        <p
-          className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.opportunityUSD > 0 ? 'text-cache-savings' : 'text-text-dim'}`}
-        >
-          {waste.opportunityUSD > 0
-            ? `up to ${formatUSD(waste.opportunityUSD)}`
-            : '$0.00'}
-        </p>
-        <p className="mt-1 text-label text-text-dim">
-          if you change the setup · upper bounds, not additive
-        </p>
-      </div>
-      <p className="self-center text-body leading-[1.5] text-text-dim md:max-w-[58ch]">
-        {lead === null ? (
-          <>
-            Nothing was burned.{' '}
-            {waste.opportunityUSD > 0 &&
-              'The opportunities below say what a different setup could have saved, each on its own.'}
-          </>
-        ) : (
-          <>
-            <span className="font-medium text-text">{lead.opening}</span>{' '}
-            {lead.what} <InlineCode line={lead.lever} />
-          </>
+        {(waste.events.length > 0 || waste.context.length > 0) && (
+          <div className="@2xl:col-span-2 @5xl:col-span-3">
+            <LeakRail run={run} waste={waste} />
+          </div>
         )}
-      </p>
-      {(waste.events.length > 0 || waste.context.length > 0) && (
-        <div className="md:col-span-3">
-          <LeakRail run={run} waste={waste} />
-        </div>
-      )}
+      </div>
     </section>
   );
 }
