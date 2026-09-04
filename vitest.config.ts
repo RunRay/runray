@@ -42,6 +42,12 @@ export default defineConfig({
       '@tracepulse/core/triage': fileURLToPath(
         new URL('./packages/core/src/triage/index.ts', import.meta.url),
       ),
+      '@runray/core/waste': fileURLToPath(
+        new URL('./packages/core/src/waste/index.ts', import.meta.url),
+      ),
+      '@tracepulse/core/waste': fileURLToPath(
+        new URL('./packages/core/src/waste/index.ts', import.meta.url),
+      ),
       '@runray/core': fileURLToPath(
         new URL('./packages/core/src/index.ts', import.meta.url),
       ),

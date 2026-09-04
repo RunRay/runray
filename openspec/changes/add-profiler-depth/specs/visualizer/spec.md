@@ -97,8 +97,10 @@ collapsed.
   unpriced count
 
 ### Requirement: Cost breakdown view
-The system SHALL provide a per-run cost view with totals, cost-over-time by
-model, a hierarchical agent-subtree map, and the waste table. The subtree
+The system SHALL provide a per-run cost view with totals, the tool spend
+leaderboard, cost-over-time by model and a hierarchical agent-subtree map —
+where the money went; what could have been kept (the findings and the
+what-if repricing) lives on the Waste tab, not here. The subtree
 map SHALL nest delegated subagents inside their delegating subagent (never
 flattening nested delegation into innermost-only attribution), SHALL derive
 each node's own value from the cost-engine's canonical attribution cells so
@@ -151,7 +153,7 @@ rule fired it SHALL state that explicitly rather than hiding.
 - THEN it states that the rules found nothing to save in this period
 
 ### Requirement: What-if repricing panel
-The run Cost view SHALL provide a what-if panel: a target-tier selector (the
+The run's Waste tab SHALL provide a what-if panel: a target-tier selector (the
 suggested downgrade preselected, any model from the delivered pricing table
 selectable), a per-subtree table of current cost, repriced cost, and delta
 with risk flags rendered as named badges, and a total line showing both the
@@ -171,7 +173,7 @@ cost-engine primitive, never a UI reimplementation.
 
 #### Scenario: No pricing payload
 - GIVEN an exported report produced without an embedded pricing payload
-- WHEN the Cost view renders
+- WHEN the Waste tab renders
 - THEN the panel shows a notice explaining repricing is unavailable and no
   fabricated rates are used
 
@@ -508,3 +510,106 @@ run summary SHALL take the triage's tone.
 - GIVEN a selected span with status cancelled
 - WHEN the Inspector renders it
 - THEN it says the person declined the call and shows no playbook
+
+### Requirement: Waste tab
+The run view SHALL offer a Waste tab (`#/run/:id/waste`) between Time and
+Errors, rendered from the core waste grouping
+(waste-grouping capability) and never from a UI-side arrangement. The tab
+SHALL open with two figures kept apart — the burned amount (the run's
+capped wasted estimate) with its share of the run's cost, and the
+opportunity amount labelled as upper bounds that do not add up — and one
+sentence that names the largest burned group, what it was, and the lever
+the person has for it in the run's own source. Then the burned groups in a
+"Burned" section and the opportunity groups in an "Opportunities" section,
+largest first, each row showing the rule's label and id, the count, the
+group's share of the run, the group's grade as the severity pill, and the
+group's amount. A row SHALL open to its occurrences largest first — the
+moment on the session's clock, the cached and re-written tokens for cache
+findings or the finding's title otherwise, the model or the tool, the
+amount — each a control that opens the finding in the Inspector with its
+evidence selected on the Timeline Explorer; a cache-prefix-break group's
+split by shape; and the rule's playbook for the run's own source. A context-bloat group
+SHALL open to how its estimate is counted — the baseline (the median
+context of the first three main-scope calls), the calls counted, the
+excess tokens and, when priced, the blended rate — SHALL say it is an
+upper bound against the session's opening context that assumes nothing
+about compacting at any size, and SHALL show, from the core context
+ceiling estimates, what the same calls would have saved had the context
+never passed 100k, 200k and 400k tokens, with amounts only when a pricing
+table is delivered. A folded
+group SHALL render as one line saying its count and that each finding is
+under the warning floor. Between the figures and the groups the tab SHALL
+place the burned findings on the session's time axis — a bar per burned
+finding at the moment it happened, sized by its amount, over the context
+size each model call carried drawn as an area (a hole where no call
+happened), with idle gaps shaded, compactions marked apart, a guide at
+~200k tokens, and clock-friendly axis labels; a bar SHALL open its
+finding on the Timeline Explorer, and folded groups and burns under the
+warning floor SHALL stay off the rail. The tab's label SHALL carry the burned amount in whole dollars,
+tinted once the burned share reaches the warning share. A run without
+findings SHALL render an empty state naming what the rules checked and
+linking to the Overview. When any finding is unpriced the tab SHALL say
+the amounts are lower bounds.
+
+#### Scenario: Two figures, never one
+- GIVEN a run whose wasted estimate is $111.04 and whose opportunity
+  findings sum to $697.57
+- WHEN the Waste tab renders
+- THEN it shows "$111.04" as burned with its share and "up to $697.57" as
+  opportunities, and no figure adds the two
+
+#### Scenario: A group opens to its occurrences and playbook
+- GIVEN a Claude Code run with eighteen cache-prefix-break findings, four of
+  them compactions
+- WHEN the Waste tab renders
+- THEN the cache-prefix-break row is open, shows "14 re-writes of the
+  conversation" and "4 compactions" with their amounts, lists the largest
+  occurrences with their tokens, and shows "What you can do · Claude Code"
+
+#### Scenario: Cents fold
+- GIVEN thirteen duplicate-read findings each under $0.05
+- WHEN the Waste tab renders
+- THEN the duplicate-read row reads "13 findings, each under $0.05" as one
+  line
+
+#### Scenario: Nothing found
+- GIVEN a run without findings
+- WHEN the Waste tab renders
+- THEN it says nothing leaked that the rules can see, names what was
+  checked, and links to the Overview
+
+#### Scenario: How Growing context is counted
+- GIVEN a $808 run whose context-bloat estimate is $659 against a 51k
+  baseline
+- WHEN its Growing context row is open
+- THEN it says the baseline is 51k tokens, names the calls counted and the
+  excess tokens, calls the figure an upper bound that assumes nothing about
+  compacting, and lists what ceilings of 100k, 200k and 400k would have
+  saved ($585, $448, $236) with their shares of the session
+
+#### Scenario: Leaks on the clock
+- GIVEN a 20-hour run with fourteen history re-writes between 170k and
+  860k tokens of context, four compactions, two idle gaps and thirteen
+  duplicate-read findings worth cents
+- WHEN the Waste tab renders
+- THEN the rail shows fourteen bars whose heights follow the amounts, the
+  context area rising to each re-write, four compaction marks, two shaded
+  gaps and the 200k guide, and no bar for the re-reads
+
+### Requirement: Findings strip hands over to the Waste tab
+The findings strip above a run's views SHALL show at most the five largest
+findings ranked by estimated waste, and when more exist SHALL end with a
+control reading "+N more in Waste" that opens the Waste tab, where the rest
+are grouped by rule rather than listed. Activating a pill SHALL keep
+highlighting its evidence and opening the finding in the Inspector.
+
+#### Scenario: Thirty-six findings, five pills
+- GIVEN a run with thirty-six findings
+- WHEN the strip renders
+- THEN it shows the five largest and "+31 more in Waste", which opens
+  `#/run/:id/waste`
+
+#### Scenario: Few findings, no hand-over
+- GIVEN a run with three findings
+- WHEN the strip renders
+- THEN it shows all three and no hand-over control

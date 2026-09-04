@@ -56,7 +56,8 @@ export default function RunTour() {
     route.view === 'timeline' ||
     route.view === 'cost' ||
     route.view === 'time' ||
-    route.view === 'errors';
+    route.view === 'errors' ||
+    route.view === 'waste';
 
   const isOfferable =
     onboarding.enabled &&

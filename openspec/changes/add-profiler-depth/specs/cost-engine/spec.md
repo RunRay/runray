@@ -445,3 +445,27 @@ the findings SHALL read exactly as before, with no placeholder.
 - WHEN the findings are emitted
 - THEN no finding text contains any part of the error, and no placeholder
   stands in for it
+
+### Requirement: Context ceiling estimates
+The system SHALL expose, under a browser-safe subpath, the context-excess
+formula the `context-bloat` rule prices with — from the fourth main-scope
+call on, each call's input-class tokens above a floor, priced at what that
+call actually paid per input-class token — and a function that, for a run,
+reports the rule's own figure (the floor being the median context of the
+first three main-scope calls) alongside the same formula evaluated with a
+ceiling in place of the baseline for 100k, 200k and 400k tokens. The rule
+SHALL compute its estimate through that same function, so the two cannot
+diverge; without a pricing table the token figures SHALL stand and the
+amounts SHALL be undefined; a run with fewer than six main-scope calls
+SHALL yield nothing, as the rule never fires there.
+
+#### Scenario: The rule and the ceilings agree
+- GIVEN a run on which context-bloat fires
+- WHEN the ceiling estimates are computed with the same pricing table
+- THEN the figure against the baseline equals the finding's
+  `estimatedWasteUSD`, and the amounts decrease as the ceiling rises
+
+#### Scenario: Unpriced stays honest
+- GIVEN the same run and no pricing table
+- WHEN the ceiling estimates are computed
+- THEN the token figures are present and every amount is undefined

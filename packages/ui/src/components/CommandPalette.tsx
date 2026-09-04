@@ -103,6 +103,14 @@ function buildCommands(
       perform: nav({ view: 'time', runId: activeRunId }),
     });
     cmds.push({
+      id: 'view:waste',
+      group: 'Switch view',
+      label: 'Waste view',
+      keywords:
+        'waste burned savings opportunities findings cache retry current run',
+      perform: nav({ view: 'waste', runId: activeRunId }),
+    });
+    cmds.push({
       id: 'view:errors',
       group: 'Switch view',
       label: 'Errors view',
