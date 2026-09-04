@@ -453,3 +453,12 @@ automatically extends its fixture-parameterized equivalence matrix.
       context row explains the baseline, the calls counted, the excess and
       the rate as an upper bound, and lists what each ceiling would have
       saved. Asked by the user after seeing $659 of $808. Added 2026-09-04.
+
+## 14. Navigation rail
+
+- [x] 14.1 B [UI → /frontend-design] Collapsible navigation rail (spec:
+      visualizer "Collapsible navigation rail"): `ui.navCollapsed` persisted
+      under `runray.navCollapsed`, `toggleNav`, the chevron at the foot of
+      the rail, the `[` key, a palette command and a help-sheet entry;
+      collapsed the rail keeps icons with names and tooltips and the shell
+      follows its width. Asked by the user. Added 2026-09-04.

@@ -123,7 +123,7 @@ export function App() {
   }, []);
 
   // Global keys (03-design.md §3): ⌘K/Ctrl-K palette · `?` help ·
-  // `g t`/`g c` view switch.
+  // `g t`/`g c` view switch · `[` the navigation rail.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // ⌘K / Ctrl-K toggles the palette from anywhere — a modifier chord can't
@@ -139,6 +139,11 @@ export function App() {
       if (e.key === '?') {
         e.preventDefault();
         useAppStore.getState().toggleHelp();
+        return;
+      }
+      if (e.key === '[') {
+        e.preventDefault();
+        useAppStore.getState().toggleNav();
         return;
       }
       if (e.key === 'Escape') {
@@ -169,6 +174,9 @@ export function App() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  // the shell follows the rail's width: icons only, or names beside them
+  const navCollapsed = useAppStore((s) => s.ui.navCollapsed);
+
   return (
     // The shell is viewport-bound (h-screen, not min-h-screen): every pane
     // scrolls internally, which is what the virtualized waterfall's
@@ -177,7 +185,9 @@ export function App() {
     // left deep links parked at the top of the document.
     <div className="flex h-screen overflow-hidden bg-bg text-text font-sans antialiased">
       <SideNavBar />
-      <div className="ml-60 flex-1 flex flex-col min-h-0 relative overflow-hidden bg-bg">
+      <div
+        className={`${navCollapsed ? 'ml-14' : 'ml-60'} flex-1 flex flex-col min-h-0 relative overflow-hidden bg-bg`}
+      >
         {data.status === 'ready' && !data.live && (
           <ProvenanceStrip traceFile={data.traceFile} />
         )}
