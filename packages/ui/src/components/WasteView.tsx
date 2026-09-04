@@ -11,6 +11,7 @@ import { toHash } from '../lib/router';
 import { formatOffset } from '../lib/triage';
 import { leadSentence, runWaste, tok } from '../lib/waste';
 import { useAppStore } from '../store';
+import { ContextBloatHow } from './ContextBloatHow';
 import { ContextualHint } from './ContextualHint';
 import { LeakRail } from './LeakRail';
 import { InlineCode, PlaybookList, PlaybookSteps } from './PlaybookSteps';
@@ -381,12 +382,7 @@ function GroupRow({
                   })}
               </p>
             )}
-          {group.ruleId === 'context-bloat' && (
-            <p className="text-label text-text-faint">
-              Upper bound: assumes the work could have continued from a
-              compacted context.
-            </p>
-          )}
+          {group.ruleId === 'context-bloat' && <ContextBloatHow run={run} />}
           <ul className="grid gap-0.5">
             {shown.map((o) => (
               <li key={o.insightId}>

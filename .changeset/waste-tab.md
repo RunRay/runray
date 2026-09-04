@@ -22,3 +22,8 @@ A **Waste** tab per session: what bought nothing, and what one change would have
   cost by model, agent subtrees; its waste table and the what-if
   repricing panel move to the Waste tab. The findings strip shows the
   five largest findings and "+N more in Waste".
+- The Growing context row opens to how its estimate is counted — the
+  baseline, the calls counted, the excess tokens and the rate, an upper
+  bound against the session's opening context — and to what keeping the
+  context under 100k, 200k or 400k tokens would have saved, by the same
+  formula (`contextCapEstimates` in `@runray/core/waste`).
