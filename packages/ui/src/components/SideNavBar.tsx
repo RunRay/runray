@@ -7,7 +7,7 @@ import { useAppStore } from '../store';
  * destinations with their names and the local-only status; collapsed it
  * keeps every destination as an icon with its name for assistive tech and
  * a tooltip, so nothing becomes unreachable. The choice persists like the
- * theme (`ui.navCollapsed`), toggles from the chevron at the bottom, the
+ * theme (`ui.navCollapsed`), toggles from the chevron in the header, the
  * `[` key and the palette. Width changes without animation: the guardrail
  * allows only transform and opacity, and a sliding rail would reflow the
  * whole shell on every frame. `SideNavBar` wires the store; `NavRail` is
@@ -48,21 +48,37 @@ export function NavRail({
         collapsed ? 'w-14' : 'w-60'
       }`}
     >
-      <a
-        href="#/dashboard"
-        title={collapsed ? 'RunRay' : undefined}
-        className={`flex items-center gap-2 mb-6 text-sm font-bold tracking-tight text-text hover:text-brand transition-colors duration-150 select-none ${
-          collapsed ? 'justify-center px-0' : 'px-6'
+      <div
+        className={`mb-6 flex items-center ${
+          collapsed ? 'flex-col gap-2 px-0' : 'justify-between gap-2 pl-6 pr-3'
         }`}
       >
-        <div className="w-6 h-6 shrink-0 rounded-md bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center">
-          <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-white">
-            <title>RunRay Logo</title>
-            <path d="M8 1L2 5v6l6 4 6-4V5L8 1zm0 2.2L12 5.8v4.4L8 12.8 4 10.2V5.8L8 3.2z" />
-          </svg>
-        </div>
-        {!collapsed && <span>RunRay</span>}
-      </a>
+        <a
+          href="#/dashboard"
+          title={collapsed ? 'RunRay' : undefined}
+          className="flex items-center gap-2 text-sm font-bold tracking-tight text-text hover:text-brand transition-colors duration-150 select-none"
+        >
+          <div className="w-6 h-6 shrink-0 rounded-md bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center">
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-white">
+              <title>RunRay Logo</title>
+              <path d="M8 1L2 5v6l6 4 6-4V5L8 1zm0 2.2L12 5.8v4.4L8 12.8 4 10.2V5.8L8 3.2z" />
+            </svg>
+          </div>
+          {!collapsed && <span>RunRay</span>}
+        </a>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!collapsed}
+          aria-label={
+            collapsed ? 'Expand the navigation' : 'Collapse the navigation'
+          }
+          title={`${collapsed ? 'Expand' : 'Collapse'} the navigation ( [ )`}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-text-faint transition-colors duration-150 ease-out hover:bg-text/5 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-text/10"
+        >
+          <ChevronIcon pointing={collapsed ? 'right' : 'left'} />
+        </button>
+      </div>
 
       <div className="flex flex-col gap-0.5 px-2 flex-1">
         <NavLink
@@ -138,21 +154,6 @@ export function NavRail({
           )}
           <ThemeToggle />
         </div>
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-expanded={!collapsed}
-          aria-label={
-            collapsed ? 'Expand the navigation' : 'Collapse the navigation'
-          }
-          title={`${collapsed ? 'Expand' : 'Collapse'} the navigation ( [ )`}
-          className={`flex h-8 items-center gap-2 rounded-control text-text-faint transition-colors duration-150 ease-out hover:bg-text/5 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-text/10 ${
-            collapsed ? 'w-8 justify-center' : 'px-2.5 text-[11px] font-mono'
-          }`}
-        >
-          <ChevronIcon pointing={collapsed ? 'right' : 'left'} />
-          {!collapsed && 'Collapse'}
-        </button>
       </div>
     </nav>
   );

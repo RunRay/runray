@@ -458,7 +458,7 @@ automatically extends its fixture-parameterized equivalence matrix.
 
 - [x] 14.1 B [UI → /frontend-design] Collapsible navigation rail (spec:
       visualizer "Collapsible navigation rail"): `ui.navCollapsed` persisted
-      under `runray.navCollapsed`, `toggleNav`, the chevron at the foot of
-      the rail, the `[` key, a palette command and a help-sheet entry;
+      under `runray.navCollapsed`, `toggleNav`, the icon-only chevron in the
+      rail's header, the `[` key, a palette command and a help-sheet entry;
       collapsed the rail keeps icons with names and tooltips and the shell
       follows its width. Asked by the user. Added 2026-09-04.

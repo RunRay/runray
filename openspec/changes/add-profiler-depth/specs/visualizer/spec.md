@@ -616,8 +616,9 @@ highlighting its evidence and opening the finding in the Inspector.
 
 ### Requirement: Collapsible navigation rail
 The navigation rail SHALL collapse to icons and expand back on the
-person's request: a control at the foot of the rail, the `[` key outside
-text fields, and a palette command. Collapsed, every destination and the
+person's request: an icon-only control in the rail's header beside the
+wordmark (under the mark when collapsed), the `[` key outside text
+fields, and a palette command. Collapsed, every destination and the
 local-only status SHALL keep a name for assistive technology and a
 tooltip, the current destination SHALL stay marked, and the content pane
 SHALL take the freed width. The choice SHALL persist across reloads the
@@ -627,8 +628,8 @@ way the theme does.
 - GIVEN the rail is collapsed
 - WHEN the Explorer is open
 - THEN the rail shows the Explorer icon marked as current with the name
-  "Explorer" available to assistive technology, and the control at the
-  foot reads as "Expand the navigation"
+  "Explorer" available to assistive technology, and the header control
+  reads as "Expand the navigation"
 
 #### Scenario: The choice survives a reload
 - GIVEN the person collapsed the rail
