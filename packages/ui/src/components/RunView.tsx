@@ -95,7 +95,9 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
         ) : view === 'time' ? (
           <TimeView run={run} />
         ) : view === 'errors' ? (
-          <ErrorsView run={run} />
+          // keyed by run: the tab's open/filter state is per session, and a
+          // back/forward or deep link can swap the run under the same view
+          <ErrorsView key={run.id} run={run} />
         ) : (
           <CostView run={run} />
         )}

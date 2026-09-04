@@ -50,6 +50,17 @@ describe('errorPreview — where the failure is named', () => {
     expect(errorPreview(only)).toBe('Ran 12 tests, 0 errors');
   });
 
+  it('counts the plural as naming a failure', () => {
+    const text =
+      'Compiling...\nLinking...\nBuild finished with 5 errors and 0 warnings.';
+    expect(errorPreview(text)).toBe(
+      'Build finished with 5 errors and 0 warnings.',
+    );
+    expect(errorPreview('step one\n2 exceptions were thrown')).toBe(
+      '2 exceptions were thrown',
+    );
+  });
+
   it('keeps a single-line harness error unchanged', () => {
     const text =
       '<tool_use_error>String to replace not found in file. String: x</tool_use_error>';
