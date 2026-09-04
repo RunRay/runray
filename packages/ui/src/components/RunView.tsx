@@ -7,16 +7,18 @@ import {
 } from '../lib/format';
 import { type Route, type RunViewName, toHash } from '../lib/router';
 import { errorPill } from '../lib/triage';
+import { wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
 import { CostView } from './CostView';
 import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
+import { WasteView } from './WasteView';
 import { Waterfall } from './Waterfall';
 
 /**
- * Center pane: run header + Overview | Timeline Explorer | Time | Errors
- * tab switch (hash-driven).
+ * Center pane: run header + Overview | Timeline Explorer | Time | Errors |
+ * Waste tab switch (hash-driven).
  */
 export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
@@ -98,6 +100,8 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
           // keyed by run: the tab's open/filter state is per session, and a
           // back/forward or deep link can swap the run under the same view
           <ErrorsView key={run.id} run={run} />
+        ) : view === 'waste' ? (
+          <WasteView key={run.id} run={run} />
         ) : (
           <CostView run={run} />
         )}
@@ -109,8 +113,10 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
 function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
   const runId = run.id;
   // the Errors tab carries its count with the triage's tone, so the tab
-  // bar already says whether the failures are the person's problem
+  // bar already says whether the failures are the person's problem; the
+  // Waste tab carries the burned amount in the engine's tone
   const pill = errorPill(run);
+  const burned = wasteBadge(run);
   const tabs: {
     label: string;
     route: Route;
@@ -143,6 +149,20 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
               text: pill.label.split(' ')[0] ?? '',
               tone: pill.tone,
               title: `${pill.label} — ${pill.title}`,
+            },
+          }),
+    },
+    {
+      label: 'Waste',
+      route: { view: 'waste', runId },
+      active: view === 'waste',
+      ...(burned === null
+        ? {}
+        : {
+            badge: {
+              text: burned.text,
+              tone: burned.tone,
+              title: burned.title,
             },
           }),
     },

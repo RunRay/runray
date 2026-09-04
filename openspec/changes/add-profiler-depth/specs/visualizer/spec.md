@@ -508,3 +508,55 @@ run summary SHALL take the triage's tone.
 - GIVEN a selected span with status cancelled
 - WHEN the Inspector renders it
 - THEN it says the person declined the call and shows no playbook
+
+### Requirement: Waste tab
+The run view SHALL offer a Waste tab (`#/run/:id/waste`) beside Overview,
+Timeline Explorer, Time and Errors, rendered from the core waste grouping
+(waste-grouping capability) and never from a UI-side arrangement. The tab
+SHALL open with two figures kept apart — the burned amount (the run's
+capped wasted estimate) with its share of the run's cost, and the
+opportunity amount labelled as upper bounds that do not add up — and one
+sentence that names the largest burned group, what it was, and the lever
+the person has for it in the run's own source. Then the burned groups in a
+"Burned" section and the opportunity groups in an "Opportunities" section,
+largest first, each row showing the rule's label and id, the count, the
+group's share of the run, the group's grade as the severity pill, and the
+group's amount. A row SHALL open to its occurrences largest first — the
+moment on the session's clock, the cached and re-written tokens for cache
+findings or the finding's title otherwise, the model or the tool, the
+amount — each a control that opens the finding in the Inspector with its
+evidence selected on the Timeline Explorer; a cache-prefix-break group's
+split by shape; and the rule's playbook for the run's own source. A folded
+group SHALL render as one line saying its count and that each finding is
+under the warning floor. The tab's label SHALL carry the burned amount,
+tinted once the burned share reaches the warning share. A run without
+findings SHALL render an empty state naming what the rules checked and
+linking to the Overview. When any finding is unpriced the tab SHALL say
+the amounts are lower bounds.
+
+#### Scenario: Two figures, never one
+- GIVEN a run whose wasted estimate is $111.04 and whose opportunity
+  findings sum to $697.57
+- WHEN the Waste tab renders
+- THEN it shows "$111.04" as burned with its share and "up to $697.57" as
+  opportunities, and no figure adds the two
+
+#### Scenario: A group opens to its occurrences and playbook
+- GIVEN a Claude Code run with eighteen cache-prefix-break findings, four of
+  them compactions
+- WHEN the Waste tab renders
+- THEN the cache-prefix-break row is open, shows "14 re-writes of the
+  conversation" and "4 compactions" with their amounts, lists the largest
+  occurrences with their tokens, and shows "What you can do · Claude Code"
+
+#### Scenario: Cents fold
+- GIVEN thirteen duplicate-read findings each under $0.05
+- WHEN the Waste tab renders
+- THEN the duplicate-read row reads "13 findings, each under $0.05" as one
+  line
+
+#### Scenario: Nothing found
+- GIVEN a run without findings
+- WHEN the Waste tab renders
+- THEN it says nothing leaked that the rules can see, names what was
+  checked, and links to the Overview
