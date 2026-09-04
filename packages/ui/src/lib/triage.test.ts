@@ -120,7 +120,7 @@ describe('errorPill', () => {
       tool('t2', 5, 'Read', 'ok', 'l2'),
     ]);
     const pill = errorPill(r);
-    expect(pill?.label).toBe('2 errors · 1 needs you');
+    expect(pill?.label).toBe('2 errors · 1 yours to fix');
     expect(pill?.count).toBe('2 errors');
     expect(pill?.tone).toBe('alarm');
   });
@@ -143,7 +143,7 @@ describe('errorPill', () => {
       }),
     ]);
     const pill = errorPill(r);
-    expect(pill?.label).toBe('1 model error · 1 needs you');
+    expect(pill?.label).toBe('1 model error · 1 yours to fix');
     expect(pill?.tone).toBe('alarm');
   });
 

@@ -88,7 +88,7 @@ Every finding answers two questions. **Is the money gone?** — *burned* finding
 
 The strip above the timeline lists findings ranked by amount; evidence rows in the waterfall carry a severity notch and a ⚠ chip, and the Inspector switches between an activity and the finding it belongs to. Every suggestion is addressed to you, not to the model, and the Inspector shows the rule's playbook for your tool under *How to fix*. Full rule list, formulas and threshold keys: [docs/08-FINDINGS.md](https://github.com/apitome-app/runray/blob/main/docs/08-FINDINGS.md).
 
-Failed tool calls get the same treatment. The **Errors** tab of a session groups them by *who can act* — needs you (a missing binary, a shell the agent misread), tooling (a stuck browser pane, an MCP server), the agent's own slips, failed model calls, and the expected feedback of a test that did not pass yet — with the error text, whether the tool came back, what the reaction cost, and what you can do in your tool. The errors pill turns red only when a failure needs you or the session never got past one; a run whose slips the agent fixed itself reads neutral.
+Failed tool calls get the same treatment. The **Errors** tab of a session groups them by *who can act* — yours to fix (a missing binary, a shell the agent misread), tooling (a stuck browser pane, an MCP server), the agent's own slips, failed model calls, and the expected feedback of a test that did not pass yet — with the error text, whether the tool came back, what the reaction cost, and what you can do in your tool. The errors pill turns red only when a failure is yours to fix or the session never got past one; a run whose slips the agent fixed itself reads neutral.
 
 ---
 

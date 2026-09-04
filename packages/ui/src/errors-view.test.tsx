@@ -124,14 +124,14 @@ describe('ErrorsView', () => {
 
   it('groups failures by owner, most actionable first, with the summary line', () => {
     const html = renderToStaticMarkup(<ErrorsView run={fixture} />);
-    const needsYou = html.indexOf('aria-label="Needs you"');
+    const needsYou = html.indexOf('aria-label="Yours to fix"');
     const agent = html.indexOf('aria-label="Agent slips"');
     const work = html.indexOf('aria-label="Expected feedback"');
     expect(needsYou).toBeGreaterThan(-1);
     expect(agent).toBeGreaterThan(needsYou);
     expect(work).toBeGreaterThan(agent);
     expect(html).toContain('3</span> tool errors');
-    expect(html).toContain('need');
+    expect(html).toContain('yours to fix');
     expect(html).toContain('$2.06'); // 1.11 + 0.67 + 0.28 reacting
     expect(html).toContain('Shell syntax');
     expect(html).toContain('Path not found');

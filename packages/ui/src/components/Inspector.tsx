@@ -289,7 +289,7 @@ function RunSummary({ run }: { run: Run }) {
                 className={`font-mono ${pill?.tone === 'alarm' ? 'text-span-error' : ''}`}
               >
                 {formatTokens(counts.toolErrors)}
-                {pill?.label.includes('need') && (
+                {pill?.label.includes(' · ') && (
                   <span className="text-text-faint">
                     {' '}
                     · {pill.label.split(' · ')[1]}

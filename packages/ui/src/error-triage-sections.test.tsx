@@ -121,7 +121,7 @@ describe('ErrorTriageSections', () => {
     const html = renderToStaticMarkup(
       <ErrorTriageSections span={e1} run={fixture} />,
     );
-    expect(html).toContain('Needs you');
+    expect(html).toContain('Yours to fix');
     expect(html).toContain('Missing program, module or permission');
     expect(html).toContain('The next bash call succeeded 2.0s later.');
     expect(html).toContain('cost $0.40');

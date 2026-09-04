@@ -31,7 +31,7 @@ describe('findings docs ↔ error classes', () => {
 
   it('renders every owner group and every class', () => {
     const block = renderErrorClassesMarkdown();
-    expect(block).toContain('### Needs you');
+    expect(block).toContain('### Yours to fix');
     expect(block).toContain('### Expected feedback');
     expect(block).toContain('#### `shell-syntax` · Shell syntax');
     expect(block).toContain('#### `pane-timeout` · Browser pane timeout');

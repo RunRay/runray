@@ -240,7 +240,7 @@ function Summary({ run, triage }: { run: Run; triage: RunTriage }) {
           >
             {needsYou}
           </span>{' '}
-          need{needsYou === 1 ? 's' : ''} you ·{' '}
+          yours to fix ·{' '}
           <span className="font-mono text-text">{triage.recovered}</span>{' '}
           recovered on the next call
           {triage.reactionUSD > 0 && (

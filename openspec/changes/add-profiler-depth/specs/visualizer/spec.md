@@ -423,7 +423,7 @@ Overview, Timeline Explorer and Time, rendered from the core error triage
 SHALL open with a summary — failed tool calls, failed model calls, how many
 need the person, how many recovered on the next call, the reaction cost —
 a strip of failures by owner, and the failures placed on the session's time
-axis; then the clusters grouped by owner in triage order (needs you,
+axis; then the clusters grouped by owner in triage order (yours to fix,
 tooling, agent slips, model calls, expected feedback, unclassified), each
 group carrying its meaning, count and reaction cost. A cluster row SHALL
 show the tool, the class, the first line of its latest failure text, its
@@ -444,7 +444,7 @@ redaction the tab SHALL say that classes are read from the tool alone.
 - GIVEN a Claude Code run with a shell-syntax failure, a path-not-found
   slip that recovered and a failed test run
 - WHEN the Errors tab renders
-- THEN "Needs you" comes first with the shell failure open, showing its
+- THEN "Yours to fix" comes first with the shell failure open, showing its
   text and the Claude Code playbook; "Agent slips" follows; "Expected
   feedback" is last, collapsed, with a control to show it
 
@@ -462,8 +462,8 @@ redaction the tab SHALL say that classes are read from the tool alone.
 The sessions table, the sessions rail and the run header's tab bar SHALL
 keep showing a run's failure count, but SHALL tint it by the triage's
 attention signal — alarm when the run needs the person or never got past a
-failure, neutral otherwise. The sessions table SHALL append "· N need(s)
-you" when clusters owned by the person exist; the narrow sessions rail and
+failure, neutral otherwise. The sessions table SHALL append "· N yours to
+fix" when clusters owned by the person exist; the narrow sessions rail and
 the tab bar SHALL show the count alone. A run whose only failures are
 model-call failures SHALL show a model-error count instead of nothing. The
 tooltip SHALL name the owner breakdown.
@@ -480,7 +480,7 @@ tooltip SHALL name the owner breakdown.
 - WHEN the sessions rail renders
 - THEN the rail's pill reads "1 errors" in the alarm tone, its tooltip
   names the owner breakdown, and the sessions table's pill reads
-  "1 errors · 1 needs you"
+  "1 errors · 1 yours to fix"
 
 ### Requirement: Inspector error sections
 When the Inspector shows a failed span, it SHALL render after the Output
@@ -500,7 +500,7 @@ run summary SHALL take the triage's tone.
 #### Scenario: A failed shell call in the Inspector
 - GIVEN a selected Bash span whose failure is classified shell-syntax
 - WHEN the Inspector renders it
-- THEN "What this is" says "Needs you · Shell syntax", reports that the
+- THEN "What this is" says "Yours to fix · Shell syntax", reports that the
   next Bash call succeeded and what the reaction cost, and "What you can
   do · Claude Code" lists the class's Claude Code actions
 

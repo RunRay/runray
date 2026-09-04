@@ -416,12 +416,12 @@ Very large tool outputs entered the context; their usefulness is unknowable, so 
 
 ## Errors, class by class
 
-A failed call is not one thing. On real sessions a third of the "errors" are the agent's own check-and-fix loop (a test that did not pass yet), a third are the model's slips corrected within seconds, and under a tenth are something the person can act on. RunRay reads the failure text into an **error class** and an **owner** — who has a lever — and the Errors tab groups a session's failures by owner, most actionable first. Classification is a pure function of the text (`packages/core/src/triage`); under `--redact` it falls back to what the span shape still tells (an MCP call, a non-zero exit code) and says so. The pill in the sessions list turns red only when a group needs you or the session never got past a failure (a tool that never came back, with nothing succeeding after it).
+A failed call is not one thing. On real sessions a third of the "errors" are the agent's own check-and-fix loop (a test that did not pass yet), a third are the model's slips corrected within seconds, and under a tenth are something the person can act on. RunRay reads the failure text into an **error class** and an **owner** — who has a lever — and the Errors tab groups a session's failures by owner, most actionable first. Classification is a pure function of the text (`packages/core/src/triage`); under `--redact` it falls back to what the span shape still tells (an MCP call, a non-zero exit code) and says so. The pill in the sessions list turns red only when a group is yours to fix or the session never got past a failure (a tool that never came back, with nothing succeeding after it).
 
 <!-- error-classes:start -->
 <!-- Generated from ERROR_CLASS_META in packages/core/src/triage/meta.ts by `pnpm docs:playbooks`. Edit the registry, not this block. -->
 
-### Needs you
+### Yours to fix
 
 *something in your environment or configuration; the agent cannot fix it alone.*
 
@@ -1032,8 +1032,8 @@ The failure text did not match any known class.
 - **Timeline → findings strip.** One pill per finding, ranked by amount, tinted by severity. Click one to highlight its evidence rows and open it in the Inspector.
 - **Timeline → rows.** Every row that is evidence of a finding carries a severity-coloured notch in the left gutter and a ⚠ chip, with a count when several findings share the row. Hover for the list; click the chip to open the finding.
 - **Inspector.** With an evidence row selected, switch between *Activity* (the span) and *Finding* (why it was flagged, what share of the run it represents, and *How to fix*: the rule's playbook for the session's own source). A row under several findings offers a chip per finding.
-- **Errors tab.** A session's failed calls grouped by who can act — needs you, tooling, agent slips, model calls, expected feedback — with a summary (how many need you, how many recovered on the next call, what the reactions cost), the failures on the session's time axis, and one row per class × tool that opens to the error text, its occurrences (each a jump to the timeline), the findings that cite it, and the class playbook for your tool. Expected feedback starts collapsed; agent slips show a lever only when they repeat or never recover.
-- **Inspector, failed span.** After *Output*: *What this is* (owner · class, what happened next, what the reaction cost) and *What you can do* for your tool, from the same registry as the tab. The errors pill in the sessions lists and the tab bar turns red only when a failure needs you or the session never got past one.
+- **Errors tab.** A session's failed calls grouped by who can act — yours to fix, tooling, agent slips, model calls, expected feedback — with a summary (how many are yours to fix, how many recovered on the next call, what the reactions cost), the failures on the session's time axis, and one row per class × tool that opens to the error text, its occurrences (each a jump to the timeline), the findings that cite it, and the class playbook for your tool. Expected feedback starts collapsed; agent slips show a lever only when they repeat or never recover.
+- **Inspector, failed span.** After *Output*: *What this is* (owner · class, what happened next, what the reaction cost) and *What you can do* for your tool, from the same registry as the tab. The errors pill in the sessions lists and the tab bar turns red only when a failure is yours to fix or the session never got past one.
 - **CLI.** `runray export --json <file>` writes the normalized trace with every finding, its `severity`, `estimatedWasteUSD` and `spanIds`.
 
 ## Tuning thresholds
