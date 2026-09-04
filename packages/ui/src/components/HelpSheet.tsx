@@ -3,11 +3,24 @@ import { formatClock, formatUSD } from '../lib/format';
 import { buildCostSeries, cumulativeCostAt } from '../lib/spine';
 import { computeTimeRange } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
+import { SeverityPill } from './SeverityPill';
 
 /**
- * `?` help sheet (03-design.md §3, §6): the keyboard map plus the Spend
- * Spine's accessible fallback — cumulative cost as a plain data table.
+ * `?` help sheet (03-design.md §3, §6): the keyboard map, the findings
+ * legend (class + severity tiers — the one place in the UI that states the
+ * default thresholds), plus the Spend Spine's accessible fallback —
+ * cumulative cost as a plain data table.
  */
+
+/** Severity tiers as shipped (DEFAULT_THRESHOLDS.severity in core). */
+const SEVERITY_LEGEND: [
+  severity: 'critical' | 'warning' | 'info',
+  meaning: string,
+][] = [
+  ['critical', 'at least 10% of this run’s cost and at least $1'],
+  ['warning', 'at least 2% of this run’s cost and at least $0.05'],
+  ['info', 'smaller than that, or no dollar estimate'],
+];
 
 const KEYMAP: [keys: string, action: string][] = [
   ['⌘K / Ctrl K', 'open the command palette'],
@@ -52,7 +65,7 @@ export function HelpSheet({ onClose }: { onClose: () => void }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Keyboard shortcuts and chart data"
+        aria-label="Keyboard shortcuts, findings legend and chart data"
         className="relative max-h-full w-[480px] overflow-y-auto rounded-panel border border-border bg-surface-2 p-4 shadow-popover"
       >
         <div className="flex items-center justify-between">
@@ -81,6 +94,35 @@ export function HelpSheet({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </dl>
+
+        <h3 className="micro-label mt-4 mb-2 text-text-faint">Findings</h3>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-label">
+          <dt className="self-center text-text">burned</dt>
+          <dd className="text-text-dim">
+            spend that bought nothing — retries, cache re-writes, duplicate
+            reads, dead ends. Adds up to the run’s wasted figure.
+          </dd>
+          <dt className="self-center text-text">opportunity</dt>
+          <dd className="text-text-dim">
+            spend that could have been cheaper — heavy fixed context, wrong
+            model tier, cold cache. Never counted as wasted.
+          </dd>
+          {SEVERITY_LEGEND.map(([severity, meaning]) => (
+            <div key={severity} className="contents">
+              <dt className="self-center">
+                <SeverityPill severity={severity} />
+              </dt>
+              <dd className="self-center text-text-dim">{meaning}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-2 text-label leading-[1.45] text-text-faint">
+          Severity is graded per run, not per rule: the same $0.60 retry loop is
+          a warning in a $0.65 session and info in a $600 one. Defaults shown;
+          tune them under{' '}
+          <span className="font-mono">insights.thresholds.severity</span> in
+          runray.config.json.
+        </p>
 
         {spineTable !== null && (
           <>

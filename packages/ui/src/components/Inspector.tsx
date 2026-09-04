@@ -1,3 +1,8 @@
+import {
+  PLAYBOOK_SOURCE_LABEL,
+  RULE_META,
+  resolvePlaybookSource,
+} from '@runray/core/insights-meta';
 import type { Insight, Run, Span } from '@runray/schema';
 import { type ReactNode, useMemo, useState } from 'react';
 import {
@@ -8,8 +13,12 @@ import {
 } from '../lib/format';
 import type { SanitizationManifest } from '../lib/load';
 import { KIND_BG } from '../lib/span-kind';
+import { errorPill } from '../lib/triage';
+import { insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
+import { ErrorTriageSections } from './ErrorTriageSections';
+import { PlaybookList, PlaybookSteps } from './PlaybookSteps';
 import { ruleLabel } from './SavingsPanel';
 import { TranscriptPane } from './TranscriptPane';
 
@@ -35,8 +44,11 @@ export function Inspector(props: InspectorProps = {}) {
   } = props;
   const storeSpanId = useAppStore((s) => s.selection.spanId);
   const storeInsightId = useAppStore((s) => s.selection.insightId);
+  const focus = useAppStore((s) => s.selection.focus);
   const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
+  const showInsight = useAppStore((s) => s.showInsight);
+  const focusInspector = useAppStore((s) => s.focusInspector);
 
   const spanId = propSpanId !== undefined ? propSpanId : storeSpanId;
   const insightId =
@@ -51,6 +63,27 @@ export function Inspector(props: InspectorProps = {}) {
     () => run?.insights.find((i) => i.id === insightId),
     [run, insightId],
   );
+  // Findings this activity is evidence of, worst first: the Activity |
+  // Finding switch and its per-finding chips are built from it.
+  const spanFindings = useMemo(
+    () =>
+      span === undefined || run === undefined
+        ? []
+        : (insightsBySpan(run.insights).get(span.id) ?? []),
+    [run, span],
+  );
+  // The switch flips `focus`; with no span selected the finding shows on
+  // its own, with no finding active the activity does.
+  const showingFinding =
+    insight !== undefined && (span === undefined || focus === 'insight');
+  const openFinding = () => {
+    if (span === undefined) return;
+    if (insight?.spanIds.includes(span.id)) {
+      focusInspector('insight');
+    } else if (spanFindings[0] !== undefined) {
+      showInsight(spanFindings[0], span.id);
+    }
+  };
 
   return (
     <aside
@@ -71,10 +104,28 @@ export function Inspector(props: InspectorProps = {}) {
       <div className="shrink-0 p-2 pb-0">
         <ContextualHint hintKey="redact" />
       </div>
-      {span !== undefined ? (
-        <SpanDetail span={span} />
-      ) : insight !== undefined && run !== undefined ? (
+      {span !== undefined && spanFindings.length > 0 && (
+        <DetailSwitch
+          mode={showingFinding ? 'finding' : 'activity'}
+          findings={spanFindings}
+          onActivity={() => focusInspector('span')}
+          onFinding={openFinding}
+        />
+      )}
+      {showingFinding &&
+        span !== undefined &&
+        insight !== undefined &&
+        spanFindings.length > 1 && (
+          <FindingChips
+            findings={spanFindings}
+            activeId={insight.id}
+            onPick={(f) => showInsight(f, span.id)}
+          />
+        )}
+      {showingFinding && insight !== undefined && run !== undefined ? (
         <InsightDetail insight={insight} run={run} />
+      ) : span !== undefined ? (
+        <SpanDetail span={span} />
       ) : run !== undefined ? (
         <RunSummary run={run} manifest={propManifest} />
       ) : (
@@ -85,6 +136,141 @@ export function Inspector(props: InspectorProps = {}) {
         </div>
       )}
     </aside>
+  );
+}
+
+/**
+ * Activity | Finding switch (B): offered when the selected span is evidence
+ * of at least one finding. The finding side carries the worst severity's
+ * glyph and a count when the span sits under several findings.
+ */
+function DetailSwitch({
+  mode,
+  findings,
+  onActivity,
+  onFinding,
+}: {
+  mode: 'activity' | 'finding';
+  findings: Insight[];
+  onActivity: () => void;
+  onFinding: () => void;
+}) {
+  const worst = findings[0];
+  const segment = (active: boolean) =>
+    `flex-1 px-3 py-1 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary ${
+      active
+        ? 'bg-surface-variant font-semibold text-on-surface'
+        : 'bg-surface text-on-surface-variant hover:bg-surface-variant/40 hover:text-on-surface active:bg-bg-deep-gray'
+    }`;
+  return (
+    <div className="px-3 pt-2">
+      <div className="flex overflow-hidden rounded border border-border-slate">
+        <button
+          type="button"
+          aria-pressed={mode === 'activity'}
+          onClick={onActivity}
+          className={segment(mode === 'activity')}
+        >
+          Activity
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'finding'}
+          onClick={onFinding}
+          className={segment(mode === 'finding')}
+        >
+          {worst !== undefined && (
+            <span aria-hidden className={SEVERITY_TEXT[worst.severity]}>
+              ⚠{' '}
+            </span>
+          )}
+          Finding{findings.length > 1 ? ` · ${findings.length}` : ''}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The page behind the one-sentence suggestion (docs/08-FINDINGS.md, "How
+ * to fix"): the levers the person has in THIS session's source, most
+ * effective first — a real order, hence the numbers. The causes and the
+ * limits sit behind one disclosure, so the pane stays about what to do.
+ */
+function Playbook({ ruleId, source }: { ruleId: string; source: string }) {
+  const [why, setWhy] = useState(false);
+  const meta = RULE_META[ruleId];
+  if (meta === undefined) return null;
+  const key = resolvePlaybookSource(source);
+  return (
+    <Section title={`How to fix · ${PLAYBOOK_SOURCE_LABEL[key]}`}>
+      <PlaybookSteps actions={meta.playbook.actions[key]} />
+      <button
+        type="button"
+        aria-expanded={why}
+        onClick={() => setWhy((v) => !v)}
+        className="mt-2 flex items-center gap-1.5 rounded-control px-1 py-0.5 text-label text-text-dim transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg"
+      >
+        <span
+          aria-hidden
+          className={`inline-block text-[9px] transition-transform duration-150 ease-out ${why ? 'rotate-90' : ''}`}
+        >
+          ▶
+        </span>
+        Why it happens, and what is out of your hands
+      </button>
+      {why && (
+        <div className="mt-1.5 space-y-2.5 border-l border-border pl-2.5">
+          <PlaybookList label="Why it happens" lines={meta.playbook.causes} />
+          <PlaybookList
+            label="Out of your hands"
+            lines={meta.playbook.limits}
+          />
+        </div>
+      )}
+    </Section>
+  );
+}
+
+/** One chip per finding the selected span is evidence of, worst first. */
+function FindingChips({
+  findings,
+  activeId,
+  onPick,
+}: {
+  findings: Insight[];
+  activeId: string;
+  onPick: (insight: Insight) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 px-3 pt-2">
+      {findings.map((f) => {
+        const active = f.id === activeId;
+        return (
+          <button
+            key={f.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onPick(f)}
+            className={`rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg ${
+              active
+                ? 'border-border-slate bg-surface-2 text-text'
+                : 'border-border bg-surface text-text-dim hover:bg-surface-2 hover:text-text'
+            }`}
+          >
+            <span aria-hidden className={SEVERITY_TEXT[f.severity]}>
+              ⚠{' '}
+            </span>
+            {ruleLabel(f.ruleId).label}
+            {f.estimatedWasteUSD !== undefined && (
+              <span className="ml-1 font-mono text-text-faint">
+                {formatUSD(f.estimatedWasteUSD)}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -123,11 +309,24 @@ function RunSummary({
           <Mono>{formatTokens(counts.toolCalls)}</Mono>
         </Field>
         <Field label="tool errors">
-          <span
-            className={`font-mono ${counts.toolErrors > 0 ? 'text-span-error' : ''}`}
-          >
-            {formatTokens(counts.toolErrors)}
-          </span>
+          {(() => {
+            // the count stays; the tone is the triage's (see lib/triage)
+            const pill = errorPill(run);
+            return (
+              <span
+                title={pill?.title}
+                className={`font-mono ${pill?.tone === 'alarm' ? 'text-span-error' : ''}`}
+              >
+                {formatTokens(counts.toolErrors)}
+                {pill?.label.includes(' · ') && (
+                  <span className="text-text-faint">
+                    {' '}
+                    · {pill.label.split(' · ')[1]}
+                  </span>
+                )}
+              </span>
+            );
+          })()}
         </Field>
         <Field label="subagents">
           <Mono>{formatTokens(counts.subagents)}</Mono>
@@ -186,6 +385,12 @@ const SEVERITY_TEXT: Record<Insight['severity'], string> = {
 
 function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
   const selectSpan = useAppStore((s) => s.selectSpan);
+  // Severity is graded from this share (docs/08-FINDINGS.md); showing it
+  // next to the grade makes the grade explain itself.
+  const share =
+    insight.estimatedWasteUSD !== undefined && run.totals.costUSD.total > 0
+      ? (insight.estimatedWasteUSD / run.totals.costUSD.total) * 100
+      : undefined;
   const evidence = useMemo(() => {
     const byId = new Map(run.spans.map((s) => [s.id, s]));
     return insight.spanIds
@@ -197,7 +402,16 @@ function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="border-b border-border px-3 py-3">
         <p className={`text-label ${SEVERITY_TEXT[insight.severity]}`}>
-          ⚠ {insight.severity} · {ruleLabel(insight.ruleId).label}{' '}
+          ⚠ {insight.severity}
+          {share !== undefined && (
+            // why this grade: the share of the run the estimate represents
+            <span className="text-text-dim">
+              {' · '}
+              {share.toFixed(share < 10 ? 1 : 0)}% of this run
+            </span>
+          )}
+          {' · '}
+          {ruleLabel(insight.ruleId).label}{' '}
           <span className="font-mono text-text-faint">{insight.ruleId}</span>
         </p>
         <h2 className="mt-1 text-detail font-medium text-text">
@@ -221,6 +435,7 @@ function InsightDetail({ insight, run }: { insight: Insight; run: Run }) {
           </p>
         </Section>
       )}
+      <Playbook ruleId={insight.ruleId} source={run.source.tool} />
       <Section title={`Evidence (${evidence.length})`}>
         <ul className="space-y-0.5">
           {evidence.map((span) => (
@@ -259,6 +474,7 @@ function SpanDetail({ span }: { span: Span }) {
   const activeRunId = useAppStore((s) =>
     'runId' in s.route ? s.route.runId : null,
   );
+  const run = useAppStore(selectActiveRun);
   const [showRaw, setShowRaw] = useState(false);
   const isError = span.status === 'error';
 
@@ -390,6 +606,9 @@ function SpanDetail({ span }: { span: Span }) {
           <PreviewText value={span.content.outputPreview} />
         </Section>
       )}
+
+      {/* what a failure is, who can act, what to do (error-triage) */}
+      {run !== undefined && <ErrorTriageSections span={span} run={run} />}
 
       {/* full source-log slice behind the preview (D4) */}
       {activeRunId !== null && (

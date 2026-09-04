@@ -1,8 +1,14 @@
 import type { Insight, Run } from '@runray/schema';
 import type { PricingTable } from '../pricing/engine.js';
 import { bundledPricing } from '../pricing/index.js';
+import { DEFAULT_BREAK_SHAPE } from './cache-shape.js';
 import { ruleClass } from './meta.js';
 import { V0_RULES } from './rules.js';
+import {
+  DEFAULT_SEVERITY_THRESHOLDS,
+  gradeSeverity,
+  type SeverityThresholds,
+} from './severity.js';
 
 /**
  * Insight rule engine (tasks 4.1/4.2, 05-ARCHITECTURE §2.4). Rules are pure
@@ -13,6 +19,12 @@ import { V0_RULES } from './rules.js';
  * sums only WASTE-CLASS findings — money already burned (retry-loop,
  * dead-end-run). Efficiency-opportunity findings (low-cache-hit, …) carry
  * their own `estimatedWasteUSD` but never inflate the run's wasted total.
+ *
+ * Severity semantics: rules do NOT grade themselves. The engine assigns
+ * `severity` after evaluation from the finding's estimate as a share of the
+ * run's cost (`gradeSeverity`, `thresholds.severity`), so severity answers
+ * "how big is this in THIS run" while the class answers "is it already
+ * burned" — two independent axes.
  */
 
 export interface Thresholds {
@@ -30,7 +42,6 @@ export interface Thresholds {
     topCulprits: number;
   };
   expensiveSubagent: { minShareOfRunCost: number; minCostUSD: number };
-  deadEndRun: { criticalCostUSD: number };
   modelMismatch: {
     minSavingsUSD: number;
     riskToolCalls: number;
@@ -40,12 +51,20 @@ export interface Thresholds {
     minPrefixTokens: number;
     collapseRatio: number;
     rewriteFloorTokens: number;
+    /** Below this many cached tokens after the break, the front of the
+     * prompt itself changed (tools, system prompt, a setting). */
+    baseRetainedTokens: number;
+    /** A breaking call whose context is below this share of the previous
+     * call's was a compaction, not an invalidation. */
+    shrinkRatio: number;
   };
   idleCacheExpiry: { minIdleMinutes: number; rewriteFloorTokens: number };
   fixedContextOverhead: { floorTokens: number; minLlmCalls: number };
   duplicateRead: { minRepeats: number };
   scatteredToolFailures: { minFailures: number; minErrorShare: number };
   oversizedOutput: { minOutputBytes: number; topOffenders: number };
+  /** Severity grading — see `gradeSeverity`. */
+  severity: SeverityThresholds;
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
@@ -58,7 +77,6 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   },
   contextBloat: { multiplier: 2, minMedianInputTokens: 50_000, topCulprits: 3 },
   expensiveSubagent: { minShareOfRunCost: 0.5, minCostUSD: 0.25 },
-  deadEndRun: { criticalCostUSD: 1 },
   modelMismatch: {
     minSavingsUSD: 0.5,
     riskToolCalls: 25,
@@ -68,12 +86,14 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
     minPrefixTokens: 20_000,
     collapseRatio: 0.2,
     rewriteFloorTokens: 10_000,
+    ...DEFAULT_BREAK_SHAPE,
   },
   idleCacheExpiry: { minIdleMinutes: 5, rewriteFloorTokens: 10_000 },
   fixedContextOverhead: { floorTokens: 20_000, minLlmCalls: 5 },
   duplicateRead: { minRepeats: 3 },
   scatteredToolFailures: { minFailures: 5, minErrorShare: 0.2 },
   oversizedOutput: { minOutputBytes: 100_000, topOffenders: 5 },
+  severity: DEFAULT_SEVERITY_THRESHOLDS,
 };
 
 export type ThresholdOverrides = {
@@ -111,7 +131,6 @@ export function resolveThresholds(
       ...DEFAULT_THRESHOLDS.expensiveSubagent,
       ...overrides.expensiveSubagent,
     },
-    deadEndRun: { ...DEFAULT_THRESHOLDS.deadEndRun, ...overrides.deadEndRun },
     modelMismatch: {
       ...DEFAULT_THRESHOLDS.modelMismatch,
       ...overrides.modelMismatch,
@@ -140,6 +159,7 @@ export function resolveThresholds(
       ...DEFAULT_THRESHOLDS.oversizedOutput,
       ...overrides.oversizedOutput,
     },
+    severity: { ...DEFAULT_THRESHOLDS.severity, ...overrides.severity },
   };
   // a raised firing gate must never produce a negative-savings absurdity
   resolved.lowCacheHit.targetHitRate = Math.max(
@@ -149,8 +169,11 @@ export function resolveThresholds(
   return resolved;
 }
 
-/** A finding before the engine assigns its per-run id. */
-export type Finding = Omit<Insight, 'id'>;
+/**
+ * A finding as a rule emits it: no per-run id yet, and no severity — the
+ * engine grades that from the estimate's share of the run (`gradeSeverity`).
+ */
+export type Finding = Omit<Insight, 'id' | 'severity'>;
 
 /**
  * Everything a rule may consult (C3). `pricing` is the same effective table
@@ -179,8 +202,9 @@ function round6(x: number): number {
 
 /**
  * Evaluate rules over a normalized Run. Pure — returns a new Run with
- * `insights` filled and `totals.costUSD.wastedEstimate` recomputed. Rule
- * order is fixed (registration order) so insight ids are deterministic.
+ * `insights` filled (severity graded per finding) and
+ * `totals.costUSD.wastedEstimate` recomputed. Rule order is fixed
+ * (registration order) so insight ids are deterministic.
  */
 export function applyInsights(
   run: Run,
@@ -194,8 +218,19 @@ export function applyInsights(
   };
   const insights: Insight[] = [];
   for (const rule of rules) {
-    for (const finding of rule.evaluate(run, ctx)) {
-      insights.push({ id: `i${insights.length + 1}`, ...finding });
+    for (const { ruleId, ...rest } of rule.evaluate(run, ctx)) {
+      // key order is part of the byte-stable contract (goldens, exports):
+      // id · ruleId · severity · the rule's own fields, as it always was
+      insights.push({
+        id: `i${insights.length + 1}`,
+        ruleId,
+        severity: gradeSeverity(
+          rest.estimatedWasteUSD,
+          run.totals.costUSD.total,
+          ctx.thresholds.severity,
+        ),
+        ...rest,
+      });
     }
   }
   // cap (B2): waste-class overlap is only partially deduped across rules, so
@@ -218,6 +253,27 @@ export function applyInsights(
   };
 }
 
-export type { RuleClass, RuleMeta } from './meta.js';
-export { RULE_META, ruleClass } from './meta.js';
+export type { Playbook, PlaybookSource, RuleClass, RuleMeta } from './meta.js';
+export {
+  PLAYBOOK_SOURCE_LABEL,
+  PLAYBOOK_SOURCES,
+  playbookActions,
+  RULE_META,
+  resolvePlaybookSource,
+  ruleClass,
+} from './meta.js';
+export {
+  extractBlock,
+  extractPlaybooksBlock,
+  PLAYBOOKS_END,
+  PLAYBOOKS_START,
+  renderPlaybooksMarkdown,
+  replaceBlock,
+  replacePlaybooksBlock,
+} from './playbook-markdown.js';
 export { V0_RULES } from './rules.js';
+export {
+  DEFAULT_SEVERITY_THRESHOLDS,
+  gradeSeverity,
+  type SeverityThresholds,
+} from './severity.js';

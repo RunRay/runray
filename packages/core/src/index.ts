@@ -21,16 +21,35 @@ export { diffRuns } from './diff/index.js';
 export type {
   Finding,
   InsightRule,
+  Playbook,
+  PlaybookSource,
   RuleContext,
+  RuleMeta,
+  SeverityThresholds,
   ThresholdOverrides,
   Thresholds,
 } from './insights/index.js';
 export {
   applyInsights,
   DEFAULT_THRESHOLDS,
+  extractPlaybooksBlock,
+  gradeSeverity,
+  PLAYBOOK_SOURCE_LABEL,
+  PLAYBOOK_SOURCES,
+  playbookActions,
+  RULE_META,
+  renderPlaybooksMarkdown,
+  replacePlaybooksBlock,
+  resolvePlaybookSource,
   resolveThresholds,
   V0_RULES,
 } from './insights/index.js';
+export {
+  extractBlock,
+  PLAYBOOKS_END,
+  PLAYBOOKS_START,
+  replaceBlock,
+} from './insights/playbook-markdown.js';
 export type { NormalizeOptions } from './normalize.js';
 export { normalize } from './normalize.js';
 export type {
@@ -101,3 +120,44 @@ export type {
   TranscriptSlice,
 } from './transcript.js';
 export { readTranscriptSlice } from './transcript.js';
+export type {
+  ClusterOutcome,
+  ErrorClassId,
+  ErrorClassification,
+  ErrorClassMeta,
+  ErrorCluster,
+  ErrorOccurrence,
+  ErrorOwner,
+  ErrorOwnerMeta,
+  RecoveryKind,
+  RunTriage,
+  TriageTone,
+} from './triage/index.js';
+export {
+  classifyError,
+  ERROR_CLASS_IDS,
+  ERROR_CLASS_META,
+  ERROR_CLASSES_END,
+  ERROR_CLASSES_START,
+  ERROR_OWNER_META,
+  ERROR_OWNER_ORDER,
+  errorClassOwner,
+  renderErrorClassesMarkdown,
+  triageRun,
+  triageTone,
+} from './triage/index.js';
+export {
+  type BreakShape,
+  type BreakShapeThresholds,
+  breakShape,
+  type ContextPoint,
+  contextTokens,
+  DEFAULT_BREAK_SHAPE,
+  type LeakEvent,
+  type LeakKind,
+  type RunWaste,
+  type WasteGroup,
+  type WasteOccurrence,
+  type WasteOptions,
+  wasteRun,
+} from './waste/index.js';

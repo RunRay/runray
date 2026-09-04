@@ -13,6 +13,7 @@ import type {
 } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
+import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
 
 /**
@@ -33,6 +34,15 @@ import { toolTargetAttributes } from './target.js';
  *    spawns), plus `name`/`agentType`/`description` for labeling.
  * Legacy sessions (`Task` tool / `isSidechain: true`) parse flat with a
  * run warning.
+ *
+ * Record identity: the desktop app re-appends the whole transcript after a
+ * bridge (`bridge-session` record), so every record written before it
+ * appears twice — same `uuid`, `message.id` and tool ids, later lines, a
+ * newer `version`/`slug`, sometimes an emptied `toolUseResult`. The first
+ * occurrence of a `uuid` wins and later copies are skipped, and a tool_use
+ * id or tool_result is never registered twice (spec: trace-ingestion
+ * "Duplicate transcript records"); records without a uuid are never
+ * deduplicated.
  */
 
 const PREVIEW_CHARS = 200;
@@ -136,6 +146,16 @@ interface ToolResultRef {
   line: number;
   isError: boolean;
   outputBytes: number | undefined;
+  /** PREVIEW_CHARS of an error result's text starting where the failure is
+   * named (error-preview.ts) — the one thing a retry-loop or dead-end
+   * finding can quote; prompt-derived, so it goes through the
+   * content/redaction contract like every preview. */
+  errorPreview: string | undefined;
+  /** `Exit code N` parsed from a shell tool's failure text. */
+  exitCode: number | undefined;
+  /** The "failure" is the harness reporting that the person declined the
+   * call — a decision, not an error (spec: "User-rejected tool calls"). */
+  rejected: boolean;
   toolUseResult: Json | undefined;
 }
 /** One llm_call — assistant JSONL records sharing a message.id (Claude Code
@@ -184,6 +204,8 @@ async function collectTranscript(
     firstTs: undefined,
   };
   const byKey = new Map<string, LlmGroup>();
+  const seenUuids = new Set<string>();
+  const seenToolUses = new Set<string>();
   const rl = createInterface({
     input: createReadStream(file),
     crlfDelay: Infinity,
@@ -210,6 +232,13 @@ async function collectTranscript(
       type === 'x-tracellm-scrub'
     )
       continue; // fixture marker
+    const uuid = str(rec.uuid);
+    if (uuid !== undefined) {
+      // a re-appended copy (see the header): the first occurrence keeps its
+      // provenance line and its live data; the copy contributes nothing
+      if (seenUuids.has(uuid)) continue;
+      seenUuids.add(uuid);
+    }
     const ts = str(rec.timestamp);
     if (ts !== undefined && t.firstTs === undefined) t.firstTs = ts;
     if (rec.isSidechain === true) t.legacy = true;
@@ -220,8 +249,7 @@ async function collectTranscript(
     if (type === 'assistant') {
       const msg = isObj(rec.message) ? rec.message : undefined;
       if (!msg) continue;
-      const uuid = str(rec.uuid) ?? `rec-${line}`;
-      const key = str(msg.id) ?? uuid;
+      const key = str(msg.id) ?? uuid ?? `rec-${line}`;
       let g = byKey.get(key);
       if (!g) {
         g = {
@@ -253,6 +281,10 @@ async function collectTranscript(
           } else if (block.type === 'tool_use') {
             const id = str(block.id);
             if (id === undefined) continue;
+            // a tool_use block lives in exactly one record; seeing its id
+            // again (a copy under a fresh uuid) must not emit a second span
+            if (seenToolUses.has(id)) continue;
+            seenToolUses.add(id);
             g.toolUses.push({
               id,
               name: str(block.name) ?? 'unknown',
@@ -264,7 +296,6 @@ async function collectTranscript(
         }
       }
     } else if (type === 'user') {
-      const uuid = str(rec.uuid);
       const msg = isObj(rec.message) ? rec.message : undefined;
       const content = msg?.content;
       const text = textOf(content);
@@ -274,11 +305,20 @@ async function collectTranscript(
           if (!isObj(block) || block.type !== 'tool_result') continue;
           const toolUseId = str(block.tool_use_id);
           if (toolUseId === undefined) continue;
+          // a tool_use has exactly one result; a record re-registering it
+          // (a copy under a fresh uuid) must not move the span's outcome or
+          // provenance off the result written live
+          if (t.results.has(toolUseId)) continue;
+          const failureText =
+            block.is_error === true ? textOf(block.content) : undefined;
           t.results.set(toolUseId, {
             timestamp: ts ?? EPOCH,
             line,
             isError: block.is_error === true,
             outputBytes: byteLength(block.content),
+            errorPreview: errorPreview(failureText, PREVIEW_CHARS),
+            exitCode: exitCodeOf(failureText),
+            rejected: isUserRejection(failureText),
             toolUseResult: isObj(rec.toolUseResult)
               ? rec.toolUseResult
               : undefined,
@@ -298,6 +338,7 @@ async function collectTranscript(
 
 function mapAgentStatus(result: ToolResultRef | undefined): RawSpan['status'] {
   if (!result) return 'in_progress';
+  if (result.rejected) return 'cancelled';
   if (result.isError) return 'error';
   const s = str(result.toolUseResult?.status)?.toLowerCase();
   if (s === undefined) return 'ok';
@@ -454,24 +495,41 @@ async function emitFromTranscript(
         parentId: g.key,
         kind: mcpServer === undefined ? 'tool_call' : 'mcp_call',
         name: tu.name,
+        // a declined call is the person's decision, not the tool failing:
+        // `cancelled` keeps it out of toolErrors and every failure rule
         status:
           result === undefined
             ? 'in_progress'
-            : result.isError
-              ? 'error'
-              : 'ok',
+            : result.rejected
+              ? 'cancelled'
+              : result.isError
+                ? 'error'
+                : 'ok',
+        ...(result?.rejected ? { statusReason: 'user-rejected' } : {}),
         startedAt: tu.timestamp,
         ...(endedAt === undefined ? {} : { endedAt }),
         durationMs: durationBetween(tu.timestamp, endedAt),
         tool: {
           name: tu.name,
-          isError: result?.isError === true,
+          isError: result?.isError === true && !result.rejected,
           ...(mcpServer === undefined ? {} : { mcpServer }),
+          ...(result?.exitCode === undefined
+            ? {}
+            : { exitCode: result.exitCode }),
           ...(result?.outputBytes === undefined
             ? {}
             : { outputBytes: result.outputBytes }),
           ...counts,
         },
+        // only a failure's text is kept: successful outputs are sized, not
+        // previewed (a file's first 200 chars would be noise in every span)
+        ...(result?.isError
+          ? {
+              content: contentField(ctx, {
+                outputPreview: result.errorPreview,
+              }),
+            }
+          : {}),
         attributes: toolTargetAttributes(
           'claude-code',
           tu.name,

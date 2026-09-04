@@ -129,3 +129,111 @@ run warning naming their count.
 - WHEN the session is ingested
 - THEN the transcript is skipped and the run carries a warning counting
   the unlinked transcripts
+
+### Requirement: Tool error text capture
+Adapters SHALL keep 200 characters of a failed tool result's text as the
+tool span's `content.outputPreview`, under the same content contract as
+every other preview: present only when redaction is off, `null` under
+`--redact`. The preview SHALL start where the failure is named: at the last
+line that contains `failed`/`failure`/`failing`/`error(s)`/`exception(s)`
+as a word and does not negate it ("0 errors", "no failures"), else at the first
+non-empty line that is not the shell wrapper's `Exit code N` line, else at
+the first non-empty line; the selection SHALL be a pure function of the
+text, shared by all adapters. The Claude Code adapter SHALL parse a leading
+`Exit code N` line into `tool.exitCode`. Successful tool results SHALL carry
+no preview (their size is recorded, their text is not). The Claude Code
+adapter SHALL recognize `PowerShell` as a command tool for target identity,
+exactly like `Bash`.
+
+#### Scenario: A failed Bash call keeps its error
+- GIVEN a tool_result with `is_error: true` whose text starts
+  "ENOENT: no such file"
+- WHEN the transcript is parsed without redaction
+- THEN the tool span's `outputPreview` starts with that text, and the same
+  span parsed with redaction carries `outputPreview: null`
+
+#### Scenario: The preview starts at the failing step of a batch log
+- GIVEN a failed `browser_batch` result whose text logs two successful steps
+  and ends with "actions[2] (computer:screenshot) failed: …"
+- WHEN the transcript is parsed
+- THEN the tool span's `outputPreview` starts with "actions[2]", not with
+  the first successful step
+
+#### Scenario: The wrapper line becomes the exit code
+- GIVEN a failed Bash result whose text is "Exit code 1\n/usr/bin/bash:
+  line 1: cd: x: No such file or directory"
+- WHEN the transcript is parsed
+- THEN the tool span carries `tool.exitCode: 1` and its `outputPreview`
+  starts with "/usr/bin/bash:"
+
+#### Scenario: Successful output is sized, not quoted
+- GIVEN a successful Read of a 5 kB file
+- WHEN the transcript is parsed
+- THEN the tool span records `outputBytes` and no content preview
+
+### Requirement: User-rejected tool calls are decisions, not failures
+When a tool result reports that the person declined the call (Claude Code's
+"The user doesn't want to proceed with this tool use" / "…take this action
+right now" / "[Request interrupted by user…", OpenCode's "The user rejected
+permission to use this specific tool call"), the adapter SHALL emit the span
+with status `cancelled` and `statusReason: "user-rejected"`, `tool.isError`
+false, and the harness message as its `outputPreview` under the usual
+content contract. Cancelled spans SHALL NOT count toward `toolErrors` and
+SHALL NOT feed the failure rules (retry-loop, scattered-tool-failures,
+dead-end-run).
+
+#### Scenario: A declined edit is cancelled
+- GIVEN a Claude Code tool_result with `is_error: true` whose text starts
+  "The user doesn't want to proceed with this tool use"
+- WHEN the transcript is parsed
+- THEN the tool span has status `cancelled`, `statusReason` `user-rejected`,
+  `tool.isError` false, and the run's `toolErrors` does not include it
+
+#### Scenario: An OpenCode permission refusal is cancelled
+- GIVEN an OpenCode tool part in error state whose error text is "The user
+  rejected permission to use this specific tool call."
+- WHEN the part is parsed
+- THEN the span has status `cancelled` and `statusReason` `user-rejected`
+
+### Requirement: Duplicate transcript records
+The claude-code adapter SHALL treat a record's `uuid` as its identity within
+a transcript. When a transcript carries several records with the same
+`uuid` — the desktop app re-appends the whole session after a
+`bridge-session` record, so every record written before it appears again
+later, with new provenance lines and small metadata differences (a newer
+`version`, a `slug`, sometimes an emptied `toolUseResult`) — the adapter
+SHALL keep the FIRST occurrence and skip every later copy deterministically,
+so each span is emitted once, provenance stays on the line written live, and
+token, cost and error totals match a single copy of the session. A
+`tool_use` block whose id was already seen, and a `tool_result` block for a
+`tool_use_id` that already has a result, SHALL likewise be ignored
+(first-wins), whatever record carries them. Records without a `uuid` SHALL
+NOT be deduplicated.
+
+#### Scenario: Transcript re-appended after a bridge
+- GIVEN a session whose records repeat after a `bridge-session` record with
+  the same `uuid`, `message.id` and `tool_use` ids
+- WHEN the session is ingested
+- THEN every llm_call, tool_call and error span appears exactly once, each
+  span's provenance line is the first occurrence, and the run's token, cost
+  and tool-error totals equal those of the un-duplicated transcript
+
+#### Scenario: Repeated tool_use and tool_result under fresh uuids
+- GIVEN later records under new `uuid`s: an assistant record repeating a
+  `tool_use` block whose id was already seen, and a `user` record carrying
+  a `tool_result` for a `tool_use_id` that already received one
+- WHEN the transcript is parsed
+- THEN the tool span is emitted once and keeps the first result's status,
+  output size, error text and provenance
+
+#### Scenario: Copies manufacture no findings
+- GIVEN a run of consecutive failed calls of one tool that the re-appended
+  copies repeat
+- WHEN the session is ingested and insights are evaluated
+- THEN the failures form one retry-loop finding, not a second cluster
+  built from the copies
+
+#### Scenario: Records without a uuid are kept
+- GIVEN two assistant records that carry neither `uuid` nor `message.id`
+- WHEN the transcript is parsed
+- THEN both are emitted as separate llm_call spans

@@ -12,6 +12,7 @@ import type {
 } from '../adapter.js';
 import { loadSqlite, type SqliteDatabase } from '../sqlite.js';
 import { stripBom } from '../text.js';
+import { errorPreview, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
 
 /**
@@ -446,6 +447,17 @@ function outputBytes(state: Json | undefined): number | undefined {
   return undefined;
 }
 
+/** A failed part's error text: a string in the storage format, an
+ * `{ name, message }` object in some exports. */
+function errorText(state: Json | undefined): string | undefined {
+  const err = state?.error;
+  return typeof err === 'string'
+    ? err
+    : isObj(err)
+      ? (str(err.message) ?? str(err.name))
+      : undefined;
+}
+
 function durationBetween(
   startedAt: string,
   endedAt: string | undefined,
@@ -562,7 +574,12 @@ function emitBundle(
       const st = isObj(state?.time) ? state.time : {};
       const pStart = iso(num(st.start)) ?? mStart;
       const pEnd = iso(num(st.end));
-      const status = toolStatus(state);
+      const failure = errorText(state);
+      // a permission refusal is the person's decision, not the tool failing
+      // (same contract as the claude-code adapter): `cancelled`, not `error`
+      const rejected =
+        toolStatus(state) === 'error' && isUserRejection(failure);
+      const status = rejected ? 'cancelled' : toolStatus(state);
       const counts = status === 'ok' ? codeChangeCounts(toolName, input) : {};
       const bytes = outputBytes(state);
       const mcpServer = mcpServerOf(toolName);
@@ -573,6 +590,7 @@ function emitBundle(
         kind: mcpServer === undefined ? 'tool_call' : 'mcp_call',
         name: toolName,
         status,
+        ...(rejected ? { statusReason: 'user-rejected' } : {}),
         startedAt: pStart,
         ...(pEnd === undefined ? {} : { endedAt: pEnd }),
         durationMs: durationBetween(pStart, pEnd),
@@ -583,6 +601,16 @@ function emitBundle(
           ...(bytes === undefined ? {} : { outputBytes: bytes }),
           ...counts,
         },
+        // a failure's text is the one output worth previewing (same
+        // content/redaction contract as the claude-code adapter); a declined
+        // call keeps the harness message so the Inspector can say why
+        ...(status === 'error' || rejected
+          ? {
+              content: contentField(ctx, {
+                outputPreview: errorPreview(failure, PREVIEW_CHARS),
+              }),
+            }
+          : {}),
         attributes: {
           ...toolTargetAttributes('opencode', toolName, input, ctx.redact),
           ...(mcpServer === undefined

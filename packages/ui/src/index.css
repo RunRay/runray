@@ -219,6 +219,19 @@
   }
 }
 
+/* Evidence rows light up when an insight lands the timeline (deep link or
+   strip pill): hold saturated for the first third, then settle into the
+   resting wash — opacity only; the call site owns the duration (FLASH_MS). */
+@keyframes evidence-flash {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* The burn line draws itself once (03-design.md §2 Motion) — pathLength=1
    at the call site so the dash math is unit-free. */
 @keyframes draw {

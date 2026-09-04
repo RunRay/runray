@@ -7,7 +7,10 @@ export function SideNavBar() {
   const isSessions =
     route.view === 'sessions' ||
     route.view === 'timeline' ||
-    route.view === 'cost';
+    route.view === 'cost' ||
+    route.view === 'time' ||
+    route.view === 'errors' ||
+    route.view === 'waste';
 
   return (
     <nav

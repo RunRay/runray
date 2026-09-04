@@ -139,9 +139,16 @@ premium — re-written tokens times the difference between the EFFECTIVE
 cache-write rate (the 5m/1h blend of the re-writing span, per the
 TTL-aware pricing requirement) and the cache-read rate — with the breaking
 call as evidence. When an event satisfies both predicates it SHALL be
-attributed to idle-cache-expiry only. The low-cache-hit savings target
-SHALL be configurable, defaulting to 0.6, never below the firing
-threshold.
+attributed to idle-cache-expiry only. Each cache-prefix-break finding
+SHALL classify the break by what survived, from the two calls' token
+shapes: *compaction* when the breaking call's context (input + cacheRead
++ cacheWrite) is below the configured shrink ratio of the previous call's,
+*front* when fewer than the configured base tokens stayed cached (the tool
+list, system prompt or a setting changed), else *history* (the fixed front
+stayed cached and the conversation was written again). The detail and the
+suggestion SHALL follow the shape; the estimate SHALL NOT depend on it.
+The low-cache-hit savings target SHALL be configurable, defaulting to 0.6,
+never below the firing threshold.
 
 #### Scenario: Mid-session prefix break
 - GIVEN call N−1 with 80k cacheRead and call N with 2k cacheRead and 75k
@@ -157,12 +164,31 @@ threshold.
 - THEN an idle-cache-expiry finding is emitted for the pair and no
   cache-prefix-break finding duplicates it
 
+#### Scenario: Shape follows what survived
+- GIVEN three breaks after a 200k-token cached call: one where 38k tokens
+  stay cached and 190k are written again, one where 1k stays cached and
+  200k are written again, and one where the breaking call's whole context
+  is 60k tokens
+- WHEN rules are evaluated
+- THEN the findings read as a history re-write, a front change and a
+  compaction respectively, with different suggestions and the same
+  re-write-premium estimate formula
+
 ### Requirement: Context overhead insights
 The system SHALL detect sessions whose first llm_call context footprint
 (input + cacheRead + cacheWrite) exceeds a configurable floor, pricing the
 overhead as one cache write plus a cache read per subsequent call; and the
-context-bloat estimate SHALL be the cumulative excess input tokens across
-all calls beyond the baseline median, not a trailing-window approximation.
+context-bloat rule SHALL measure each call's full input-class context
+(input + cacheRead + cacheWrite) of the main session (subagent calls
+excluded, as for the footprint), fire when the median of the last three
+calls exceeds the configured multiple of the first three and the floor,
+and estimate the cumulative excess over the baseline median across all
+later calls, each call's excess priced at what that call actually paid per
+input-class token (its input, cache-read and effective cache-write legs) —
+never a trailing-window approximation, and never the input rate for tokens
+that were served from cache. The finding SHALL state that this estimate is
+an upper bound which assumes the work could have continued from a
+compacted context.
 
 #### Scenario: Session born bloated
 - GIVEN a session whose first llm_call carries a 95k-token context footprint
@@ -176,6 +202,20 @@ all calls beyond the baseline median, not a trailing-window approximation.
 - WHEN context-bloat is evaluated
 - THEN the estimate sums each call's excess over the 20k baseline rather
   than three times the final delta
+
+#### Scenario: Cached growth is visible and priced as cache reads
+- GIVEN a run whose calls read 10k tokens from cache at the start and
+  150k tokens from cache at the end, with a few thousand fresh input
+  tokens per call throughout
+- WHEN context-bloat is evaluated
+- THEN it fires on the cached growth and prices the excess at the
+  cache-read rate, not the input rate
+
+#### Scenario: Subagent calls do not drag the medians
+- GIVEN a main session whose context is flat at 80k tokens and a subagent
+  whose calls run at 5k tokens
+- WHEN context-bloat is evaluated
+- THEN it stays silent
 
 ### Requirement: Tool-usage insights
 The system SHALL detect repeated reads of an unchanged target (same tool
@@ -320,3 +360,112 @@ recomputed on demand, never persisted into the frozen TraceFile schema.
 - WHEN coverage is computed
 - THEN it reports 3 unpriced calls, their summed tokens, and the model names
   in stable order, and `complete` is false
+
+### Requirement: Severity grading
+The system SHALL assign each finding's severity centrally in the engine,
+after rule evaluation, from the finding's estimated waste as a share of the
+run's total cost: `critical` when the share is at least the critical share
+AND the amount is at least the critical floor; `warning` when the share is
+at least the warning share AND the amount is at least the warning floor;
+`info` otherwise. Findings without an estimate, and findings on runs with
+zero priced cost, SHALL be `info`. The shares and floors SHALL be
+configurable under `insights.thresholds.severity` (defaults: warning 2% /
+$0.05, critical 10% / $1). Rules SHALL NOT set severity themselves, and
+severity SHALL be independent of the rule's waste/opportunity class.
+
+#### Scenario: Same rule, different runs
+- GIVEN two runs with a retry-loop finding worth $0.60, one run costing
+  $0.65 and the other $600
+- WHEN rules are evaluated
+- THEN the first finding is `warning` and the second is `info`
+
+#### Scenario: Critical needs both share and amount
+- GIVEN a $0.50 finding on a $0.50 run and a $20 finding on a $100 run
+- WHEN severity is graded
+- THEN the first is `warning` (below the $1 floor) and the second is
+  `critical`
+
+#### Scenario: No estimate means info
+- GIVEN a finding whose waste could not be priced
+- WHEN severity is graded
+- THEN it is `info` regardless of its rule
+
+### Requirement: Suggestions address the person running the agent
+Every finding's `suggestion` SHALL be one sentence addressed to the person
+running the agent, naming a lever that person has (a command, a
+configuration key, an instructions file, a model switch), never an
+instruction the model would have to follow. Where the finding's own numbers
+change the decision (the cost of one loop, the per-call cache-read cost of a
+large context, the tokens re-written) the sentence SHALL carry them, and
+where the lever differs by source the sentence SHALL pick it by
+`run.source.tool` (Claude Code, OpenCode, or a custom agent for OTLP and
+unknown sources). Each rule SHALL register a playbook in the rule metadata
+registry — causes, actions per source, limits — which is the single source
+for the generated docs section "How to fix, rule by rule" and for the
+Inspector.
+
+#### Scenario: A retry loop on a shell tool points at the instructions file
+- GIVEN a Claude Code run with a retry-loop finding on `Bash`
+- WHEN the finding is emitted
+- THEN its suggestion names `CLAUDE.md` as the place to record the missing
+  environment fact, and the same finding on an OpenCode run names
+  `AGENTS.md`
+
+#### Scenario: An idle expiry states the running cost
+- GIVEN an idle-cache-expiry finding after a two-hour gap that re-wrote 50k
+  tokens
+- WHEN the finding is emitted
+- THEN its suggestion says to compact before a long break or start a new
+  session, and states the cache-read cost every further call in that
+  context pays
+
+#### Scenario: Playbook coverage
+- GIVEN the registered rule set
+- WHEN the metadata registry is checked
+- THEN every rule has a playbook with at least one cause, at least one
+  action for each of Claude Code, OpenCode and custom agents, and at least
+  one limit, and the committed docs block equals the rendered registry
+
+### Requirement: Findings quote the failure
+Where a failed tool span carries an error preview, retry-loop SHALL quote
+the last failure's first line (whitespace collapsed, at most 120
+characters) in its detail, dead-end-run SHALL name the failing step's
+reason, and scattered-tool-failures SHALL quote the dominant tool's most
+recent error. Without a preview (redacted, or not captured by the source)
+the findings SHALL read exactly as before, with no placeholder.
+
+#### Scenario: Retry loop names the error
+- GIVEN three consecutive Bash failures whose last error reads "The token
+  '&&' is not a valid statement separator."
+- WHEN the finding is emitted
+- THEN its detail quotes that sentence as the last error
+
+#### Scenario: Redaction leaves no trace of the text
+- GIVEN the same session parsed with `--redact`
+- WHEN the findings are emitted
+- THEN no finding text contains any part of the error, and no placeholder
+  stands in for it
+
+### Requirement: Context ceiling estimates
+The system SHALL expose, under a browser-safe subpath, the context-excess
+formula the `context-bloat` rule prices with — from the fourth main-scope
+call on, each call's input-class tokens above a floor, priced at what that
+call actually paid per input-class token — and a function that, for a run,
+reports the rule's own figure (the floor being the median context of the
+first three main-scope calls) alongside the same formula evaluated with a
+ceiling in place of the baseline for 100k, 200k and 400k tokens. The rule
+SHALL compute its estimate through that same function, so the two cannot
+diverge; without a pricing table the token figures SHALL stand and the
+amounts SHALL be undefined; a run with fewer than six main-scope calls
+SHALL yield nothing, as the rule never fires there.
+
+#### Scenario: The rule and the ceilings agree
+- GIVEN a run on which context-bloat fires
+- WHEN the ceiling estimates are computed with the same pricing table
+- THEN the figure against the baseline equals the finding's
+  `estimatedWasteUSD`, and the amounts decrease as the ceiling rises
+
+#### Scenario: Unpriced stays honest
+- GIVEN the same run and no pricing table
+- WHEN the ceiling estimates are computed
+- THEN the token figures are present and every amount is undefined

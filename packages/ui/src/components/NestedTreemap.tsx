@@ -58,6 +58,11 @@ export function NestedTreemap({ run }: { run: Run }) {
   // top level: main-session own value + top-level subagents side by side
   const topItems = cellItems(tree);
   const maxValue = Math.max(...topItems.map((i) => i.value), 1);
+  // a delegate worth 1% of the run draws as a sliver the map cannot label;
+  // the map keeps its honest proportions and the strip below names them
+  const unlabeled = treemapLayout(topItems, (i) => i.value, 100, 100)
+    .filter((c) => !isLabelable(c.w, c.h))
+    .map((c) => c.item);
 
   return (
     <div>
@@ -87,8 +92,39 @@ export function NestedTreemap({ run }: { run: Run }) {
           format={format}
         />
       </div>
+      {unlabeled.length > 0 && (
+        <p className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-label text-text-dim">
+          <span className="micro-label text-text-faint">
+            too small to label
+          </span>
+          {unlabeled.map((item) => (
+            <button
+              key={item.rootId ?? '·own'}
+              type="button"
+              onClick={() => openInTimeline(run.id, item.rootId)}
+              title={`${item.name} — ${format(item.value)}. Open in timeline.`}
+              className="rounded-control px-1 py-0.5 text-left transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass active:bg-bg"
+            >
+              {item.name}{' '}
+              <span className="font-mono text-text-faint">
+                {format(item.value)}
+              </span>
+            </button>
+          ))}
+        </p>
+      )}
     </div>
   );
+}
+
+/** A cell wide and tall enough to carry its name and value. */
+function isLabelable(w: number, h: number): boolean {
+  return w > 18 && h > 12;
+}
+
+function openInTimeline(runId: string, rootId: string | null): void {
+  if (rootId !== null) useAppStore.getState().selectSpan(rootId);
+  useAppStore.getState().navigateTo({ view: 'timeline', runId });
 }
 
 interface CellItem {
@@ -140,12 +176,7 @@ function CellLayer({
         const cellArea = total > 0 ? areaPct * (item.value / total) : 0;
         const nested = item.node !== null && item.node.children.length > 0;
         const canRecurse = nested && cellArea >= RECURSE_FLOOR && h > 22;
-        const open = () => {
-          if (item.rootId !== null) {
-            useAppStore.getState().selectSpan(item.rootId);
-          }
-          useAppStore.getState().navigateTo({ view: 'timeline', runId });
-        };
+        const open = () => openInTimeline(runId, item.rootId);
         const label = `${item.name} — ${format(item.value)}`;
 
         if (canRecurse && item.node !== null) {
@@ -189,7 +220,7 @@ function CellLayer({
         }
 
         const hiddenNested = item.node !== null ? descendants(item.node) : 0;
-        const big = w > 18 && h > 12;
+        const big = isLabelable(w, h);
         return (
           <button
             key={item.rootId ?? '·own'}

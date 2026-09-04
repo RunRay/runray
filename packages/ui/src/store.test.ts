@@ -191,3 +191,89 @@ describe('selectActiveRun', () => {
     expect(selectActiveRun(useAppStore.getState())).toBeUndefined();
   });
 });
+
+describe('inspector focus (Activity | Finding)', () => {
+  const i1 = {
+    id: 'i1',
+    ruleId: 'retry-loop',
+    severity: 'warning' as const,
+    title: 't1',
+    detail: 'd',
+    spanIds: ['s1', 's2'],
+  };
+  const i2 = {
+    id: 'i2',
+    ruleId: 'duplicate-read',
+    severity: 'info' as const,
+    title: 't2',
+    detail: 'd',
+    spanIds: ['s2', 's3'],
+  };
+
+  it('activateInsight keeps a selected span that is evidence and focuses the finding', () => {
+    useAppStore.getState().selectSpan('s1');
+    useAppStore.getState().activateInsight(i1);
+    const { selection } = useAppStore.getState();
+    expect(selection).toEqual({
+      spanId: 's1',
+      insightId: 'i1',
+      focus: 'insight',
+    });
+  });
+
+  it('showInsight has no toggle semantics and can select the evidence span in one step', () => {
+    useAppStore.getState().showInsight(i1, 's2');
+    let state = useAppStore.getState();
+    expect(state.selection).toEqual({
+      spanId: 's2',
+      insightId: 'i1',
+      focus: 'insight',
+    });
+    expect(state.ui.inspectorOpen).toBe(true);
+    // opening the same finding again does not deactivate it
+    useAppStore.getState().showInsight(i1, 's2');
+    expect(useAppStore.getState().selection.insightId).toBe('i1');
+    // switching to another finding of the same span keeps the span
+    useAppStore.getState().showInsight(i2, 's2');
+    state = useAppStore.getState();
+    expect(state.selection).toEqual({
+      spanId: 's2',
+      insightId: 'i2',
+      focus: 'insight',
+    });
+    expect([...state.ui.highlighted].sort()).toEqual(['s2', 's3']);
+    // an unrelated span is dropped rather than shown behind the finding
+    useAppStore.getState().showInsight(i1, 's9');
+    expect(useAppStore.getState().selection.spanId).toBeNull();
+  });
+
+  it('focusInspector flips the detail; selecting a span returns to the activity', () => {
+    useAppStore.getState().showInsight(i1, 's1');
+    useAppStore.getState().focusInspector('span');
+    let { selection } = useAppStore.getState();
+    expect(selection).toEqual({ spanId: 's1', insightId: 'i1', focus: 'span' });
+    useAppStore.getState().focusInspector('insight');
+    expect(useAppStore.getState().selection.focus).toBe('insight');
+    useAppStore.getState().selectSpan('s2');
+    ({ selection } = useAppStore.getState());
+    expect(selection).toEqual({ spanId: 's2', insightId: 'i1', focus: 'span' });
+  });
+
+  it('deactivating a finding returns the focus to the activity', () => {
+    useAppStore.getState().selectSpan('s1');
+    useAppStore.getState().activateInsight(i1);
+    useAppStore.getState().activateInsight(i1);
+    const { selection, ui } = useAppStore.getState();
+    expect(selection).toEqual({ spanId: 's1', insightId: null, focus: 'span' });
+    expect(ui.highlighted.size).toBe(0);
+  });
+
+  it('a staged insight lands with the finding in focus', () => {
+    useAppStore.getState().routeChanged({ view: 'dashboard' });
+    useAppStore.getState().stageInsight(i1);
+    useAppStore.getState().routeChanged({ view: 'timeline', runId: 'r2' });
+    expect(useAppStore.getState().selection.focus).toBe('insight');
+    useAppStore.getState().routeChanged({ view: 'timeline', runId: 'r3' });
+    expect(useAppStore.getState().selection.focus).toBe('span');
+  });
+});

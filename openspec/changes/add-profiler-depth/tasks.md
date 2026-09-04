@@ -262,6 +262,11 @@ Composition (all [UI → /frontend-design]; savings panel first, rest on top):
       stamp. After 7.21 (TopBar serialization).
 - [x] 7.23 B Command palette: add `go:dashboard` as first "Go to" entry;
       remove the misleading `dashboard` keyword from `go:sessions` (D7). ∥
+- [x] 7.24 B [UI → /frontend-design] Finding markers in the waterfall
+      (severity notch + count chip per evidence row, `insightsBySpan`) and
+      the Inspector Activity | Finding switch (`selection.focus`,
+      `showInsight`, `focusInspector`); spec: visualizer "Finding markers
+      and the Inspector detail switch". Added 2026-09-03.
 
 ## 8. Human-gated fixtures — Batch 2 (additive golden commits, one per capture)
 
@@ -325,3 +330,126 @@ automatically extends its fixture-parameterized equivalence matrix.
       isSidechain legacy gate scoped to the MAIN transcript, sidecars in
       candidate provenance, scrub allowlist keeps sidecar join keys,
       O(spans+agents) adoption index, parallel sidecar reads.
+- [x] 11.7 A Severity graded by the engine, not the rules (spec: cost-engine
+      "Severity grading"): `gradeSeverity` from estimatedWasteUSD as a share
+      of run cost with per-tier floors (`insights.thresholds.severity`),
+      `deadEndRun.criticalCostUSD` retired, rules no longer emit severity;
+      UI insights strip and run tour rank findings by estimated waste
+      (`rankInsights`). Goldens regenerated (severity values only) in a
+      dedicated commit. Added 2026-09-03.
+- [x] 11.8 A Suggestions and playbooks (spec: cost-engine "Suggestions address
+      the person running the agent", visualizer "Finding playbook in the
+      Inspector"): every rule's suggestion rewritten for the person running
+      the agent, source-aware via `run.source.tool`, carrying the finding's
+      numbers (goldens regenerated, text only, dedicated commit); `RULE_META`
+      playbooks (causes · actions per source · limits) rendered into
+      docs/08-FINDINGS.md by `pnpm docs:playbooks` with a drift test;
+      Inspector "How to fix" section; dashboard groups describe the rule,
+      not one finding. Added 2026-09-03.
+- [x] 11.9 A Error text on failed tool spans (spec: trace-ingestion "Tool
+      error text capture", cost-engine "Findings quote the failure"): the
+      claude-code and opencode adapters keep the first 200 chars of a failed
+      result as `content.outputPreview` (null under `--redact`); retry-loop,
+      dead-end-run and scattered-tool-failures quote it; `PowerShell` joins
+      the claude-code target map (command identity). Goldens regenerated in a
+      dedicated commit. Added 2026-09-03.
+- [x] 11.10 A Rule semantics after the suggestions audit (spec: cost-engine
+      "Cache lifecycle insights" and "Context overhead insights" amended):
+      context-bloat measures the full input-class context of the main
+      session and prices each call's excess at what that call actually paid
+      per token (it never fired on cached sessions before); cache-prefix-break
+      classifies the break by what survived (front · history · compaction,
+      `cachePrefixBreak.baseRetainedTokens` / `shrinkRatio`) and words the
+      finding per shape; the 1h-TTL attribution of idle-cache-expiry was
+      checked against real sessions (1h caches survive 5–60 min gaps in
+      ~90% of pairs) and kept. Goldens regenerated in a dedicated commit.
+      Added 2026-09-03.
+
+## 12. Error triage (post-analysis addition, spec: trace-ingestion "Tool error text capture" amended + "User-rejected tool calls are decisions, not failures"; error-triage capability; visualizer "Errors tab")
+
+- [x] 12.1 A Failure text selection, exit codes and user rejections (E0):
+      shared `adapters/error-preview.ts` (preview starts at the last line
+      naming the failure, else past the `Exit code N` wrapper line) used by
+      all three adapters; claude-code parses `Exit code N` into
+      `tool.exitCode`; a declined call ("The user doesn't want to proceed…",
+      OpenCode "The user rejected permission…") is `cancelled` +
+      `statusReason: user-rejected`, out of `toolErrors` and the failure
+      rules. Goldens regenerated in a dedicated commit. Added 2026-09-03.
+- [x] 12.2 A Duplicate transcript records (E0, spec: trace-ingestion
+      "Duplicate transcript records"): the claude-code adapter keeps the
+      first copy of each record uuid and never registers a tool_use id or a
+      tool_result twice — a desktop `bridge-session` re-appends the history
+      and doubled every tool span before it (4 of the user's 70 sessions,
+      phantom retry-loop findings). Fixture `claude-code/duplicate-records`
+      + golden. Done on `claude/suspicious-ellis-0abbbd`, merged as 2c57268.
+      Added 2026-09-03.
+- [x] 12.3 A Error triage in core (E1, spec: error-triage "Error
+      classification", "Error clusters, reaction cost and recovery",
+      "Attention signal", "Error-class playbooks"): browser-safe
+      `@runray/core/triage` — `classifyError` (ordered patterns over the
+      failure text → class + owner: you · tooling · agent · model · work ·
+      unknown; shape fallback without text), `ERROR_CLASS_META` with a
+      playbook per class per source, `triageRun` (clusters = class × tool,
+      reaction cost claimed once per model call, recovery = next same-tool
+      call in scope, outcome, linked findings), `triageTone`; error-classes
+      block in docs/08 generated by `pnpm docs:playbooks` with a drift test.
+      Verified against the user's 592 real failures. Added 2026-09-03.
+- [x] 12.4 B [UI → /frontend-design] Errors tab and triage-toned pills (E2,
+      spec: visualizer "Errors tab", "Error triage in the sessions lists"):
+      route `#/run/:id/errors`, `ErrorsView` (summary · owner strip · time
+      rail · owner filter · clusters with error text, occurrence jumps to
+      the timeline, finding links, class playbook per source; expected
+      feedback collapsed and dimmed; empty and redacted states), Errors tab
+      with count in the triage tone, `lib/triage.ts` (WeakMap-cached
+      `runTriage`, `errorPill`), pills in the sessions table and rail tinted
+      by `triageTone` with "· N yours to fix", palette entry, contextual hint,
+      shared `PlaybookSteps`. Added 2026-09-03.
+- [x] 12.5 B [UI → /frontend-design] Inspector error sections (E3, spec:
+      visualizer "Inspector error sections"): `ErrorTriageSections` after
+      Output — owner · class, explanation, what happened to this occurrence
+      (recovery, reaction cost), the source playbook under the tab's
+      visibility rule, a jump to the Errors tab; one sentence for a declined
+      call; "tool errors" in the run summary takes the triage tone; the
+      Inspector's rule playbook reuses `PlaybookSteps`. Added 2026-09-03.
+- [x] 12.6 A+B Docs and changeset for the series (E4): docs/08 "Errors,
+      class by class" (generated) and the Errors tab / Inspector sections
+      under "Where findings appear"; docs/05 §2.5 error triage and §4 UI
+      surfaces; README sentence; one `minor` changeset covering E0–E3.
+      Added 2026-09-03.
+
+## 13. Waste tab (post-analysis addition, spec: waste-grouping capability; visualizer "Waste tab", "Cost breakdown view" and "Insights strip" amended)
+
+- [x] 13.1 A Waste grouping in core (W0, spec: waste-grouping "Findings
+      grouped by rule and class", "Group severity", "Cent-level groups
+      fold", "Leak events on the session's clock", "One shape for a cache
+      break"): browser-safe `@runray/core/waste` — `wasteRun` (groups per
+      rule split burned / opportunities, graded on the group sum by the
+      engine's own `gradeSeverity`, folded when every finding is under the
+      warning floor, cache breaks read by shape from their two evidence
+      calls, leak events and per-call context points); `gradeSeverity` and
+      the break shape moved to pure modules shared with the engine. Analysed
+      on the user's 72 real sessions. Added 2026-09-04.
+- [x] 13.2 B [UI → /frontend-design] Waste tab (W1, spec: visualizer "Waste
+      tab"): route `#/run/:id/waste`, `WasteView` (two headline figures and
+      the lead sentence, burned and opportunity groups with occurrences,
+      shape split, playbook per group, folded cents, empty state), tab badge
+      with the burned amount, palette entry, contextual hint, `lib/waste.ts`.
+- [x] 13.3 B [UI → /frontend-design] Leak rail (W2, spec: visualizer "Waste
+      tab" — "Leaks on the clock"): context curve per model call, one bar
+      per burned event sized by amount, idle bands, compaction marks, a 200k
+      guide; a bar opens the timeline on its span.
+- [x] 13.4 B [UI → /frontend-design] Re-homing (W3, spec: visualizer "Cost
+      breakdown view" and "Insights strip" amended): the waste table and the
+      what-if panel leave the Overview for the Waste tab; the strip shows the
+      five largest findings and a "+N more in Waste" control; tour, hints and
+      tests follow.
+- [x] 13.5 A+B Docs and changeset (W4): docs/08 "Where findings appear",
+      docs/05 §2.5 and §4, README, one `minor` changeset.
+- [x] 13.6 A+B How Growing context is counted (spec: cost-engine "Context
+      ceiling estimates", visualizer "Waste tab" amended): the context-excess
+      formula moves to browser-safe `insights/context-excess.ts` (the rule
+      calls it; `contextCapEstimates` re-runs it with 100k / 200k / 400k
+      ceilings, exported from `@runray/core/waste`); the open Growing
+      context row explains the baseline, the calls counted, the excess and
+      the rate as an upper bound, and lists what each ceiling would have
+      saved. Asked by the user after seeing $659 of $808. Added 2026-09-04.

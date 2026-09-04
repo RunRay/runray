@@ -1,8 +1,10 @@
 import type { Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
+  collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  insightsBySpan,
   laneMarks,
   matchingSpanIds,
   subagentSpanIds,
@@ -209,5 +211,85 @@ describe('subtreeRollups (D3)', () => {
     });
     expect(rollups.get('root')?.costUSD).toBeCloseTo(0.75, 6);
     expect(rollups.get('root')?.llmCalls).toBe(3);
+  });
+});
+
+describe('collapsedAncestorsOf', () => {
+  const spans = [
+    stubSpan({ id: 'root' }),
+    stubSpan({ id: 'agent', parentId: 'root', depth: 1 }),
+    stubSpan({ id: 'call', parentId: 'agent', depth: 2 }),
+    stubSpan({ id: 'other', parentId: 'root', depth: 1 }),
+    stubSpan({ id: 'leaf', parentId: 'other', depth: 2 }),
+  ];
+
+  it('returns only the collapsed ancestors of the targets', () => {
+    const hidden = collapsedAncestorsOf(
+      spans,
+      new Set(['call']),
+      new Set(['agent', 'other', 'root']),
+    );
+    expect([...hidden].sort()).toEqual(['agent', 'root']);
+  });
+
+  it('is empty when nothing above a target is collapsed', () => {
+    expect(
+      collapsedAncestorsOf(spans, new Set(['call']), new Set(['other'])).size,
+    ).toBe(0);
+    expect(collapsedAncestorsOf(spans, new Set(), new Set(['root'])).size).toBe(
+      0,
+    );
+  });
+
+  it('ignores a collapsed target itself — only ancestors hide it', () => {
+    expect(
+      collapsedAncestorsOf(spans, new Set(['agent']), new Set(['agent'])).size,
+    ).toBe(0);
+  });
+});
+
+describe('insightsBySpan', () => {
+  const finding = (
+    id: string,
+    severity: 'info' | 'warning' | 'critical',
+    spanIds: string[],
+    usd?: number,
+  ) => ({
+    id,
+    ruleId: 'retry-loop',
+    severity,
+    title: id,
+    detail: '',
+    spanIds,
+    ...(usd === undefined ? {} : { estimatedWasteUSD: usd }),
+  });
+
+  it('keys every evidence span and lists a shared span under each finding', () => {
+    const map = insightsBySpan([
+      finding('a', 'warning', ['s1', 's2']),
+      finding('b', 'info', ['s2', 's3']),
+    ]);
+    expect([...map.keys()].sort()).toEqual(['s1', 's2', 's3']);
+    expect(map.get('s2')?.map((i) => i.id)).toEqual(['a', 'b']);
+    expect(map.get('s3')?.map((i) => i.id)).toEqual(['b']);
+  });
+
+  it('orders a span’s findings worst first: severity, then waste, then id', () => {
+    const map = insightsBySpan([
+      finding('cheap', 'warning', ['s'], 1),
+      finding('info', 'info', ['s'], 50),
+      finding('critical', 'critical', ['s']),
+      finding('dear', 'warning', ['s'], 9),
+    ]);
+    expect(map.get('s')?.map((i) => i.id)).toEqual([
+      'critical',
+      'dear',
+      'cheap',
+      'info',
+    ]);
+  });
+
+  it('is empty for a run without findings', () => {
+    expect(insightsBySpan([]).size).toBe(0);
   });
 });

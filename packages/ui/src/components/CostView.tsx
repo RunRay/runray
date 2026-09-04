@@ -1,4 +1,4 @@
-import type { Insight, Run } from '@runray/schema';
+import type { Run } from '@runray/schema';
 import { type ReactNode, useMemo, useState } from 'react';
 import {
   bucketCostByModel,
@@ -8,20 +8,17 @@ import {
 import { formatClock, formatTokens, formatUSD } from '../lib/format';
 import { assignModelColors } from '../lib/model-colors';
 import { computeTimeRange } from '../lib/waterfall';
-import { useAppStore } from '../store';
 import { CacheDial } from './CacheDial';
 import { CoverageBanner } from './CoverageNotices';
 import { LimitSuffix } from './LimitMode';
 import { NestedTreemap } from './NestedTreemap';
 import { PricingProvenance, TranscriptCostNote } from './PricingProvenance';
-import { SeverityPill } from './SeverityPill';
-import { WhatIfPanel } from './WhatIfPanel';
 
 /**
- * Cost Breakdown (03-design.md §4.3): hero totals · cost stacked by model
- * over time · treemap by agent subtree (heat = share of the biggest cell) ·
- * waste table naming failed work. Evidence links jump to the Timeline with
- * the span selected.
+ * Cost Breakdown (03-design.md §4.3): where the money went — hero totals ·
+ * tool spend leaderboard · cost stacked by model over time · treemap by
+ * agent subtree (heat = share of the biggest cell). What could have been
+ * kept — the findings and the what-if repricing — lives on the Waste tab.
  */
 
 export function CostView({ run }: { run: Run }) {
@@ -53,14 +50,6 @@ export function CostView({ run }: { run: Run }) {
           toolCosts={toolCosts}
           totalCost={run.totals.costUSD.total}
         />
-      </Panel>
-
-      <Panel title="Wasted spend">
-        <WasteTable insights={run.insights} runId={run.id} />
-      </Panel>
-
-      <Panel title="What if — cheaper tier">
-        <WhatIfPanel run={run} />
       </Panel>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -329,79 +318,5 @@ function StackedBar({
         </div>
       )}
     </>
-  );
-}
-
-function WasteTable({
-  insights,
-  runId,
-}: {
-  insights: readonly Insight[];
-  runId: string;
-}) {
-  const selectSpan = useAppStore((s) => s.selectSpan);
-  if (insights.length === 0) {
-    return (
-      <p className="py-4 text-center text-label text-text-faint">
-        No findings — nothing wasted that the rules can see.
-      </p>
-    );
-  }
-  const openEvidence = (insight: Insight) => {
-    const first = insight.spanIds[0];
-    if (first !== undefined) selectSpan(first);
-    useAppStore.getState().navigateTo({ view: 'timeline', runId });
-  };
-  return (
-    <table className="w-full text-body">
-      <thead>
-        <tr className="border-b border-border-slate text-left text-label text-on-surface-variant">
-          <th scope="col" className="py-1.5 pr-3 font-normal">
-            finding
-          </th>
-          <th scope="col" className="py-1.5 pr-3 text-right font-normal">
-            est. waste
-          </th>
-          <th scope="col" className="py-1.5 pr-3 font-normal">
-            suggestion
-          </th>
-          <th scope="col" className="py-1.5 font-normal">
-            <span className="sr-only">evidence</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {insights.map((insight) => (
-          <tr
-            key={insight.id}
-            className="border-b border-border-slate/40 align-top"
-          >
-            <td className="py-2 pr-3">
-              <span className="mr-2">
-                <SeverityPill severity={insight.severity} />
-              </span>
-              <span className="text-text">{insight.title}</span>
-            </td>
-            <td className="whitespace-nowrap py-2 pr-3 text-right font-mono text-heat-2">
-              {insight.estimatedWasteUSD !== undefined
-                ? formatUSD(insight.estimatedWasteUSD)
-                : '—'}
-            </td>
-            <td className="py-2 pr-3 text-text-dim">
-              {insight.suggestion ?? insight.detail}
-            </td>
-            <td className="whitespace-nowrap py-2 text-right">
-              <button
-                type="button"
-                onClick={() => openEvidence(insight)}
-                className="rounded border border-border-slate bg-surface px-2 py-0.5 text-label text-on-surface-variant transition-colors duration-150 ease-out hover:bg-surface-variant hover:text-on-surface active:bg-bg-deep-gray"
-              >
-                View evidence
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
