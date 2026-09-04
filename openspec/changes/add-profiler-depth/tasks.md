@@ -445,3 +445,11 @@ automatically extends its fixture-parameterized equivalence matrix.
       tests follow.
 - [x] 13.5 A+B Docs and changeset (W4): docs/08 "Where findings appear",
       docs/05 §2.5 and §4, README, one `minor` changeset.
+- [x] 13.6 A+B How Growing context is counted (spec: cost-engine "Context
+      ceiling estimates", visualizer "Waste tab" amended): the context-excess
+      formula moves to browser-safe `insights/context-excess.ts` (the rule
+      calls it; `contextCapEstimates` re-runs it with 100k / 200k / 400k
+      ceilings, exported from `@runray/core/waste`); the open Growing
+      context row explains the baseline, the calls counted, the excess and
+      the rate as an upper bound, and lists what each ceiling would have
+      saved. Asked by the user after seeing $659 of $808. Added 2026-09-04.

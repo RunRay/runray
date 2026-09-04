@@ -12,6 +12,13 @@ export {
   DEFAULT_BREAK_SHAPE,
 } from '../insights/cache-shape.js';
 export {
+  type ContextCapEstimate,
+  type ContextCapEstimates,
+  type ContextExcess,
+  contextCapEstimates,
+  DEFAULT_CONTEXT_CAPS,
+} from '../insights/context-excess.js';
+export {
   DEFAULT_SEVERITY_THRESHOLDS,
   gradeSeverity,
   type SeverityThresholds,

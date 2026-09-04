@@ -1,8 +1,6 @@
 import type { Run, Span } from '@runray/schema';
-import type { PricingEntry, PricingTable } from '../pricing/engine.js';
 import {
   cacheWrite1hTokens,
-  effectiveCacheWriteRate,
   matchModel,
   repriceRun,
   repriceSpans,
@@ -10,6 +8,14 @@ import {
   suggestedDowngrade,
 } from '../pricing/engine.js';
 import { breakShape, contextTokens } from './cache-shape.js';
+import {
+  contextExcess,
+  dominantModel,
+  dominantModelEntry,
+  mainScopeLlmCalls,
+  median3,
+  spanCacheWriteRate,
+} from './context-excess.js';
 import {
   buildScopeIndex,
   chronological,
@@ -110,27 +116,6 @@ function toolClassOf(span: Span): ToolClass {
 }
 
 /** Rate card for waste estimates: the run's dominant model (most input tokens). */
-function dominantModel(spans: readonly Span[]): string | undefined {
-  const byModel = new Map<string, number>();
-  for (const s of spans) {
-    if (s.kind !== 'llm_call' || !s.llm) continue;
-    byModel.set(
-      s.llm.model,
-      (byModel.get(s.llm.model) ?? 0) +
-        s.llm.tokens.input +
-        s.llm.tokens.cacheRead,
-    );
-  }
-  return [...byModel.entries()].sort(
-    (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
-  )[0]?.[0];
-}
-
-function dominantModelEntry(run: Run, pricing: PricingTable) {
-  const dominant = dominantModel(run.spans);
-  return dominant === undefined ? undefined : matchModel(pricing, dominant);
-}
-
 /** The llm calls a retry cluster bills: parents of the failures plus
  * same-scope llm calls inside the first→last failure window (B6 — parallel
  * sibling subtrees are never billed for a loop they did not run). */
@@ -316,50 +301,13 @@ function lowCacheHitSuggestion(
   }
 }
 
-function median3(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[1] ?? 0;
-}
-
-/** What one input-class token of this call cost on average: its input,
- * cache-read and effective cache-write legs over its context. A grown
- * context served from cache is priced as cache reads, not as fresh input
- * — measuring `input` alone never saw a cached session grow, and the
- * input rate would overstate one by an order of magnitude. */
-function contextRatePerMTok(
-  s: Span,
-  pricing: PricingTable,
-  fallback: PricingEntry | undefined,
-): number | undefined {
-  const t = s.llm?.tokens;
-  if (t === undefined) return undefined;
-  const entry =
-    (s.llm === undefined ? undefined : matchModel(pricing, s.llm.model)) ??
-    fallback;
-  if (entry === undefined) return undefined;
-  const context = t.input + t.cacheRead + t.cacheWrite;
-  if (context <= 0) return undefined;
-  return (
-    (t.input * entry.inputPerMTok +
-      t.cacheRead * entry.cacheReadPerMTok +
-      t.cacheWrite * spanCacheWriteRate(entry, s)) /
-    context
-  );
-}
-
 const contextBloat: InsightRule = {
   id: 'context-bloat',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
     const cfg = ctx.thresholds;
     // main session only, like fixed-context-overhead: a subagent runs its
     // own context, and its small calls would drag the session's medians
-    const scope = buildScopeIndex(run);
-    const scopeKind = new Map(run.spans.map((s) => [s.id, s.kind]));
-    const llms = chronologicalLlmCalls(run).filter(
-      (l) =>
-        l.llm !== undefined &&
-        scopeKind.get(scope.get(l.id) ?? '') !== 'subagent',
-    );
+    const llms = mainScopeLlmCalls(run);
     if (llms.length < 6) return [];
     const contexts = llms.map(contextTokens);
     const first = median3(contexts.slice(0, 3));
@@ -381,19 +329,15 @@ const contextBloat: InsightRule = {
           (a.id < b.id ? -1 : 1),
       )
       .slice(0, t.topCulprits);
-    const fallback = dominantModelEntry(run, ctx.pricing);
     // cumulative excess beyond the opening baseline (B5), each call's share
-    // priced at what that call actually paid per input-class token
-    let excessTokens = 0;
-    let excessUSD: number | undefined = 0;
-    for (let i = 3; i < llms.length; i++) {
-      const excess = Math.max(0, (contexts[i] ?? 0) - first);
-      if (excess === 0) continue;
-      excessTokens += excess;
-      const rate = contextRatePerMTok(llms[i] as Span, ctx.pricing, fallback);
-      if (rate === undefined) excessUSD = undefined;
-      else if (excessUSD !== undefined) excessUSD += (excess * rate) / 1e6;
-    }
+    // priced at what that call actually paid per input-class token — the
+    // shared formula the Waste tab re-runs with a ceiling for the baseline
+    const { tokens: excessTokens, usd: excessUSD } = contextExcess(
+      llms,
+      first,
+      ctx.pricing,
+      dominantModelEntry(run, ctx.pricing),
+    );
     const waste = excessUSD === undefined ? undefined : round6(excessUSD);
     return [
       {
@@ -742,15 +686,6 @@ const modelMismatch: InsightRule = {
     );
   },
 };
-
-/** Effective cache-write rate of one span's write at this entry's rates:
- * the 5m/1h blend from the adapter-recorded TTL split — the SAME math the
- * cost engine billed, so waste dollars reconcile with span costUSD. */
-function spanCacheWriteRate(entry: PricingEntry, s: Span): number {
-  const t = s.llm?.tokens;
-  if (t === undefined) return entry.cacheWritePerMTok;
-  return effectiveCacheWriteRate(entry, t, cacheWrite1hTokens(s.attributes, t));
-}
 
 /**
  * Per llm span: was the LIVE cache at that point written with a

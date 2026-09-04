@@ -177,6 +177,18 @@ describe('WasteView', () => {
     expect(html).toContain('Out of your hands');
   });
 
+  it('explains how the Growing context estimate is counted, with ceilings', () => {
+    const html = renderToStaticMarkup(<WasteView run={fixture} />);
+    expect(html).toContain('How this is counted');
+    // median of the first three main-scope calls: 50k · 277k · 60.6k
+    expect(html).toContain('>61k</span> tokens');
+    expect(html).toContain('>3</span> later calls');
+    expect(html).toContain('Had the context never passed');
+    expect(html).toContain('>784k<'); // excess above a 400k ceiling
+    expect(html).toContain('>1.2M<'); // above 200k
+    expect(html).toContain('Amounts need the pricing payload');
+  });
+
   it('folds cent-level groups into one line', () => {
     const html = renderToStaticMarkup(<WasteView run={fixture} />);
     expect(html).toContain('2 findings, each under $0.05');

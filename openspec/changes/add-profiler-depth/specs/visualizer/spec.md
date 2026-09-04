@@ -528,7 +528,15 @@ moment on the session's clock, the cached and re-written tokens for cache
 findings or the finding's title otherwise, the model or the tool, the
 amount — each a control that opens the finding in the Inspector with its
 evidence selected on the Timeline Explorer; a cache-prefix-break group's
-split by shape; and the rule's playbook for the run's own source. A folded
+split by shape; and the rule's playbook for the run's own source. A context-bloat group
+SHALL open to how its estimate is counted — the baseline (the median
+context of the first three main-scope calls), the calls counted, the
+excess tokens and, when priced, the blended rate — SHALL say it is an
+upper bound against the session's opening context that assumes nothing
+about compacting at any size, and SHALL show, from the core context
+ceiling estimates, what the same calls would have saved had the context
+never passed 100k, 200k and 400k tokens, with amounts only when a pricing
+table is delivered. A folded
 group SHALL render as one line saying its count and that each finding is
 under the warning floor. Between the figures and the groups the tab SHALL
 place the burned findings on the session's time axis — a bar per burned
@@ -569,6 +577,15 @@ the amounts are lower bounds.
 - WHEN the Waste tab renders
 - THEN it says nothing leaked that the rules can see, names what was
   checked, and links to the Overview
+
+#### Scenario: How Growing context is counted
+- GIVEN a $808 run whose context-bloat estimate is $659 against a 51k
+  baseline
+- WHEN its Growing context row is open
+- THEN it says the baseline is 51k tokens, names the calls counted and the
+  excess tokens, calls the figure an upper bound that assumes nothing about
+  compacting, and lists what ceilings of 100k, 200k and 400k would have
+  saved ($585, $448, $236) with their shares of the session
 
 #### Scenario: Leaks on the clock
 - GIVEN a 20-hour run with fourteen history re-writes between 170k and
