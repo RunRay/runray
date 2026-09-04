@@ -30,6 +30,7 @@ const KEYMAP: [keys: string, action: string][] = [
   ['g t / g c', 'switch to Timeline / Cost view'],
   ['/', 'filter spans by name'],
   ['?', 'toggle this help sheet'],
+  ['[', 'collapse / expand the navigation rail'],
   ['Esc', 'close / clear'],
 ];
 

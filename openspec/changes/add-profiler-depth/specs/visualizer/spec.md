@@ -613,3 +613,25 @@ highlighting its evidence and opening the finding in the Inspector.
 - GIVEN a run with three findings
 - WHEN the strip renders
 - THEN it shows all three and no hand-over control
+
+### Requirement: Collapsible navigation rail
+The navigation rail SHALL collapse to icons and expand back on the
+person's request: an icon-only control in the rail's header beside the
+wordmark (under the mark when collapsed), the `[` key outside text
+fields, and a palette command. Collapsed, every destination and the
+local-only status SHALL keep a name for assistive technology and a
+tooltip, the current destination SHALL stay marked, and the content pane
+SHALL take the freed width. The choice SHALL persist across reloads the
+way the theme does.
+
+#### Scenario: Collapsed rail keeps its destinations
+- GIVEN the rail is collapsed
+- WHEN the Explorer is open
+- THEN the rail shows the Explorer icon marked as current with the name
+  "Explorer" available to assistive technology, and the header control
+  reads as "Expand the navigation"
+
+#### Scenario: The choice survives a reload
+- GIVEN the person collapsed the rail
+- WHEN the page is reloaded
+- THEN the rail opens collapsed

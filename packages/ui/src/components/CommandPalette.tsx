@@ -25,7 +25,14 @@ import { useAppStore } from '../store';
 
 const NO_RUNS: Run[] = [];
 
-type Group = 'Go to' | 'Switch view' | 'Runs' | 'Compare' | 'Filter' | 'Theme';
+type Group =
+  | 'Go to'
+  | 'Switch view'
+  | 'Runs'
+  | 'Compare'
+  | 'Filter'
+  | 'Theme'
+  | 'Layout';
 
 interface Command {
   /** Stable across renders (React key + activedescendant map). */
@@ -223,6 +230,14 @@ function buildCommands(
     label: `Switch to ${target} theme`,
     keywords: `theme appearance ${target} ink paper dark light`,
     perform: toggleTheme,
+  });
+  cmds.push({
+    id: 'layout:nav',
+    group: 'Layout',
+    label: 'Collapse or expand the navigation rail',
+    hint: '[',
+    keywords: 'sidebar navigation rail menu collapse expand hide show',
+    perform: () => useAppStore.getState().toggleNav(),
   });
 
   return cmds;
