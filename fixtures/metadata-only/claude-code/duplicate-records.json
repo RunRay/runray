@@ -1,0 +1,80 @@
+{
+  "id": "run_ecd496d8e343e607",
+  "source": {
+    "tool": "claude-code",
+    "format": "claude-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-03T11:34:16.175Z",
+  "endedAt": "2026-09-03T17:22:55.809Z",
+  "durationMs": 20919634,
+  "spans": [
+    {
+      "id": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-03T11:34:16.175Z",
+      "endedAt": "2026-09-03T17:22:55.809Z",
+      "durationMs": 20919634,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ed1bef26-fc12-4296-9dcf-19fc7063111e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 1
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 230,
+      "output": 2723,
+      "cacheRead": 457598,
+      "cacheWrite": 24864,
+      "reasoning": 0,
+      "total": 485415
+    },
+    "costUSD": {
+      "total": 1.093328,
+      "wastedEstimate": 0.227544,
+      "byModel": {
+        "claude-fable-5-1": 1.093328
+      }
+    },
+    "counts": {
+      "llmCalls": 4,
+      "toolCalls": 4,
+      "toolErrors": 2,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.9995
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "idle-cache-expiry",
+      "severity": "warning",
+      "title": "Idle gap of 344m expired the cache",
+      "detail": "After 344 minutes of inactivity the provider cache TTL lapsed; the next claude-fable-5-1 call re-wrote 12.0k tokens of prefix that had been cached before the gap.",
+      "spanIds": [
+        "ed1bef26-fc12-4296-9dcf-19fc7063111e"
+      ],
+      "estimatedWasteUSD": 0.227544,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium, and every further call in this context costs $0.01 in cache reads alone."
+    }
+  ]
+}
