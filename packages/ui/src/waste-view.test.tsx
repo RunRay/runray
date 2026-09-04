@@ -213,12 +213,13 @@ describe('WasteView', () => {
 describe('lib/waste', () => {
   it('badges the tab with the burned amount in the engine tone', () => {
     expect(wasteBadge(run(FINDINGS))).toEqual({
-      text: '$20.95',
+      text: '$21',
       tone: 'alarm',
       title:
         '$20.95 burned · 21% of this session · up to $67.57 in opportunities',
     });
     expect(wasteBadge(run(FINDINGS, 0.5))?.tone).toBe('quiet');
+    expect(wasteBadge(run(FINDINGS, 0.27))?.text).toBe('<$1');
     expect(wasteBadge(run([], 0))).toBeNull();
   });
 

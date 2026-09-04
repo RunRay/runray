@@ -545,7 +545,7 @@ size each model call carried drawn as an area (a hole where no call
 happened), with idle gaps shaded, compactions marked apart, a guide at
 ~200k tokens, and clock-friendly axis labels; a bar SHALL open its
 finding on the Timeline Explorer, and folded groups and burns under the
-warning floor SHALL stay off the rail. The tab's label SHALL carry the burned amount,
+warning floor SHALL stay off the rail. The tab's label SHALL carry the burned amount in whole dollars,
 tinted once the burned share reaches the warning share. A run without
 findings SHALL render an empty state naming what the rules checked and
 linking to the Overview. When any finding is unpriced the tab SHALL say

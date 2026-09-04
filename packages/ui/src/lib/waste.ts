@@ -28,15 +28,16 @@ export function runWaste(run: Run): RunWaste {
 }
 
 export interface WasteBadge {
-  /** The burned amount, e.g. "$111.04". */
+  /** The burned amount in whole dollars, e.g. "$111"; "<$1" below fifty cents. */
   text: string;
   /** alarm once the burned share reaches the warning share. */
   tone: 'alarm' | 'quiet';
   title: string;
 }
 
-/** The tab-bar badge: the burned amount, tinted the way the engine would
- * grade it. Null when nothing was burned. */
+/** The tab-bar badge: the burned amount in whole dollars (the tab bar is
+ * a glance, the tab has the cents), tinted the way the engine would grade
+ * it. Null when nothing was burned. */
 export function wasteBadge(run: Run): WasteBadge | null {
   const w = runWaste(run);
   if (w.burnedUSD <= 0) return null;
@@ -45,8 +46,9 @@ export function wasteBadge(run: Run): WasteBadge | null {
     w.opportunityUSD > 0
       ? ` · up to ${formatUSD(w.opportunityUSD)} in opportunities`
       : '';
+  const whole = Math.round(w.burnedUSD);
   return {
-    text: formatUSD(w.burnedUSD),
+    text: whole === 0 ? '<$1' : `$${whole}`,
     tone:
       w.burnedShare >= DEFAULT_SEVERITY_THRESHOLDS.warningShare
         ? 'alarm'
