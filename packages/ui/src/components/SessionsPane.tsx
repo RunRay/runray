@@ -36,8 +36,9 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {runs.map((run) => {
           const active = run.id === activeRunId;
-          // the count stays; the tone is the triage's — red only when
-          // something is for the person or the session never got past it
+          // the count alone (the rail is narrow); the tone is the triage's —
+          // red only when something is for the person or the session never
+          // got past it — and the tooltip carries the owner breakdown
           const pill = errorPill(run);
           return (
             <li key={run.id} ref={active ? activeRef : undefined}>
@@ -71,7 +72,7 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
                           : 'text-text-dim'
                       }
                     >
-                      {pill.label}
+                      {pill.count}
                     </span>
                   )}
                 </span>

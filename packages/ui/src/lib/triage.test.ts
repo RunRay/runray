@@ -121,6 +121,7 @@ describe('errorPill', () => {
     ]);
     const pill = errorPill(r);
     expect(pill?.label).toBe('2 errors · 1 needs you');
+    expect(pill?.count).toBe('2 errors');
     expect(pill?.tone).toBe('alarm');
   });
 

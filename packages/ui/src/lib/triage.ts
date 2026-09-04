@@ -50,6 +50,8 @@ export const OWNER_FILL: Readonly<Record<ErrorOwner, string>> = {
 export interface ErrorPill {
   /** e.g. "13 errors · 1 needs you" */
   label: string;
+  /** The count alone, e.g. "13 errors" — for the narrow sessions rail. */
+  count: string;
   tone: TriageTone;
   /** Tooltip: the owner breakdown. */
   title: string;
@@ -59,7 +61,9 @@ export interface ErrorPill {
  * The errors pill for a sessions list: the count stays, the tone comes from
  * the triage (alarm only when something is for the person or the session
  * never got past a failure), and a "· N need you" suffix names the reason
- * when there is one. Null when the run has no failed calls.
+ * when there is one — the wide sessions table shows it, the rail shows
+ * `count` alone and keeps the breakdown in the tooltip. Null when the run
+ * has no failed calls.
  */
 export function errorPill(run: Run): ErrorPill | null {
   const t = runTriage(run);
@@ -86,7 +90,7 @@ export function errorPill(run: Run): ErrorPill | null {
       : tone === 'quiet'
         ? ' · the agent handled them'
         : '';
-  return { label, tone, title: `${parts.join(' · ')}${why}` };
+  return { label, count: head, tone, title: `${parts.join(' · ')}${why}` };
 }
 
 /** "1h38" — an offset from the run's start, for time rails and rows. */
