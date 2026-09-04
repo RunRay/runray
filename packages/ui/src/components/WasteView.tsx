@@ -15,6 +15,7 @@ import { ContextualHint } from './ContextualHint';
 import { LeakRail } from './LeakRail';
 import { InlineCode, PlaybookList, PlaybookSteps } from './PlaybookSteps';
 import { SeverityPill } from './SeverityPill';
+import { WhatIfPanel } from './WhatIfPanel';
 
 /**
  * The Waste tab (waste-grouping capability, visualizer "Waste tab"): what
@@ -26,8 +27,9 @@ import { SeverityPill } from './SeverityPill';
  * finding on the timeline), its shape split and the playbook for the
  * session's own source. Cents fold into one line. Between the figures
  * and the groups, the leak rail places every burned finding on the
- * session's clock. Hue: heat for burned, savings green for
- * opportunities, severity only on the pill.
+ * session's clock; the what-if repricing closes the tab — a cheaper tier
+ * is the one opportunity the rules do not size per finding. Hue: heat for
+ * burned, savings green for opportunities, severity only on the pill.
  */
 
 const OCCURRENCES_SHOWN = 6;
@@ -44,6 +46,18 @@ export function WasteView({ run }: { run: Run }) {
           .filter((g): g is WasteGroup => g !== undefined)
           .map((g) => g.ruleId),
       ),
+  );
+
+  const whatIf = (
+    <section
+      aria-label="What if"
+      className="shrink-0 rounded border border-border-slate bg-surface-container-low p-4 shadow-card"
+    >
+      <h3 className="mb-3 font-display text-title font-semibold text-text">
+        What if — cheaper tier
+      </h3>
+      <WhatIfPanel run={run} />
+    </section>
   );
 
   if (waste.findings === 0) {
@@ -67,6 +81,7 @@ export function WasteView({ run }: { run: Run }) {
             .
           </p>
         </section>
+        {whatIf}
       </div>
     );
   }
@@ -103,6 +118,7 @@ export function WasteView({ run }: { run: Run }) {
           onToggle={toggle}
         />
       )}
+      {whatIf}
       <p className="text-label text-text-faint">
         Burned is the engine's waste-class total, capped at the session's cost.
         Opportunities assume a different setup and overlap with each other and

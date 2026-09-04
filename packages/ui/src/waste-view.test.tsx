@@ -186,6 +186,15 @@ describe('WasteView', () => {
     const html = renderToStaticMarkup(<WasteView run={run([], 0)} />);
     expect(html).toContain('Nothing leaked that the rules can see.');
     expect(html).toContain('#/run/run1');
+    expect(html).toContain('What if — cheaper tier');
+  });
+
+  it('closes with the what-if repricing panel', () => {
+    const html = renderToStaticMarkup(<WasteView run={fixture} />);
+    const opp = html.indexOf('aria-label="Opportunities"');
+    const whatIf = html.indexOf('aria-label="What if"');
+    expect(whatIf).toBeGreaterThan(opp);
+    expect(html).toContain('What if — cheaper tier');
   });
 });
 
