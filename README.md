@@ -9,7 +9,7 @@ npx runray view   # your own sessions
 
 ![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](docs/images/dashboard.png)
 
-**Status: alpha.** `runray@0.1.0-alpha.2` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
+**Status: alpha.** `runray@0.1.0-alpha.3` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
 
 ## Why
 
