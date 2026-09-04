@@ -7,7 +7,7 @@ npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
-![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/runray/runray/main/docs/images/dashboard.png)
+![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](docs/images/dashboard.png)
 
 **Status: alpha.** `runray@0.1.0-alpha.2` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
 
@@ -27,7 +27,7 @@ Usage trackers tell you how many tokens you spent this week. That number is easy
 
 ### Waste
 
-![The Waste tab: burned and opportunity figures, the leak rail over the context curve, and findings grouped by rule](https://raw.githubusercontent.com/runray/runray/main/docs/images/waste.png)
+![The Waste tab: burned and opportunity figures, the leak rail over the context curve, and findings grouped by rule](docs/images/waste.png)
 
 Twelve rules look at each session: retry loops, cache-prefix breaks, cache expiry after an idle gap, duplicate file reads, growing context, heavy fixed context, wrong model tier, expensive subagents, dead-end runs, scattered tool failures, oversized tool outputs, low cache hit-rate. Every finding points at its evidence spans, carries an amount, and ends with one suggestion written for you, not for the model.
 
@@ -37,13 +37,13 @@ The largest opportunity, growing context, deserves a caveat: its estimate assume
 
 ### Errors
 
-![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](https://raw.githubusercontent.com/runray/runray/main/docs/images/errors.png)
+![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](docs/images/errors.png)
 
 A failed tool call is not one thing. On real sessions about a third of them are the agent's own check-and-fix loop, a third are slips the model corrected on the next call, and fewer than one in ten are something you can act on. The Errors tab reads a class from each failure's text and groups them by owner: yours to fix (a shell the agent misread, a missing binary), tooling (a stuck browser pane, an MCP server), the agent's slips, failed model calls, and the expected feedback of a test that did not pass yet. Each group shows the error text, whether the tool came back, what the reaction cost, and the levers you have in your own tool. The error count in the session list turns red only when a failure is yours or the session never got past one.
 
 ### Timeline Explorer
 
-![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](https://raw.githubusercontent.com/runray/runray/main/docs/images/timeline.png)
+![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](docs/images/timeline.png)
 
 ## Where the data comes from
 
