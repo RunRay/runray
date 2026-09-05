@@ -13,18 +13,20 @@ export type HintKey =
 
 export const HINT_COPY: Record<HintKey, string> = {
   'time-view':
-    'Wall clock, not the sum of spans — this is where the waiting actually was.',
+    'Wall-clock duration rather than summed span times. This highlights where waiting actually occurred.',
   'errors-view':
-    'Grouped by who can act. Most red is not yours: a check that did not pass is the agent working.',
+    'Grouped by who can act. Most failures are normal; a failing check usually means the agent is exploring.',
   'waste-view':
-    'Two figures, kept apart: burned is money already spent on nothing; opportunities are upper bounds if you change the setup.',
+    'Two separate metrics. Burned money went to dead ends, while opportunities show potential savings under new settings.',
   'what-if':
-    'Re-price this session against another model. Nothing is sent anywhere.',
-  diff: 'Two runs of the same task? Compare them: runray diff <runA> <runB>',
-  'limit-mode': 'Reading tokens and % of your weekly limit instead of dollars.',
+    'Re-price this session against another model. Calculations run locally.',
+  diff: 'Two runs of the same task? Compare them with: runray diff <runA> <runB>',
+  'limit-mode':
+    'Shows token usage and percentage of your weekly limit instead of dollars.',
   coverage:
-    'Unpriced models are listed, never guessed — tokens without a dollar figure.',
-  redact: 'Exporting? --redact keeps structure and counts, drops prompt text.',
+    'Unpriced models show token counts without dollar figures. Costs are never guessed.',
+  redact:
+    'Exporting? Use --redact to keep structure and counts while dropping prompt text.',
 };
 
 const STORAGE_KEY = 'runray.dismissedHints';

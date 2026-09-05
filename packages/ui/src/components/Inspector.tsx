@@ -693,7 +693,7 @@ function CostSourceBadge({
           ? 'Computed from the bundled pricing snapshot'
           : source === 'reported'
             ? 'Reported by the source tool'
-            : 'No pricing match — excluded from rollups'
+            : 'No pricing match, excluded from rollups'
       }
       className={`rounded-control border px-1.5 py-px font-mono text-label ${
         source === 'unknown'

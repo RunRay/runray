@@ -24,25 +24,25 @@ const DASHBOARD_STEPS: readonly TourStep[] = [
     id: 'savings',
     anchorKeys: ['savings'],
     title: 'Two numbers, not one',
-    body: 'Left is burned — retries, cache breaks and dead ends, already paid for. Right is what a different setup would have saved. Only the right one is still yours to change.',
+    body: 'The left number is burned spend from retries or cache breaks, already paid for. The right number shows what alternative settings would have saved. You can still control that right number.',
   },
   {
     id: 'overview-trend',
     anchorKeys: ['overview-trend', 'tool-rank'],
     title: 'Where it went',
-    body: 'Spend by day and model, then the tools and MCP servers that carried it. Click any of it to filter every view to that slice.',
+    body: 'Daily spend by model, followed by the tools and MCP servers carrying it. Click any item to filter every view to that slice.',
   },
   {
     id: 'sessions-table',
     anchorKeys: ['sessions-table'],
     title: 'One row is one session',
-    body: 'Open a row for the forensics: the delegation tree, the burn line, and the findings for that session specifically.',
+    body: 'Open any row to inspect its delegation tree, burn line, and targeted findings.',
   },
   {
     id: 'help-button',
     anchorKeys: ['help-button'],
     title: 'The rest is keyboard',
-    body: '? lists every shortcut. ⌘K opens the command palette — jump to a session, filter, or switch views without the mouse.',
+    body: 'Press ? to view keyboard shortcuts. Press ⌘K to open the command palette and jump to a session or switch views.',
   },
 ];
 

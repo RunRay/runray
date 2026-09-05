@@ -318,7 +318,7 @@ export function ExportDialog({
         {/* Footer note */}
         <div className="mt-4 border-t border-border pt-3 text-[11px] text-text-faint">
           The dashboard creates no files and makes no network requests. Report
-          generation happens exclusively inside the CLI.
+          generation happens only inside the CLI.
         </div>
       </div>
     </div>

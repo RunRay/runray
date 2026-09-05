@@ -89,9 +89,9 @@ export function WhatIfPanel({ run }: { run: Run }) {
   if (pricing === undefined) {
     return (
       <p className="text-label text-text-dim">
-        Repricing is unavailable — this page carries no pricing payload (older
-        export or CLI). Re-export with a current runray, or open the run in{' '}
-        <code className="font-mono text-text">runray view</code>.
+        Repricing is unavailable because this page carries no pricing payload
+        from an older export or CLI. Re-export with a current runray, or open
+        the run in <code className="font-mono text-text">runray view</code>.
       </p>
     );
   }
@@ -217,7 +217,7 @@ export function WhatIfPanel({ run }: { run: Run }) {
           </span>
         </p>
         <p className="micro-label text-text-faint">
-          estimated at {effectiveTarget} rates — identical token usage assumed
+          estimated at {effectiveTarget} rates, assuming identical token usage
         </p>
       </div>
     </div>

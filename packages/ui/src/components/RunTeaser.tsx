@@ -69,7 +69,7 @@ export function RunTeaser({ runs }: { runs: Run[] }) {
     <section aria-label="Cost breakdown preview">
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="font-display text-header font-semibold text-text">
-          Inside a run — where the money went
+          Where the money went in this run
         </h2>
         <span className="hidden shrink-0 text-label text-text-faint sm:inline">
           by model · priciest of {runs.length}{' '}

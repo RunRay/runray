@@ -28,11 +28,11 @@ export function WelcomeDialog() {
       : `${count} sessions were already on this machine.`;
 
   const body = isSample
-    ? 'Real structure, no real prompts or paths. Everything below works the same on your own sessions — runray view reads those.'
-    : 'RunRay read them from logs Claude Code and OpenCode had already written — no collector, no account, no configuration.';
+    ? 'Real structure, no real prompts or paths. Everything below works the same on your own sessions when you run "runray view".'
+    : 'RunRay found these in logs Claude Code and OpenCode already wrote. No collector or account required.';
 
   const privacy =
-    'It all stayed here. No network calls, no telemetry; this dashboard is served from 127.0.0.1 to this browser only.';
+    'Everything stays local. No network calls or telemetry; this dashboard runs on 127.0.0.1 for this browser only.';
 
   // Secondary / Esc / backdrop = "I'll explore myself": the dashboard tour is
   // declined, not merely deferred (plan §7.2).

@@ -168,7 +168,7 @@ describe('WasteView', () => {
   it('opens the largest burned group to its shape split, occurrences and playbook', () => {
     const html = renderToStaticMarkup(<WasteView run={fixture} />);
     expect(html).toContain(
-      '1 re-write of the conversation, the front stayed cached',
+      '1 conversation re-write while the prefix stayed cached',
     );
     expect(html).toContain('1 compaction');
     expect(html).toContain('790k → 34k cached · 759k re-written');
@@ -198,7 +198,7 @@ describe('WasteView', () => {
     const html = renderToStaticMarkup(<WasteView run={run([], 0)} />);
     expect(html).toContain('Nothing leaked that the rules can see.');
     expect(html).toContain('#/run/run1');
-    expect(html).toContain('What if — cheaper tier');
+    expect(html).toContain('What if: cheaper tier');
   });
 
   it('closes with the what-if repricing panel', () => {
@@ -206,7 +206,7 @@ describe('WasteView', () => {
     const opp = html.indexOf('aria-label="Opportunities"');
     const whatIf = html.indexOf('aria-label="What if"');
     expect(whatIf).toBeGreaterThan(opp);
-    expect(html).toContain('What if — cheaper tier');
+    expect(html).toContain('What if: cheaper tier');
   });
 });
 
@@ -227,7 +227,7 @@ describe('lib/waste', () => {
     const w = runWaste(run(FINDINGS));
     expect(leadSentence(w, 'claude-code')).toEqual({
       opening: 'Most of the burn is one pattern:',
-      what: '1 time the conversation was re-written at the write premium while the context sat at 790k tokens — $14.43.',
+      what: '1 time the conversation was re-written at the write premium while the context sat at 790k tokens, costing $14.43.',
       lever:
         '`/compact` before the context passes ~200k, or a new session per task, would have kept it.',
     });
@@ -238,7 +238,7 @@ describe('lib/waste', () => {
       run([finding('i1', 'cache-prefix-break', ['nope', 'nope2'], 4)], 4),
     );
     expect(leadSentence(shapeless, 'claude-code')?.what).toBe(
-      '1 cache break re-wrote already-cached content at the write premium — $4.00.',
+      '1 cache break re-wrote already-cached content at the write premium, costing $4.00.',
     );
   });
 });

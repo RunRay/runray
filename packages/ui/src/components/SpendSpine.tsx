@@ -76,7 +76,7 @@ export function SpendSpine({
           const t = range.start + f * (range.end - range.start);
           setHover({
             y: e.clientY,
-            label: `at ${formatClock(t - range.start)} — ${formatUSD(cumulativeCostAt(series, t))}`,
+            label: `at ${formatClock(t - range.start)}: ${formatUSD(cumulativeCostAt(series, t))}`,
           });
         }}
         onMouseLeave={() => setHover(null)}

@@ -167,8 +167,8 @@ export function LimitModeToggle() {
             />
           </label>
           <p className="mt-1 text-label text-text-faint">
-            A user-configured reference window — an estimate, never a provider
-            quota.
+            A user-configured reference window. This is an estimate, not an
+            official provider quota.
           </p>
           <div className="mt-2 grid grid-cols-2 gap-2 text-label text-text-dim">
             <label className="flex flex-col gap-0.5">
