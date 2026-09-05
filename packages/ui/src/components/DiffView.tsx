@@ -124,7 +124,7 @@ export function DiffView({ runA, runB }: { runA: Run; runB: Run }) {
         </Panel>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Panel title="Summary — mirrors runray diff">
+          <Panel title="Summary (mirrors runray diff)">
             <SummaryTable header={header} />
           </Panel>
           {alignment.subtrees.length > 0 && (
@@ -213,7 +213,7 @@ function PairedWaterfall({ rows }: { rows: DiffRow[] }) {
   if (rows.length === 0) {
     return (
       <p className="py-6 text-center text-label text-text-faint">
-        Nothing to align — both runs are empty.
+        Nothing to align: both runs are empty.
       </p>
     );
   }

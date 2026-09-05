@@ -44,7 +44,7 @@ export function TranscriptPane({
         className="text-label text-text-faint"
         data-testid="transcript-metadata-only-notice"
       >
-        Transcript omitted — this report was exported with the{' '}
+        Transcript omitted. This report was exported with the{' '}
         <code className="font-mono text-text-dim">metadata-only</code> profile.
       </p>
     );
@@ -54,7 +54,7 @@ export function TranscriptPane({
     return (
       <p className="text-label text-text-faint">
         The full transcript is available in{' '}
-        <code className="font-mono text-text-dim">runray view</code> — an
+        <code className="font-mono text-text-dim">runray view</code>. An
         exported file carries only previews.
       </p>
     );
@@ -83,9 +83,9 @@ export function TranscriptPane({
   if (state.status === 'redacted') {
     return (
       <p className="text-label text-text-faint">
-        Redacted — this viewer runs with{' '}
-        <code className="font-mono">--redact</code>; no raw log text reaches the
-        browser.
+        Redacted. This viewer runs with{' '}
+        <code className="font-mono">--redact</code>, so no raw log text reaches
+        the browser.
       </p>
     );
   }
@@ -99,7 +99,7 @@ export function TranscriptPane({
   if (state.status === 'unavailable') {
     return (
       <p className="text-label text-text-faint">
-        Transcript unavailable — {state.reason}
+        Transcript unavailable: {state.reason}
       </p>
     );
   }
@@ -123,7 +123,7 @@ function Segments({
     <div>
       {state.truncated && (
         <p className="mb-1 micro-label text-heat-2">
-          truncated — the slice is capped at 1 MB
+          Truncated: the slice is capped at 1 MB
         </p>
       )}
       <div

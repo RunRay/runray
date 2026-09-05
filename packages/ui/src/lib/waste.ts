@@ -109,7 +109,7 @@ function wording(
       if (history.count + front.count + compaction.count === 0) {
         // evidence that did not resolve (a trimmed export): no shape to word
         return {
-          what: `${plural(g.count, 'cache break')} re-wrote already-cached content at the write premium — ${usd}.`,
+          what: `${plural(g.count, 'cache break')} re-wrote already-cached content at the write premium, costing ${usd}.`,
           lever: playbookActions(g.ruleId, source)[0] ?? '',
         };
       }
@@ -126,46 +126,46 @@ function wording(
               ? ` while the context sat at ${tok(lo)} tokens`
               : ` while the context sat between ${tok(lo)} and ${tok(hi)} tokens`;
         return {
-          what: `${plural(history.count, 'time')} the conversation was re-written at the write premium${range} — ${formatUSD(history.usd)}.`,
+          what: `${plural(history.count, 'time')} the conversation was re-written at the write premium${range}, costing ${formatUSD(history.usd)}.`,
           lever: custom
-            ? 'Keep the history you re-send under ~200k tokens: summarize or drop what is no longer needed.'
+            ? 'Keep the history you re-send under ~200k tokens by summarizing or dropping what is no longer needed.'
             : '`/compact` before the context passes ~200k, or a new session per task, would have kept it.',
         };
       }
       if (front.usd >= compaction.usd) {
         return {
-          what: `${plural(front.count, 'time')} the front of the prompt changed mid-session and the whole prefix was written again — ${formatUSD(front.usd)}.`,
+          what: `${plural(front.count, 'time')} the front of the prompt changed mid-session and the whole prefix was rewritten, costing ${formatUSD(front.usd)}.`,
           lever: custom
             ? 'Never change the system prompt or the tool list once a session runs.'
             : 'Connect MCP servers and switch model or settings at a task boundary, not mid-session.',
         };
       }
       return {
-        what: `${plural(compaction.count, 'compaction')} each wrote a new prefix — ${formatUSD(compaction.usd)}.`,
+        what: `${plural(compaction.count, 'compaction')} each wrote a new prefix, costing ${formatUSD(compaction.usd)}.`,
         lever:
           'Compact earlier, while there is less to summarize, or start a new session per task.',
       };
     }
     case 'idle-cache-expiry':
       return {
-        what: `${plural(g.count, 'idle gap')} let the cache expire; resuming re-wrote the prefix — ${usd}.`,
+        what: `${plural(g.count, 'idle gap')} let the cache expire; resuming re-wrote the prefix, costing ${usd}.`,
         lever: custom
           ? 'Use the 1-hour cache TTL and compact the history before an expected pause.'
           : '`/compact` before a long break, or start the next task in a new session.',
       };
     case 'retry-loop':
       return {
-        what: `${plural(g.count, 'retry loop')} re-billed the whole context on every attempt — ${usd}.`,
+        what: `${plural(g.count, 'retry loop')} re-billed the whole context on every attempt, costing ${usd}.`,
         lever: `Interrupt when the same call fails twice and put the missing fact into ${instructionsFile(source)}.`,
       };
     case 'scattered-tool-failures':
       return {
-        what: `Scattered tool failures each cost a model call to react — ${usd}.`,
+        what: `Scattered tool failures prompted reactive model calls, costing ${usd}.`,
         lever: `Record the fixes in ${instructionsFile(source)}, starting with the tool that failed most.`,
       };
     case 'dead-end-run':
       return {
-        what: `The session ended on a failure; the calls after the last completed change bought nothing — ${usd}.`,
+        what: `The session ended on a failure; calls after the last completed change yielded nothing, costing ${usd}.`,
         lever:
           source === 'claude-code'
             ? 'Resume with `claude --continue` and deal with the failing step first.'
@@ -175,12 +175,12 @@ function wording(
       };
     case 'duplicate-read':
       return {
-        what: `Unchanged files were re-read into the context — ${usd}.`,
+        what: `Unchanged files were re-read into the context, costing ${usd}.`,
         lever: 'Nothing to configure; shorter files make every read cheaper.',
       };
     default:
       return {
-        what: `${g.label} — ${usd}.`,
+        what: `${g.label}, costing ${usd}.`,
         lever: playbookActions(g.ruleId, source)[0] ?? '',
       };
   }

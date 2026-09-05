@@ -55,8 +55,9 @@ export function SavingsPanel({
 
       {summary.findings === 0 ? (
         <p className="mt-3 text-body text-text-dim">
-          All {ruleCount} rules found nothing to save in this period — no retry
-          loops, cache breaks, or tier mismatches in the visible sessions.
+          All {ruleCount} rules found nothing to save in this period. No retry
+          loops, cache breaks, or tier mismatches occurred in the visible
+          sessions.
         </p>
       ) : (
         <>
@@ -76,7 +77,7 @@ export function SavingsPanel({
                 )}
               </p>
               <p className="mt-1 text-label text-text-dim">
-                already burned — retries, cache breaks, dead ends
+                already burned from retries, cache breaks, and dead ends
               </p>
             </div>
             <div>
@@ -96,7 +97,7 @@ export function SavingsPanel({
                 )}
               </p>
               <p className="mt-1 text-label text-text-dim">
-                efficiency opportunities — if you change the setup
+                efficiency opportunities available from setup changes
               </p>
             </div>
           </div>

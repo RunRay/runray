@@ -144,8 +144,8 @@ export function SessionsTable({
           Comparing from{' '}
           <span className="font-mono text-text">
             {anchorRun?.title ?? diffAnchor.slice(0, 16)}
-          </span>{' '}
-          — pick the second run.
+          </span>
+          . Pick the second run.
           <button
             type="button"
             onClick={() => useAppStore.getState().setDiffAnchor(null)}

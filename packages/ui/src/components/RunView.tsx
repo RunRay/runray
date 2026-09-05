@@ -177,7 +177,7 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
             badge: {
               text: pill.label.split(' ')[0] ?? '',
               tone: pill.tone,
-              title: `${pill.label} — ${pill.title}`,
+              title: `${pill.label}: ${pill.title}`,
             },
           }),
     },

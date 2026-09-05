@@ -121,8 +121,8 @@ export function Overview({
       {viewConfig?.isSample === true && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-brand/40 bg-brand/10 p-3.5 text-label text-text font-medium shadow-card">
           <span>
-            This is a scrubbed sample session, not your data. When you've run an
-            agent on this machine:{' '}
+            This is a scrubbed sample session, not your data. Once you run an
+            agent on this machine, view your sessions with:{' '}
             <code className="font-mono rounded border border-border-slate bg-surface px-1.5 py-0.5 text-text">
               runray view
             </code>

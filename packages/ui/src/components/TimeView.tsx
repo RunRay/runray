@@ -70,7 +70,7 @@ export function TimeView({
           {breakdown.parallelism > 1.05 && (
             <span
               className="rounded-control bg-surface-2 px-2 py-0.5 font-mono text-label text-text-dim"
-              title="Σ active span time ÷ covered wall-clock — parallel work compresses into the same wall time"
+              title="Total active span time divided by wall-clock duration. Parallel work compresses into the same elapsed time."
             >
               ×{breakdown.parallelism.toFixed(1)} parallel
             </span>
@@ -120,7 +120,7 @@ export function TimeView({
           </tbody>
         </table>
         <p className="mt-2 micro-label text-text-faint">
-          idle = gaps ≥ {DEFAULT_IDLE_GAP_MS / 1000}s (display threshold — the
+          idle = gaps ≥ {DEFAULT_IDLE_GAP_MS / 1000}s (display threshold; the
           cache-expiry insight uses the provider TTL, a different constant)
         </p>
       </section>
