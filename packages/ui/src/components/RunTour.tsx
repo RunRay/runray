@@ -24,19 +24,19 @@ const RUN_STEPS: readonly TourStep[] = [
     id: 'waterfall',
     anchorKeys: ['waterfall'],
     title: 'Nesting is delegation',
-    body: "Indentation shows who called whom. Rows on separate lanes ran at the same time — that's real parallelism, not layout.",
+    body: 'Indentation shows who called whom. Rows on separate lanes ran concurrently, reflecting actual parallelism rather than layout spacing.',
   },
   {
     id: 'spend-spine',
     anchorKeys: ['spend-spine'],
     title: 'The burn line',
-    body: 'Cost accumulating as the session ran. A steep stretch is where the money went; click it to jump to that moment.',
+    body: 'Tracks cumulative spend as the session ran. Click any steep stretch to jump straight to that moment.',
   },
   {
     id: 'insights-strip',
     anchorKeys: ['insights-strip'],
     title: 'Findings point at evidence',
-    body: 'Click a finding — the spans that caused it highlight in the waterfall. That\'s the answer to "why did this cost that".',
+    body: 'Select a finding to highlight the spans that caused it in the waterfall. This pinpoints why the run cost what it did.',
   },
 ];
 
@@ -204,8 +204,8 @@ export default function RunTour() {
       <FloatingPortal>
         <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text">
           <p className="text-body font-medium text-text">
-            First time in a session view — want the 30-second tour of what's on
-            screen?
+            First time in a session view? Take a quick 30-second tour of what is
+            on screen.
           </p>
           <div className="mt-3 flex items-center justify-end gap-2">
             <button

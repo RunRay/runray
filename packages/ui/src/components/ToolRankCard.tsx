@@ -35,7 +35,7 @@ export function ToolRankCard({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-detail font-medium text-text">By tool</h3>
         <p className="micro-label text-text-faint">
-          attributed llm cost — equal split per turn, orchestration excluded
+          attributed llm cost (equal split per turn, orchestration excluded)
         </p>
       </div>
       <ul className="mt-2">
@@ -95,7 +95,7 @@ export function ToolRankCard({
           {share.topServer !== null && (
             <>
               {' '}
-              — top: <span className="font-mono">{share.topServer}</span>
+              · top: <span className="font-mono">{share.topServer}</span>
             </>
           )}
         </p>
