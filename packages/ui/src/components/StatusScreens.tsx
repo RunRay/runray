@@ -76,11 +76,12 @@ export function EmptyScreen() {
         </p>
         <ol className="mt-3 space-y-2 text-body text-text-dim">
           <li>
-            <Command>claude "explain this repo"</Command> — any Claude Code
+            <Command>claude "explain this repo"</Command>. Any Claude Code
             session writes a trace automatically.
           </li>
           <li>
-            <Command>runray view</Command> — finds it and opens this dashboard.
+            <Command>runray view</Command>. Discovers the trace and opens this
+            dashboard.
           </li>
         </ol>
         <p className="mt-3 text-label text-text-faint">

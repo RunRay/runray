@@ -100,13 +100,13 @@ export function HelpSheet({ onClose }: { onClose: () => void }) {
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-label">
           <dt className="self-center text-text">burned</dt>
           <dd className="text-text-dim">
-            spend that bought nothing — retries, cache re-writes, duplicate
-            reads, dead ends. Adds up to the run’s wasted figure.
+            Spend that bought nothing, such as retries, cache rewrites,
+            duplicate reads, or dead ends. Adds up to the run’s wasted figure.
           </dd>
           <dt className="self-center text-text">opportunity</dt>
           <dd className="text-text-dim">
-            spend that could have been cheaper — heavy fixed context, wrong
-            model tier, cold cache. Never counted as wasted.
+            Spend that could have been cheaper with smaller prompts, another
+            model tier, or a warm cache. Never counted as wasted.
           </dd>
           {SEVERITY_LEGEND.map(([severity, meaning]) => (
             <div key={severity} className="contents">
@@ -118,9 +118,9 @@ export function HelpSheet({ onClose }: { onClose: () => void }) {
           ))}
         </dl>
         <p className="mt-2 text-label leading-[1.45] text-text-faint">
-          Severity is graded per run, not per rule: the same $0.60 retry loop is
-          a warning in a $0.65 session and info in a $600 one. Defaults shown;
-          tune them under{' '}
+          Severity is graded per run rather than globally. The same $0.60 retry
+          loop is a warning in a $0.65 session and info in a $600 one. Default
+          thresholds are shown above. Tune them under{' '}
           <span className="font-mono">insights.thresholds.severity</span> in
           runray.config.json.
         </p>

@@ -30,7 +30,7 @@ export function CoverageBanner({ runs }: { runs: readonly Run[] }) {
         <span className="micro-label shrink-0 text-heat-2">unpriced</span>
         <span className="text-label text-text-dim">
           {c.unpricedLlmCalls} llm call{c.unpricedLlmCalls === 1 ? '' : 's'}
-          {runsNote} carry no price ({c.models.join(', ')}) — totals are
+          {runsNote} carry no price ({c.models.join(', ')}), so totals are
           understated. Try{' '}
           <code className="font-mono text-text">runray pricing --refresh</code>.
         </span>
@@ -50,11 +50,11 @@ export function CoverageCaveat({ runs }: { runs: readonly Run[] }) {
   return (
     <span
       className="cursor-help text-text-faint"
-      title={`${c.unpricedLlmCalls} llm call(s) unpriced — this figure is understated`}
+      title={`${c.unpricedLlmCalls} llm call(s) unpriced; this figure is understated`}
     >
       ≥
       <span className="sr-only">
-        {` at least — ${c.unpricedLlmCalls} llm calls unpriced, figure understated`}
+        {` at least: ${c.unpricedLlmCalls} llm calls unpriced, figure understated`}
       </span>
     </span>
   );

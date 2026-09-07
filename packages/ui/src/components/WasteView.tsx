@@ -55,7 +55,7 @@ export function WasteView({ run }: { run: Run }) {
       className="shrink-0 rounded border border-border-slate bg-surface-container-low p-4 shadow-card"
     >
       <h3 className="mb-3 font-display text-title font-semibold text-text">
-        What if — cheaper tier
+        What if: cheaper tier
       </h3>
       <WhatIfPanel run={run} />
     </section>
@@ -125,7 +125,7 @@ export function WasteView({ run }: { run: Run }) {
         Opportunities assume a different setup and overlap with each other and
         with the burn, so they are read one at a time.
         {waste.unpriced &&
-          ' Some findings carry no estimate (unpriced model): the amounts are lower bounds.'}
+          ' Some findings carry no estimate due to unpriced models, making amounts lower bounds.'}
       </p>
     </div>
   );
@@ -265,9 +265,9 @@ function GroupSection({
 
 const SHAPE_LABEL = {
   history: (n: number) =>
-    `${n} re-write${n === 1 ? '' : 's'} of the conversation, the front stayed cached`,
+    `${n} conversation re-write${n === 1 ? '' : 's'} while the prefix stayed cached`,
   front: (n: number) =>
-    `${n} front change${n === 1 ? '' : 's'}: tools, model or a setting`,
+    `${n} front change${n === 1 ? '' : 's'} in tools, model, or settings`,
   compaction: (n: number) => `${n} compaction${n === 1 ? '' : 's'}`,
 } as const;
 

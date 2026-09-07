@@ -23,7 +23,7 @@ next step, no apology"*). Extended for onboarding:
 | Never apologise for correct behavior | "Unpriced models are listed, never guessed." | "Sorry, we couldn't price…" |
 | Explain the *why* once, never twice | (one clause) | a paragraph of reassurance |
 | Sentence case everywhere, including buttons | "Show me around" | "Show Me Around" |
-| Em dash for the turn, not parentheses | "gone — retries and dead ends" | "gone (retries, dead ends)" |
+| Direct punctuation, no em-dashes | "Burned from retries and dead ends." | "gone — retries and dead ends" |
 
 **Banned:** exclamation marks · emoji · "Oops" · "Sorry" · "Simply" / "Just" · "easy" ·
 "Welcome aboard" · "Let's get started" · "powerful" · "AI-powered" · "seamless" ·
@@ -282,14 +282,14 @@ Count from `traceFile.runs.length`. Singular form: `One session was already on t
 
 **Body:**
 ```
-RunRay read them from logs Claude Code and OpenCode had already written —
-no collector, no account, no configuration.
+RunRay found these in logs Claude Code and OpenCode already wrote.
+No collector or account required.
 ```
 
 **Privacy line** (own block, quieter type, the mechanism *is* the reassurance):
 ```
-It all stayed here. No network calls, no telemetry; this dashboard is served
-from 127.0.0.1 to this browser only.
+Everything stays local. No network calls or telemetry; this dashboard runs
+on 127.0.0.1 for this browser only.
 ```
 
 **Buttons:**
@@ -306,7 +306,7 @@ On `runray demo`, replace title and body; keep the privacy line and buttons:
 ```
 Title:  A sample session, scrubbed and bundled.
 Body:   Real structure, no real prompts or paths. Everything below works the
-        same on your own sessions — `runray view` reads those.
+        same on your own sessions when you run "runray view".
 ```
 
 ### §4.2 Dashboard tour — 4 steps
@@ -317,30 +317,30 @@ Final step's `Next` reads `Done`.
 **Step 1 — anchor `savings`**
 ```
 Title:  Two numbers, not one
-Body:   Left is burned — retries, cache breaks and dead ends, already paid
-        for. Right is what a different setup would have saved. Only the
-        right one is still yours to change.
+Body:   The left number is burned spend from retries or cache breaks, already
+        paid for. The right number shows what alternative settings would have
+        saved. You can still control that right number.
 ```
 
 **Step 2 — anchor `overview-trend`, then `tool-rank`**
 ```
 Title:  Where it went
-Body:   Spend by day and model, then the tools and MCP servers that carried
-        it. Click any of it to filter every view to that slice.
+Body:   Daily spend by model, followed by the tools and MCP servers carrying
+        it. Click any item to filter every view to that slice.
 ```
 
 **Step 3 — anchor `sessions-table`**
 ```
 Title:  One row is one session
-Body:   Open a row for the forensics: the delegation tree, the burn line,
-        and the findings for that session specifically.
+Body:   Open any row to inspect its delegation tree, burn line, and targeted
+        findings.
 ```
 
 **Step 4 — anchor `help-button`**
 ```
 Title:  The rest is keyboard
-Body:   ? lists every shortcut. ⌘K opens the command palette — jump to a
-        session, filter, or switch views without the mouse.
+Body:   Press ? to view keyboard shortcuts. Press ⌘K to open the command
+        palette and jump to a session or switch views.
 ```
 
 ### §4.3 Tour completion
@@ -361,7 +361,7 @@ The button navigates to the highest-cost visible run's timeline. If costs are un
 #### §4.4a The offer (non-modal, first run view opened)
 
 ```
-First time in a session view — want the 30-second tour of what's on screen?
+First time in a session view? Take a quick 30-second tour of what is on screen.
 
 [ Show me ]   [ No thanks ]
 ```
@@ -373,22 +373,22 @@ First time in a session view — want the 30-second tour of what's on screen?
 **Step 1 — anchor `waterfall`**
 ```
 Title:  Nesting is delegation
-Body:   Indentation shows who called whom. Rows on separate lanes ran at the
-        same time — that's real parallelism, not layout.
+Body:   Indentation shows who called whom. Rows on separate lanes ran
+        concurrently, reflecting actual parallelism rather than layout spacing.
 ```
 
 **Step 2 — anchor `spend-spine`**
 ```
 Title:  The burn line
-Body:   Cost accumulating as the session ran. A steep stretch is where the
-        money went; click it to jump to that moment.
+Body:   Tracks cumulative spend as the session ran. Click any steep stretch
+        to jump straight to that moment.
 ```
 
 **Step 3 — anchor `insights-strip`**
 ```
 Title:  Findings point at evidence
-Body:   Click a finding — the spans that caused it highlight in the
-        waterfall. That's the answer to "why did this cost that".
+Body:   Select a finding to highlight the spans that caused it in the
+        waterfall. This pinpoints why the run cost what it did.
 ```
 
 Step 3's `Next` reads `Try it` and activates the first finding rather than closing silently:
@@ -400,12 +400,14 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 
 | Key | Copy |
 |---|---|
-| `time-view` | `Wall clock, not the sum of spans — this is where the waiting actually was.` |
-| `what-if` | `Re-price this session against another model. Nothing is sent anywhere.` |
-| `diff` | `Two runs of the same task? Compare them: runray diff <runA> <runB>` |
-| `limit-mode` | `Reading tokens and % of your weekly limit instead of dollars.` |
-| `coverage` | `Unpriced models are listed, never guessed — tokens without a dollar figure.` |
-| `redact` | `Exporting? --redact keeps structure and counts, drops prompt text.` |
+| `time-view` | `Wall-clock duration rather than summed span times. This highlights where waiting actually occurred.` |
+| `errors-view` | `Grouped by who can act. Most failures are normal; a failing check usually means the agent is exploring.` |
+| `waste-view` | `Two separate metrics. Burned money went to dead ends, while opportunities show potential savings under new settings.` |
+| `what-if` | `Re-price this session against another model. Calculations run locally.` |
+| `diff` | `Two runs of the same task? Compare them with: runray diff <runA> <runB>` |
+| `limit-mode` | `Shows token usage and percentage of your weekly limit instead of dollars.` |
+| `coverage` | `Unpriced models show token counts without dollar figures. Costs are never guessed.` |
+| `redact` | `Exporting? Use --redact to keep structure and counts while dropping prompt text.` |
 
 `limit-mode` exists for persona B, who is on a flat subscription and for whom a dollar
 figure is the wrong unit entirely (`03-PERSONAS.md §B`). It must never say "cost".

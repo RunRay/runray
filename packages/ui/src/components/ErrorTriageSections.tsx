@@ -29,7 +29,7 @@ export function ErrorTriageSections({ span, run }: { span: Span; run: Run }) {
           {span.statusReason === 'user-rejected'
             ? ''
             : ` (${span.statusReason ?? 'cancelled'})`}
-          ; it is not counted as an error and no finding reacts to it.
+          . It is not counted as an error and no finding reacts to it.
         </p>
       </Section>
     );
