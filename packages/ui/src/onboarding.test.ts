@@ -1,5 +1,7 @@
 import type { Insight, Run, TraceFile } from '@runray/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DASHBOARD_STEPS } from './components/DashboardTour';
+import { RUN_STEPS } from './components/RunTour';
 import { loadOnboarding, postOnboardingPatch } from './lib/load';
 import { useAppStore } from './store';
 
@@ -289,6 +291,50 @@ describe('Dashboard onboarding & tour (phase 4, ui)', () => {
       expect(exportState.data.status === 'ready' && exportState.data.live).toBe(
         false,
       );
+    });
+
+    it('checklist milestone updates and dismissal persist in store', () => {
+      useAppStore.getState().onboardingLoaded({
+        checklist: { tracesIndexed: true },
+      });
+      let state = useAppStore.getState();
+      expect(state.onboarding.checklist.tracesIndexed).toBe(true);
+      expect(state.onboarding.checklistDismissed).toBe(false);
+
+      useAppStore.getState().setChecklistStep('waterfallInspected', true);
+      state = useAppStore.getState();
+      expect(state.onboarding.checklist.waterfallInspected).toBe(true);
+
+      useAppStore.getState().dismissChecklist();
+      state = useAppStore.getState();
+      expect(state.onboarding.checklistDismissed).toBe(true);
+      expect(state.onboarding.checklist.dismissed).toBe(true);
+    });
+
+    it('DASHBOARD_STEPS covers the 4 dashboard steps with profiling focus', () => {
+      expect(DASHBOARD_STEPS).toHaveLength(4);
+      expect(DASHBOARD_STEPS.map((s) => s.id)).toEqual([
+        'savings',
+        'overview-trend',
+        'sessions-table',
+        'help-button',
+      ]);
+      expect(DASHBOARD_STEPS[0]?.title).toBe('Two numbers, not one');
+      expect(DASHBOARD_STEPS[2]?.title).toBe('One row is one session');
+    });
+
+    it('RUN_STEPS covers the 4 profiler dimensions', () => {
+      expect(RUN_STEPS).toHaveLength(4);
+      expect(RUN_STEPS.map((s) => s.id)).toEqual([
+        'waterfall',
+        'time-tab',
+        'errors-tab',
+        'insights-strip',
+      ]);
+      expect(RUN_STEPS[0]?.title).toBe('Nesting is delegation');
+      expect(RUN_STEPS[1]?.title).toBe('Where the time went');
+      expect(RUN_STEPS[2]?.title).toBe('Normal errors vs real bugs');
+      expect(RUN_STEPS[3]?.title).toBe('Findings point at evidence');
     });
   });
 });

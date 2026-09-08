@@ -19,12 +19,12 @@ export interface TourStep {
   body: string;
 }
 
-const DASHBOARD_STEPS: readonly TourStep[] = [
+export const DASHBOARD_STEPS: readonly TourStep[] = [
   {
     id: 'savings',
     anchorKeys: ['savings'],
     title: 'Two numbers, not one',
-    body: 'The left number is burned spend from retries or cache breaks, already paid for. The right number shows what alternative settings would have saved. You can still control that right number.',
+    body: 'The left number is spend burned on retries and broken caches. The right number shows what cleaner runs would have saved. You can still fix that right number.',
   },
   {
     id: 'overview-trend',
@@ -36,7 +36,7 @@ const DASHBOARD_STEPS: readonly TourStep[] = [
     id: 'sessions-table',
     anchorKeys: ['sessions-table'],
     title: 'One row is one session',
-    body: 'Open any row to inspect its delegation tree, burn line, and targeted findings.',
+    body: 'Open any row to see who called whom, where seconds were lost, and which tools threw errors.',
   },
   {
     id: 'help-button',
@@ -189,9 +189,7 @@ export default function DashboardTour() {
   }
 
   const targetRun = priciestRun ?? visibleRuns[0];
-  const onwardLabel = priciestRun
-    ? 'Open the priciest session →'
-    : 'Open the newest session →';
+  const onwardLabel = 'Open latest session →';
 
   return (
     <FloatingPortal>
@@ -220,7 +218,7 @@ export default function DashboardTour() {
             className="w-[420px] rounded-panel border border-border-slate bg-surface-container-low p-6 shadow-popover text-text"
           >
             <h2 className="font-display text-header font-semibold text-text">
-              That's the map. The money is inside the sessions.
+              That's the map. The actual traces live inside the sessions.
             </h2>
             <div className="mt-6 flex justify-end">
               <button

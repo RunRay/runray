@@ -35,21 +35,19 @@ whether the tool changes a decision. Three gates, in order:
 
 | Gate | Definition | Observable proof | Target |
 |---|---|---|---|
-| **A0 — Wow** | User understands what RunRay shows, on *sample* data | Can name one wasteful thing in the demo session unprompted | < 60 s from `npx runray demo` |
-| **A1 — Activation** | User opens one insight on **their own** run and lands on its evidence spans | Insight activated → evidence highlighted in the waterfall (`activateInsight` → `ui.highlighted`) | < 3 min from install |
-| **A2 — Habit** | User comes back to a second session, or acts on a finding | Second `runray view` on a later day, or a changed delegation/cache pattern they attribute to us | within 7 days |
+| **A0 — Wow** | User understands what RunRay profiles, on *sample* data | Can name one execution bottleneck or wasteful pattern in the demo session unprompted | < 60 s from `npx runray demo` |
+| **A1 — Activation** | User profiles **their own** run and identifies an actionable execution bottleneck | Lands on evidence spans for an insight, diagnoses latency in the Time tab, or reviews error triage in the Errors tab | < 3 min from install |
+| **A2 — Habit** | User comes back to a second session, or acts on a finding | Second `runray view` on a later day, or a changed delegation/tool/cache pattern they attribute to us | within 7 days |
 
-**The aha moment is A1, and it is deliberately narrow.** Per `docs/03-PERSONAS.md`, every
-persona's "wow" test is the same shape: *point at one bar or one finding and say "there it
-is."* Not "saw a dashboard", not "read a total" — `ccusage` already gives totals, and a
-user who only reaches a total has not been activated, they have been duplicated.
+**The aha moment is A1.** Per `docs/03-PERSONAS.md`, every persona's "wow" test is the same shape:
+*point at one bottleneck (latency, failure streak, delegation sprawl, or cost leak) and say "there it is."*
+Not "saw a dashboard", not "read a token total" — a user who only reaches a total has not been activated.
 
-**Corollary for the tour:** the tour's single job is to get the user to A1. Anything that
-does not shorten the path from "dashboard opened" to "insight evidence highlighted" is a
-later hint, not a tour step (see §7.4).
+**Corollary for the tour:** the tour's single job is to get the user to A1. It walks the user
+through four concrete views: delegation trees, clock time, tool errors, and what-if repricing.
 
 **Non-goal:** activating on demo data. `demo` earns attention; it cannot earn activation,
-because the insight is not about the user's money. The demo's success criterion is a
+because the trace is not about the user's agent. The demo's success criterion is a
 *transition* — the user runs `runray view` afterwards.
 
 ---
@@ -302,27 +300,23 @@ which is not a celebration, it is a pointer at the next action: open a run.
 **The tour never navigates for the user.** Force-navigating a first-time user is how tours
 become hostile; the run-level material is taught in situ instead:
 
-### 7.4 Run tour — 3 steps, triggered in place
+### 7.4 Run tour — 4 steps across profiler views
 
-First time a run view opens (`route.view` ∈ `timeline|cost|time` and
-`tours.run` unset), offer a 3-step tour of the things with no analogue in other tools:
+First time a run view opens (`route.view` ∈ `timeline|cost|time|errors|waste` and
+`tours.run` unset), offer a 4-step tour:
 
 | Step | Anchor | Teaches |
 |---|---|---|
-| 1 | `Waterfall` rows | nesting = delegation; **lanes = genuinely parallel** tool calls, not layout |
-| 2 | `SpendSpine` gutter | cumulative cost as the session progresses; a steep segment is where money went; click to jump |
-| 3 | `InsightsStrip` item | click a finding → its evidence highlights in the waterfall — **this is A1** |
+| 1 | `Waterfall` rows | **Nesting & lanes**: nesting = subagent delegation; lanes = parallel tool execution |
+| 2 | `Time` tab | **Where time went**: clock time split between model thinking and tool wait |
+| 3 | `Errors` tab | **Normal errors vs bugs**: failures grouped by actor (agent exploring vs broken tools) |
+| 4 | `InsightsStrip` / `WhatIf` | **Findings & What-If**: targeted findings and simulation of cheaper models |
 
 Offered as a small non-modal prompt (`§4.4a`), not an auto-starting overlay: the user
-arrived here with an intention, and hijacking it is exactly the "debug the observability
-tool before your agents" failure Elena describes.
+arrived here with an intention, and hijacking it is hostile.
 
-Step 3 is the activation gate. Instrument nothing — just make sure the click is one step
-away and the payoff (evidence highlighting via `activateInsight` → `ui.highlighted`) is
-visible without scrolling.
-
-`TimeView`'s wall-clock decomposition and `CostView`'s what-if panel are **hints, not tour
-steps** (§7.5) — they are second-session material, and the run tour must stay at three.
+Step 4 is the activation gate. It performs the activation — selecting a finding to highlight
+evidence or inviting a What-If repricing simulation.
 
 ### 7.5 Contextual first-time hints
 
@@ -332,6 +326,8 @@ One-shot, dismissible, at most one visible at a time, keyed in
 | Key | Trigger | Subject |
 |---|---|---|
 | `time-view` | first `#/run/:id/time` | wall-clock ≠ sum of spans; where the waiting was |
+| `errors-view` | first `#/run/:id/errors` | error triage by actor; agent exploration vs bugs |
+| `waste-view` | first `#/run/:id/waste` | burned spend vs potential savings under new settings |
 | `what-if` | first `CostView` with `WhatIfPanel` visible | re-price the run against another model |
 | `diff` | second run opened in a session | compare two runs of the same task |
 | `limit-mode` | `limitWindow` configured and first dashboard | tokens / % of limit instead of USD (persona B) |
@@ -353,6 +349,17 @@ not an oversight.
   not, and that it is read-only. No dialog, no dismiss, no state. This is Sam's entire
   onboarding, and its job is to make him ask for the team version unprompted
   (internal validation checklist). Copy: `§4.6`.
+
+### 7.7 First run checklist
+
+A lightweight, collapsible, non-modal checklist docked in the UI for new users:
+- Step 1: `[x] Found agent logs on disk` (Pre-completed at 25% progress).
+- Step 2: `[ ] Check subagents and lanes in Timeline`.
+- Step 3: `[ ] See where time went in Time view`.
+- Step 4: `[ ] Check tool errors or test What-If repricing`.
+
+Milestones update reactively upon user navigation. The checklist is permanently dismissible
+at any point, persists in `state.json.onboarding.checklist`, and is excluded from exports.
 
 ---
 

@@ -15,6 +15,7 @@ import { Inspector } from './components/Inspector';
 import { Overview } from './components/Overview';
 import { ProvenanceStrip } from './components/ProvenanceStrip';
 import { RunTeaser } from './components/RunTeaser';
+import { OnboardingChecklistContainer } from './components/OnboardingChecklistContainer';
 import { RunTourContainer } from './components/RunTourContainer';
 import { RunView } from './components/RunView';
 import { SessionsPane } from './components/SessionsPane';
@@ -282,6 +283,7 @@ export function App() {
         !onboarding.welcomeDismissedAt && <WelcomeDialogContainer />}
       <DashboardTourContainer />
       <RunTourContainer />
+      <OnboardingChecklistContainer />
     </div>
   );
 }

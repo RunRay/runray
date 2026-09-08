@@ -45,6 +45,7 @@ export interface OnboardingBlock {
   welcomeDismissedAt?: string | null;
   tours?: Record<string, string>;
   hints?: string[];
+  checklist?: Record<string, boolean>;
 }
 
 declare global {
