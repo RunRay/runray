@@ -107,8 +107,7 @@ export default function OnboardingChecklist() {
   }
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="First run checklist"
       className="fixed bottom-4 left-4 z-40 w-80 rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text"
     >
@@ -137,7 +136,11 @@ export default function OnboardingChecklist() {
               strokeWidth="2"
             >
               <title>Minimize</title>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <button
@@ -155,7 +158,11 @@ export default function OnboardingChecklist() {
               strokeWidth="2"
             >
               <title>Dismiss</title>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -222,6 +229,6 @@ export default function OnboardingChecklist() {
           </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }

@@ -6,6 +6,7 @@ import {
   formatUSD,
 } from '../lib/format';
 import { type Route, type RunViewName, toHash } from '../lib/router';
+import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
 import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
@@ -14,7 +15,6 @@ import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
 import { WasteView } from './WasteView';
-import { tourAttr } from '../lib/tour-attr';
 import { Waterfall } from './Waterfall';
 
 /**

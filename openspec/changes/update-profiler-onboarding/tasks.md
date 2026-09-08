@@ -54,7 +54,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 
 ## 7. Verification and Quality Checks
 
-- [ ] 7.1 Verify export purity in `packages/ui/src/bundle-guard.test.ts`: ensure `dist-export/index.html` remains < 1.5 MB with zero onboarding code or markers.
-- [ ] 7.2 Run full test suite: `pnpm test`.
-- [ ] 7.3 Run linter and typecheck: `pnpm lint && pnpm typecheck`.
-- [ ] 7.4 Confirm goldens in `fixtures/normalized/` remain 100% byte-identical.
+- [x] 7.1 Verify export purity in `packages/ui/src/bundle-guard.test.ts`: ensure `dist-export/index.html` remains < 1.5 MB with zero onboarding code or markers.
+- [x] 7.2 Run full test suite: `pnpm test`.
+- [x] 7.3 Run linter and typecheck: `pnpm lint && pnpm typecheck`.
+- [x] 7.4 Confirm goldens in `fixtures/normalized/` remain 100% byte-identical.
