@@ -75,6 +75,23 @@ describe('onboarding-state', () => {
         welcomeDismissedAt: null,
       });
     });
+
+    it('filters checklist to boolean values dropping rest silently', () => {
+      const raw = {
+        checklist: {
+          tracesIndexed: true,
+          waterfallInspected: true,
+          invalidVal: 'yes',
+          badNum: 1,
+        },
+      };
+      expect(filterOnboardingPatch(raw)).toEqual({
+        checklist: {
+          tracesIndexed: true,
+          waterfallInspected: true,
+        },
+      });
+    });
   });
 
   describe('reader & writer contract', () => {

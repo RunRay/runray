@@ -105,6 +105,8 @@ export interface OnboardingState {
   welcomeDismissedAt: string | null | undefined;
   tours: Record<string, string>;
   hints: string[];
+  checklist: Record<string, boolean>;
+  checklistDismissed: boolean;
 }
 
 export interface AppState {
@@ -176,6 +178,8 @@ export interface AppState {
   dismissWelcome(startTour: boolean): void;
   setTourStatus(tourKey: string, status: string): void;
   dismissOnboardingHint(hintKey: string): void;
+  setChecklistStep(stepKey: string, completed?: boolean): void;
+  dismissChecklist(): void;
   setLimitEnabled(enabled: boolean): void;
   /** In-UI settings popover: a local override, persisted; null clears it. */
   setLimitOverride(config: LimitWindowConfig | null): void;
@@ -271,6 +275,8 @@ export const useAppStore = create<AppState>()((set) => ({
     welcomeDismissedAt: undefined,
     tours: {},
     hints: [],
+    checklist: {},
+    checklistDismissed: false,
   },
   filter: EMPTY_FILTER,
   // The boot script already stamped the persisted choice on the root; mirror
@@ -318,6 +324,8 @@ export const useAppStore = create<AppState>()((set) => ({
               welcomeDismissedAt: undefined,
               tours: {},
               hints: [],
+              checklist: {},
+              checklistDismissed: false,
             }
           : {
               enabled: true,
@@ -325,6 +333,8 @@ export const useAppStore = create<AppState>()((set) => ({
               welcomeDismissedAt: payload.welcomeDismissedAt,
               tours: payload.tours ?? {},
               hints: payload.hints ?? [],
+              checklist: payload.checklist ?? {},
+              checklistDismissed: payload.checklist?.dismissed === true,
             },
     }),
   dismissWelcome: (startTour) => {
@@ -363,6 +373,31 @@ export const useAppStore = create<AppState>()((set) => ({
         onboarding: {
           ...s.onboarding,
           hints: nextHints,
+        },
+      };
+    });
+  },
+  setChecklistStep: (stepKey, completed = true) => {
+    set((s) => {
+      const nextChecklist = { ...s.onboarding.checklist, [stepKey]: completed };
+      void postOnboardingPatch({ checklist: { [stepKey]: completed } });
+      return {
+        onboarding: {
+          ...s.onboarding,
+          checklist: nextChecklist,
+        },
+      };
+    });
+  },
+  dismissChecklist: () => {
+    set((s) => {
+      const nextChecklist = { ...s.onboarding.checklist, dismissed: true };
+      void postOnboardingPatch({ checklist: { dismissed: true } });
+      return {
+        onboarding: {
+          ...s.onboarding,
+          checklist: nextChecklist,
+          checklistDismissed: true,
         },
       };
     });

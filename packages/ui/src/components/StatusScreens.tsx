@@ -88,6 +88,10 @@ export function EmptyScreen() {
           Logs somewhere else? Point at a folder:{' '}
           <Command>runray view &lt;path&gt;</Command>
         </p>
+        <p className="mt-2 text-label text-text-faint">
+          Never run an agent here? See it on a sample session:{' '}
+          <Command>runray demo</Command>
+        </p>
         {isLive && <CheckedRoots roots={rootsScanned} />}
       </div>
     </CenteredPane>

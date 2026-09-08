@@ -41,7 +41,7 @@ export function writeFirstRunBanner(
   writeState({ firstSeenAt: new Date().toISOString() }, statePath);
 
   const version = getCliVersion();
-  let output = `RunRay ${version} — first run. Nothing leaves this machine.\n`;
+  let output = `RunRay ${version}. Local agent profiler, first run. Nothing leaves this machine.\n`;
   if (runsCount > 0) {
     output += `Read ${runsCount} session(s) from ${locationCount} location(s). Pricing: bundled snapshot ${snapshotDate}.\n`;
   }

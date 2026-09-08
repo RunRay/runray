@@ -72,7 +72,7 @@ own left-hand gutter, symbols and dim hint text. Consequences for the copy:
 Printed once per machine (`state.json.firstSeenAt` absent), before the result line.
 
 ```
-RunRay 0.1.0 — first run. Nothing leaves this machine.
+RunRay 0.1.0. Local agent profiler, first run. Nothing leaves this machine.
 Read 14 session(s) from 2 location(s). Pricing: bundled snapshot 2026-07-01.
 ```
 
@@ -282,7 +282,8 @@ Count from `traceFile.runs.length`. Singular form: `One session was already on t
 
 **Body:**
 ```
-RunRay found these in logs Claude Code and OpenCode already wrote.
+RunRay read the logs Claude Code and OpenCode already wrote.
+See where the time went, which tools stalled, and how subagents branched.
 No collector or account required.
 ```
 
@@ -317,9 +318,9 @@ Final step's `Next` reads `Done`.
 **Step 1 — anchor `savings`**
 ```
 Title:  Two numbers, not one
-Body:   The left number is burned spend from retries or cache breaks, already
-        paid for. The right number shows what alternative settings would have
-        saved. You can still control that right number.
+Body:   The left number is spend burned on retries and broken caches. The
+        right number shows what cleaner runs would have saved. You can still
+        fix the right number.
 ```
 
 **Step 2 — anchor `overview-trend`, then `tool-rank`**
@@ -332,8 +333,8 @@ Body:   Daily spend by model, followed by the tools and MCP servers carrying
 **Step 3 — anchor `sessions-table`**
 ```
 Title:  One row is one session
-Body:   Open any row to inspect its delegation tree, burn line, and targeted
-        findings.
+Body:   Open any row to see who called whom, where seconds were lost, and
+        which tools threw errors.
 ```
 
 **Step 4 — anchor `help-button`**
@@ -348,15 +349,15 @@ Body:   Press ? to view keyboard shortcuts. Press ⌘K to open the command
 Not a celebration — a pointer at the next action (the plan's A1 gate):
 
 ```
-That's the map. The money is inside the sessions.
+That's the map. The actual traces live inside the sessions.
 
-[ Open the priciest session → ]
+[ Open latest session → ]
 ```
 
-The button navigates to the highest-cost visible run's timeline. If costs are unavailable
-(fully unpriced trace), it reads `[ Open the newest session → ]`.
+The button navigates to the newest visible run's timeline. If runs are available,
+it opens session inspection.
 
-### §4.4 Run tour — 3 steps
+### §4.4 Run tour — 4 steps
 
 #### §4.4a The offer (non-modal, first run view opened)
 
@@ -373,26 +374,45 @@ First time in a session view? Take a quick 30-second tour of what is on screen.
 **Step 1 — anchor `waterfall`**
 ```
 Title:  Nesting is delegation
-Body:   Indentation shows who called whom. Rows on separate lanes ran
-        concurrently, reflecting actual parallelism rather than layout spacing.
+Body:   Indentation shows who called whom. Rows in separate lanes ran
+        at the same time, not one after another.
 ```
 
-**Step 2 — anchor `spend-spine`**
+**Step 2 — anchor `time-tab`**
 ```
-Title:  The burn line
-Body:   Tracks cumulative spend as the session ran. Click any steep stretch
-        to jump straight to that moment.
+Title:  Where the time went
+Body:   The Time tab splits clock time between the model thinking and the
+        agent waiting on tools.
 ```
 
-**Step 3 — anchor `insights-strip`**
+**Step 3 — anchor `errors-tab`**
+```
+Title:  Normal errors vs real bugs
+Body:   The Errors tab separates normal exploration from tool crashes. A failed
+        check is usually just the agent trying things. A broken tool is your problem.
+```
+
+**Step 4 — anchor `insights-strip`**
 ```
 Title:  Findings point at evidence
-Body:   Select a finding to highlight the spans that caused it in the
-        waterfall. This pinpoints why the run cost what it did.
+Body:   Click a finding to highlight the spans that caused it in the
+        waterfall. Or open What-If to test cheaper models on this exact run.
 ```
 
-Step 3's `Next` reads `Try it` and activates the first finding rather than closing silently:
-the click *is* the activation moment, so the tour performs it instead of describing it.
+Step 4's `Next` reads `Try it` and activates the first finding or opens What-If.
+
+### §4.8 First run checklist
+
+Docked in the corner, collapsible, non-modal:
+
+```
+Title:  First run checklist (25%)
+Items:
+  [x] Found agent logs on disk
+  [ ] Check subagents and lanes in Timeline
+  [ ] See where time went in Time view
+  [ ] Check tool errors or test What-If repricing
+```
 
 ### §4.5 Contextual hints
 
@@ -400,10 +420,10 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 
 | Key | Copy |
 |---|---|
-| `time-view` | `Wall-clock duration rather than summed span times. This highlights where waiting actually occurred.` |
-| `errors-view` | `Grouped by who can act. Most failures are normal; a failing check usually means the agent is exploring.` |
-| `waste-view` | `Two separate metrics. Burned money went to dead ends, while opportunities show potential savings under new settings.` |
-| `what-if` | `Re-price this session against another model. Calculations run locally.` |
+| `time-view` | `Clock time, not the sum of spans. Shows where the session was actually stuck waiting.` |
+| `errors-view` | `Grouped by who can fix it. Most failed commands are just the agent exploring; broken tools are real bugs.` |
+| `waste-view` | `Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.` |
+| `what-if` | `Re-price this session against another model. Calculations stay on this machine.` |
 | `diff` | `Two runs of the same task? Compare them with: runray diff <runA> <runB>` |
 | `limit-mode` | `Shows token usage and percentage of your weekly limit instead of dollars.` |
 | `coverage` | `Unpriced models show token counts without dollar figures. Costs are never guessed.` |

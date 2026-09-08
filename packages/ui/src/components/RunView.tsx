@@ -14,6 +14,7 @@ import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
 import { WasteView } from './WasteView';
+import { tourAttr } from '../lib/tour-attr';
 import { Waterfall } from './Waterfall';
 
 /**
@@ -190,6 +191,11 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
       {tabs.map(({ label, route, active, badge }) => (
         <a
           key={label}
+          {...(route.view === 'time'
+            ? tourAttr('time-tab')
+            : route.view === 'errors'
+              ? tourAttr('errors-tab')
+              : {})}
           href={toHash(route)}
           aria-current={active ? 'page' : undefined}
           title={badge?.title}

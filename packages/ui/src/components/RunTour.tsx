@@ -19,24 +19,30 @@ export interface TourStep {
   body: string;
 }
 
-const RUN_STEPS: readonly TourStep[] = [
+export const RUN_STEPS: readonly TourStep[] = [
   {
     id: 'waterfall',
     anchorKeys: ['waterfall'],
     title: 'Nesting is delegation',
-    body: 'Indentation shows who called whom. Rows on separate lanes ran concurrently, reflecting actual parallelism rather than layout spacing.',
+    body: 'Indentation shows who called whom. Rows in separate lanes ran at the same time, not one after another.',
   },
   {
-    id: 'spend-spine',
-    anchorKeys: ['spend-spine'],
-    title: 'The burn line',
-    body: 'Tracks cumulative spend as the session ran. Click any steep stretch to jump straight to that moment.',
+    id: 'time-tab',
+    anchorKeys: ['time-tab'],
+    title: 'Where the time went',
+    body: 'The Time tab splits clock time between the model thinking and the agent waiting on tools.',
+  },
+  {
+    id: 'errors-tab',
+    anchorKeys: ['errors-tab'],
+    title: 'Normal errors vs real bugs',
+    body: 'The Errors tab separates normal exploration from tool crashes. A failed check is usually just the agent trying things. A broken tool is your problem.',
   },
   {
     id: 'insights-strip',
     anchorKeys: ['insights-strip'],
     title: 'Findings point at evidence',
-    body: 'Select a finding to highlight the spans that caused it in the waterfall. This pinpoints why the run cost what it did.',
+    body: 'Click a finding to highlight the spans that caused it in the waterfall. Or open What-If to test cheaper models on this exact run.',
   },
 ];
 

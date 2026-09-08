@@ -26,6 +26,7 @@ export interface OnboardingBlock {
   welcomeDismissedAt?: string | null;
   tours?: Record<string, string>;
   hints?: string[];
+  checklist?: Record<string, boolean>;
 }
 
 export interface StateDocument {
@@ -120,6 +121,22 @@ export function filterOnboardingPatch(patch: unknown): OnboardingBlock {
     result.hints = hints;
   }
 
+  if (
+    'checklist' in obj &&
+    typeof obj.checklist === 'object' &&
+    obj.checklist !== null &&
+    !Array.isArray(obj.checklist)
+  ) {
+    const checklistObj = obj.checklist as Record<string, unknown>;
+    const checklist: Record<string, boolean> = {};
+    for (const [k, v] of Object.entries(checklistObj)) {
+      if (typeof v === 'boolean') {
+        checklist[k] = v;
+      }
+    }
+    result.checklist = checklist;
+  }
+
   return result;
 }
 
@@ -143,6 +160,13 @@ function mergeOnboardingBlocks(
       ...(patch.hints ?? []),
     ]);
     merged.hints = Array.from(set);
+  }
+
+  if (base.checklist || patch.checklist) {
+    merged.checklist = {
+      ...(base.checklist ?? {}),
+      ...(patch.checklist ?? {}),
+    };
   }
 
   return merged;
