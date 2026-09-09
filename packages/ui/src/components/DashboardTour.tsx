@@ -82,14 +82,14 @@ export default function DashboardTour() {
       offset(12),
       flip({
         fallbackPlacements: [
-          'top-start',
-          'right-start',
-          'left-start',
           'bottom-end',
+          'top-start',
           'top-end',
+          'right-start',
+          'bottom-start',
         ],
       }),
-      shift({ padding: 12 }),
+      shift({ padding: 16 }),
     ],
     whileElementsMounted: autoUpdate,
   });
@@ -115,11 +115,30 @@ export default function DashboardTour() {
     }
   }, [anchorEl]);
 
+  const isLastStep = stepIndex >= validSteps.length - 1;
+  const isCompletionStep = stepIndex >= validSteps.length;
+
+  // Lock scrolling on main container while active tour step is presented
+  useEffect(() => {
+    if (!isActive || isCompletionStep) return;
+    const scrollContainer =
+      anchorEl?.closest('main') ??
+      document.querySelector('main.overflow-y-auto');
+    if (scrollContainer instanceof HTMLElement) {
+      const prevOverflow = scrollContainer.style.overflow;
+      scrollContainer.style.overflow = 'hidden';
+      return () => {
+        scrollContainer.style.overflow = prevOverflow;
+      };
+    }
+  }, [isActive, isCompletionStep, anchorEl]);
+
   useEffect(() => {
     if (anchorEl && stepIndex >= 0) {
-      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      updateRect();
     }
-  }, [stepIndex, anchorEl]);
+  }, [stepIndex, anchorEl, updateRect]);
 
   useEffect(() => {
     updateRect();
@@ -143,9 +162,6 @@ export default function DashboardTour() {
     }
     return max.totals.costUSD.total > 0 ? max : undefined;
   }, [visibleRuns]);
-
-  const isLastStep = stepIndex >= validSteps.length - 1;
-  const isCompletionStep = stepIndex >= validSteps.length;
 
   const handleSkip = () => {
     setTourStatus('dashboard', 'skipped');
@@ -196,7 +212,7 @@ export default function DashboardTour() {
       {/* Spotlight overlay */}
       {targetRect && !isCompletionStep && (
         <div
-          className="fixed pointer-events-none transition-all duration-200 ease-out z-40 rounded"
+          className="fixed pointer-events-none z-40 rounded"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,
