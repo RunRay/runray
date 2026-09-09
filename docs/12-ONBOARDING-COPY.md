@@ -94,7 +94,7 @@ so the user arrows and hits Enter — there are no numbers to type.
 
 **Intro:**
 ```
-RunRay — no agent sessions found in the standard locations.
+RunRay: no agent sessions found in the standard locations.
 ```
 
 **Question:**
@@ -106,7 +106,7 @@ What would you like to do?
 
 | label | hint |
 |---|---|
-| `Open the sample session` | `recommended — nothing to install` |
+| `Open the sample session` | `recommended, nothing to install` |
 | `Show setup guides` | `Claude Code · OpenCode · OTLP` |
 | `Point at a folder` | `logs live somewhere else` |
 | `Open the dashboard anyway` | `empty, but it explains itself` |
@@ -139,13 +139,13 @@ Checked:
   ~/.claude/projects                                    missing
   ~/.local/share/opencode                               missing
 
-RunRay reads logs coding agents already write — there is nothing to set
+RunRay reads logs coding agents already write. There is nothing to set
 up. Two ways forward:
 
   Run any agent session once, then:   runray view
   Logs live somewhere else:           runray view <path>
 
-Never run an agent here? See it on a sample session:  runray demo
+No agent sessions on this machine? Try the sample session:  runray demo
 ```
 
 Notes for the implementer:
@@ -154,7 +154,7 @@ Notes for the implementer:
 - One line per root actually checked, in scan order. If `--source` narrowed the scan, add:
   `(scan limited to --source claude)` under the list.
 - `unreadable` roots get one extra line after the list:
-  `One location could not be read — check permissions, or pass the folder directly.`
+  `One location could not be read. Check permissions, or pass the folder directly.`
 
 ### §3.5 Setup guides (wizard option 2)
 
@@ -164,8 +164,8 @@ Claude Code
   Run:  claude "explain this repo"     then:  runray view
 
 OpenCode
-  Nothing to configure. Sessions land in ~/.local/share/opencode — both the
-  legacy file storage and the newer SQLite store are read.
+  Nothing to configure. Sessions land in ~/.local/share/opencode. RunRay reads
+  both the legacy file storage and the newer SQLite store.
   Installed somewhere non-standard? runray view <that folder>
 
 Other agents (Cursor, custom pipelines)
@@ -283,8 +283,8 @@ Count from `traceFile.runs.length`. Singular form: `One session was already on t
 **Body:**
 ```
 RunRay read the logs Claude Code and OpenCode already wrote.
-See where the time went, which tools stalled, and how subagents branched.
-No collector or account required.
+Inspect execution time, stalled tools, and subagent branches.
+It requires no collector or account.
 ```
 
 **Privacy line** (own block, quieter type, the mechanism *is* the reassurance):
@@ -326,15 +326,15 @@ Body:   The left number is spend burned on retries and broken caches. The
 **Step 2 — anchor `overview-trend`, then `tool-rank`**
 ```
 Title:  Where it went
-Body:   Daily spend by model, followed by the tools and MCP servers carrying
-        it. Click any item to filter every view to that slice.
+Body:   Charts show daily spend by model, followed by the tools and MCP servers
+        behind it. Click any item to filter every view to that slice.
 ```
 
 **Step 3 — anchor `sessions-table`**
 ```
 Title:  One row is one session
-Body:   Open any row to see who called whom, where seconds were lost, and
-        which tools threw errors.
+Body:   Open any row to see the delegation tree, slow tool calls, and
+        tool errors.
 ```
 
 **Step 4 — anchor `help-button`**
@@ -346,10 +346,10 @@ Body:   Press ? to view keyboard shortcuts. Press ⌘K to open the command
 
 ### §4.3 Tour completion
 
-Not a celebration — a pointer at the next action (the plan's A1 gate):
+Not a celebration, but a pointer at the next action (the plan's A1 gate):
 
 ```
-That's the map. The actual traces live inside the sessions.
+The overview is complete. Traces and evidence live inside individual sessions.
 
 [ Open latest session → ]
 ```
@@ -362,7 +362,7 @@ it opens session inspection.
 #### §4.4a The offer (non-modal, first run view opened)
 
 ```
-First time in a session view? Take a quick 30-second tour of what is on screen.
+First time in a session view? Take a 30-second tour of this view.
 
 [ Show me ]   [ No thanks ]
 ```
@@ -387,9 +387,9 @@ Body:   The Time tab splits clock time between the model thinking and the
 
 **Step 3 — anchor `errors-tab`**
 ```
-Title:  Normal errors vs real bugs
+Title:  Normal errors versus real bugs
 Body:   The Errors tab separates normal exploration from tool crashes. A failed
-        check is usually just the agent trying things. A broken tool is your problem.
+        check usually means the agent is exploring. A broken tool is yours to fix.
 ```
 
 **Step 4 — anchor `insights-strip`**
@@ -409,9 +409,9 @@ Docked in the corner, collapsible, non-modal:
 Title:  First run checklist (25%)
 Items:
   [x] Found agent logs on disk
-  [ ] Check subagents and lanes in Timeline
-  [ ] See where time went in Time view
-  [ ] Check tool errors or test What-If repricing
+  [ ] Inspect subagents and lanes in Timeline
+  [ ] Trace clock time in Time view
+  [ ] Review tool errors or test What-If repricing
 ```
 
 ### §4.5 Contextual hints
@@ -420,8 +420,8 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 
 | Key | Copy |
 |---|---|
-| `time-view` | `Clock time, not the sum of spans. Shows where the session was actually stuck waiting.` |
-| `errors-view` | `Grouped by who can fix it. Most failed commands are just the agent exploring; broken tools are real bugs.` |
+| `time-view` | `Clock time, not the sum of spans. Shows where the session was stuck waiting.` |
+| `errors-view` | `Grouped by who can fix it. Most failed commands are the agent exploring; broken tools are real bugs.` |
 | `waste-view` | `Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.` |
 | `what-if` | `Re-price this session against another model. Calculations stay on this machine.` |
 | `diff` | `Two runs of the same task? Compare them with: runray diff <runA> <runB>` |

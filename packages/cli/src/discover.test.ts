@@ -405,13 +405,13 @@ describe('formatNoDataHints', () => {
         ~/.claude/projects                                    missing
         ~/.local/share/opencode                               missing
 
-      RunRay reads logs coding agents already write — there is nothing to set
+      RunRay reads logs coding agents already write. There is nothing to set
       up. Two ways forward:
 
         Run any agent session once, then:   runray view
         Logs live somewhere else:           runray view <path>
 
-      Never run an agent here? See it on a sample session:  runray demo
+      No agent sessions on this machine? Try the sample session:  runray demo
       "
     `);
   });
@@ -430,13 +430,13 @@ describe('formatNoDataHints', () => {
         ~/.claude/projects                                    empty
         ~/.local/share/opencode                               missing
 
-      RunRay reads logs coding agents already write — there is nothing to set
+      RunRay reads logs coding agents already write. There is nothing to set
       up. Two ways forward:
 
         Run any agent session once, then:   runray view
         Logs live somewhere else:           runray view <path>
 
-      Never run an agent here? See it on a sample session:  runray demo
+      No agent sessions on this machine? Try the sample session:  runray demo
       "
     `);
   });
@@ -454,15 +454,15 @@ describe('formatNoDataHints', () => {
       Checked:
         ~/.claude/projects                                    unreadable
         ~/.local/share/opencode                               missing
-      One location could not be read — check permissions, or pass the folder directly.
+      One location could not be read. Check permissions, or pass the folder directly.
 
-      RunRay reads logs coding agents already write — there is nothing to set
+      RunRay reads logs coding agents already write. There is nothing to set
       up. Two ways forward:
 
         Run any agent session once, then:   runray view
         Logs live somewhere else:           runray view <path>
 
-      Never run an agent here? See it on a sample session:  runray demo
+      No agent sessions on this machine? Try the sample session:  runray demo
       "
     `);
   });
@@ -480,13 +480,13 @@ describe('formatNoDataHints', () => {
         ~/.claude/projects                                    missing
       (scan limited to --source claude)
 
-      RunRay reads logs coding agents already write — there is nothing to set
+      RunRay reads logs coding agents already write. There is nothing to set
       up. Two ways forward:
 
         Run any agent session once, then:   runray view
         Logs live somewhere else:           runray view <path>
 
-      Never run an agent here? See it on a sample session:  runray demo
+      No agent sessions on this machine? Try the sample session:  runray demo
       "
     `);
   });
@@ -503,13 +503,13 @@ describe('formatNoDataHints', () => {
       Checked:
         /tmp/my-custom-logs                                   missing
 
-      RunRay reads logs coding agents already write — there is nothing to set
+      RunRay reads logs coding agents already write. There is nothing to set
       up. Two ways forward:
 
         Run any agent session once, then:   runray view
         Logs live somewhere else:           runray view <path>
 
-      Never run an agent here? See it on a sample session:  runray demo
+      No agent sessions on this machine? Try the sample session:  runray demo
       "
     `);
   });

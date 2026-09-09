@@ -30,13 +30,13 @@ export const DASHBOARD_STEPS: readonly TourStep[] = [
     id: 'overview-trend',
     anchorKeys: ['overview-trend', 'tool-rank'],
     title: 'Where it went',
-    body: 'Daily spend by model, followed by the tools and MCP servers carrying it. Click any item to filter every view to that slice.',
+    body: 'Charts show daily spend by model, followed by the tools and MCP servers behind it. Click any item to filter every view to that slice.',
   },
   {
     id: 'sessions-table',
     anchorKeys: ['sessions-table'],
     title: 'One row is one session',
-    body: 'Open any row to see who called whom, where seconds were lost, and which tools threw errors.',
+    body: 'Open any row to see the delegation tree, slow tool calls, and tool errors.',
   },
   {
     id: 'help-button',
@@ -218,7 +218,8 @@ export default function DashboardTour() {
             className="w-[420px] rounded-panel border border-border-slate bg-surface-container-low p-6 shadow-popover text-text"
           >
             <h2 className="font-display text-header font-semibold text-text">
-              That's the map. The actual traces live inside the sessions.
+              The overview is complete. Traces and evidence live inside
+              individual sessions.
             </h2>
             <div className="mt-6 flex justify-end">
               <button

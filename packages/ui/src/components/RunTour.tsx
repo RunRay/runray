@@ -35,8 +35,8 @@ export const RUN_STEPS: readonly TourStep[] = [
   {
     id: 'errors-tab',
     anchorKeys: ['errors-tab'],
-    title: 'Normal errors vs real bugs',
-    body: 'The Errors tab separates normal exploration from tool crashes. A failed check is usually just the agent trying things. A broken tool is your problem.',
+    title: 'Normal errors versus real bugs',
+    body: 'The Errors tab separates normal exploration from tool crashes. A failed check usually means the agent is exploring. A broken tool is yours to fix.',
   },
   {
     id: 'insights-strip',
@@ -210,8 +210,7 @@ export default function RunTour() {
       <FloatingPortal>
         <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text">
           <p className="text-body font-medium text-text">
-            First time in a session view? Take a quick 30-second tour of what is
-            on screen.
+            First time in a session view? Take a 30-second tour of this view.
           </p>
           <div className="mt-3 flex items-center justify-end gap-2">
             <button

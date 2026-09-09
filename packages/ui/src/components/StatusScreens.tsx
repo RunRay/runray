@@ -89,7 +89,7 @@ export function EmptyScreen() {
           <Command>runray view &lt;path&gt;</Command>
         </p>
         <p className="mt-2 text-label text-text-faint">
-          Never run an agent here? See it on a sample session:{' '}
+          No agent sessions on this machine? Try the sample session:{' '}
           <Command>runray demo</Command>
         </p>
         {isLive && <CheckedRoots roots={rootsScanned} />}

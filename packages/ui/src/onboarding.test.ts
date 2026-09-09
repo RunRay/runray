@@ -1,6 +1,9 @@
 import type { Insight, Run, TraceFile } from '@runray/schema';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DASHBOARD_STEPS } from './components/DashboardTour';
+import { ChecklistCard } from './components/OnboardingChecklist';
 import { RUN_STEPS } from './components/RunTour';
 import { loadOnboarding, postOnboardingPatch } from './lib/load';
 import { useAppStore } from './store';
@@ -311,6 +314,36 @@ describe('Dashboard onboarding & tour (phase 4, ui)', () => {
       expect(state.onboarding.checklist.dismissed).toBe(true);
     });
 
+    it('checklist is positioned clear of the sidebar (left-64 expanded, left-[4.5rem] collapsed)', () => {
+      // Expanded sidebar (navCollapsed === false)
+      let html = renderToStaticMarkup(
+        createElement(ChecklistCard, { navCollapsed: false }),
+      );
+      expect(html).toContain('left-64');
+      expect(html).not.toContain('left-4');
+
+      // Collapsed sidebar (navCollapsed === true)
+      html = renderToStaticMarkup(
+        createElement(ChecklistCard, { navCollapsed: true }),
+      );
+      expect(html).toContain('left-[4.5rem]');
+      expect(html).not.toContain('left-64');
+      expect(html).not.toContain('left-4');
+
+      // Collapsed checklist badge state also respects navCollapsed
+      const badgeHtml = renderToStaticMarkup(
+        createElement(ChecklistCard, { navCollapsed: false, collapsed: true }),
+      );
+      expect(badgeHtml).toContain('left-64');
+      expect(badgeHtml).not.toContain('left-4');
+
+      const collapsedNavBadgeHtml = renderToStaticMarkup(
+        createElement(ChecklistCard, { navCollapsed: true, collapsed: true }),
+      );
+      expect(collapsedNavBadgeHtml).toContain('left-[4.5rem]');
+      expect(collapsedNavBadgeHtml).not.toContain('left-64');
+    });
+
     it('DASHBOARD_STEPS covers the 4 dashboard steps with profiling focus', () => {
       expect(DASHBOARD_STEPS).toHaveLength(4);
       expect(DASHBOARD_STEPS.map((s) => s.id)).toEqual([
@@ -333,7 +366,7 @@ describe('Dashboard onboarding & tour (phase 4, ui)', () => {
       ]);
       expect(RUN_STEPS[0]?.title).toBe('Nesting is delegation');
       expect(RUN_STEPS[1]?.title).toBe('Where the time went');
-      expect(RUN_STEPS[2]?.title).toBe('Normal errors vs real bugs');
+      expect(RUN_STEPS[2]?.title).toBe('Normal errors versus real bugs');
       expect(RUN_STEPS[3]?.title).toBe('Findings point at evidence');
     });
   });
