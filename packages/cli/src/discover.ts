@@ -122,19 +122,19 @@ export function formatNoDataHints(
   const hasUnreadable = rootsScanned.some((r) => r.verdict === 'unreadable');
   if (hasUnreadable) {
     lines.push(
-      'One location could not be read — check permissions, or pass the folder directly.',
+      'One location could not be read. Check permissions, or pass the folder directly.',
     );
   }
 
   lines.push(
     '',
-    'RunRay reads logs coding agents already write — there is nothing to set',
+    'RunRay reads logs coding agents already write. There is nothing to set',
     'up. Two ways forward:',
     '',
     '  Run any agent session once, then:   runray view',
     '  Logs live somewhere else:           runray view <path>',
     '',
-    'Never run an agent here? See it on a sample session:  runray demo',
+    'No agent sessions on this machine? Try the sample session:  runray demo',
     '',
   );
 

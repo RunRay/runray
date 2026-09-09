@@ -1,101 +1,45 @@
 import { useEffect, useState } from 'react';
 import { useAppStore, useVisibleRuns } from '../store';
 
-export default function OnboardingChecklist() {
-  const onboarding = useAppStore((s) => s.onboarding);
-  const route = useAppStore((s) => s.route);
-  const visibleRuns = useVisibleRuns();
-  const setChecklistStep = useAppStore((s) => s.setChecklistStep);
-  const dismissChecklist = useAppStore((s) => s.dismissChecklist);
-  const navigateTo = useAppStore((s) => s.navigateTo);
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  completed: boolean;
+  onClick: () => void;
+}
 
-  const [collapsed, setCollapsed] = useState(false);
+export interface ChecklistCardProps {
+  navCollapsed?: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+  onDismiss?: () => void;
+  items?: ChecklistItem[];
+  pct?: number;
+  allComplete?: boolean;
+}
 
-  const checklist = onboarding.checklist ?? {};
-
-  // Auto-complete steps on navigation
-  useEffect(() => {
-    if (!onboarding.enabled || onboarding.checklistDismissed) return;
-
-    // Step 1: traces always discovered if onboarding is active with runs
-    if (visibleRuns.length > 0 && checklist.tracesIndexed !== true) {
-      setChecklistStep('tracesIndexed', true);
-    }
-
-    if (route.view === 'timeline' && checklist.timelineInspected !== true) {
-      setChecklistStep('timelineInspected', true);
-    } else if (route.view === 'time' && checklist.timeDiagnosed !== true) {
-      setChecklistStep('timeDiagnosed', true);
-    } else if (
-      (route.view === 'errors' || route.view === 'waste') &&
-      checklist.optimizationReviewed !== true
-    ) {
-      setChecklistStep('optimizationReviewed', true);
-    }
-  }, [
-    route.view,
-    visibleRuns.length,
-    checklist,
-    onboarding.enabled,
-    onboarding.checklistDismissed,
-    setChecklistStep,
-  ]);
-
-  if (
-    !onboarding.enabled ||
-    !onboarding.loaded ||
-    onboarding.checklistDismissed ||
-    visibleRuns.length === 0
-  ) {
-    return null;
-  }
-
-  const items = [
-    {
-      id: 'tracesIndexed',
-      label: 'Found agent logs on disk',
-      completed: checklist.tracesIndexed ?? true,
-      onClick: () => navigateTo({ view: 'dashboard' }),
-    },
-    {
-      id: 'timelineInspected',
-      label: 'Check subagents and lanes in Timeline',
-      completed: checklist.timelineInspected === true,
-      onClick: () => {
-        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
-        if (runId) navigateTo({ view: 'timeline', runId });
-      },
-    },
-    {
-      id: 'timeDiagnosed',
-      label: 'See where time went in Time view',
-      completed: checklist.timeDiagnosed === true,
-      onClick: () => {
-        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
-        if (runId) navigateTo({ view: 'time', runId });
-      },
-    },
-    {
-      id: 'optimizationReviewed',
-      label: 'Check tool errors or test What-If repricing',
-      completed: checklist.optimizationReviewed === true,
-      onClick: () => {
-        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
-        if (runId) navigateTo({ view: 'errors', runId });
-      },
-    },
-  ];
-
-  const completedCount = items.filter((i) => i.completed).length;
-  const pct = Math.round((completedCount / items.length) * 100);
-  const allComplete = completedCount === items.length;
+/**
+ * Presentational card for the first-run checklist.
+ * Pure component rendered from props so positioning and interaction can be tested.
+ * Anchored to the viewport bottom and offset clear of the side navigation rail.
+ */
+export function ChecklistCard({
+  navCollapsed = false,
+  collapsed = false,
+  onToggleCollapse,
+  onDismiss,
+  items = [],
+  pct = 0,
+  allComplete = false,
+}: ChecklistCardProps) {
+  const leftPosition = navCollapsed ? 'left-[4.5rem]' : 'left-64';
 
   if (collapsed) {
     return (
-      <div className="fixed bottom-4 left-4 z-40">
+      <div className={`fixed bottom-4 ${leftPosition} z-40`}>
         <button
           type="button"
-          onClick={() => setCollapsed(false)}
+          onClick={onToggleCollapse}
           className="flex items-center gap-2 rounded-panel border border-border-slate bg-surface-container-low px-3 py-2 text-label font-medium text-text shadow-popover hover:bg-surface-variant transition-colors"
           aria-label="Expand first run checklist"
         >
@@ -109,7 +53,7 @@ export default function OnboardingChecklist() {
   return (
     <section
       aria-label="First run checklist"
-      className="fixed bottom-4 left-4 z-40 w-80 rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text"
+      className={`fixed bottom-4 ${leftPosition} z-40 w-80 rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text`}
     >
       <div className="flex items-center justify-between pb-2 border-b border-border-slate">
         <div className="flex items-center gap-2">
@@ -123,7 +67,7 @@ export default function OnboardingChecklist() {
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => setCollapsed(true)}
+            onClick={onToggleCollapse}
             className="rounded p-1 text-text-faint hover:text-text hover:bg-surface transition-colors"
             title="Minimize checklist"
             aria-label="Minimize checklist"
@@ -145,7 +89,7 @@ export default function OnboardingChecklist() {
           </button>
           <button
             type="button"
-            onClick={dismissChecklist}
+            onClick={onDismiss}
             className="rounded p-1 text-text-faint hover:text-text hover:bg-surface transition-colors"
             title="Dismiss checklist"
             aria-label="Dismiss checklist"
@@ -218,11 +162,11 @@ export default function OnboardingChecklist() {
       {allComplete && (
         <div className="mt-3 pt-2 border-t border-border-slate flex items-center justify-between">
           <span className="text-[11px] text-text-faint font-mono">
-            All four explored.
+            You explored all four views.
           </span>
           <button
             type="button"
-            onClick={dismissChecklist}
+            onClick={onDismiss}
             className="rounded bg-brand px-2 py-0.5 text-label text-white hover:bg-brand-secondary transition-colors"
           >
             Done
@@ -230,5 +174,108 @@ export default function OnboardingChecklist() {
         </div>
       )}
     </section>
+  );
+}
+
+export default function OnboardingChecklist() {
+  const onboarding = useAppStore((s) => s.onboarding);
+  const route = useAppStore((s) => s.route);
+  const navCollapsed = useAppStore((s) => s.ui.navCollapsed);
+  const visibleRuns = useVisibleRuns();
+  const setChecklistStep = useAppStore((s) => s.setChecklistStep);
+  const dismissChecklist = useAppStore((s) => s.dismissChecklist);
+  const navigateTo = useAppStore((s) => s.navigateTo);
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  const checklist = onboarding.checklist ?? {};
+
+  // Auto-complete steps on navigation
+  useEffect(() => {
+    if (!onboarding.enabled || onboarding.checklistDismissed) return;
+
+    // Step 1: traces always discovered if onboarding is active with runs
+    if (visibleRuns.length > 0 && checklist.tracesIndexed !== true) {
+      setChecklistStep('tracesIndexed', true);
+    }
+
+    if (route.view === 'timeline' && checklist.timelineInspected !== true) {
+      setChecklistStep('timelineInspected', true);
+    } else if (route.view === 'time' && checklist.timeDiagnosed !== true) {
+      setChecklistStep('timeDiagnosed', true);
+    } else if (
+      (route.view === 'errors' || route.view === 'waste') &&
+      checklist.optimizationReviewed !== true
+    ) {
+      setChecklistStep('optimizationReviewed', true);
+    }
+  }, [
+    route.view,
+    visibleRuns.length,
+    checklist,
+    onboarding.enabled,
+    onboarding.checklistDismissed,
+    setChecklistStep,
+  ]);
+
+  if (
+    !onboarding.enabled ||
+    !onboarding.loaded ||
+    onboarding.checklistDismissed ||
+    visibleRuns.length === 0
+  ) {
+    return null;
+  }
+
+  const items: ChecklistItem[] = [
+    {
+      id: 'tracesIndexed',
+      label: 'Found agent logs on disk',
+      completed: checklist.tracesIndexed ?? true,
+      onClick: () => navigateTo({ view: 'dashboard' }),
+    },
+    {
+      id: 'timelineInspected',
+      label: 'Inspect subagents and lanes in Timeline',
+      completed: checklist.timelineInspected === true,
+      onClick: () => {
+        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
+        if (runId) navigateTo({ view: 'timeline', runId });
+      },
+    },
+    {
+      id: 'timeDiagnosed',
+      label: 'Trace clock time in Time view',
+      completed: checklist.timeDiagnosed === true,
+      onClick: () => {
+        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
+        if (runId) navigateTo({ view: 'time', runId });
+      },
+    },
+    {
+      id: 'optimizationReviewed',
+      label: 'Review tool errors or test What-If repricing',
+      completed: checklist.optimizationReviewed === true,
+      onClick: () => {
+        const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;
+        if (runId) navigateTo({ view: 'errors', runId });
+      },
+    },
+  ];
+
+  const completedCount = items.filter((i) => i.completed).length;
+  const pct = Math.round((completedCount / items.length) * 100);
+  const allComplete = completedCount === items.length;
+
+  return (
+    <ChecklistCard
+      navCollapsed={navCollapsed}
+      collapsed={collapsed}
+      onToggleCollapse={() => setCollapsed((c) => !c)}
+      onDismiss={dismissChecklist}
+      items={items}
+      pct={pct}
+      allComplete={allComplete}
+    />
   );
 }

@@ -29,7 +29,7 @@ export function WelcomeDialog() {
 
   const body = isSample
     ? 'Real structure, no real prompts or paths. Everything below works the same on your own sessions when you run "runray view".'
-    : 'RunRay read the logs Claude Code and OpenCode already wrote. See where the time went, which tools stalled, and how subagents branched. No collector or account required.';
+    : 'RunRay read the logs Claude Code and OpenCode already wrote. Inspect execution time, stalled tools, and subagent branches. It requires no collector or account.';
 
   const privacy =
     'Everything stays local. No network calls or telemetry; this dashboard runs on 127.0.0.1 for this browser only.';
