@@ -10,6 +10,7 @@ export interface ChecklistItem {
 
 export interface ChecklistCardProps {
   navCollapsed?: boolean;
+  hasSessionsPane?: boolean;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onDismiss?: () => void;
@@ -21,10 +22,9 @@ export interface ChecklistCardProps {
 /**
  * Presentational card for the first-run checklist.
  * Pure component rendered from props so positioning and interaction can be tested.
- * Anchored to the viewport bottom and offset clear of the side navigation rail.
+ * Docked in the bottom-left corner (bottom-4 left-4) and brought to front (z-40) over the sidebar.
  */
 export function ChecklistCard({
-  navCollapsed = false,
   collapsed = false,
   onToggleCollapse,
   onDismiss,
@@ -32,11 +32,9 @@ export function ChecklistCard({
   pct = 0,
   allComplete = false,
 }: ChecklistCardProps) {
-  const leftPosition = navCollapsed ? 'left-[4.5rem]' : 'left-64';
-
   if (collapsed) {
     return (
-      <div className={`fixed bottom-4 ${leftPosition} z-40`}>
+      <div className="fixed bottom-4 left-4 z-40">
         <button
           type="button"
           onClick={onToggleCollapse}
@@ -53,7 +51,7 @@ export function ChecklistCard({
   return (
     <section
       aria-label="First run checklist"
-      className={`fixed bottom-4 ${leftPosition} z-40 w-80 rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text`}
+      className="fixed bottom-4 left-4 z-40 w-80 rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text"
     >
       <div className="flex items-center justify-between pb-2 border-b border-border-slate">
         <div className="flex items-center gap-2">
@@ -180,7 +178,6 @@ export function ChecklistCard({
 export default function OnboardingChecklist() {
   const onboarding = useAppStore((s) => s.onboarding);
   const route = useAppStore((s) => s.route);
-  const navCollapsed = useAppStore((s) => s.ui.navCollapsed);
   const visibleRuns = useVisibleRuns();
   const setChecklistStep = useAppStore((s) => s.setChecklistStep);
   const dismissChecklist = useAppStore((s) => s.dismissChecklist);
@@ -218,9 +215,20 @@ export default function OnboardingChecklist() {
     setChecklistStep,
   ]);
 
+  const isDashboardTourActive =
+    Boolean(onboarding.welcomeDismissedAt) &&
+    onboarding.tours.dashboard !== 'completed' &&
+    onboarding.tours.dashboard !== 'skipped' &&
+    route.view === 'dashboard';
+
+  const isRunTourActive = onboarding.tours.run === 'active';
+
   if (
     !onboarding.enabled ||
     !onboarding.loaded ||
+    !onboarding.welcomeDismissedAt ||
+    isDashboardTourActive ||
+    isRunTourActive ||
     onboarding.checklistDismissed ||
     visibleRuns.length === 0
   ) {
@@ -269,7 +277,6 @@ export default function OnboardingChecklist() {
 
   return (
     <ChecklistCard
-      navCollapsed={navCollapsed}
       collapsed={collapsed}
       onToggleCollapse={() => setCollapsed((c) => !c)}
       onDismiss={dismissChecklist}

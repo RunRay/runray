@@ -38,7 +38,6 @@ export function SavingsPanel({
 
   return (
     <section
-      {...tourAttr('savings')}
       aria-label="Potential savings"
       className="rounded border border-border-slate bg-surface-container-low p-5 shadow-card motion-safe:animate-[rise_500ms_var(--ease-out)_both]"
     >
@@ -54,14 +53,17 @@ export function SavingsPanel({
       </div>
 
       {summary.findings === 0 ? (
-        <p className="mt-3 text-body text-text-dim">
+        <p {...tourAttr('savings')} className="mt-3 text-body text-text-dim">
           All {ruleCount} rules found nothing to save in this period. No retry
           loops, cache breaks, or tier mismatches occurred in the visible
           sessions.
         </p>
       ) : (
         <>
-          <div className="mt-3 flex flex-wrap items-end gap-x-10 gap-y-3">
+          <div
+            {...tourAttr('savings')}
+            className="mt-3 flex flex-wrap items-end gap-x-10 gap-y-3"
+          >
             <div>
               <p className="flex items-baseline gap-1.5 font-display text-[30px] font-semibold leading-[1.05] text-heat-2">
                 <CoverageCaveat runs={runs} />

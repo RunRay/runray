@@ -90,14 +90,14 @@ export default function RunTour() {
       offset(12),
       flip({
         fallbackPlacements: [
-          'top-start',
-          'right-start',
-          'left-start',
           'bottom-end',
+          'top-start',
           'top-end',
+          'right-start',
+          'bottom-start',
         ],
       }),
-      shift({ padding: 12 }),
+      shift({ padding: 16 }),
     ],
     whileElementsMounted: autoUpdate,
   });
@@ -122,11 +122,26 @@ export default function RunTour() {
     }
   }, [anchorEl]);
 
+  // Lock scrolling on main container while run tour is active
+  useEffect(() => {
+    if (!inTour) return;
+    const scrollContainer =
+      anchorEl?.closest('main') ?? document.querySelector('main');
+    if (scrollContainer instanceof HTMLElement) {
+      const prevOverflow = scrollContainer.style.overflow;
+      scrollContainer.style.overflow = 'hidden';
+      return () => {
+        scrollContainer.style.overflow = prevOverflow;
+      };
+    }
+  }, [inTour, anchorEl]);
+
   useEffect(() => {
     if (inTour && anchorEl && stepIndex >= 0) {
-      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      updateRect();
     }
-  }, [inTour, stepIndex, anchorEl]);
+  }, [inTour, stepIndex, anchorEl, updateRect]);
 
   useEffect(() => {
     if (inTour) {
@@ -163,6 +178,7 @@ export default function RunTour() {
       navigateTo({ view: 'timeline', runId: activeRun.id });
     }
     setInTour(true);
+    setTourStatus('run', 'active');
     setStepIndex(0);
   };
 
@@ -244,7 +260,7 @@ export default function RunTour() {
       {/* Spotlight overlay */}
       {targetRect && (
         <div
-          className="fixed pointer-events-none transition-all duration-200 ease-out z-40 rounded"
+          className="fixed pointer-events-none z-40 rounded"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,
