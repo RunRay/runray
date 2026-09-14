@@ -19,24 +19,30 @@ export interface TourStep {
   body: string;
 }
 
-const RUN_STEPS: readonly TourStep[] = [
+export const RUN_STEPS: readonly TourStep[] = [
   {
     id: 'waterfall',
     anchorKeys: ['waterfall'],
     title: 'Nesting is delegation',
-    body: 'Indentation shows who called whom. Rows on separate lanes ran concurrently, reflecting actual parallelism rather than layout spacing.',
+    body: 'Indentation shows who called whom. Rows in separate lanes ran at the same time, not one after another.',
   },
   {
-    id: 'spend-spine',
-    anchorKeys: ['spend-spine'],
-    title: 'The burn line',
-    body: 'Tracks cumulative spend as the session ran. Click any steep stretch to jump straight to that moment.',
+    id: 'time-tab',
+    anchorKeys: ['time-tab'],
+    title: 'Where the time went',
+    body: 'The Time tab splits clock time between the model thinking and the agent waiting on tools.',
+  },
+  {
+    id: 'errors-tab',
+    anchorKeys: ['errors-tab'],
+    title: 'Normal errors versus real bugs',
+    body: 'The Errors tab separates normal exploration from tool crashes. A failed check usually means the agent is exploring. A broken tool is yours to fix.',
   },
   {
     id: 'insights-strip',
     anchorKeys: ['insights-strip'],
     title: 'Findings point at evidence',
-    body: 'Select a finding to highlight the spans that caused it in the waterfall. This pinpoints why the run cost what it did.',
+    body: 'Click a finding to highlight the spans that caused it in the waterfall. Or open What-If to test cheaper models on this exact run.',
   },
 ];
 
@@ -84,14 +90,14 @@ export default function RunTour() {
       offset(12),
       flip({
         fallbackPlacements: [
-          'top-start',
-          'right-start',
-          'left-start',
           'bottom-end',
+          'top-start',
           'top-end',
+          'right-start',
+          'bottom-start',
         ],
       }),
-      shift({ padding: 12 }),
+      shift({ padding: 16 }),
     ],
     whileElementsMounted: autoUpdate,
   });
@@ -116,11 +122,26 @@ export default function RunTour() {
     }
   }, [anchorEl]);
 
+  // Lock scrolling on main container while run tour is active
+  useEffect(() => {
+    if (!inTour) return;
+    const scrollContainer =
+      anchorEl?.closest('main') ?? document.querySelector('main');
+    if (scrollContainer instanceof HTMLElement) {
+      const prevOverflow = scrollContainer.style.overflow;
+      scrollContainer.style.overflow = 'hidden';
+      return () => {
+        scrollContainer.style.overflow = prevOverflow;
+      };
+    }
+  }, [inTour, anchorEl]);
+
   useEffect(() => {
     if (inTour && anchorEl && stepIndex >= 0) {
-      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      updateRect();
     }
-  }, [inTour, stepIndex, anchorEl]);
+  }, [inTour, stepIndex, anchorEl, updateRect]);
 
   useEffect(() => {
     if (inTour) {
@@ -157,6 +178,7 @@ export default function RunTour() {
       navigateTo({ view: 'timeline', runId: activeRun.id });
     }
     setInTour(true);
+    setTourStatus('run', 'active');
     setStepIndex(0);
   };
 
@@ -204,8 +226,7 @@ export default function RunTour() {
       <FloatingPortal>
         <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-panel border border-border-slate bg-surface-container-low p-4 shadow-popover text-text">
           <p className="text-body font-medium text-text">
-            First time in a session view? Take a quick 30-second tour of what is
-            on screen.
+            First time in a session view? Take a 30-second tour of this view.
           </p>
           <div className="mt-3 flex items-center justify-end gap-2">
             <button
@@ -239,7 +260,7 @@ export default function RunTour() {
       {/* Spotlight overlay */}
       {targetRect && (
         <div
-          className="fixed pointer-events-none transition-all duration-200 ease-out z-40 rounded"
+          className="fixed pointer-events-none z-40 rounded"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,

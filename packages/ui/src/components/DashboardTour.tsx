@@ -19,24 +19,24 @@ export interface TourStep {
   body: string;
 }
 
-const DASHBOARD_STEPS: readonly TourStep[] = [
+export const DASHBOARD_STEPS: readonly TourStep[] = [
   {
     id: 'savings',
     anchorKeys: ['savings'],
     title: 'Two numbers, not one',
-    body: 'The left number is burned spend from retries or cache breaks, already paid for. The right number shows what alternative settings would have saved. You can still control that right number.',
+    body: 'The left number is spend burned on retries and broken caches. The right number shows what cleaner runs would have saved. You can still fix that right number.',
   },
   {
     id: 'overview-trend',
     anchorKeys: ['overview-trend', 'tool-rank'],
     title: 'Where it went',
-    body: 'Daily spend by model, followed by the tools and MCP servers carrying it. Click any item to filter every view to that slice.',
+    body: 'Charts show daily spend by model, followed by the tools and MCP servers behind it. Click any item to filter every view to that slice.',
   },
   {
     id: 'sessions-table',
     anchorKeys: ['sessions-table'],
     title: 'One row is one session',
-    body: 'Open any row to inspect its delegation tree, burn line, and targeted findings.',
+    body: 'Open any row to see the delegation tree, slow tool calls, and tool errors.',
   },
   {
     id: 'help-button',
@@ -82,14 +82,14 @@ export default function DashboardTour() {
       offset(12),
       flip({
         fallbackPlacements: [
-          'top-start',
-          'right-start',
-          'left-start',
           'bottom-end',
+          'top-start',
           'top-end',
+          'right-start',
+          'bottom-start',
         ],
       }),
-      shift({ padding: 12 }),
+      shift({ padding: 16 }),
     ],
     whileElementsMounted: autoUpdate,
   });
@@ -115,11 +115,30 @@ export default function DashboardTour() {
     }
   }, [anchorEl]);
 
+  const isLastStep = stepIndex >= validSteps.length - 1;
+  const isCompletionStep = stepIndex >= validSteps.length;
+
+  // Lock scrolling on main container while active tour step is presented
+  useEffect(() => {
+    if (!isActive || isCompletionStep) return;
+    const scrollContainer =
+      anchorEl?.closest('main') ??
+      document.querySelector('main.overflow-y-auto');
+    if (scrollContainer instanceof HTMLElement) {
+      const prevOverflow = scrollContainer.style.overflow;
+      scrollContainer.style.overflow = 'hidden';
+      return () => {
+        scrollContainer.style.overflow = prevOverflow;
+      };
+    }
+  }, [isActive, isCompletionStep, anchorEl]);
+
   useEffect(() => {
     if (anchorEl && stepIndex >= 0) {
-      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      anchorEl.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      updateRect();
     }
-  }, [stepIndex, anchorEl]);
+  }, [stepIndex, anchorEl, updateRect]);
 
   useEffect(() => {
     updateRect();
@@ -143,9 +162,6 @@ export default function DashboardTour() {
     }
     return max.totals.costUSD.total > 0 ? max : undefined;
   }, [visibleRuns]);
-
-  const isLastStep = stepIndex >= validSteps.length - 1;
-  const isCompletionStep = stepIndex >= validSteps.length;
 
   const handleSkip = () => {
     setTourStatus('dashboard', 'skipped');
@@ -189,16 +205,14 @@ export default function DashboardTour() {
   }
 
   const targetRun = priciestRun ?? visibleRuns[0];
-  const onwardLabel = priciestRun
-    ? 'Open the priciest session →'
-    : 'Open the newest session →';
+  const onwardLabel = 'Open latest session →';
 
   return (
     <FloatingPortal>
       {/* Spotlight overlay */}
       {targetRect && !isCompletionStep && (
         <div
-          className="fixed pointer-events-none transition-all duration-200 ease-out z-40 rounded"
+          className="fixed pointer-events-none z-40 rounded"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,
@@ -220,7 +234,8 @@ export default function DashboardTour() {
             className="w-[420px] rounded-panel border border-border-slate bg-surface-container-low p-6 shadow-popover text-text"
           >
             <h2 className="font-display text-header font-semibold text-text">
-              That's the map. The money is inside the sessions.
+              The overview is complete. Traces and evidence live inside
+              individual sessions.
             </h2>
             <div className="mt-6 flex justify-end">
               <button

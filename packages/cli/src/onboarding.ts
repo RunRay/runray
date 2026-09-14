@@ -41,7 +41,7 @@ export function writeFirstRunBanner(
   writeState({ firstSeenAt: new Date().toISOString() }, statePath);
 
   const version = getCliVersion();
-  let output = `RunRay ${version} — first run. Nothing leaves this machine.\n`;
+  let output = `RunRay ${version}. Local agent profiler, first run. Nothing leaves this machine.\n`;
   if (runsCount > 0) {
     output += `Read ${runsCount} session(s) from ${locationCount} location(s). Pricing: bundled snapshot ${snapshotDate}.\n`;
   }
@@ -67,8 +67,8 @@ export const SETUP_GUIDES_TEXT = `Claude Code
   Run:  claude "explain this repo"     then:  runray view
 
 OpenCode
-  Nothing to configure. Sessions land in ~/.local/share/opencode — both the
-  legacy file storage and the newer SQLite store are read.
+  Nothing to configure. Sessions land in ~/.local/share/opencode. RunRay reads
+  both the legacy file storage and the newer SQLite store.
   Installed somewhere non-standard? runray view <that folder>
 
 Other agents (Cursor, custom pipelines)
@@ -145,7 +145,7 @@ export async function runWizard(
   options: RunWizardOptions,
   prompts: ClackPrompts = clack,
 ): Promise<WizardResult> {
-  prompts.intro('RunRay — no agent sessions found in the standard locations.');
+  prompts.intro('RunRay: no agent sessions found in the standard locations.');
 
   while (true) {
     const selection = await prompts.select({
@@ -155,7 +155,7 @@ export async function runWizard(
         {
           value: 'sample',
           label: 'Open the sample session',
-          hint: 'recommended — nothing to install',
+          hint: 'recommended, nothing to install',
         },
         {
           value: 'guides',

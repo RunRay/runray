@@ -1,5 +1,10 @@
 import type { Insight, Run, TraceFile } from '@runray/schema';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DASHBOARD_STEPS } from './components/DashboardTour';
+import { ChecklistCard } from './components/OnboardingChecklist';
+import { RUN_STEPS } from './components/RunTour';
 import { loadOnboarding, postOnboardingPatch } from './lib/load';
 import { useAppStore } from './store';
 
@@ -289,6 +294,92 @@ describe('Dashboard onboarding & tour (phase 4, ui)', () => {
       expect(exportState.data.status === 'ready' && exportState.data.live).toBe(
         false,
       );
+    });
+
+    it('checklist milestone updates and dismissal persist in store', () => {
+      useAppStore.getState().onboardingLoaded({
+        checklist: { tracesIndexed: true },
+      });
+      let state = useAppStore.getState();
+      expect(state.onboarding.checklist.tracesIndexed).toBe(true);
+      expect(state.onboarding.checklistDismissed).toBe(false);
+
+      useAppStore.getState().setChecklistStep('waterfallInspected', true);
+      state = useAppStore.getState();
+      expect(state.onboarding.checklist.waterfallInspected).toBe(true);
+
+      useAppStore.getState().dismissChecklist();
+      state = useAppStore.getState();
+      expect(state.onboarding.checklistDismissed).toBe(true);
+      expect(state.onboarding.checklist.dismissed).toBe(true);
+    });
+
+    it('checklist is docked in the bottom-left corner (bottom-4 left-4) and brought to front (z-40)', () => {
+      // Expanded checklist card
+      const cardHtml = renderToStaticMarkup(
+        createElement(ChecklistCard, { collapsed: false }),
+      );
+      expect(cardHtml).toContain('bottom-4');
+      expect(cardHtml).toContain('left-4');
+      expect(cardHtml).toContain('z-40');
+
+      // Collapsed checklist badge state
+      const badgeHtml = renderToStaticMarkup(
+        createElement(ChecklistCard, { collapsed: true }),
+      );
+      expect(badgeHtml).toContain('bottom-4');
+      expect(badgeHtml).toContain('left-4');
+      expect(badgeHtml).toContain('z-40');
+    });
+
+    it('checklist visibility conditions align with welcome dialog and active dashboard tour', () => {
+      useAppStore
+        .getState()
+        .dataLoaded(stubTraceFile([stubRun('r1', 1.0)]), true);
+      useAppStore
+        .getState()
+        .onboardingLoaded({ welcomeDismissedAt: undefined });
+
+      // Before welcome dialog is dismissed
+      let state = useAppStore.getState();
+      expect(state.onboarding.welcomeDismissedAt).toBeUndefined();
+
+      // "Show me around": welcome dismissed, dashboard tour active
+      useAppStore.getState().dismissWelcome(true);
+      state = useAppStore.getState();
+      expect(state.onboarding.welcomeDismissedAt).toBeDefined();
+      expect(state.onboarding.tours.dashboard).toBeUndefined();
+
+      // Tour completed: ready for checklist
+      useAppStore.getState().setTourStatus('dashboard', 'completed');
+      state = useAppStore.getState();
+      expect(state.onboarding.tours.dashboard).toBe('completed');
+    });
+
+    it('DASHBOARD_STEPS covers the 4 dashboard steps with profiling focus', () => {
+      expect(DASHBOARD_STEPS).toHaveLength(4);
+      expect(DASHBOARD_STEPS.map((s) => s.id)).toEqual([
+        'savings',
+        'overview-trend',
+        'sessions-table',
+        'help-button',
+      ]);
+      expect(DASHBOARD_STEPS[0]?.title).toBe('Two numbers, not one');
+      expect(DASHBOARD_STEPS[2]?.title).toBe('One row is one session');
+    });
+
+    it('RUN_STEPS covers the 4 profiler dimensions', () => {
+      expect(RUN_STEPS).toHaveLength(4);
+      expect(RUN_STEPS.map((s) => s.id)).toEqual([
+        'waterfall',
+        'time-tab',
+        'errors-tab',
+        'insights-strip',
+      ]);
+      expect(RUN_STEPS[0]?.title).toBe('Nesting is delegation');
+      expect(RUN_STEPS[1]?.title).toBe('Where the time went');
+      expect(RUN_STEPS[2]?.title).toBe('Normal errors versus real bugs');
+      expect(RUN_STEPS[3]?.title).toBe('Findings point at evidence');
     });
   });
 });

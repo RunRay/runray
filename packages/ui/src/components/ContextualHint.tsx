@@ -13,13 +13,13 @@ export type HintKey =
 
 export const HINT_COPY: Record<HintKey, string> = {
   'time-view':
-    'Wall-clock duration rather than summed span times. This highlights where waiting actually occurred.',
+    'Clock time, not the sum of spans. Shows where the session was stuck waiting.',
   'errors-view':
-    'Grouped by who can act. Most failures are normal; a failing check usually means the agent is exploring.',
+    'Grouped by who can fix it. Most failed commands are the agent exploring; broken tools are real bugs.',
   'waste-view':
-    'Two separate metrics. Burned money went to dead ends, while opportunities show potential savings under new settings.',
+    'Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.',
   'what-if':
-    'Re-price this session against another model. Calculations run locally.',
+    'Re-price this session against another model. Calculations stay on this machine.',
   diff: 'Two runs of the same task? Compare them with: runray diff <runA> <runB>',
   'limit-mode':
     'Shows token usage and percentage of your weekly limit instead of dollars.',

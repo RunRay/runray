@@ -12,6 +12,7 @@ import { DiffView } from './components/DiffView';
 import { ExportDialog } from './components/ExportDialog';
 import { HelpSheet } from './components/HelpSheet';
 import { Inspector } from './components/Inspector';
+import { OnboardingChecklistContainer } from './components/OnboardingChecklistContainer';
 import { Overview } from './components/Overview';
 import { ProvenanceStrip } from './components/ProvenanceStrip';
 import { RunTeaser } from './components/RunTeaser';
@@ -282,6 +283,7 @@ export function App() {
         !onboarding.welcomeDismissedAt && <WelcomeDialogContainer />}
       <DashboardTourContainer />
       <RunTourContainer />
+      <OnboardingChecklistContainer />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   formatUSD,
 } from '../lib/format';
 import { type Route, type RunViewName, toHash } from '../lib/router';
+import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
 import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
@@ -190,6 +191,11 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
       {tabs.map(({ label, route, active, badge }) => (
         <a
           key={label}
+          {...(route.view === 'time'
+            ? tourAttr('time-tab')
+            : route.view === 'errors'
+              ? tourAttr('errors-tab')
+              : {})}
           href={toHash(route)}
           aria-current={active ? 'page' : undefined}
           title={badge?.title}
