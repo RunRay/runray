@@ -47,10 +47,7 @@ Twelve rules look at each session. Every finding points at its evidence spans, c
 | dead-end runs | oversized tool outputs |
 | scattered tool failures | low cache hit-rate |
 
-Two things matter about the amounts:
-
-- **Burned and opportunity are never added into one number.** Burned is money that is gone. Opportunity is an upper bound on what a different setup would have saved.
-- **Severity depends on the session, not the rule.** Each finding is graded by its share of that run's cost. A $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. Groups are graded the same way, so eighteen small cache breaks read as the 12% they add up to.
+Two things matter about the amounts. Burned and opportunity are never added into one number: burned is money that is gone, opportunity is an upper bound on what a different setup would have saved. And severity depends on the session, not the rule. Each finding is graded by its share of that run's cost, so a $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. Groups are graded the same way, so eighteen small cache breaks read as the 12% they add up to.
 
 One caveat. The largest opportunity, growing context, assumes the whole session could have run at its opening context size. The tab says so, and shows what keeping the context under 100k, 200k or 400k tokens would have saved instead. Rule formulas, examples and the threshold keys are in [docs/08-FINDINGS.md](https://github.com/RunRay/runray/blob/main/docs/08-FINDINGS.md).
 
