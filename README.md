@@ -7,43 +7,72 @@ npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
-![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](docs/images/dashboard.png)
+![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
-**Status: alpha.** `runray@0.1.0-alpha.3` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/runray/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
+**Status: alpha.** `runray@0.1.0-alpha.3` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
 
 ## Why
 
-Usage trackers tell you how many tokens you spent this week. That number is easy to get and hard to act on. RunRay works one session at a time and answers a different question: where did the money go inside this run, and which part of it was avoidable? "Bash failed three times in a row and the retries cost $0.09" is something you can fix. "138k tokens" is not.
+Usage trackers tell you how many tokens you spent this week. That number is easy to get and hard to act on.
+
+RunRay works one session at a time and answers a different question: where did the money go inside this run, and which part of it was avoidable?
+
+> "Bash failed three times in a row and the retries cost $0.09" is something you can fix.
+> "138k tokens" is not.
 
 ## What you get
 
-- **A dashboard across sessions.** Spend by day, by project, by model and by tool, with a potential-savings panel that keeps two figures apart: money already burned (retries, cache re-writes, dead ends) and savings a different setup would bring.
-- **Overview of a session.** Total cost, the tool spend leaderboard, cost by model over time, and a map of what each subagent subtree cost.
-- **Timeline Explorer.** The full execution tree as a waterfall: delegation nesting, parallel calls on their own lanes, error marks, and a cumulative-cost gutter you can click to jump to any moment.
-- **Time.** Where the wall clock went: model wait, tool execution, coordination, idle gaps.
-- **Waste.** What the session burned and what it could have saved, with every burn placed on the session's clock over the context size it happened in.
-- **Errors.** Failed calls grouped by who can act on them, with the error text and what to do in your tool.
-- **A single-file report.** `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` redacts prompt text and pseudonymizes paths first, so the file is safe to hand over.
+| Tab | What it shows |
+|---|---|
+| **Dashboard** | Spend by day, project, model and tool across sessions. A savings panel keeps two figures apart: money already burned and savings a different setup would bring. |
+| **Overview** | One session: total cost, the tool spend leaderboard, cost by model over time, and what each subagent subtree cost. |
+| **Timeline Explorer** | The execution tree as a waterfall: delegation nesting, parallel calls on their own lanes, error marks, and a cost gutter you can click to jump to any moment. |
+| **Time** | Where the wall clock went: model wait, tool execution, coordination, idle gaps. |
+| **Waste** | What the session burned and what it could have saved, each burn placed on the session's clock over the context size it happened in. |
+| **Errors** | Failed calls grouped by who can act on them, with the error text and what to do in your tool. |
+| **Report** | `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` makes it safe to hand over. |
 
 ### Waste
 
-![The Waste tab: burned and opportunity figures, the leak rail over the context curve, and findings grouped by rule](docs/images/waste.png)
+![The Waste tab: burned and opportunity figures, the leak rail over the context curve, and findings grouped by rule](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/waste.png)
 
-Twelve rules look at each session: retry loops, cache-prefix breaks, cache expiry after an idle gap, duplicate file reads, growing context, heavy fixed context, wrong model tier, expensive subagents, dead-end runs, scattered tool failures, oversized tool outputs, low cache hit-rate. Every finding points at its evidence spans, carries an amount, and ends with one suggestion written for you, not for the model.
+Twelve rules look at each session. Every finding points at its evidence spans, carries an amount, and ends with one suggestion written for you, not for the model.
 
-Two things matter about the amounts. First, a finding is either *burned* (the money is gone) or an *opportunity* (an upper bound on what a different setup would have saved), and the two are never added into one number. Second, severity is not a property of the rule. The engine grades each finding by its share of that run's cost, so a $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. The Waste tab groups findings by rule and grades the groups the same way, so eighteen small cache breaks read as the 12% they add up to.
+| Money already gone | Money a different setup would have saved |
+|---|---|
+| retry loops | growing context |
+| cache-prefix breaks | heavy fixed context |
+| cache expiry after an idle gap | wrong model tier |
+| duplicate file reads | expensive subagents |
+| dead-end runs | oversized tool outputs |
+| scattered tool failures | low cache hit-rate |
 
-The largest opportunity, growing context, deserves a caveat: its estimate assumes the whole session could have run at its opening context size. The tab says so, and shows what keeping the context under 100k, 200k or 400k tokens would have saved instead. Rule formulas, examples and the threshold keys are in [docs/08-FINDINGS.md](https://github.com/runray/runray/blob/main/docs/08-FINDINGS.md).
+Two things matter about the amounts:
+
+- **Burned and opportunity are never added into one number.** Burned is money that is gone. Opportunity is an upper bound on what a different setup would have saved.
+- **Severity depends on the session, not the rule.** Each finding is graded by its share of that run's cost. A $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. Groups are graded the same way, so eighteen small cache breaks read as the 12% they add up to.
+
+One caveat. The largest opportunity, growing context, assumes the whole session could have run at its opening context size. The tab says so, and shows what keeping the context under 100k, 200k or 400k tokens would have saved instead. Rule formulas, examples and the threshold keys are in [docs/08-FINDINGS.md](https://github.com/RunRay/runray/blob/main/docs/08-FINDINGS.md).
 
 ### Errors
 
-![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](docs/images/errors.png)
+![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/errors.png)
 
-A failed tool call is not one thing. On real sessions about a third of them are the agent's own check-and-fix loop, a third are slips the model corrected on the next call, and fewer than one in ten are something you can act on. The Errors tab reads a class from each failure's text and groups them by owner: yours to fix (a shell the agent misread, a missing binary), tooling (a stuck browser pane, an MCP server), the agent's slips, failed model calls, and the expected feedback of a test that did not pass yet. Each group shows the error text, whether the tool came back, what the reaction cost, and the levers you have in your own tool. The error count in the session list turns red only when a failure is yours or the session never got past one.
+A failed tool call is not one thing. On real sessions about a third of them are the agent's own check-and-fix loop, a third are slips the model corrected on the next call, and fewer than one in ten are something you can act on. The Errors tab reads a class from each failure's text and groups them by owner:
+
+| Owner | Example |
+|---|---|
+| **You** | A shell the agent misread, a missing binary |
+| **Tooling** | A stuck browser pane, an MCP server that stopped answering |
+| **The agent** | A slip it corrected on the next call |
+| **The model API** | A failed model call |
+| **Expected** | A test that did not pass yet |
+
+Each group shows the error text, whether the tool came back, what the reaction cost, and the levers you have in your own tool. The error count in the session list turns red only when a failure is yours or the session never got past one.
 
 ### Timeline Explorer
 
-![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](docs/images/timeline.png)
+![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/timeline.png)
 
 ## Where the data comes from
 
@@ -55,11 +84,24 @@ RunRay does not instrument anything and runs no collector. It reads what the age
 | OpenCode | file storage, `opencode.db` (opened read-only), `opencode export` JSON | OpenCode stores `cost: 0`, so the cost engine prices every call from token counts. |
 | OTLP/JSON | exported OpenTelemetry traces | For custom agents and Claude Code's native traces. Import only, best effort. |
 
-Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network. A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated. Costs are computed from the transcript, which makes them a lower bound: utility calls, unlogged retries and web-search fees never reach the log.
+How prices work:
+
+- Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network.
+- A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated.
+- Costs are computed from the transcript, which makes them a lower bound. Utility calls, unlogged retries and web-search fees never reach the log.
 
 ## Privacy
 
-Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account. `--redact` strips prompt and output text in the parser and keeps structure and counts, `--scrub-paths` pseudonymizes project paths, branch names and transcript paths, and `--anonymize` is the two together. `--metadata-only` goes further and prunes leaf spans, keeping containers, totals and findings. All of it happens in core before serialization, never as a UI-side filter, and `runray export` asks for confirmation before it writes an unredacted file.
+Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account.
+
+| Flag | What it strips |
+|---|---|
+| `--redact` | Prompt and output text. Structure and counts stay. |
+| `--scrub-paths` | Project paths, branch names and transcript paths, replaced by stable pseudonyms. |
+| `--anonymize` | Both of the above. |
+| `--metadata-only` | Everything above, plus leaf spans. Containers, totals and findings stay. |
+
+All of it happens in core before serialization, never as a UI-side filter. `runray export` asks for confirmation before it writes an unredacted file.
 
 ## Commands
 
@@ -113,7 +155,7 @@ fixtures/         scrubbed sample logs per source and their normalized goldens
 openspec/         specs and the change history behind every feature
 ```
 
-Work follows the specs in `openspec/`: a change starts with a spec delta, fixtures are never edited by hand, and the golden outputs must stay byte-identical unless a commit regenerates them on purpose.
+Work follows the specs in `openspec/`: a change starts with a spec delta, fixtures are never edited by hand, and the golden outputs must stay byte-identical unless a commit regenerates them on purpose. How to send a change: [CONTRIBUTING.md](CONTRIBUTING.md). How to report a leak or an exploit: [SECURITY.md](SECURITY.md).
 
 ## License
 
