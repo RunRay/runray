@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security issue
+    url: https://github.com/RunRay/runray/security/advisories/new
+    about: Prompt text, paths or names leaking through redaction, or any outbound network call. Private, maintainers only.

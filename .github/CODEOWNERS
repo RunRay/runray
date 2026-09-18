@@ -1,0 +1,9 @@
+# Every change needs a review from a maintainer.
+* @kotowskis @krzysztof-lempka
+
+# Areas where a wrong change is expensive to undo. Same owners today, listed
+# separately so the rule stays explicit when ownership is delegated later.
+/schema/          @kotowskis @krzysztof-lempka
+/packages/schema/ @kotowskis @krzysztof-lempka
+/fixtures/        @kotowskis @krzysztof-lempka
+/.github/         @kotowskis @krzysztof-lempka

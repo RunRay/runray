@@ -1,14 +1,18 @@
-# Publishes `runray` to npm. Deliberate, human-triggered: this workflow is the
-# npm Trusted Publisher for the package, so it needs no NPM_TOKEN — the
-# registry trusts the OIDC token GitHub mints for this exact workflow file.
-# Configure it once at npmjs.com → package Settings → Trusted Publisher.
+# Publishes `runray` to npm, then tags the commit and opens a GitHub Release.
+# Deliberate, human-triggered: this workflow is the npm Trusted Publisher for
+# the package, so it needs no NPM_TOKEN — the registry trusts the OIDC token
+# GitHub mints for this exact workflow file and the `npm` environment.
+# Configure it once at npmjs.com → package Settings → Trusted Publisher
+# (repository RunRay/runray, workflow release.yml, environment npm).
 #
-# No --provenance: npm cannot issue attestations from a private source
-# repository, even for a public package, so passing the flag would fail the
-# publish at the very last step. Trusted publishing itself is unaffected and
-# works fine while the repo stays private. If it is ever made public, npm
-# generates provenance automatically for a trusted-publisher release — the
-# flag does not need to come back.
+# The `npm` environment is where the release gate lives (Settings →
+# Environments): a required reviewer other than the person who started the
+# run, and deployment branches limited to main. The `if:` below is the
+# belt to that brace — it holds even if the environment is misconfigured.
+#
+# No --provenance flag: npm attaches provenance to a trusted-publisher
+# release from a public repository on its own. While the repository is
+# private the flag would fail the publish at the very last step.
 name: Release
 
 on:
@@ -21,18 +25,24 @@ on:
         default: next
         required: true
 
-permissions:
-  contents: read
-  # mints the OIDC token the registry exchanges for publish rights
-  id-token: write
+# Nothing at the workflow level; each job asks for exactly what it uses.
+permissions: {}
 
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: npm
+    permissions:
+      contents: read
+      # mints the OIDC token the registry exchanges for publish rights
+      id-token: write
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
@@ -46,6 +56,31 @@ jobs:
       # actually runs on the pipeline that ships to npm rather than skipping
       - run: pnpm --filter runray bundle
       - run: pnpm test
+      - id: meta
+        run: echo "version=$(node -p "require('./packages/cli/package.json').version")" >> "$GITHUB_OUTPUT"
       # `prepack` assembles the package: ui assets, README + LICENSE, and the
       # esbuild bundle that inlines the private workspace packages
       - run: pnpm --filter runray publish --access public --no-git-checks --tag ${{ inputs.tag }}
+
+  # Separate job so the token that can write to the repository never sits in
+  # the same runner as the one that can publish to npm.
+  tag:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.publish.outputs.version }}
+      PRERELEASE: ${{ inputs.tag == 'next' }}
+    steps:
+      # creates the tag at the released commit when it does not exist yet
+      - run: |
+          extra=()
+          if [ "$PRERELEASE" = "true" ]; then extra+=(--prerelease); fi
+          gh release create "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "runray $VERSION" \
+            --generate-notes \
+            "${extra[@]}"

@@ -1,0 +1,21 @@
+name: Feature request
+description: Something RunRay should show, compute or read that it does not today.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to find out
+      description: The question about a session that RunRay does not answer today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would answer it
+      description: A tab, a column, a finding, a flag. Rough is fine.
+  - type: textarea
+    id: source
+    attributes:
+      label: Which log source
+      description: Claude Code, OpenCode, OTLP, or a new one. If new, where the files live and a scrubbed sample if you have one.
