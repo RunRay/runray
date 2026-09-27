@@ -11,6 +11,7 @@
       "!.claude",
       "!schema",
       "!fixtures",
+      "!demo/runs",
       "!docs/ui-design",
       "!docs/mockups"
     ]

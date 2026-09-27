@@ -6,8 +6,43 @@ import { startServer } from './server.js';
 describe('demo', () => {
   const dir = resolveDemoDataDir();
 
-  it('finds the bundled demo data (goldens in a monorepo checkout)', () => {
+  it('finds the bundled demo data (demo/runs in a monorepo checkout)', () => {
     expect(dir).toBeDefined();
+    expect(dir?.replace(/\\/g, '/')).toMatch(/demo\/runs\/$/);
+  });
+
+  it('reads like real work: titled, priced, and free of scrubber lorem', () => {
+    if (dir === undefined) throw new Error('unreachable');
+    const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
+    // the scrubber's vocabulary (scripts/scrub-fixture.ts), as words and as
+    // the x-joined tokens it writes into paths
+    const lorem =
+      /\b(lorem|ipsum|dolor|consectetur|adipiscing|incididunt|labore|aliqua|aliquip|nostrud|veniam|tempor|magna|minim|enim|quis|elit|amet)\b|(lorem|ipsum|dolor|adipis|aliqu|nostrud|consec)x/i;
+    const leaks: string[] = [];
+    const walk = (value: unknown, path: string): void => {
+      if (typeof value === 'string') {
+        if (lorem.test(value)) leaks.push(`${path}: ${value.slice(0, 40)}`);
+      } else if (Array.isArray(value)) {
+        for (const [i, v] of value.entries()) walk(v, `${path}[${i}]`);
+      } else if (value !== null && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value)) {
+          if (!/(^id|Id)$/.test(k)) walk(v, `${path}.${k}`);
+        }
+      }
+    };
+    for (const run of traceFile.runs) {
+      walk(run, run.id);
+      expect(run.title, run.id).toBeTruthy();
+      expect(run.project?.name, run.id).toBeTruthy();
+      // no "totals are understated" banner on the showcase
+      const unpriced = run.spans.filter(
+        (s) => s.kind === 'llm_call' && s.llm?.costSource === 'unknown',
+      );
+      expect(unpriced, run.id).toEqual([]);
+      // fixture-truncation warnings are test data, not demo content
+      expect(run.warnings, run.id).toBeUndefined();
+    }
+    expect(leaks.slice(0, 5)).toEqual([]);
   });
 
   it('wraps the goldens in a TraceFile envelope, newest first', () => {
@@ -31,9 +66,9 @@ describe('demo', () => {
   it('collapses cross-era duplicates so every demo run id is unique', () => {
     if (dir === undefined) throw new Error('unreachable');
     const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
-    // The OpenCode storage/sqlite/export goldens capture one session three
-    // ways and hash to the same run id; without deduping, the demo would show
-    // it three times and the UI could only reach the first (deep-link, rail).
+    // Run ids are not unique by design (the OpenCode cross-era goldens share
+    // one); a duplicate in the demo would leave all but the first copy
+    // unreachable in the UI (deep-link, rail).
     const ids = traceFile.runs.map((run) => run.id);
     expect(new Set(ids).size).toBe(ids.length);
     // and it must be idempotent/deterministic — the same call, same runs
