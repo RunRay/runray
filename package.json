@@ -20,6 +20,7 @@
     "goldens": "tsx scripts/regen-goldens.ts",
     "demo:build": "tsx scripts/build-demo.ts",
     "docs:playbooks": "tsx scripts/render-playbooks.ts",
+    "docs:screenshots": "tsx scripts/readme-screenshots.ts",
     "changeset": "changeset",
     "version": "changeset version"
   },

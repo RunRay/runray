@@ -31,7 +31,8 @@ pnpm demo:build
 The build puts every run through `priceRun → normalize → applyInsights` and
 fails if a run id changes, a model is unpriced, a story is short of prompts,
 files or error texts, or any scrubber lorem is left. Never edit `runs/` by
-hand.
+hand. After a rebuild, retake the README screenshots with
+`pnpm docs:screenshots` (see `scripts/README.md`).
 
 Not in the demo: `claude-code/duplicate-records` (a parser edge case),
 `otlp/claude-traces-beta-1` (a 12-second probe), and the OpenCode

@@ -121,3 +121,27 @@ node scripts/otlp-sink.mjs "$HOME/otlp-capture.json"   # or: pnpm otlp-sink -- <
 
 Full capture recipe (env vars, the required `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`
 flag, `simple`/`subagents` variants) lives in `fixtures/otlp/README.md`.
+
+## build-demo.ts — the `runray demo` sample data
+
+`pnpm demo:build` rebuilds `demo/runs/` from the goldens and the storylines in
+`scripts/demo/stories.ts`. See `demo/README.md`.
+
+## readme-screenshots.ts — retake the README screenshots
+
+```sh
+pnpm build                     # CLI dist + the UI dist it serves
+pnpm docs:screenshots          # writes docs/images/{dashboard,waste,errors,timeline}.png
+pnpm docs:screenshots --out /tmp/shots   # try it without touching docs/images
+```
+
+Starts `runray demo` on port 4390 with a throwaway config dir. The onboarding
+welcome, tours and first-run checklist are closed there, so they stay out of
+frame, and your own onboarding state is never touched. Headless Chrome then
+captures each view at 1920x1080. Chrome is found via `CHROME_PATH` or the usual
+install paths. The Waste, Errors and Timeline shots use the demo's invoices
+table run.
+
+Retake after a UI change that shows in these views, or after `pnpm demo:build`.
+The header shows the capture time, so retakes are never byte-identical: commit
+them only when the views actually changed.
