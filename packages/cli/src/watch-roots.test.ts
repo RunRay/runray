@@ -59,11 +59,23 @@ describe('zero-config watch chain', () => {
       notifier.subscribe(() => resolve());
     });
     const watcher = watchRoots([dir], notifier, 50);
+    let drops: NodeJS.Timeout | undefined;
     try {
-      // wait for chokidar's initial scan to finish (deterministic) rather
-      // than racing a fixed sleep — a write before 'ready' is swallowed
+      // chokidar's 'ready' only means its initial scan finished — it does NOT
+      // mean the OS-level watch is delivering yet: `fs.watch` arms its
+      // kqueue/FSEvents stream asynchronously, and a write landing inside that
+      // arming window is dropped with no event at all. The window is sub-ms on
+      // an idle machine but ~10ms under load, which is why a single write right
+      // after 'ready' failed ~50% of parallel runs.
+      // So wait on the condition instead of a guess: keep dropping session
+      // files until one is observed. Each file is written exactly once, so
+      // `awaitWriteFinish` settles each independently rather than having its
+      // stability timer reset by the next drop.
       await watcher.ready;
-      writeFileSync(join(dir, 'ses_new.json'), '{}');
+      let n = 0;
+      const drop = () => writeFileSync(join(dir, `ses_${n++}.json`), '{}');
+      drop();
+      drops = setInterval(drop, 250);
       await expect(
         Promise.race([
           fired.then(() => 'changed'),
@@ -71,6 +83,7 @@ describe('zero-config watch chain', () => {
         ]),
       ).resolves.toBe('changed');
     } finally {
+      clearInterval(drops);
       await watcher.close();
     }
   }, 15_000);
