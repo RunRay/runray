@@ -1,8 +1,8 @@
 /**
  * prepack (05-ARCHITECTURE §3): build the UI and copy both build outputs plus
- * the scrubbed goldens (the `runray demo` sample data) into cli/assets/ so
- * the published cli package is self-sufficient while @runray/ui stays
- * private.
+ * the `runray demo` sample data (demo/runs, see scripts/build-demo.ts) into
+ * cli/assets/ so the published cli package is self-sufficient while
+ * @runray/ui stays private.
  */
 import { execSync } from 'node:child_process';
 import { cpSync, existsSync, rmSync } from 'node:fs';
@@ -32,9 +32,9 @@ const copies = [
     marker: 'index.html',
   },
   {
-    from: join(repoRoot, 'fixtures', 'normalized'),
+    from: join(repoRoot, 'demo', 'runs'),
     to: join(cliRoot, 'assets', 'demo'),
-    marker: join('claude-code', 'subagents.json'),
+    marker: join('claude-code', 'orders-api-kysely-migration.json'),
   },
 ];
 for (const { from, to, marker } of copies) {

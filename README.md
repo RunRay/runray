@@ -149,6 +149,7 @@ packages/core     adapters, normalizer, cost engine, findings, triage
 packages/cli      commands and the local server; embeds the built UI
 packages/ui       the dashboard (Vite, React, Tailwind)
 fixtures/         scrubbed sample logs per source and their normalized goldens
+demo/             the `runray demo` sessions, built from the goldens (pnpm demo:build)
 openspec/         specs and the change history behind every feature
 ```
 

@@ -10,7 +10,11 @@ import {
 import type { Run, TraceFile } from '@runray/schema';
 import { Command } from 'commander';
 import { loadConfig } from './config.js';
-import { loadDemoTraceFile, resolveDemoDataDir } from './demo.js';
+import {
+  DEMO_TRANSCRIPT,
+  loadDemoTraceFile,
+  resolveDemoDataDir,
+} from './demo.js';
 import { formatDiffSummary } from './diff.js';
 import {
   abbreviateHome,
@@ -238,6 +242,7 @@ export function createProgram(): Command {
         // id-only lookup against the served snapshot (D4) — clients can
         // never supply file paths; redaction refuses inside core's reader
         getTranscript: async (runId, spanId) => {
+          if (isDemo) return DEMO_TRANSCRIPT;
           cache ??= (await build()).traceFile;
           return resolveTranscript(cache, runId, spanId, redact);
         },
@@ -607,10 +612,7 @@ export function createProgram(): Command {
         // demo is a deterministic showcase — always the bundled table
         getPricing: () => ({ origin: 'bundled', table: bundledPricing() }),
         getViewConfig: () => ({ isSample: true }),
-        // demo provenance points at scrubbed fixtures: resolves in a repo
-        // checkout, degrades to a structured status elsewhere
-        getTranscript: (runId, spanId) =>
-          resolveTranscript(traceFile, runId, spanId, false),
+        getTranscript: async () => DEMO_TRANSCRIPT,
       });
       console.log(
         `RunRay demo: ${traceFile.runs.length} scrubbed sample run(s) at ${server.url}`,

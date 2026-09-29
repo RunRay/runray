@@ -1,18 +1,22 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { TranscriptSlice } from '@runray/core';
 import { type Run, SCHEMA_VERSION, type TraceFile } from '@runray/schema';
 
 /**
- * `runray demo` data (cli spec "Instant demo"): the scrubbed normalized
- * goldens double as the bundled sample — already schema-valid, insight- and
- * cost-annotated, and free of real prompt text by construction. Two layouts,
- * monorepo-first for the same stale-copy reason as `resolveUiDistDir`:
- * - monorepo checkout: `fixtures/normalized/`,
- * - published package: `prepack` copies the goldens into `cli/assets/demo`.
+ * `runray demo` data (cli spec "Instant demo"): `demo/runs/`, built by
+ * `pnpm demo:build` from the scrubbed goldens. The goldens keep their real
+ * token counts, timings and span trees; their lorem text is replaced with a
+ * coherent storyline per session (scripts/demo/stories.ts), so the sample
+ * is free of real prompt text by construction and still reads like real
+ * work. Two layouts, monorepo-first for the same stale-copy reason as
+ * `resolveUiDistDir`:
+ * - monorepo checkout: `demo/runs/`,
+ * - published package: `prepack` copies it into `cli/assets/demo`.
  */
 export function resolveDemoDataDir(): string | undefined {
-  const candidates = ['../../../fixtures/normalized/', '../assets/demo/'];
+  const candidates = ['../../../demo/runs/', '../assets/demo/'];
   for (const rel of candidates) {
     const dir = fileURLToPath(new URL(rel, import.meta.url));
     if (existsSync(dir) && collectRunFiles(dir).length > 0) return dir;
@@ -20,7 +24,17 @@ export function resolveDemoDataDir(): string | undefined {
   return undefined;
 }
 
-/** All `<source>/<variant>.json` golden files under the demo data dir. */
+/**
+ * The demo ships normalized runs only: their provenance names the sessions
+ * they were built from, which exist on no one's disk. Answer the transcript
+ * endpoint with a plain status instead of an ENOENT from the reader.
+ */
+export const DEMO_TRANSCRIPT: TranscriptSlice = {
+  status: 'unavailable',
+  reason: 'the demo includes normalized runs only, not raw session logs',
+};
+
+/** All `<source>/<slug>.json` run files under the demo data dir. */
 function collectRunFiles(dir: string): string[] {
   const files: string[] = [];
   for (const entry of readdirSync(dir)) {
@@ -39,13 +53,11 @@ export function loadDemoTraceFile(
   generatorVersion: string,
 ): TraceFile {
   // `run.id` is a stable hash of the source session id(s) (docs/02-DATA-MODEL),
-  // deterministic but NOT unique: the OpenCode cross-era goldens deliberately
-  // capture one session three ways (storage/sqlite/export) to prove the
-  // adapter's cross-era equivalence, so all three normalize to the same id.
-  // The goldens double as the demo sample, so a naive concatenation would
-  // showcase that session three times and — because the UI keys routing and
-  // selection off `run.id` — leave two of the three unreachable. Collapse
-  // duplicates here, keeping the first in a stable sorted-path order so the
+  // deterministic but NOT unique: the OpenCode cross-era goldens capture one
+  // session three ways (storage/sqlite/export), all with the same id. The
+  // demo build picks one of them, but the UI keys routing and selection off
+  // `run.id`, so a duplicate would leave all but one copy unreachable. Keep
+  // collapsing duplicates here, first in a stable sorted-path order so the
   // choice is deterministic across platforms (readdir order is not).
   const byId = new Map<string, Run>();
   for (const file of collectRunFiles(dir).sort()) {
