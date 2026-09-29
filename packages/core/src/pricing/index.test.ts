@@ -120,17 +120,20 @@ describe('computeCostUSD — tabular (05-ARCHITECTURE §2.3)', () => {
     [0, 0, 0, 0, 1_000_000, 15], // reasoning billed at output rate
     [12_480, 610, 0, 11_020, 0, 0.087915],
     [0, 0, 0, 0, 0, 0],
-  ])('in=%d out=%d cr=%d cw=%d r=%d → $%d', (input, output, cacheRead, cacheWrite, reasoning, usd) => {
-    expect(
-      computeCostUSD(sonnet, {
-        input,
-        output,
-        cacheRead,
-        cacheWrite,
-        reasoning,
-      }),
-    ).toBe(usd);
-  });
+  ])(
+    'in=%d out=%d cr=%d cw=%d r=%d → $%d',
+    (input, output, cacheRead, cacheWrite, reasoning, usd) => {
+      expect(
+        computeCostUSD(sonnet, {
+          input,
+          output,
+          cacheRead,
+          cacheWrite,
+          reasoning,
+        }),
+      ).toBe(usd);
+    },
+  );
 
   const quad = { input: 0, output: 0, cacheRead: 0, cacheWrite: 1_000_000 };
 
