@@ -102,15 +102,38 @@ const server = spawn(
   },
 );
 
+// drain stderr for the whole run: an unread pipe can fill up and stall the
+// server, and its text is the only clue when the server fails to start
+let serverStderr = '';
+server.stderr.on('data', (chunk) => {
+  serverStderr += String(chunk);
+});
+
+const STARTUP_TIMEOUT_MS = 30_000;
+
 try {
   const url = await new Promise<string>((resolveUrl, reject) => {
+    const fail = (reason: string) =>
+      reject(new Error(`demo server ${reason}\n${serverStderr.trim()}`));
+    const timer = setTimeout(
+      () => fail(`did not print its URL within ${STARTUP_TIMEOUT_MS / 1000}s`),
+      STARTUP_TIMEOUT_MS,
+    );
     server.stdout.on('data', (chunk) => {
       const match = /(http:\/\/127\.0\.0\.1:\d+)/.exec(String(chunk));
-      if (match?.[1] !== undefined) resolveUrl(match[1]);
+      if (match?.[1] !== undefined) {
+        clearTimeout(timer);
+        resolveUrl(match[1]);
+      }
     });
-    server.on('exit', (code) =>
-      reject(new Error(`demo server exited early (code ${code})`)),
-    );
+    server.on('error', (err) => {
+      clearTimeout(timer);
+      fail(`failed to spawn: ${err.message}`);
+    });
+    server.on('exit', (code) => {
+      clearTimeout(timer);
+      fail(`exited early (code ${code})`);
+    });
   });
 
   const shots: Record<string, string> = {

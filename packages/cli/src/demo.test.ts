@@ -1,6 +1,10 @@
 import type { TraceFile } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
-import { loadDemoTraceFile, resolveDemoDataDir } from './demo.js';
+import {
+  DEMO_TRANSCRIPT,
+  loadDemoTraceFile,
+  resolveDemoDataDir,
+} from './demo.js';
 import { startServer } from './server.js';
 
 describe('demo', () => {
@@ -82,6 +86,8 @@ describe('demo', () => {
     const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
     const server = await startServer({
       getTraceFile: async () => traceFile,
+      // the same hook `runray demo` and the wizard's demo branch install
+      getTranscript: async () => DEMO_TRANSCRIPT,
       basePort: 4350,
     });
     try {
@@ -89,8 +95,31 @@ describe('demo', () => {
       expect(res.status).toBe(200);
       const data = (await res.json()) as TraceFile;
       expect(data.runs.length).toBe(traceFile.runs.length);
+
+      // demo provenance names logs that exist on no one's disk: the
+      // transcript endpoint answers with a plain status, never an ENOENT
+      const run = traceFile.runs[0];
+      const span = run?.spans.find((s) => s.kind === 'llm_call');
+      if (run === undefined || span === undefined) {
+        throw new Error('demo run without llm calls');
+      }
+      const transcript = await fetch(
+        new URL(
+          `/api/transcript?run=${encodeURIComponent(run.id)}&span=${encodeURIComponent(span.id)}`,
+          server.url,
+        ),
+      );
+      expect(transcript.status).toBe(200);
+      expect(await transcript.json()).toEqual(DEMO_TRANSCRIPT);
     } finally {
       await server.close();
     }
+  });
+
+  it('describes the missing demo transcripts without leaking an I/O error', () => {
+    expect(DEMO_TRANSCRIPT.status).toBe('unavailable');
+    if (DEMO_TRANSCRIPT.status !== 'unavailable') return;
+    expect(DEMO_TRANSCRIPT.reason).toMatch(/demo/);
+    expect(DEMO_TRANSCRIPT.reason).not.toMatch(/ENOENT|no such file/i);
   });
 });
