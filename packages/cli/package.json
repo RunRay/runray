@@ -15,12 +15,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/runray/runray.git",
+    "url": "git+https://github.com/RunRay/runray.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/runray/runray#readme",
+  "homepage": "https://github.com/RunRay/runray#readme",
   "bugs": {
-    "url": "https://github.com/runray/runray/issues"
+    "url": "https://github.com/RunRay/runray/issues"
   },
   "engines": {
     "node": ">=20"
