@@ -1,5 +1,13 @@
 # runray
 
+## 0.1.0-alpha.4
+
+### Patch Changes
+
+- 9bf2d61: `runray demo` now shows six sessions that read like real work, with no lorem ipsum. Titles, projects, prompts, subagent tasks, file names and error messages describe what each session actually does; token counts, timings and costs still come from real sessions. The demo no longer shows the "totals understated" banner, and a transcript request answers with a clear "not included in the demo" status.
+- The dashboard has a first-run checklist in the bottom-left corner with four steps: found agent logs on disk, inspect subagents and lanes in Timeline, trace clock time in Time view, and review tool errors or try What-If repricing. Progress is saved with the rest of the onboarding state on this machine. The dashboard and run tours now cover the same profiler dimensions and keep their place when you move between steps.
+- Reworded the CLI first-run banner, the "no sessions found" hints, the setup wizard and the dashboard messages in plainer language. Behavior is unchanged.
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes
