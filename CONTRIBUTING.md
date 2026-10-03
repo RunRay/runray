@@ -26,7 +26,10 @@ iterate.
 - For anything larger than a bug fix, open an issue first and say what you
   plan to change. The active spec under `openspec/changes/` is the source of
   requirements; if the spec and the code disagree, the spec wins.
-- Work on a branch in your fork. One change per pull request.
+- Branch from `develop` and open the pull request against `develop`, which
+  is the default branch. `main` holds the released code and only takes
+  releases and hotfixes from maintainers (see below). One change per pull
+  request. Contributors outside the RunRay organization work in a fork.
 - Add a changeset (`pnpm changeset`) for anything a user of the `runray`
   package would notice. Internal refactors and docs need none.
 - Commit messages follow Conventional Commits, in English:
@@ -58,15 +61,46 @@ These come from AGENTS.md and CI enforces most of them.
 ## Review and merge
 
 Every pull request needs CI green and one approving review from a
-maintainer (see `.github/CODEOWNERS`). Pull requests are squash-merged, so
-the pull request title becomes the commit message; write it as a
-Conventional Commit. Workflows on pull requests from forks wait for a
-maintainer to approve the run.
+maintainer (see `.github/CODEOWNERS`). Pull requests into `develop` are
+squash-merged, so the pull request title becomes the commit message; write
+it as a Conventional Commit. Workflows on pull requests from forks wait for
+a maintainer to approve the run.
+
+## Branches
+
+| Branch | Holds | Takes changes from |
+|---|---|---|
+| `develop` | the next release | `feature/*`, `fix/*`, `chore/*`, `docs/*` and Dependabot, squash-merged; `main` after a hotfix, merge commit |
+| `main` | the published version | `develop` (a release) or `hotfix/*`, merge commit only |
+
+A required check (`pr-source`) rejects a pull request into `main` from any
+other branch or from a fork. `main` takes merge commits rather than
+squashes so it keeps sharing history with `develop`; a squash would make
+every following release re-apply old commits.
 
 ## Releases
 
 Maintainers publish to npm from the `Release` workflow on `main`. Nothing
 you need to do; the changeset you added ends up in the release notes.
+
+For maintainers:
+
+1. On a branch from `develop`, run `pnpm changeset version` and open a
+   pull request into `develop` (`chore(release): version X`).
+2. Open a pull request from `develop` into `main` titled
+   `release: X` and merge it with a merge commit.
+3. Run the `Release` workflow on `main`.
+
+## Hotfixes
+
+For a bug in the published version that cannot wait for the next release:
+
+1. Branch `hotfix/<what>` from `main`. Fix, add a changeset, run
+   `pnpm changeset version`.
+2. Open a pull request into `main`, merge it with a merge commit, run the
+   `Release` workflow.
+3. Open a pull request from `main` into `develop` and merge it with a merge
+   commit, so the fix is not lost in the next release.
 
 ## Security issues
 
