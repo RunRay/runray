@@ -17,6 +17,7 @@ You are implementing RunRay. Read before writing any code:
 
 ## Workflow
 
+- Branch from `develop` and open pull requests against `develop`. Never target `main`: it only takes releases from `develop` and `hotfix/*` branches, and a required check rejects anything else (see CONTRIBUTING.md → Branches).
 - One task from `tasks.md` per commit/PR; conventional commit messages; reference the task id (e.g. `feat(core): claude-code adapter tree reconstruction [2.2]`).
 - Definition of done for any task: `pnpm lint && pnpm typecheck && pnpm test` green, goldens unchanged (or regenerated deliberately with justification), no schema drift (CI schema-diff clean).
 - If a spec scenario and the code disagree, the spec wins; if the spec seems wrong, stop and flag it — do not silently reinterpret requirements.
