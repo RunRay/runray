@@ -1,9 +1,12 @@
 # Weekly, grouped, so the actions pinned by SHA in .github/workflows keep
 # moving without a hand edit per bump. Majors stay separate pull requests.
+# Version updates target develop like any other change. Security updates
+# ignore target-branch and go to the default branch, which is develop too.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
@@ -13,6 +16,7 @@ updates:
         update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday

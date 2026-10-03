@@ -1,4 +1,4 @@
-<!-- The title becomes the squash commit message. Write it as a Conventional Commit: type(scope): what changed -->
+<!-- Target develop. The title becomes the squash commit message. Write it as a Conventional Commit: type(scope): what changed -->
 
 ## What and why
 

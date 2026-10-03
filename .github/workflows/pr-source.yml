@@ -1,0 +1,47 @@
+# Guards what may be merged into main. main always holds the released code,
+# so it accepts pull requests from exactly two places in this repository:
+#   - develop    (a release: everything merged since the last one)
+#   - hotfix/*   (an urgent fix branched from main)
+# Rulesets cannot restrict the source branch of a pull request, so this job
+# does it and the `main` ruleset lists `pr-source` as a required check.
+# Pull requests into any other branch pass straight away.
+name: PR source
+
+on:
+  pull_request:
+    # `edited` fires when the base branch is changed, so retargeting a
+    # pull request to main re-runs the check
+    types: [opened, reopened, synchronize, edited]
+
+# Reads nothing but the event payload.
+permissions: {}
+
+jobs:
+  pr-source:
+    runs-on: ubuntu-latest
+    # branch names come from the pull request author; pass them through env,
+    # never interpolate them into the script
+    env:
+      BASE: ${{ github.base_ref }}
+      HEAD: ${{ github.head_ref }}
+      HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      REPO: ${{ github.repository }}
+    steps:
+      - run: |
+          if [ "$BASE" != "main" ]; then
+            echo "Target is $BASE, not main: no source restriction."
+            exit 0
+          fi
+          if [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::Pull requests from forks go to develop, not main. Change the base branch to develop."
+            exit 1
+          fi
+          case "$HEAD" in
+            develop|hotfix/?*)
+              echo "$HEAD -> main is allowed."
+              ;;
+            *)
+              echo "::error::main only accepts pull requests from develop or hotfix/*. Change the base branch of $HEAD to develop."
+              exit 1
+              ;;
+          esac

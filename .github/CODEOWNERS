@@ -1,9 +1,10 @@
-# Every change needs a review from a maintainer.
-* @kotowskis @krzysztof-lempka
+# Every change needs a review from a maintainer. Membership lives in the
+# org team, so adding a maintainer is a team change, not an edit here.
+* @RunRay/maintainers
 
 # Areas where a wrong change is expensive to undo. Same owners today, listed
 # separately so the rule stays explicit when ownership is delegated later.
-/schema/          @kotowskis @krzysztof-lempka
-/packages/schema/ @kotowskis @krzysztof-lempka
-/fixtures/        @kotowskis @krzysztof-lempka
-/.github/         @kotowskis @krzysztof-lempka
+/schema/          @RunRay/maintainers
+/packages/schema/ @RunRay/maintainers
+/fixtures/        @RunRay/maintainers
+/.github/         @RunRay/maintainers
