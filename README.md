@@ -7,6 +7,8 @@ npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
+Needs Node.js 22 or newer.
+
 ![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
 **Status: alpha.** `runray@0.1.0-alpha.4` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
