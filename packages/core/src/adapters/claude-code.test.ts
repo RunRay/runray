@@ -1133,3 +1133,58 @@ describe('claude-code adapter — records repeated after a bridge-session', () =
     expect(loops[0]?.title).toBe('Bash failed 3× in a row');
   });
 });
+
+describe('claude-code files that are not sessions', () => {
+  // detect() picks files by name, so parse() is where a foreign .jsonl must
+  // be refused; discovery then skips it with a warning (no 1970 run).
+  async function parseLines(lines: readonly unknown[]): Promise<RawRun> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-foreign-'));
+    try {
+      writeFileSync(
+        join(dir, 'foreign.jsonl'),
+        lines
+          .map((l) => (typeof l === 'string' ? l : JSON.stringify(l)))
+          .join('\n'),
+      );
+      const [candidate] = await claudeCodeAdapter.detect([dir]);
+      if (candidate === undefined) throw new Error('not detected');
+      return await claudeCodeAdapter.parse(candidate, { redact: false });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it.each<[string, unknown[]]>([
+    [
+      'a log from another tool, timestamps and all',
+      [{ level: 'info', timestamp: '2026-07-02T13:00:00Z', msg: 'started' }],
+    ],
+    [
+      'summary records only',
+      [{ type: 'summary', summary: 's', leafUuid: 'u1' }],
+    ],
+    [
+      'user records without any timestamp',
+      [{ type: 'user', uuid: 'u1', message: { role: 'user', content: 'hi' } }],
+    ],
+    ['lines that are not JSON', ['not json', '{also not']],
+  ])('refuses %s', async (_label, lines) => {
+    await expect(parseLines(lines)).rejects.toThrow(
+      'not a Claude Code session',
+    );
+  });
+
+  it('keeps a session whose prompt never got a reply', async () => {
+    const raw = await parseLines([
+      {
+        type: 'user',
+        uuid: 'u1',
+        sessionId: 'sess-crashed',
+        timestamp: '2026-07-02T13:00:00Z',
+        message: { role: 'user', content: 'hi' },
+      },
+    ]);
+    expect(raw.spans[0]?.kind).toBe('session');
+    expect(raw.spans[0]?.startedAt).toBe('2026-07-02T13:00:00Z');
+  });
+});

@@ -185,6 +185,8 @@ interface Transcript {
   customTitle: string | undefined;
   legacy: boolean;
   firstTs: string | undefined;
+  /** Saw at least one `user` or `assistant` record. */
+  conversational: boolean;
 }
 
 async function collectTranscript(
@@ -202,6 +204,7 @@ async function collectTranscript(
     customTitle: undefined,
     legacy: false,
     firstTs: undefined,
+    conversational: false,
   };
   const byKey = new Map<string, LlmGroup>();
   const seenUuids = new Set<string>();
@@ -241,6 +244,7 @@ async function collectTranscript(
     }
     const ts = str(rec.timestamp);
     if (ts !== undefined && t.firstTs === undefined) t.firstTs = ts;
+    if (type === 'user' || type === 'assistant') t.conversational = true;
     if (rec.isSidechain === true) t.legacy = true;
     if (t.sessionId === undefined) t.sessionId = str(rec.sessionId);
     if (t.cwd === undefined) t.cwd = str(rec.cwd);
@@ -874,6 +878,16 @@ export const claudeCodeAdapter: SourceAdapter = {
     };
 
     const main = await collectTranscript(mainFile, warnings);
+    // detect() picks session files by name alone, so any .jsonl in a scanned
+    // folder lands here: another tool's export, a log someone dropped into a
+    // project. Without a timestamped user or assistant record it is not a
+    // session, and emitting it would mean a run dated 1970 with no calls.
+    // Throwing makes discovery skip it with a warning instead.
+    if (!main.conversational || main.firstTs === undefined) {
+      throw new Error(
+        'not a Claude Code session: no timestamped user or assistant records',
+      );
+    }
     const sessionId = main.sessionId ?? basename(mainFile, '.jsonl');
     const sessionSpan: RawSpan = {
       id: sessionId,
@@ -881,7 +895,7 @@ export const claudeCodeAdapter: SourceAdapter = {
       kind: 'session',
       name: 'session',
       status: 'ok',
-      startedAt: main.firstTs ?? EPOCH,
+      startedAt: main.firstTs,
       agent: { sessionId },
       attributes: {},
       provenance: { file: mainFile, line: 1 },
