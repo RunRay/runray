@@ -355,9 +355,10 @@ export function reportDiscoveryErrors(
     process.stderr.write(`warning: skipped ${e.runRef}: ${e.message}\n`);
   }
   if (errors.length > 0 && loadedCount !== undefined) {
-    const noun = errors.length === 1 ? 'The session' : 'The sessions';
+    const noun =
+      errors.length === 1 ? 'The file above was' : 'The files above were';
     process.stderr.write(
-      `${noun} above could not be read; the other ${loadedCount} loaded normally. A locked\ndatabase or a partly written file is skipped, never guessed at.\n`,
+      `${noun} skipped; the other ${loadedCount} loaded normally.\nA locked database, a partly written file or a file that isn't a session\nis skipped, never guessed at.\n`,
     );
   }
 }

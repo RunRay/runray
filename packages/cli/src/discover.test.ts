@@ -17,6 +17,7 @@ import {
   collapseDuplicateRunIds,
   formatNoDataHints,
   parseSince,
+  reportDiscoveryErrors,
   reportUnpricedCoverage,
   resolveScanRoots,
   type ScannedRoot,
@@ -608,6 +609,30 @@ describe('a foreign file next to real sessions (no 1970 runs)', () => {
       ]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('reportDiscoveryErrors trailer', () => {
+  it('names skipped files, not unreadable sessions, and fits 80 columns', () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+    try {
+      reportDiscoveryErrors(
+        [{ runRef: '/x/app-log.jsonl', message: 'not a Claude Code session' }],
+        115,
+      );
+      const out = write.mock.calls.map((c) => String(c[0])).join('');
+      expect(out).toBe(
+        'warning: skipped /x/app-log.jsonl: not a Claude Code session\n' +
+          'The file above was skipped; the other 115 loaded normally.\n' +
+          "A locked database, a partly written file or a file that isn't a session\n" +
+          'is skipped, never guessed at.\n',
+      );
+      for (const line of out.split('\n').slice(1)) {
+        expect(line.length).toBeLessThanOrEqual(80);
+      }
+    } finally {
+      write.mockRestore();
     }
   });
 });

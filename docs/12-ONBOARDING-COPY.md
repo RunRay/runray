@@ -256,12 +256,14 @@ a dollar figure. Refresh prices with:  runray pricing --refresh
 ```
 
 **f. Contained-failure framing** — prints next to the existing per-candidate discovery
-errors and does **not** consume a hint slot. One session failing to parse is expected — a
-locked OpenCode database, a half-written import — and on a first run it reads as a broken
-install unless we say otherwise:
+errors and does **not** consume a hint slot. One candidate failing to parse is expected — a
+locked OpenCode database, a half-written import, another tool's `.jsonl` in a scanned folder
+(change `skip-foreign-session-files`) — and on a first run it reads as a broken install
+unless we say otherwise:
 ```
-The session(s) above could not be read; the other N loaded normally. A locked
-database or a partly written file is skipped, never guessed at.
+The file(s) above was/were skipped; the other N loaded normally.
+A locked database, a partly written file or a file that isn't a session
+is skipped, never guessed at.
 ```
 `N` is the real count of runs that did load. Singular/plural per the actual numbers; no
 apology (§1) — this is correct behavior being described, not a failure being excused.

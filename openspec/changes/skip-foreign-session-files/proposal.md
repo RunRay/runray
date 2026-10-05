@@ -14,11 +14,12 @@ The SQLite era isn't affected: the `session` table's schema guarantees both fiel
 
 - `claude-code` `parse()` throws `not a Claude Code session: no timestamped user or assistant records` when the main transcript has no `user`/`assistant` record or no record `timestamp`. A session with a timestamped prompt and no reply yet (crashed, interrupted) is still a session.
 - `opencode` `parse()` throws `not an opencode session: no id or time.created` for storage and export candidates whose session lacks either field.
-- Discovery already catches a throwing `parse()`: the candidate is skipped, the other runs load, and the CLI prints `warning: skipped <file>: <reason>` on stderr. So no CLI change is needed.
+- Discovery already catches a throwing `parse()`: the candidate is skipped, the other runs load, and the CLI prints `warning: skipped <file>: <reason>` on stderr.
+- The trailer printed under those warnings said the session "could not be read" and only named a locked database or a partly written file. It now says the file was skipped and also names files that aren't sessions (`docs/12-ONBOARDING-COPY.md` §f, kept within 80 columns).
 
 ## Impact
 
 - Affected specs: trace-ingestion (ADDED "Files that are not sessions are skipped").
-- Affected code: `packages/core/src/adapters/claude-code.ts`, `packages/core/src/adapters/opencode.ts`, and their tests. Plus one discovery-level test in `packages/cli/src/discover.test.ts`.
+- Affected code: `packages/core/src/adapters/claude-code.ts`, `packages/core/src/adapters/opencode.ts`, the trailer in `packages/cli/src/discover.ts`, and their tests.
 - Goldens are unchanged: no committed fixture relies on the `EPOCH` fallback. No schema change, no new dependency.
 - Behavior change: a foreign file in a scanned folder now prints one `warning: skipped …` line per run instead of showing up as a 1970 session.
