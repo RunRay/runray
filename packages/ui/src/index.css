@@ -191,12 +191,17 @@
   --radius-control: 6px;
   --radius-panel: 12px;
 
-  /* Elevation in ink: layered card shadow on panels, heavier tier on popovers */
+  /* Elevation: layered card shadow on panels, heavier tier on popovers.
+     Tailwind copies these values into the shadow-card / shadow-popover
+     utilities at build time, so overriding --shadow-card per theme never
+     reaches them. Only the colours vary by theme: they stay var()
+     references, and the base layer below sets them for ink and paper. */
   --shadow-*: initial;
-  --shadow-card: 0 1px 0 rgb(0 0 0 / 0.35), 0 8px 22px rgb(0 0 0 / 0.35);
+  --shadow-card:
+    0 1px 0 var(--elevation-card-edge), 0 8px 22px var(--elevation-card-drop);
   --shadow-popover:
-    0 0 0 1px var(--color-border), 0 2px 8px rgb(0 0 0 / 0.5),
-    0 18px 44px rgb(0 0 0 / 0.5);
+    0 0 0 1px var(--color-border), 0 2px 8px var(--elevation-popover-near),
+    0 18px 44px var(--elevation-popover-far);
 
   /* ---- Motion: one orchestrated entrance, then 120–160ms hovers ---- */
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -243,6 +248,10 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --elevation-card-edge: rgb(0 0 0 / 0.35);
+    --elevation-card-drop: rgb(0 0 0 / 0.35);
+    --elevation-popover-near: rgb(0 0 0 / 0.5);
+    --elevation-popover-far: rgb(0 0 0 / 0.5);
   }
 
   /* "Paper ledger" light theme based on new Electric Indigo scheme */
@@ -278,11 +287,11 @@
     --color-model-3: #818cf8;
     --color-model-4: #3730a3;
 
-    --shadow-card:
-      0 1px 0 rgb(31 41 55 / 0.04), 0 6px 18px rgb(31 41 55 / 0.08);
-    --shadow-popover:
-      0 0 0 1px var(--color-border), 0 2px 6px rgb(31 41 55 / 0.12),
-      0 14px 34px rgb(31 41 55 / 0.16);
+    /* Slate-tinted, so paper cards lift instead of wearing a dark rim */
+    --elevation-card-edge: rgb(31 41 55 / 0.04);
+    --elevation-card-drop: rgb(31 41 55 / 0.08);
+    --elevation-popover-near: rgb(31 41 55 / 0.12);
+    --elevation-popover-far: rgb(31 41 55 / 0.16);
 
     /* --- Design System specific tokens under data-theme="light" --- */
     --color-surface-container-lowest: #ffffff;
