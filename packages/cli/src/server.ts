@@ -1,5 +1,10 @@
 import { readFileSync, type Stats, statSync } from 'node:fs';
-import { createServer, type Server, type ServerResponse } from 'node:http';
+import {
+  createServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import type { TraceFile } from '@runray/schema';
 import {
@@ -127,6 +132,50 @@ function isLoopbackHost(host: string | undefined): boolean {
     ? host.slice(1, host.indexOf(']')) // [::1]:port
     : (host.split(':')[0] ?? '');
   return name === '127.0.0.1' || name === 'localhost' || name === '::1';
+}
+
+/**
+ * CSRF defense for state-changing requests. The Host guard stops DNS
+ * rebinding, but any page open in the user's browser can still fire a
+ * "simple" cross-site POST (text/plain, no CORS preflight) at 127.0.0.1, and
+ * the browser sends it with a loopback Host. So a write must:
+ * - declare an `application/json` body, which a cross-site page can only send
+ *   after a preflight this server never approves (no CORS headers anywhere);
+ * - come from this same origin whenever the browser names the requester
+ *   (`Sec-Fetch-Site`, `Origin`). Clients that send neither (curl, tests,
+ *   Node's fetch) are local processes that could write the file directly.
+ * Returns the rejection to send, or undefined when the write may proceed.
+ */
+function rejectCrossSiteWrite(
+  req: IncomingMessage,
+): { status: number; error: string } | undefined {
+  const site = req.headers['sec-fetch-site'];
+  if (site !== undefined && site !== 'same-origin') {
+    return { status: 403, error: 'cross-site request refused' };
+  }
+  const origin = req.headers.origin;
+  if (origin !== undefined && !isSameOrigin(origin, req.headers.host)) {
+    return { status: 403, error: 'cross-origin request refused' };
+  }
+  const mediaType = (req.headers['content-type'] ?? '')
+    .split(';')[0]
+    ?.trim()
+    .toLowerCase();
+  if (mediaType !== 'application/json') {
+    return { status: 415, error: 'content-type must be application/json' };
+  }
+  return undefined;
+}
+
+function isSameOrigin(origin: string, host: string | undefined): boolean {
+  if (host === undefined) return false;
+  let parsed: URL;
+  try {
+    parsed = new URL(origin); // the opaque origin "null" throws here
+  } catch {
+    return false;
+  }
+  return parsed.protocol === 'http:' && parsed.host === host.toLowerCase();
 }
 
 function serveStatic(
@@ -264,6 +313,13 @@ export async function startServer(
       }
 
       if (req.method === 'POST') {
+        const rejection = rejectCrossSiteWrite(req);
+        if (rejection !== undefined) {
+          req.resume(); // discard the body unread; nothing is applied
+          sendJson(res, rejection.status, { error: rejection.error });
+          return;
+        }
+
         let bodyBytes = 0;
         const chunks: Buffer[] = [];
         let exceeded = false;

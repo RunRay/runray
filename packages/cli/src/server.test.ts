@@ -1,4 +1,4 @@
-import { chmodSync, mkdtempSync, rmSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -432,6 +432,97 @@ describe('/api/onboarding', () => {
         req.end();
       });
     expect(await statusFor('evil.example')).toBe(403);
+  });
+
+  describe('cross-site writes', () => {
+    // node:http instead of fetch: these tests need full control over Origin
+    // and Sec-Fetch-Site, which a browser would set on its own.
+    const post = (
+      server: RunningServer,
+      headers: Record<string, string>,
+      body = JSON.stringify({ tours: { dashboard: 'completed' } }),
+    ): Promise<{ status: number; body: unknown }> =>
+      new Promise((resolvePost, rejectPost) => {
+        const req = httpRequest(
+          `${server.url}api/onboarding`,
+          { method: 'POST', headers },
+          (res) => {
+            const chunks: Buffer[] = [];
+            res.on('data', (chunk: Buffer) => chunks.push(chunk));
+            res.on('end', () =>
+              resolvePost({
+                status: res.statusCode ?? 0,
+                body: JSON.parse(Buffer.concat(chunks).toString('utf8')),
+              }),
+            );
+          },
+        );
+        req.on('error', rejectPost);
+        req.end(body);
+      });
+
+    const startWithState = async () => {
+      const dir = mkdtempSync(join(tmpdir(), 'tp-onb-csrf-'));
+      const statePath = join(dir, 'state.json');
+      const server = await start({ onboardingStatePath: statePath });
+      return { server, statePath, origin: server.url.replace(/\/$/, '') };
+    };
+
+    it('refuses a text/plain POST (no preflight in a browser) with 415 and writes nothing', async () => {
+      const { server, statePath } = await startWithState();
+      const res = await post(server, { 'content-type': 'text/plain' });
+      expect(res.status).toBe(415);
+      expect(existsSync(statePath)).toBe(false);
+      const after = await fetch(new URL('/api/onboarding', server.url));
+      expect(await after.json()).toEqual({});
+    });
+
+    it('refuses a POST with no content-type with 415', async () => {
+      const { server, statePath } = await startWithState();
+      const res = await post(server, {});
+      expect(res.status).toBe(415);
+      expect(existsSync(statePath)).toBe(false);
+    });
+
+    it('refuses a foreign Origin with 403 even with a JSON body', async () => {
+      const { server, statePath } = await startWithState();
+      for (const origin of [
+        'https://evil.example',
+        'http://localhost:3000', // another local dev server: same site, other origin
+        'null', // sandboxed iframe or file:// page
+      ]) {
+        const res = await post(server, {
+          'content-type': 'application/json',
+          origin,
+        });
+        expect(res.status, origin).toBe(403);
+      }
+      expect(existsSync(statePath)).toBe(false);
+    });
+
+    it('refuses Sec-Fetch-Site other than same-origin with 403', async () => {
+      const { server, statePath } = await startWithState();
+      for (const site of ['cross-site', 'same-site', 'none']) {
+        const res = await post(server, {
+          'content-type': 'application/json',
+          'sec-fetch-site': site,
+        });
+        expect(res.status, site).toBe(403);
+      }
+      expect(existsSync(statePath)).toBe(false);
+    });
+
+    it('accepts a same-origin JSON POST like the one the UI sends', async () => {
+      const { server, statePath, origin } = await startWithState();
+      const res = await post(server, {
+        'content-type': 'application/json; charset=UTF-8',
+        origin,
+        'sec-fetch-site': 'same-origin',
+      });
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ tours: { dashboard: 'completed' } });
+      expect(existsSync(statePath)).toBe(true);
+    });
   });
 
   it('returns 200 with in-memory state when writing to disk fails (unwritable directory)', async () => {
