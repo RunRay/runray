@@ -251,10 +251,11 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --elevation-card-edge: rgb(0 0 0 / 0.35);
-    --elevation-card-drop: rgb(0 0 0 / 0.35);
-    --elevation-popover-near: rgb(0 0 0 / 0.5);
-    --elevation-popover-far: rgb(0 0 0 / 0.5);
+    /* Ink-tinted (the bg hue, darker) rather than flat black */
+    --elevation-card-edge: rgb(4 4 12 / 0.35);
+    --elevation-card-drop: rgb(4 4 12 / 0.35);
+    --elevation-popover-near: rgb(4 4 12 / 0.5);
+    --elevation-popover-far: rgb(4 4 12 / 0.5);
   }
 
   /* "Paper ledger" light theme based on new Electric Indigo scheme */
