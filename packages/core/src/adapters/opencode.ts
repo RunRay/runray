@@ -223,8 +223,10 @@ async function listSessionFiles(storageDir: string): Promise<string[]> {
 /** export era: one self-contained { info, messages:[{info,parts}] } document. */
 function loadExportBundle(file: string, doc: Json): SessionBundle | undefined {
   const info = isObj(doc.info) ? doc.info : undefined;
-  if (info === undefined) return undefined;
-  const sessionId = str(info.id) ?? basename(file, '.json');
+  // a session export always names its session; an `info` without an id is
+  // some other document that passed the text sniff
+  const sessionId = info === undefined ? undefined : str(info.id);
+  if (info === undefined || sessionId === undefined) return undefined;
   const messages: OcRecord[] = [];
   const partsByMessage = new Map<string, OcRecord[]>();
   if (Array.isArray(doc.messages)) {
@@ -467,15 +469,29 @@ function durationBetween(
   return Number.isFinite(ms) ? Math.max(0, ms) : undefined;
 }
 
+/**
+ * `ownerStart` is the start of the span a child session hangs under. A child
+ * without `time.created` takes it, with a warning, rather than 1970: one
+ * 1970 span would make the whole run start in 1970. A root session always
+ * has `time.created` (assertSessionShape, or a SQLite row).
+ */
 function emitBundle(
   bundle: SessionBundle,
   ownerSpanId: string | null,
   ctx: EmitContext,
+  ownerStart?: string,
 ): void {
   const ses = bundle.session.json;
   const sessionId = str(ses.id) ?? bundle.session.provenance.recordId;
   const t = timeOf(ses);
-  const startedAt = iso(t.created) ?? EPOCH;
+  const created = iso(t.created);
+  if (created === undefined && ownerStart !== undefined) {
+    ctx.warnings.push({
+      message: `child session ${sessionId} has no time.created; its start falls back to the span it hangs under`,
+      file: bundle.session.provenance.file,
+    });
+  }
+  const startedAt = created ?? ownerStart ?? EPOCH;
   const endedAt = iso(t.updated);
   const isChild = ownerSpanId !== null;
 
@@ -621,7 +637,7 @@ function emitBundle(
       });
 
       if (toolName === 'task') {
-        emitSubagent(part, childBySessionId, emittedChildren, ctx);
+        emitSubagent(part, childBySessionId, emittedChildren, ctx, pStart);
       }
     }
   }
@@ -650,7 +666,7 @@ function emitBundle(
       attributes: {},
       provenance: child.session.provenance,
     });
-    emitBundle(child, childId, ctx);
+    emitBundle(child, childId, ctx, cStart);
   }
 }
 
@@ -659,6 +675,8 @@ function emitSubagent(
   childBySessionId: Map<string, SessionBundle>,
   emittedChildren: Set<string>,
   ctx: EmitContext,
+  /** the task tool span's own start, already falling back to its message */
+  spawnStart: string,
 ): void {
   const p = taskPart.json;
   const partId = str(p.id) ?? taskPart.provenance.recordId;
@@ -668,7 +686,7 @@ function emitSubagent(
   const childSessionId = str(metadata.sessionId);
   const subagentType = str(input.subagent_type) ?? 'unknown';
   const st = isObj(state?.time) ? state.time : {};
-  const startedAt = iso(num(st.start)) ?? EPOCH;
+  const startedAt = iso(num(st.start)) ?? spawnStart;
   const endedAt = iso(num(st.end));
   const spanId = childSessionId ?? `${partId}:agent`;
 
@@ -700,7 +718,7 @@ function emitSubagent(
     return;
   }
   emittedChildren.add(childSessionId);
-  emitBundle(child, spanId, ctx);
+  emitBundle(child, spanId, ctx, startedAt);
 }
 
 /**
