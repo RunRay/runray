@@ -1,4 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -561,6 +567,47 @@ describe('buildTraceFile sanitization pipeline (1.7)', () => {
     if (!run) return;
     for (const span of run.spans) {
       expect(['session', 'subagent']).toContain(span.kind);
+    }
+  });
+});
+
+describe('a foreign file next to real sessions (no 1970 runs)', () => {
+  it('skips it with a reason and keeps the real session', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-foreign-'));
+    try {
+      const simple = fileURLToPath(
+        new URL(
+          '../../../fixtures/claude-code/simple/simple.jsonl',
+          import.meta.url,
+        ),
+      );
+      writeFileSync(join(dir, 'session.jsonl'), readFileSync(simple));
+      // what an OTel Collector debug log or any other tool's JSONL looks like
+      const foreign = join(dir, 'app-log.jsonl');
+      writeFileSync(
+        foreign,
+        `${JSON.stringify({ level: 'info', timestamp: '2026-07-02T13:00:00Z', msg: 'ok' })}\n`,
+      );
+
+      const result = await buildTraceFile({
+        paths: [dir],
+        redact: false,
+        generatorVersion: '0.1.0-test',
+      });
+
+      expect(result.traceFile.runs).toHaveLength(1);
+      for (const run of result.traceFile.runs) {
+        expect(run.startedAt.startsWith('1970')).toBe(false);
+      }
+      expect(result.errors).toEqual([
+        {
+          runRef: foreign,
+          message:
+            'not a Claude Code session: no timestamped user or assistant records',
+        },
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

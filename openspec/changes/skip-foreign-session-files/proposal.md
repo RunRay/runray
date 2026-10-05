@@ -4,7 +4,7 @@
 
 Adapters pick candidates cheaply, by name and path, and never check that the content is theirs. When a file isn't, they don't refuse it: they emit a run anyway, dated `1970-01-01` (the `EPOCH` fallback), with no calls and $0. That breaks the project's "never guess silently" rule, which unknown-model pricing already follows.
 
-- **Claude Code**: `detect()` takes every `*.jsonl` in a scanned folder. Since #1-era fixes it skips files that look like OTLP, but any other JSONL (another tool's export, a log someone dropped into a project folder) becomes a session. With no record timestamp, it gets the `EPOCH` start.
+- **Claude Code**: `detect()` takes every `*.jsonl` in a scanned folder. It already skips files that look like OTLP, but any other JSONL (another tool's export, a log someone dropped into a project folder) becomes a session. With no record timestamp, it gets the `EPOCH` start.
 - **OpenCode, file storage**: a `storage/session/<project>/ses_*.json` that parses as JSON becomes a candidate with no check for the session's `id` or `time.created`, and falls back to `EPOCH`.
 - **OpenCode, export**: a document that passes the bounded text sniff and has an `info` object is parsed even when `info` isn't a session.
 
