@@ -11,6 +11,12 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # @types/node follows the oldest Node major runray supports (engines),
+      # not the newest release: newer types would let code call APIs the
+      # supported runtime lacks. Raise it together with engines.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
