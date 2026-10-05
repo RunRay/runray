@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -372,5 +373,54 @@ describe('opencode MCP classification (E4)', () => {
       read?.attributes['runray.targetKey'],
     );
     expect('runray.target' in (readR?.attributes ?? {})).toBe(false);
+  });
+});
+
+describe('opencode files that are not sessions', () => {
+  // Storage and export candidates are matched by path and a text sniff; a
+  // foreign JSON that gets that far must be refused by parse(), so
+  // discovery skips it with a warning instead of emitting a 1970 run.
+  async function parseOnly(dir: string): Promise<unknown> {
+    const candidates = await detectIn(dir);
+    expect(candidates).toHaveLength(1);
+    const candidate = candidates[0];
+    if (candidate === undefined) throw new Error('unreachable');
+    return opencodeAdapter.parse(candidate, { redact: false });
+  }
+
+  it.each<[string, unknown]>([
+    ['no id and no time', { title: 'ses_ lookalike' }],
+    ['an id but no time.created', { id: 'ses_lookalike', time: {} }],
+  ])('refuses an export document whose info has %s', async (_label, info) => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-oc-foreign-export-'));
+    try {
+      // passes the bounded sniff: "info", "ses_ and "messages" up front
+      writeFileSync(
+        join(dir, 'export.json'),
+        JSON.stringify({ info, messages: [] }),
+      );
+      await expect(parseOnly(dir)).rejects.toThrow(
+        'not an opencode session: no id or time.created',
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('refuses a storage session file without id or time.created', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-oc-foreign-storage-'));
+    try {
+      const projectDir = join(dir, 'storage', 'session', 'proj');
+      mkdirSync(projectDir, { recursive: true });
+      writeFileSync(
+        join(projectDir, 'ses_foreign.json'),
+        JSON.stringify({ title: 'valid JSON, not a session' }),
+      );
+      await expect(parseOnly(dir)).rejects.toThrow(
+        'not an opencode session: no id or time.created',
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

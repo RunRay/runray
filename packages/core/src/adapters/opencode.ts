@@ -703,6 +703,20 @@ function emitSubagent(
   emitBundle(child, spanId, ctx);
 }
 
+/**
+ * Storage and export candidates are matched by path and a bounded text
+ * sniff, so a foreign JSON file can reach parse(). Without the session's own
+ * `id` and a numeric `time.created` it is not an OpenCode session, and
+ * emitting it would mean a run dated 1970 with no calls. Throwing makes
+ * discovery skip it with a warning instead. (SQLite rows always carry both.)
+ */
+function assertSessionShape(bundle: SessionBundle): void {
+  const ses = bundle.session.json;
+  if (str(ses.id) === undefined || timeOf(ses).created === undefined) {
+    throw new Error('not an opencode session: no id or time.created');
+  }
+}
+
 function bundleToRawRun(
   bundle: SessionBundle,
   format: Candidate['format'],
@@ -990,6 +1004,7 @@ export const opencodeAdapter: SourceAdapter = {
       if (bundle === undefined) {
         throw new Error(`not an opencode export document: ${file}`);
       }
+      assertSessionShape(bundle);
       return bundleToRawRun(
         bundle,
         'opencode-export',
@@ -1045,6 +1060,7 @@ export const opencodeAdapter: SourceAdapter = {
     if (bundle === undefined) {
       throw new Error(`unreadable opencode session file: ${sessionFile}`);
     }
+    assertSessionShape(bundle);
     return bundleToRawRun(
       bundle,
       'opencode-storage',
