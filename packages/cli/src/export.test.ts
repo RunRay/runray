@@ -596,7 +596,9 @@ describe.skipIf(resolveExportTemplate() === undefined)(
         findPathShapes(html).filter((shape) => !templateShapes.has(shape));
       expect(introduced(htmlSanitized)).toEqual([]);
       expect(introduced(htmlMeta)).toEqual([]);
-    });
+      // three full exports (~4.6 MB of HTML each) in one test: on a loaded
+      // Windows machine this crossed the 30 s default now and then
+    }, 90_000);
   },
 );
 
