@@ -10,20 +10,29 @@ Two token bugs in `packages/ui/src/index.css` make the dashboard harder to read.
 ## What Changes
 
 - **Elevation:** the `@theme` shadows keep their geometry, and their colours become `var()` references: `--elevation-card-edge`, `--elevation-card-drop`, `--elevation-popover-near` and `--elevation-popover-far`. The base layer sets them for ink and overrides them for paper.
-  - Ink renders exactly as before.
+  - Ink keeps its strength and is now tinted with its ground's hue instead of flat black.
   - Paper gets its designed slate-tinted shadows: 4% and 8% on cards, 12% and 16% on popovers. They use ink's offsets and blurs, because only colours can vary by theme. The old paper override's blurs were slightly tighter (18px instead of 22px on cards).
-- **Text tiers:**
-  - `text-faint` becomes `#85859d` in ink and `#636b78` in paper. That clears 4.5:1 on `bg`, `bg-deep-gray`, `surface`, `surface-2` and `surface-container-low` in both themes, while `text-dim` stays about 1.4 times faint's contrast.
-  - On chip and tinted grounds, faint can't reach 4.5:1 without merging with dim, so text there steps up to `text-dim`. This covers inactive sort headers in the sessions table, "+N nested" in cost treemap cells, own duration on added rows in the run diff, and the timeline filter's placeholder while hovered.
-  - The top bar's status line and the timeline filter's placeholder used `text-outline`, a border token (2.5:1 in paper). They now use `text-faint`.
-- **Guard:** `packages/ui/src/theme-tokens.test.ts` checks the token sheet. It fails if a `@theme` shadow holds a literal colour or if faint drops below AA.
+- **Faint on page and panel grounds:** `text-faint` becomes `#85859d` in ink and `#636b78` in paper. That clears 4.5:1 on `bg`, `bg-deep-gray`, `surface`, `surface-2` and `surface-container-low` in both themes, while `text-dim` stays about 1.4 times faint's contrast.
+- **Faint on raised grounds:** a base-layer rule re-points `--color-text-faint` to dim on raised and tinted grounds, where faint can't reach 4.5:1 (3.43:1 on ink's `surface-variant`).
+  - Raised grounds are `surface-variant` and `surface-container-high`/`-highest`, plus their `hover:` variants. Tinted grounds are heat tints up to 15%.
+  - In the UI, that covers selected span rows, active run tabs, active tool rows, the sessions table head, cost treemap cells, added rows in the run diff, and highlighted evidence rows.
+  - Every label inside renders at dim without each component choosing.
+  - In the treemap, "+N nested" is now set in the sans face, so it stays apart from the mono figure now that both render at dim.
+- **Smaller fixes:**
+  - The top bar's status line and the timeline filter's placeholder used `text-outline`, a border token at 2.5:1 in paper. They now use `text-faint`.
+  - The top bar drops `transition-all`, against the motion guardrail.
+- **Guard:** `packages/ui/src/theme-tokens.test.ts` checks the token sheet. It fails when:
+  - a shadow layer's colour isn't a per-theme `var()`;
+  - faint drops below AA on a page or panel ground;
+  - a raised or tinted ground class used in a component is missing from the re-point rule;
+  - dim drops below AA on any ground that rule lists.
 
 ## Impact
 
 - Affected specs: visualizer (ADDED "Theme tokens hold in both themes", which also gives the theme requirement's contrast floor a concrete value).
 - Affected code:
   - `packages/ui/src/index.css`
-  - `packages/ui/src/components/{SessionsTable,NestedTreemap,DiffView,TopBar,Waterfall}.tsx`
+  - `packages/ui/src/components/{NestedTreemap,TopBar,Waterfall}.tsx`
   - the new test
 - No schema change, no new dependency, goldens unchanged.
 - Out of scope, tracked separately:
