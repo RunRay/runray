@@ -1,16 +1,14 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { abbreviateHome } from './discover.js';
 import type { OnboardingBlock } from './onboarding-state.js';
 import { resetInMemoryState } from './onboarding-state.js';
 import { createProgram } from './program.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 
 /**
  * The wizard is driven by stubbing the prompt library, not by an env-var

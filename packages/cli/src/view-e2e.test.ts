@@ -1,8 +1,8 @@
-import { fileURLToPath } from 'node:url';
 import type { TraceFile } from '@runray/schema';
 import { describe, expect, it, vi } from 'vitest';
 import { buildTraceFile } from './discover.js';
 import { startServer } from './server.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 import { resolveUiDistDir } from './ui-dist.js';
 
 /**
@@ -13,9 +13,7 @@ import { resolveUiDistDir } from './ui-dist.js';
  */
 
 const uiDistDir = resolveUiDistDir();
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 
 // parses the full claude-code fixture tree — headroom over vitest's 5s
 // default so it doesn't flake under full-suite load (see run-diff 2.1)
