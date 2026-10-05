@@ -1,9 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
   readFileSync,
   renameSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
@@ -16,7 +18,8 @@ import { dirname, join } from 'node:path';
  * - Location: $XDG_CONFIG_HOME/tracepulse/state.json, or %APPDATA%\tracepulse\state.json on Windows,
  *   defaulting to ~/.config/tracepulse/state.json.
  * - Permissions: 0600 on POSIX.
- * - Atomicity: write temporary file in the same directory, then rename.
+ * - Atomicity: write temporary file in the same directory, then rename. The
+ *   temp file has a random name and is created exclusively.
  * - Unknown top-level keys preserved across writes.
  * - Degradation: absent, unreadable, or malformed JSON returns empty state, never throws.
  * - Write failures: swallowed after applying in memory.
@@ -246,17 +249,24 @@ export function writeState(
 
   inMemoryDocument = merged;
 
+  // set once this call has created the temp file, cleared once it is renamed
+  let ownTmpPath: string | undefined;
   try {
     const dir = dirname(filePath);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    const tmpPath = join(
-      dir,
-      `.state.json.tmp.${Date.now()}.${Math.random().toString(36).slice(2)}`,
-    );
+    // Unguessable name, created exclusively ('wx' = O_CREAT | O_EXCL): an
+    // existing file or symlink at that name fails the write instead of
+    // being written through.
+    const tmpPath = join(dir, `.state.json.tmp.${randomUUID()}`);
     const content = JSON.stringify(merged, null, 2);
-    writeFileSync(tmpPath, content, { encoding: 'utf-8', mode: 0o600 });
+    writeFileSync(tmpPath, content, {
+      encoding: 'utf-8',
+      mode: 0o600,
+      flag: 'wx',
+    });
+    ownTmpPath = tmpPath;
     if (process.platform !== 'win32') {
       try {
         chmodSync(tmpPath, 0o600);
@@ -265,8 +275,17 @@ export function writeState(
       }
     }
     renameSync(tmpPath, filePath);
+    ownTmpPath = undefined;
   } catch {
-    // Swallow write failures after applying in memory
+    // Swallow write failures after applying in memory. A temp file this call
+    // created but could not rename is removed; one it didn't create is not.
+    if (ownTmpPath !== undefined) {
+      try {
+        unlinkSync(ownTmpPath);
+      } catch {
+        // ignore cleanup failure
+      }
+    }
   }
 
   return inMemoryDocument;
