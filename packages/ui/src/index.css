@@ -24,10 +24,9 @@
   --color-border-strong: #3a3a4e;
   --color-text: #e8e8f0;
   --color-text-dim: #a0a0b8;
-  /* Faint clears WCAG AA (4.5:1) on the page and panel grounds: bg,
-     surface, surface-2, surface-container-low. On chip and tinted grounds
-     (surface-variant, surface-container-high/-highest, heat tints) it falls
-     short, so text there steps up to dim. Same rule in paper. */
+  /* Faint clears WCAG AA (4.5:1) on the page and panel grounds (bg,
+     bg-deep-gray, surface, surface-2, surface-container-low). Raised and
+     tinted grounds re-point it to dim; see "Faint on raised grounds". */
   --color-text-faint: #85859d;
 
   /* Vibrant Accent */
@@ -350,6 +349,36 @@
     --color-on-surface: #1f2937;
     --color-tertiary-container: #6b7280;
     --color-on-secondary-container: #1f2937;
+  }
+
+  /* Faint on raised grounds. Selected rows, active tabs, chips and table
+     heads sit on surface-variant or surface-container-high/-highest, and
+     tinted rows and cells on heat tints. Faint can't reach 4.5:1 there
+     (3.43:1 on ink's surface-variant), so every label inside such a ground
+     renders at dim instead, without each component choosing. The ground
+     list is checked against the components in theme-tokens.test.ts. */
+  .bg-surface-variant,
+  .bg-surface-container-high,
+  .bg-surface-container-highest,
+  .bg-heat-1\/10,
+  .bg-heat-1\/14,
+  .bg-heat-1\/15,
+  .bg-heat-2\/10,
+  .bg-heat-2\/12,
+  .bg-heat-2\/15,
+  .bg-heat-3\/15 {
+    --color-text-faint: var(--color-text-dim);
+  }
+  /* Matches Tailwind, which only applies hover: backgrounds where a
+     pointer can hover. */
+  @media (hover: hover) {
+    .hover\:bg-surface-variant:hover,
+    .hover\:bg-surface-variant\/30:hover,
+    .hover\:bg-surface-variant\/40:hover,
+    .hover\:bg-surface-container-high:hover,
+    .hover\:bg-surface-container-highest:hover {
+      --color-text-faint: var(--color-text-dim);
+    }
   }
 
   /* Custom scrollbar for data density look */
