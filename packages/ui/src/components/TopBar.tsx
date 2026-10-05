@@ -34,7 +34,7 @@ export function TopBar(props: TopBarProps = {}) {
       </div>
       <div className="flex items-center gap-4 text-on-surface-variant">
         {isReady && (
-          <p className="text-[12px] text-outline flex items-center gap-1.5 font-data-mono">
+          <p className="text-[12px] text-text-faint flex items-center gap-1.5 font-data-mono">
             {isLive ? (
               <>
                 {/* pulse only when the event stream is actually connected

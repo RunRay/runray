@@ -179,7 +179,7 @@ export function SessionsTable({
                       onClick={() => toggleSort(key)}
                       className={`micro-label flex h-row w-full items-center gap-1 px-3 transition-colors duration-150 ease-out hover:bg-surface-variant hover:text-on-surface active:bg-bg-deep-gray ${
                         numeric ? 'justify-end' : ''
-                      } ${active ? 'text-text' : 'text-text-faint'}`}
+                      } ${active ? 'text-text' : 'text-text-dim'}`}
                     >
                       {label}
                       <span

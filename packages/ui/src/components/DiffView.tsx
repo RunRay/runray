@@ -338,7 +338,12 @@ function PairedRow({
               <span className="text-text-dim">{formatUSD(row.ownCostUSD)}</span>
             )}
             {row.ownDurationMs > 0 && (
-              <span className="text-text-faint">
+              // faint drops below 4.5:1 on the amber "added" tint
+              <span
+                className={
+                  row.type === 'added' ? 'text-text-dim' : 'text-text-faint'
+                }
+              >
                 {formatDuration(row.ownDurationMs)}
               </span>
             )}

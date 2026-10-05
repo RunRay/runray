@@ -242,7 +242,7 @@ function CellLayer({
                 <p className={`font-mono text-label ${HEAT_TEXT[heat]}`}>
                   {format(item.value)}
                   {hiddenNested > 0 && (
-                    <span className="ml-1 text-text-faint">
+                    <span className="ml-1 text-text-dim">
                       +{hiddenNested} nested
                     </span>
                   )}
