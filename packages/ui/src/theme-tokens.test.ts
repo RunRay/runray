@@ -10,6 +10,9 @@ import { describe, expect, it } from 'vitest';
  * build time, so overriding --shadow-card under data-theme never reaches
  * `.shadow-card`. Paper once rendered ink's 35% black card shadow that way.
  * Colours that differ by theme must stay var() references.
+ *
+ * Text: faint is the lowest text tier. It must still clear WCAG AA (4.5:1)
+ * on the page and panel grounds, and stay a visible step below dim.
  */
 
 const uiRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -45,6 +48,7 @@ function declarations(body: string): Map<string, string> {
 const theme = declarations(block(/@theme\s*\{/));
 const paperOverrides = declarations(block(/:root\[data-theme="light"\]\s*\{/));
 const ink = new Map([...theme, ...declarations(block(/:root\s*\{/))]);
+const paper = new Map([...ink, ...paperOverrides]);
 
 const shadows = [...theme].filter(([name]) => name.startsWith('--shadow-'));
 
@@ -94,4 +98,49 @@ describe('elevation follows the theme', () => {
       }
     },
   );
+});
+
+function luminance(hex: string): number {
+  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((i) => {
+    const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a: string, b: string): number {
+  const [x, y] = [luminance(a), luminance(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+function colour(tokens: Map<string, string>, name: string): string {
+  const value = tokens.get(name);
+  if (!value || !/^#[0-9a-f]{6}$/i.test(value)) {
+    throw new Error(`${name} should be a 6-digit hex colour, got ${value}`);
+  }
+  return value;
+}
+
+const GROUNDS = [
+  '--color-bg',
+  '--color-bg-deep-gray',
+  '--color-surface',
+  '--color-surface-2',
+  '--color-surface-container-low',
+];
+
+describe.each([
+  ['ink', ink],
+  ['paper', paper],
+])('%s text tiers', (_theme, tokens) => {
+  it.each(GROUNDS)('faint clears AA on %s, a step below dim', (ground) => {
+    const bg = colour(tokens, ground);
+    const text = contrast(colour(tokens, '--color-text'), bg);
+    const dim = contrast(colour(tokens, '--color-text-dim'), bg);
+    const faint = contrast(colour(tokens, '--color-text-faint'), bg);
+    expect(faint).toBeGreaterThanOrEqual(4.5);
+    // keeps the three tiers distinguishable, not just ordered
+    expect(dim / faint).toBeGreaterThanOrEqual(1.25);
+    expect(text).toBeGreaterThan(dim);
+  });
 });

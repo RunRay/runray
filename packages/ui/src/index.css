@@ -24,7 +24,11 @@
   --color-border-strong: #3a3a4e;
   --color-text: #e8e8f0;
   --color-text-dim: #a0a0b8;
-  --color-text-faint: #6b6b80;
+  /* Faint clears WCAG AA (4.5:1) on the page and panel grounds: bg,
+     surface, surface-2, surface-container-low. On chip and tinted grounds
+     (surface-variant, surface-container-high/-highest, heat tints) it falls
+     short, so text there steps up to dim. Same rule in paper. */
+  --color-text-faint: #85859d;
 
   /* Vibrant Accent */
   --color-brand: #7c5cff;
@@ -264,7 +268,7 @@
     --color-border-strong: #d1d5db;
     --color-text: #1f2937;
     --color-text-dim: #4b5563;
-    --color-text-faint: #9ca3af;
+    --color-text-faint: #636b78; /* AA on the same grounds as in ink */
 
     --color-brand: #4f46e5;
     --color-brand-bright: #6366f1;
