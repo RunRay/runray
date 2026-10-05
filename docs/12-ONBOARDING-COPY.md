@@ -261,12 +261,15 @@ locked OpenCode database, a half-written import, another tool's `.jsonl` in a sc
 (change `skip-foreign-session-files`) — and on a first run it reads as a broken install
 unless we say otherwise:
 ```
-The file(s) above was/were skipped; the other N loaded normally.
+The entry above was skipped; the other N loaded normally.
 A locked database, a partly written file or a file that isn't a session
 is skipped, never guessed at.
 ```
-`N` is the real count of runs that did load. Singular/plural per the actual numbers; no
-apology (§1) — this is correct behavior being described, not a failure being excused.
+`N` is the real count of runs that did load. Singular/plural per the actual numbers ("The
+entries above were skipped"); "entry", not "file", because a locked database is one file but
+one entry per session in it. No apology (§1) — this is correct behavior being described, not
+a failure being excused. A Claude Code file that has no conversation yet (a session whose
+first prompt isn't written) is skipped without any line, so `--watch` stays quiet about it.
 
 ---
 
