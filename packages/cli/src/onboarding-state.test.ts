@@ -28,6 +28,12 @@ vi.mock('node:crypto', async (importOriginal) => {
   return { ...actual, randomUUID: vi.fn(actual.randomUUID) };
 });
 
+// pass-through by default; one test makes a write fail half-way
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, writeFileSync: vi.fn(actual.writeFileSync) };
+});
+
 const FIXED_UUID = '00000000-0000-4000-8000-000000000000';
 
 describe('onboarding-state', () => {
@@ -294,6 +300,28 @@ describe('onboarding-state', () => {
       updateOnboardingState({ hints: ['time-view'] }, join(dir, 'state.json'));
 
       expect(readFileSync(target, 'utf-8')).toBe('untouched');
+    });
+
+    it('removes its own temp file when the write fails half-way', async () => {
+      const actualFs =
+        await vi.importActual<typeof import('node:fs')>('node:fs');
+      const dir = freshDir('tmp-write-fails');
+      // disk full mid-write: some bytes land in the temp file, then ENOSPC
+      vi.mocked(writeFileSync).mockImplementationOnce((target, _data) => {
+        actualFs.writeFileSync(target, '{"partial"');
+        throw Object.assign(new Error('no space left on device'), {
+          code: 'ENOSPC',
+        });
+      });
+      const filePath = join(dir, 'state.json');
+
+      expect(() =>
+        updateOnboardingState({ hints: ['time-view'] }, filePath),
+      ).not.toThrow();
+
+      expect(tmpLeftovers(dir)).toEqual([]);
+      expect(existsSync(filePath)).toBe(false);
+      expect(getOnboardingState(filePath)).toEqual({ hints: ['time-view'] });
     });
 
     it('removes its own temp file when the rename fails', () => {

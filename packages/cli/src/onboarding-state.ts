@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import {
   chmodSync,
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   renameSync,
   unlinkSync,
@@ -249,24 +251,26 @@ export function writeState(
 
   inMemoryDocument = merged;
 
-  // set once this call has created the temp file, cleared once it is renamed
+  // set once this call has opened the temp file, cleared once it is renamed
   let ownTmpPath: string | undefined;
   try {
     const dir = dirname(filePath);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    // Unguessable name, created exclusively ('wx' = O_CREAT | O_EXCL): an
-    // existing file or symlink at that name fails the write instead of
-    // being written through.
+    // Unguessable name, opened exclusively ('wx' = O_CREAT | O_EXCL): an
+    // existing file or symlink at that name fails the open instead of being
+    // written through. The file is ours from the open on, so a write that
+    // fails half-way (disk full) is cleaned up too.
     const tmpPath = join(dir, `.state.json.tmp.${randomUUID()}`);
     const content = JSON.stringify(merged, null, 2);
-    writeFileSync(tmpPath, content, {
-      encoding: 'utf-8',
-      mode: 0o600,
-      flag: 'wx',
-    });
+    const fd = openSync(tmpPath, 'wx', 0o600);
     ownTmpPath = tmpPath;
+    try {
+      writeFileSync(fd, content, 'utf-8');
+    } finally {
+      closeSync(fd);
+    }
     if (process.platform !== 'win32') {
       try {
         chmodSync(tmpPath, 0o600);
