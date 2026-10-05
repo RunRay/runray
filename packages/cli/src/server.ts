@@ -134,21 +134,29 @@ function isLoopbackHost(host: string | undefined): boolean {
   return name === '127.0.0.1' || name === 'localhost' || name === '::1';
 }
 
+interface Refusal {
+  status: number;
+  error: string;
+}
+
+const SAFE_METHODS = new Set(['GET', 'HEAD']);
+
 /**
- * CSRF defense for state-changing requests. The Host guard stops DNS
- * rebinding, but any page open in the user's browser can still fire a
- * "simple" cross-site POST (text/plain, no CORS preflight) at 127.0.0.1, and
- * the browser sends it with a loopback Host. So a write must:
- * - declare an `application/json` body, which a cross-site page can only send
- *   after a preflight this server never approves (no CORS headers anywhere);
- * - come from this same origin whenever the browser names the requester
- *   (`Sec-Fetch-Site`, `Origin`). Clients that send neither (curl, tests,
- *   Node's fetch) are local processes that could write the file directly.
- * Returns the rejection to send, or undefined when the write may proceed.
+ * CSRF defense. The Host guard stops DNS rebinding, but any page open in the
+ * user's browser can still fire a "simple" cross-site POST (text/plain, no
+ * CORS preflight) at 127.0.0.1, and the browser sends it with a loopback
+ * Host. Two layers close that:
+ * - every request with a state-changing method must come from this same
+ *   origin whenever the browser names the requester (`Sec-Fetch-Site`,
+ *   `Origin`) — checked once, before any route runs;
+ * - a write must declare an `application/json` body, which a cross-site page
+ *   can only send after a preflight this server never approves (no CORS
+ *   headers anywhere) — checked by the route that parses the body.
+ * Clients that send neither header (curl, tests, Node's fetch) are local
+ * processes that could write the file directly; they are judged on the
+ * media type alone.
  */
-function rejectCrossSiteWrite(
-  req: IncomingMessage,
-): { status: number; error: string } | undefined {
+function crossSiteRefusal(req: IncomingMessage): Refusal | undefined {
   const site = req.headers['sec-fetch-site'];
   if (site !== undefined && site !== 'same-origin') {
     return { status: 403, error: 'cross-site request refused' };
@@ -157,25 +165,43 @@ function rejectCrossSiteWrite(
   if (origin !== undefined && !isSameOrigin(origin, req.headers.host)) {
     return { status: 403, error: 'cross-origin request refused' };
   }
+  return undefined;
+}
+
+function jsonBodyRefusal(req: IncomingMessage): Refusal | undefined {
   const mediaType = (req.headers['content-type'] ?? '')
     .split(';')[0]
     ?.trim()
     .toLowerCase();
-  if (mediaType !== 'application/json') {
-    return { status: 415, error: 'content-type must be application/json' };
-  }
-  return undefined;
+  return mediaType === 'application/json'
+    ? undefined
+    : { status: 415, error: 'content-type must be application/json' };
 }
 
+/** `Origin` must be `http://` + this request's Host, default port folded. */
 function isSameOrigin(origin: string, host: string | undefined): boolean {
   if (host === undefined) return false;
-  let parsed: URL;
   try {
-    parsed = new URL(origin); // the opaque origin "null" throws here
+    // the opaque origin "null" throws; both sides normalize case and drop
+    // the default port, so `localhost:80` matches `http://localhost`
+    const parsed = new URL(origin);
+    return (
+      parsed.protocol === 'http:' &&
+      parsed.host === new URL(`http://${host}`).host
+    );
   } catch {
     return false;
   }
-  return parsed.protocol === 'http:' && parsed.host === host.toLowerCase();
+}
+
+/**
+ * Answers a refused request without reading its body. `connection: close`
+ * makes Node close the socket once the response is flushed, instead of
+ * draining an upload of any size from a page that is being refused anyway.
+ */
+function refuse(res: ServerResponse, refusal: Refusal): void {
+  res.setHeader('connection', 'close');
+  sendJson(res, refusal.status, { error: refusal.error });
 }
 
 function serveStatic(
@@ -271,6 +297,15 @@ export async function startServer(
       return;
     }
 
+    // refuse cross-site state-changing requests before any route runs (CSRF)
+    if (!SAFE_METHODS.has(req.method ?? 'GET')) {
+      const refusal = crossSiteRefusal(req);
+      if (refusal !== undefined) {
+        refuse(res, refusal);
+        return;
+      }
+    }
+
     if (urlPath === '/api/tracefile') {
       options
         .getTraceFile()
@@ -313,10 +348,9 @@ export async function startServer(
       }
 
       if (req.method === 'POST') {
-        const rejection = rejectCrossSiteWrite(req);
-        if (rejection !== undefined) {
-          req.resume(); // discard the body unread; nothing is applied
-          sendJson(res, rejection.status, { error: rejection.error });
+        const refusal = jsonBodyRefusal(req);
+        if (refusal !== undefined) {
+          refuse(res, refusal);
           return;
         }
 

@@ -1,5 +1,6 @@
 import { chmodSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { request as httpRequest } from 'node:http';
+import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TraceFile } from '@runray/schema';
@@ -435,31 +436,43 @@ describe('/api/onboarding', () => {
   });
 
   describe('cross-site writes', () => {
-    // node:http instead of fetch: these tests need full control over Origin
-    // and Sec-Fetch-Site, which a browser would set on its own.
-    const post = (
+    // node:http instead of fetch: these tests need full control over Origin,
+    // Sec-Fetch-Site and Host, which a browser would set on its own.
+    const send = (
       server: RunningServer,
-      headers: Record<string, string>,
-      body = JSON.stringify({ tours: { dashboard: 'completed' } }),
-    ): Promise<{ status: number; body: unknown }> =>
-      new Promise((resolvePost, rejectPost) => {
+      {
+        method = 'POST',
+        path = 'api/onboarding',
+        headers,
+        body = JSON.stringify({ tours: { dashboard: 'completed' } }),
+      }: {
+        method?: string;
+        path?: string;
+        headers: Record<string, string>;
+        body?: string;
+      },
+    ): Promise<{ status: number; connection?: string; body: string }> =>
+      new Promise((resolveSend, rejectSend) => {
         const req = httpRequest(
-          `${server.url}api/onboarding`,
-          { method: 'POST', headers },
+          `${server.url}${path}`,
+          { method, headers },
           (res) => {
             const chunks: Buffer[] = [];
             res.on('data', (chunk: Buffer) => chunks.push(chunk));
             res.on('end', () =>
-              resolvePost({
+              resolveSend({
                 status: res.statusCode ?? 0,
-                body: JSON.parse(Buffer.concat(chunks).toString('utf8')),
+                connection: res.headers.connection,
+                body: Buffer.concat(chunks).toString('utf8'),
               }),
             );
           },
         );
-        req.on('error', rejectPost);
+        req.on('error', rejectSend);
         req.end(body);
       });
+    const post = (server: RunningServer, headers: Record<string, string>) =>
+      send(server, { headers });
 
     const startWithState = async () => {
       const dir = mkdtempSync(join(tmpdir(), 'tp-onb-csrf-'));
@@ -520,8 +533,96 @@ describe('/api/onboarding', () => {
         'sec-fetch-site': 'same-origin',
       });
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ tours: { dashboard: 'completed' } });
+      expect(JSON.parse(res.body)).toEqual({
+        tours: { dashboard: 'completed' },
+      });
       expect(existsSync(statePath)).toBe(true);
+    });
+
+    it('folds the default port: Host localhost:80 matches Origin http://localhost', async () => {
+      const { server } = await startWithState();
+      const res = await post(server, {
+        'content-type': 'application/json',
+        host: 'localhost:80',
+        origin: 'http://localhost',
+        'sec-fetch-site': 'same-origin',
+      });
+      expect(res.status).toBe(200);
+    });
+
+    it('refuses cross-site state-changing requests on every route, before the route runs', async () => {
+      const { server, statePath } = await startWithState();
+      const foreign = { origin: 'https://evil.example' };
+      // a route with no write handler at all
+      const tracefile = await send(server, {
+        path: 'api/tracefile',
+        headers: foreign,
+      });
+      expect(tracefile.status).toBe(403);
+      // checked ahead of the onboarding method check (405)
+      const del = await send(server, { method: 'DELETE', headers: foreign });
+      expect(del.status).toBe(403);
+      expect(existsSync(statePath)).toBe(false);
+    });
+
+    it('leaves safe methods to the Host guard alone', async () => {
+      const { server } = await startWithState();
+      const res = await send(server, {
+        method: 'GET',
+        headers: {
+          origin: 'https://evil.example',
+          'sec-fetch-site': 'cross-site',
+        },
+        body: '',
+      });
+      expect(res.status).toBe(200);
+    });
+
+    it('answers every refusal with connection: close', async () => {
+      const { server } = await startWithState();
+      expect(
+        (await post(server, { 'content-type': 'text/plain' })).connection,
+      ).toBe('close');
+      expect((await post(server, { origin: 'null' })).connection).toBe('close');
+    });
+
+    it('closes the connection instead of draining a refused upload', async () => {
+      const { server, statePath } = await startWithState();
+      const chunk = Buffer.alloc(64 * 1024, 0x61);
+      const total = 64 * 1024 * 1024; // far beyond any socket buffer
+      // A raw socket that ignores the early 415 and keeps uploading, as a
+      // browser may. (node:http's client stops on its own once the response
+      // is in, so it can't show this.) Without connection: close, Node drains
+      // the whole body to keep the connection alive; the server must hang up.
+      const sent = await new Promise<number>((resolveSent) => {
+        let bytes = 0;
+        const socket = connect(Number(new URL(server.url).port), '127.0.0.1');
+        const done = (): void => {
+          socket.destroy();
+          resolveSent(bytes);
+        };
+        socket.on('error', () => undefined); // ECONNRESET / EPIPE is the point
+        socket.on('close', done);
+        socket.on('connect', () => {
+          socket.write(
+            'POST /api/onboarding HTTP/1.1\r\nHost: 127.0.0.1\r\n' +
+              `Content-Type: text/plain\r\nContent-Length: ${total}\r\n\r\n`,
+          );
+          const pump = (): void => {
+            while (bytes < total && !socket.destroyed) {
+              bytes += chunk.length;
+              if (!socket.write(chunk)) {
+                socket.once('drain', pump);
+                return;
+              }
+            }
+            if (bytes >= total) done(); // the server read it all
+          };
+          pump();
+        });
+      });
+      expect(sent).toBeLessThan(total);
+      expect(existsSync(statePath)).toBe(false);
     });
   });
 

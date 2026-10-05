@@ -5,7 +5,7 @@
 ### Requirement: Onboarding endpoint hardening
 `/api/onboarding` SHALL accept only `GET` and `POST` and SHALL answer any other method with 405. Request bodies SHALL be capped at 4 KB, with the connection destroyed once the cap is exceeded. Only known keys with known value shapes SHALL be applied; unrecognised keys SHALL be dropped silently rather than rejected. No response SHALL include a filesystem path. A write failure SHALL return 200 with the in-memory merged state rather than an error status.
 
-A `POST` SHALL be refused before its body is read or any state is written when it could have come from another site: a media type other than `application/json` SHALL be answered with 415; a `Sec-Fetch-Site` header other than `same-origin`, or an `Origin` header other than `http://` followed by the request's `Host`, SHALL be answered with 403. A request carrying neither header SHALL be judged on its media type alone.
+A `POST` whose media type is not `application/json` SHALL be answered with 415 before its body is read or any state is written. A cross-site `POST` never reaches this endpoint: the local server answers it with 403 first (visualizer, "Cross-site requests refused by the local server"). A request carrying neither `Sec-Fetch-Site` nor `Origin` SHALL be judged on its media type alone. A refused request's body SHALL NOT be read: the connection SHALL be closed once the response is sent.
 
 #### Scenario: Disallowed method
 - GIVEN a running local server
@@ -46,3 +46,8 @@ A `POST` SHALL be refused before its body is read or any state is written when i
 - GIVEN a running local server on `127.0.0.1:<port>`
 - WHEN the dashboard posts a JSON patch with `Origin: http://127.0.0.1:<port>` and `Sec-Fetch-Site: same-origin`
 - THEN the response is 200 carrying the merged state
+
+#### Scenario: Refused upload not drained
+- GIVEN a running local server
+- WHEN a client posts a large `text/plain` body and keeps sending after the 415
+- THEN the server closes the connection instead of reading the rest of the body
