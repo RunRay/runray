@@ -2,7 +2,7 @@ import { RULE_META } from '@runray/core/insights-meta';
 import type { Run, Span } from '@runray/schema';
 import { useMemo, useState } from 'react';
 import type { RunFilter } from '../lib/filter-runs';
-import { formatTokensCompact, formatUSD } from '../lib/format';
+import { formatUSD } from '../lib/format';
 import {
   type RuleGroup,
   type SavingsSummary,
@@ -10,6 +10,7 @@ import {
   type WasteEntry,
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
+import { AT_API_PRICES } from '../lib/unit';
 import { useAppStore } from '../store';
 import { CoverageBanner, CoverageCaveat } from './CoverageNotices';
 import { PricingProvenance } from './PricingProvenance';
@@ -22,7 +23,9 @@ import { SeverityPill } from './SeverityPill';
  * undifferentiated "save $X"; the top three recommended changes with
  * humanized labels, per-change dollars, and evidence that expands IN
  * PLACE (the timeline deep link stays as a secondary action). When no
- * rule fired, the panel says so out loud instead of hiding.
+ * rule fired, the panel says so out loud instead of hiding. Dollars in both
+ * units (E6): the estimates are price differences, so token mode labels them
+ * "at API prices" and adds the burned share instead of inventing a count.
  */
 export function SavingsPanel({
   runs,
@@ -32,6 +35,7 @@ export function SavingsPanel({
   filter: RunFilter;
 }) {
   const summary: SavingsSummary = useMemo(() => savingsSummary(runs), [runs]);
+  const tokensLead = useAppStore((s) => s.unit) === 'tokens';
   const period =
     filter.periodDays === null ? 'all time' : `last ${filter.periodDays} days`;
   const ruleCount = Object.keys(RULE_META).length;
@@ -65,17 +69,15 @@ export function SavingsPanel({
             className="mt-3 flex flex-wrap items-end gap-x-10 gap-y-3"
           >
             <div>
-              <p className="flex items-baseline gap-1.5 font-display text-[30px] font-semibold leading-[1.05] text-heat-2">
+              <p className="flex flex-wrap items-baseline gap-x-1.5 font-display text-[30px] font-semibold leading-[1.05] text-heat-2">
                 <CoverageCaveat runs={runs} />
-                {summary.burnedTokens > 0 ? (
-                  <>
-                    <span>{formatTokensCompact(summary.burnedTokens)}</span>
-                    <span className="font-mono text-body font-normal text-text-dim">
-                      ({formatUSD(summary.burnedUSD)})
-                    </span>
-                  </>
-                ) : (
-                  formatUSD(summary.burnedUSD)
+                {formatUSD(summary.burnedUSD)}
+                {tokensLead && (
+                  <span className="font-sans text-label font-normal text-text-dim">
+                    {AT_API_PRICES}
+                    {summary.burnedShare > 0 &&
+                      ` · ${(summary.burnedShare * 100).toFixed(1)}% of spend`}
+                  </span>
                 )}
               </p>
               <p className="mt-1 text-label text-text-dim">
@@ -83,19 +85,13 @@ export function SavingsPanel({
               </p>
             </div>
             <div>
-              <p className="flex items-baseline gap-1.5 font-display text-[30px] font-semibold leading-[1.05] text-cache-savings">
+              <p className="flex flex-wrap items-baseline gap-x-1.5 font-display text-[30px] font-semibold leading-[1.05] text-cache-savings">
                 <CoverageCaveat runs={runs} />
-                {summary.opportunityTokens > 0 ? (
-                  <>
-                    <span>
-                      {formatTokensCompact(summary.opportunityTokens)}
-                    </span>
-                    <span className="font-mono text-body font-normal text-text-dim">
-                      ({formatUSD(summary.opportunityUSD)})
-                    </span>
-                  </>
-                ) : (
-                  formatUSD(summary.opportunityUSD)
+                {formatUSD(summary.opportunityUSD)}
+                {tokensLead && (
+                  <span className="font-sans text-label font-normal text-text-dim">
+                    {AT_API_PRICES}
+                  </span>
                 )}
               </p>
               <p className="mt-1 text-label text-text-dim">

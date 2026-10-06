@@ -8,10 +8,10 @@ import {
   useState,
 } from 'react';
 import { projectKey, type RunFilter } from '../lib/filter-runs';
-import { formatUSD } from '../lib/format';
 import { fuzzyScore } from '../lib/fuzzy';
 import { DASHBOARD_ROUTE, type Route, SESSIONS_ROUTE } from '../lib/router';
 import type { Theme } from '../lib/theme';
+import { type DisplayUnit, formatFigure } from '../lib/unit';
 import { useAppStore } from '../store';
 
 /**
@@ -32,6 +32,7 @@ type Group =
   | 'Compare'
   | 'Filter'
   | 'Theme'
+  | 'Units'
   | 'Layout';
 
 interface Command {
@@ -66,8 +67,14 @@ function buildCommands(
   toggleTheme: () => void,
   isLive?: boolean,
   onClose?: () => void,
+  unit: DisplayUnit = 'usd',
 ): Command[] {
   const cmds: Command[] = [];
+  const figureOf = (run: Run) =>
+    `${formatFigure(unit, {
+      usd: run.totals.costUSD.total,
+      tokens: run.totals.tokens.total,
+    })}${unit === 'tokens' ? ' tokens' : ''}`;
   const nav = (route: Route) => () => {
     useAppStore.getState().navigateTo(route);
   };
@@ -146,7 +153,7 @@ function buildCommands(
     const hint = [
       project === '—' ? null : project,
       run.source.tool,
-      formatUSD(run.totals.costUSD.total),
+      figureOf(run),
     ]
       .filter(Boolean)
       .join(' · ');
@@ -170,7 +177,7 @@ function buildCommands(
         id: `compare:${run.id}`,
         group: 'Compare',
         label: `Compare active run with: ${label}`,
-        hint: formatUSD(run.totals.costUSD.total),
+        hint: figureOf(run),
         keywords: `diff compare versus vs ${run.id}`,
         perform: nav({ view: 'diff', runA: activeRunId, runB: run.id }),
       });
@@ -179,7 +186,7 @@ function buildCommands(
         id: `compare:${run.id}`,
         group: 'Compare',
         label: `Compare from: ${label}`,
-        hint: formatUSD(run.totals.costUSD.total),
+        hint: figureOf(run),
         keywords: `diff compare versus vs ${run.id}`,
         perform: () => {
           useAppStore.getState().setDiffAnchor(run.id);
@@ -247,6 +254,15 @@ function buildCommands(
     perform: toggleTheme,
   });
   cmds.push({
+    id: 'units:toggle',
+    group: 'Units',
+    label: unit === 'tokens' ? 'Lead with dollars' : 'Lead with tokens',
+    keywords:
+      'unit units usd dollars cost tokens quota subscription limit display',
+    perform: () =>
+      useAppStore.getState().setUnit(unit === 'tokens' ? 'usd' : 'tokens'),
+  });
+  cmds.push({
     id: 'layout:nav',
     group: 'Layout',
     label: 'Collapse or expand the navigation rail',
@@ -266,6 +282,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   const clearFilter = useAppStore((s) => s.clearFilter);
   const theme = useAppStore((s) => s.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
+  const unit = useAppStore((s) => s.unit);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -286,6 +303,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         toggleTheme,
         data.status === 'ready' && data.live,
         onClose,
+        unit,
       ),
     [
       runs,
@@ -297,6 +315,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       toggleTheme,
       data,
       onClose,
+      unit,
     ],
   );
 

@@ -22,7 +22,7 @@ export const HINT_COPY: Record<HintKey, string> = {
     'Re-price this session against another model. Calculations stay on this machine.',
   diff: 'Two runs of the same task? Compare them with: runray diff <runA> <runB>',
   'limit-mode':
-    'Shows token usage and percentage of your weekly limit instead of dollars.',
+    'Shows how much of your reference window this period used, in the unit beside %win. An estimate, not a provider quota.',
   coverage:
     'Unpriced models show token counts without dollar figures. Costs are never guessed.',
   redact:

@@ -1,8 +1,9 @@
 import type { Run } from '@runray/schema';
 import { useEffect, useRef } from 'react';
-import { formatDateTime, formatUSD } from '../lib/format';
+import { formatDateTime } from '../lib/format';
 import { toHash } from '../lib/router';
 import { errorPill } from '../lib/triage';
+import { formatFigure } from '../lib/unit';
 import { useAppStore } from '../store';
 
 /**
@@ -11,6 +12,7 @@ import { useAppStore } from '../store';
  */
 export function SessionsPane({ runs }: { runs: Run[] }) {
   const route = useAppStore((s) => s.route);
+  const unit = useAppStore((s) => s.unit);
   const activeRunId = 'runId' in route ? route.runId : null;
 
   // A deep link (dashboard evidence, palette, shared hash) can land on a
@@ -56,7 +58,11 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
                     {run.title ?? run.project?.name ?? run.source.tool}
                   </span>
                   <span className="shrink-0 font-mono text-label text-text-dim">
-                    {formatUSD(run.totals.costUSD.total)}
+                    {formatFigure(unit, {
+                      usd: run.totals.costUSD.total,
+                      tokens: run.totals.tokens.total,
+                    })}
+                    {unit === 'tokens' && ' tok'}
                   </span>
                 </span>
                 <span className="mt-0.5 flex items-baseline justify-between gap-2 text-label text-text-faint">

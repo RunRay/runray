@@ -8,6 +8,7 @@ import {
 import { type Route, type RunViewName, toHash } from '../lib/router';
 import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
+import { AT_API_PRICES } from '../lib/unit';
 import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
 import { CostView } from './CostView';
@@ -29,6 +30,8 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   // are upper bounds that never add to it
   const wasted = run.totals.costUSD.wastedEstimate;
   const opportunity = runWaste(run).opportunityUSD;
+  // token mode (E6): tokens already lead the bar; the dollars say what they are
+  const tokensLead = useAppStore((s) => s.unit) === 'tokens';
 
   return (
     <div className="flex h-full min-w-0 flex-col min-h-0">
@@ -66,7 +69,9 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
             </p>
           </div>
           <div>
-            <p className="micro-label text-text-faint">Cost (USD)</p>
+            <p className="micro-label text-text-faint">
+              {tokensLead ? `Cost ${AT_API_PRICES}` : 'Cost (USD)'}
+            </p>
             <p className="font-mono text-body font-semibold text-on-surface">
               {run.totals.costUSD.total > 0
                 ? formatUSD(run.totals.costUSD.total)

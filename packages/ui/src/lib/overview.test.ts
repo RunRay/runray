@@ -4,8 +4,10 @@ import {
   aggregateTotals,
   cacheAggregate,
   errorRate,
+  largestCallTokens,
   mcpShare,
   mostExpensiveCall,
+  runTokensByModel,
   savingsSummary,
   sessionCostStats,
   spendByDay,
@@ -536,5 +538,204 @@ describe('topTools + mcpShare (E5)', () => {
     expect(share.costUSD).toBeCloseTo(1, 6);
     expect(share.share).toBeCloseTo(0.1, 6);
     expect(share.topServer).toBe('srv');
+  });
+});
+
+describe('display unit (E6)', () => {
+  const callSpan = (
+    id: string,
+    model: string,
+    tokens: {
+      input: number;
+      output: number;
+      cacheRead: number;
+      cacheWrite: number;
+      reasoning?: number;
+    },
+    costUSD: number,
+  ): Span => ({
+    id,
+    parentId: null,
+    kind: 'llm_call',
+    name: id,
+    status: 'ok',
+    startedAt: '2026-07-07T10:00:00',
+    depth: 1,
+    llm: {
+      provider: 'anthropic',
+      model,
+      tokens,
+      costUSD,
+      costSource: 'computed',
+    },
+    attributes: {},
+    provenance: { file: 'x' },
+  });
+
+  it('counts every token class per model, reasoning included', () => {
+    const run = stubRun({
+      id: 'r1',
+      spans: [
+        callSpan(
+          'a',
+          'opus',
+          { input: 1, output: 2, cacheRead: 30, cacheWrite: 4, reasoning: 5 },
+          1,
+        ),
+        callSpan(
+          'b',
+          'haiku',
+          { input: 10, output: 0, cacheRead: 0, cacheWrite: 0 },
+          0.1,
+        ),
+        callSpan(
+          'c',
+          'opus',
+          { input: 0, output: 8, cacheRead: 0, cacheWrite: 0 },
+          1,
+        ),
+      ],
+    });
+    expect(runTokensByModel(run)).toEqual({ opus: 50, haiku: 10 });
+    expect(largestCallTokens([run])).toBe(42);
+    expect(largestCallTokens([])).toBe(0);
+  });
+
+  it('ranks by the display unit, so the top-N cut is the top N of what shows', () => {
+    // cheap-but-heavy: alpha costs least and carries the most tokens
+    const runs = [
+      stubRun({ id: 'a', project: 'alpha', cost: 1, tokens: 900 }),
+      stubRun({ id: 'b', project: 'beta', cost: 5, tokens: 100 }),
+      stubRun({ id: 'c', project: 'gamma', cost: 3, tokens: 50 }),
+    ];
+    expect(topProjects(runs, 2).map((p) => p.name)).toEqual(['beta', 'gamma']);
+    expect(topProjects(runs, 2, 'tokens').map((p) => p.name)).toEqual([
+      'alpha',
+      'beta',
+    ]);
+    expect(topSources(runs, 5, 'tokens')[0]?.tokens).toBe(1050);
+
+    const modelRuns = [
+      stubRun({
+        id: 'm',
+        byModel: { opus: 5, haiku: 1 },
+        spans: [
+          callSpan(
+            'o',
+            'opus',
+            { input: 10, output: 0, cacheRead: 0, cacheWrite: 0 },
+            5,
+          ),
+          callSpan(
+            'h',
+            'haiku',
+            { input: 0, output: 0, cacheRead: 900, cacheWrite: 0 },
+            1,
+          ),
+        ],
+      }),
+    ];
+    expect(topModels(modelRuns).map((m) => m.name)).toEqual(['opus', 'haiku']);
+    expect(topModels(modelRuns, 5, 'tokens').map((m) => m.name)).toEqual([
+      'haiku',
+      'opus',
+    ]);
+  });
+
+  it('carries tokens per day, per model and per source beside the dollars', () => {
+    const days = spendByDay([
+      stubRun({
+        id: 'd1',
+        startedAt: '2026-07-07T10:00:00',
+        cost: 2,
+        tokens: 60,
+        source: 'opencode',
+        byModel: { opus: 2 },
+        spans: [
+          callSpan(
+            'x',
+            'opus',
+            { input: 50, output: 10, cacheRead: 0, cacheWrite: 0 },
+            2,
+          ),
+        ],
+      }),
+      stubRun({
+        id: 'd2',
+        startedAt: '2026-07-09T10:00:00',
+        cost: 1,
+        tokens: 7,
+      }),
+    ]);
+    expect(days.map((d) => d.tokens)).toEqual([60, 0, 7]);
+    expect(days[0]?.byModelTokens).toEqual({ opus: 60 });
+    expect(days[0]?.bySourceTokens).toEqual({ opencode: 60 });
+    // the gap day has empty breakdowns of its own, not a shared object
+    expect(days[1]?.byModelTokens).toEqual({});
+    expect(days[1]?.byModelTokens).not.toBe(days[0]?.byModelTokens);
+  });
+
+  it('keeps savings in dollars and states the burned share instead of a token count', () => {
+    const s = savingsSummary([
+      stubRun({ id: 'r1', cost: 8, wasted: 2, tokens: 1000 }),
+      stubRun({ id: 'r2', cost: 0, wasted: 0, tokens: 500 }),
+    ]);
+    expect(s.burnedUSD).toBe(2);
+    expect(s.burnedShare).toBeCloseTo(0.25, 6);
+    expect(s).not.toHaveProperty('burnedTokens');
+    expect(s).not.toHaveProperty('opportunityTokens');
+    expect(savingsSummary([stubRun({ id: 'z', tokens: 9 })]).burnedShare).toBe(
+      0,
+    );
+  });
+
+  it('ranks tools and takes the MCP share in attributed tokens', () => {
+    const tool = (id: string, name: string, mcpServer?: string): Span => ({
+      id,
+      parentId: id.startsWith('a') ? 'la' : 'lb',
+      kind: mcpServer === undefined ? 'tool_call' : 'mcp_call',
+      name,
+      status: 'ok',
+      startedAt: '2026-07-07T10:00:01Z',
+      depth: 1,
+      attributes: {},
+      provenance: { file: 'x' },
+      tool: {
+        name,
+        isError: false,
+        ...(mcpServer === undefined ? {} : { mcpServer }),
+      },
+    });
+    // bash sits under a pricey, light call; the MCP tool under a cheap one
+    // that read a large cached context
+    const run = stubRun({
+      id: 'r1',
+      spans: [
+        callSpan(
+          'la',
+          'opus',
+          { input: 100, output: 0, cacheRead: 0, cacheWrite: 0 },
+          9,
+        ),
+        tool('a1', 'bash'),
+        callSpan(
+          'lb',
+          'haiku',
+          { input: 0, output: 0, cacheRead: 900, cacheWrite: 0 },
+          1,
+        ),
+        tool('b1', 'ctx7_query', 'ctx7'),
+      ],
+    });
+    expect(topTools([run]).map((t) => t.name)).toEqual(['bash', 'ctx7_query']);
+    const byTokens = topTools([run], 8, 'tokens');
+    expect(byTokens.map((t) => t.name)).toEqual(['ctx7_query', 'bash']);
+    expect(byTokens[0]?.tokens).toBe(900);
+
+    expect(mcpShare([run]).share).toBeCloseTo(0.1, 6);
+    const tokenShare = mcpShare([run], 'tokens');
+    expect(tokenShare.share).toBeCloseTo(0.9, 6);
+    expect(tokenShare.tokens).toBe(900);
+    expect(tokenShare.costUSD).toBeCloseTo(1, 6);
   });
 });

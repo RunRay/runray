@@ -1,8 +1,9 @@
 import type { Run } from '@runray/schema';
 import { useMemo } from 'react';
-import { formatDuration, formatUSD } from '../lib/format';
+import { formatDuration } from '../lib/format';
 import { mcpShare, topTools } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
+import { formatFigure } from '../lib/unit';
 import { useAppStore } from '../store';
 
 /**
@@ -10,7 +11,8 @@ import { useAppStore } from '../store';
  * llm cost — the equal-split turn attribution is a heuristic and the hint
  * copy says so; the orchestration remainder is excluded. The MCP-share
  * callout answers "are my MCP servers eating my limit"; rows filter the
- * visible runs (clearable Tool chip in the top bar).
+ * visible runs (clearable Tool chip in the top bar). In token mode (E6) the
+ * same split ranks attributed tokens, cache included.
  */
 export function ToolRankCard({
   runs,
@@ -19,12 +21,16 @@ export function ToolRankCard({
   runs: Run[];
   activeTool: string | null;
 }) {
-  const tools = useMemo(() => topTools(runs), [runs]);
+  const unit = useAppStore((s) => s.unit);
+  const tools = useMemo(() => topTools(runs, 8, unit), [runs, unit]);
   // share is computed over the full leaderboard, not the displayed top-N
-  const share = useMemo(() => mcpShare(runs), [runs]);
+  const share = useMemo(() => mcpShare(runs, unit), [runs, unit]);
   const setFilter = useAppStore((s) => s.setFilter);
   if (tools.length === 0) return null;
-  const maxCost = tools[0]?.costUSD ?? 0;
+  const tokensLead = unit === 'tokens';
+  const lead = (t: { costUSD: number; tokens: number }) =>
+    tokensLead ? t.tokens : t.costUSD;
+  const max = tools[0] === undefined ? 0 : lead(tools[0]);
 
   return (
     <section
@@ -35,7 +41,8 @@ export function ToolRankCard({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-detail font-medium text-text">By tool</h3>
         <p className="micro-label text-text-faint">
-          attributed llm cost (equal split per turn, orchestration excluded)
+          attributed llm {tokensLead ? 'tokens' : 'cost'} (equal split per turn,
+          orchestration excluded)
         </p>
       </div>
       <ul className="mt-2">
@@ -57,7 +64,7 @@ export function ToolRankCard({
                     aria-hidden
                     className="absolute inset-y-0.5 left-0 rounded-sm bg-brass/15"
                     style={{
-                      width: `${maxCost > 0 ? (tool.costUSD / maxCost) * 100 : 0}%`,
+                      width: `${max > 0 ? (lead(tool) / max) * 100 : 0}%`,
                     }}
                   />
                   <span className="relative flex min-w-0 items-baseline gap-2 px-1">
@@ -78,20 +85,25 @@ export function ToolRankCard({
                   p95 {formatDuration(tool.p95Ms)}
                 </span>
                 <span className="whitespace-nowrap font-mono text-label text-text">
-                  {formatUSD(tool.costUSD)}
+                  {formatFigure(unit, {
+                    usd: tool.costUSD,
+                    tokens: tool.tokens,
+                  })}
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-      {share.costUSD > 0 && (
+      {lead(share) > 0 && (
         <p className="mt-2 border-t border-border-slate pt-2 text-label text-text-dim">
           MCP servers:{' '}
           <span className="font-mono text-text">
-            {formatUSD(share.costUSD)}
+            {formatFigure(unit, { usd: share.costUSD, tokens: share.tokens })}
+            {tokensLead && ' tokens'}
           </span>{' '}
-          · {(share.share * 100).toFixed(0)}% of attributed spend
+          · {(share.share * 100).toFixed(0)}% of attributed{' '}
+          {tokensLead ? 'tokens' : 'spend'}
           {share.topServer !== null && (
             <>
               {' '}

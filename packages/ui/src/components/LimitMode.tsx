@@ -17,7 +17,9 @@ import { ContextualHint } from './ContextualHint';
  * this is a user-configured window, never a provider quota; percentages
  * appear in exactly three slots (overview statement, Wasted KPI, run Cost
  * hero) so the framing never doubles every number's visual weight. Window
- * math anchors to the newest run — exports render identical forever.
+ * math anchors to the newest run — exports render identical forever. The
+ * percentages follow the display unit (E6): dollars against the dollar
+ * budget, tokens against the token budget.
  */
 
 export interface LimitView {
@@ -49,11 +51,12 @@ export function useLimitView(): LimitView | null {
 /** Secondary statement line (slot 1): budget-aware copy, never X-of-itself. */
 export function LimitStatementLine() {
   const view = useLimitView();
+  const unit = useAppStore((s) => s.unit);
   if (view === null) return null;
   const { cfg, spend } = view;
 
   let textContent: React.ReactNode = null;
-  if ((cfg.budgetUSD ?? 0) > 0) {
+  if (unit === 'usd' && (cfg.budgetUSD ?? 0) > 0) {
     const share = limitShare(spend.costUSD, spend, cfg, 'usd');
     textContent = (
       <span className="text-label text-text-dim">
@@ -62,6 +65,14 @@ export function LimitStatementLine() {
         {' of '}
         <span className="font-mono">{formatUSD(cfg.budgetUSD ?? 0)}</span>
         {share !== undefined && <> (≈{Math.round(share * 100)}% used, est.)</>}
+      </span>
+    );
+  } else if (unit === 'usd') {
+    // no dollar budget: the window's own spend, never framed against itself
+    textContent = (
+      <span className="text-label text-text-dim">
+        <span className="font-mono">{formatUSD(spend.costUSD)}</span> spent this
+        window
       </span>
     );
   } else if ((cfg.budgetTokens ?? 0) > 0) {
@@ -96,11 +107,24 @@ export function LimitStatementLine() {
   );
 }
 
-/** Suffix for one dollar figure (slots 2–3): "≈N% of window, est." */
-export function LimitSuffix({ valueUSD }: { valueUSD: number }) {
+/**
+ * Suffix for one figure (slots 2–3): "≈N% of window, est.", in the display
+ * unit — callers pass both forms of the figure.
+ */
+export function LimitSuffix({
+  valueUSD,
+  tokens,
+}: {
+  valueUSD: number;
+  tokens: number;
+}) {
   const view = useLimitView();
+  const unit = useAppStore((s) => s.unit);
   if (view === null) return null;
-  const share = limitShare(valueUSD, view.spend, view.cfg);
+  const share =
+    unit === 'tokens'
+      ? limitShare(tokens, view.spend, view.cfg, 'tokens')
+      : limitShare(valueUSD, view.spend, view.cfg, 'usd');
   if (share === undefined) return null;
   return (
     <span className="font-sans text-label font-normal text-text-dim">
@@ -140,7 +164,7 @@ export function LimitModeToggle() {
         aria-expanded={open}
         aria-label="Limit window display mode"
         aria-pressed={configured && limit.enabled}
-        title="Show costs as % of a reference window (est.)"
+        title="Show figures as % of a reference window (est.)"
         className={`rounded-control border px-2 py-0.5 font-mono text-label transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass active:bg-bg-deep-gray ${
           configured && limit.enabled
             ? 'border-brass/60 bg-brass/15 text-text'
@@ -154,7 +178,7 @@ export function LimitModeToggle() {
           ref={popoverRef}
           role="dialog"
           aria-label="Limit window settings"
-          className="absolute right-0 top-full z-50 mt-1 w-64 rounded border border-border-slate bg-surface-container-low p-3 shadow-card"
+          className="absolute right-0 top-full z-50 mt-1 w-72 rounded border border-border-slate bg-surface-container-low p-3 shadow-card"
         >
           <label className="flex items-center justify-between gap-2 text-label text-text">
             show % of window
@@ -170,7 +194,7 @@ export function LimitModeToggle() {
             A user-configured reference window. This is an estimate, not an
             official provider quota.
           </p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-label text-text-dim">
+          <div className="mt-2 grid grid-cols-3 gap-2 text-label text-text-dim">
             <label className="flex flex-col gap-0.5">
               days
               <input
@@ -213,6 +237,8 @@ export function LimitModeToggle() {
                 className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
               />
             </label>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-label text-text-dim">
             <label className="flex flex-col gap-0.5">
               budget $ (opt.)
               <input
@@ -226,7 +252,30 @@ export function LimitModeToggle() {
                 className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
               />
             </label>
+            <label className="flex flex-col gap-0.5">
+              budget tokens (opt.)
+              <input
+                type="number"
+                min={0}
+                step={1_000_000}
+                value={draft.budgetTokens ?? ''}
+                onChange={(e) => {
+                  const v = Math.round(Number(e.target.value));
+                  patch({ budgetTokens: v > 0 ? v : undefined });
+                }}
+                className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
+              />
+              {(draft.budgetTokens ?? 0) > 0 && (
+                <span className="font-mono text-text-faint">
+                  = {formatTokensCompact(draft.budgetTokens ?? 0)}
+                </span>
+              )}
+            </label>
           </div>
+          <p className="mt-2 text-label text-text-faint">
+            Percentages follow the unit beside %win: USD against the dollar
+            budget, tokens against the token budget.
+          </p>
           <div className="mt-2 flex justify-between">
             <button
               type="button"

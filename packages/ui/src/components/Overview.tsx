@@ -16,6 +16,7 @@ import {
   cacheAggregate,
   type DaySpend,
   errorRate,
+  largestCallTokens,
   mostExpensiveCall,
   type RuleGroup,
   sessionCostStats,
@@ -27,6 +28,7 @@ import {
   worstToolError,
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
+import { AT_API_PRICES, type DisplayUnit } from '../lib/unit';
 import { useAppStore } from '../store';
 import { CacheDial } from './CacheDial';
 import { CoverageCaveat } from './CoverageNotices';
@@ -62,12 +64,16 @@ export function Overview({
   allRuns: Run[];
   filter: RunFilter;
 }) {
+  // the display unit (E6) picks the lead figure everywhere on this page;
+  // estimates that only exist in dollars stay in dollars, "at API prices"
+  const unit = useAppStore((s) => s.unit);
+  const tokensLead = unit === 'tokens';
   const totals = useMemo(() => aggregateTotals(runs), [runs]);
   const days = useMemo(() => spendByDay(runs), [runs]);
-  const projects = useMemo(() => topProjects(runs), [runs]);
-  const models = useMemo(() => topModels(runs), [runs]);
-  const chartModels = useMemo(() => topModels(runs, 8), [runs]);
-  const sources = useMemo(() => topSources(runs), [runs]);
+  const projects = useMemo(() => topProjects(runs, 5, unit), [runs, unit]);
+  const models = useMemo(() => topModels(runs, 5, unit), [runs, unit]);
+  const chartModels = useMemo(() => topModels(runs, 8, unit), [runs, unit]);
+  const sources = useMemo(() => topSources(runs, 5, unit), [runs, unit]);
   // One color assignment over ALL models so a model's rank dot and its stacked
   // chart segment always match (both index into the same sorted set).
   const allModelNames = useMemo(
@@ -87,12 +93,16 @@ export function Overview({
   const cache = useMemo(() => cacheAggregate(runs), [runs]);
   const errors = useMemo(() => errorRate(runs), [runs]);
   const costStats = useMemo(() => sessionCostStats(runs), [runs]);
-  const trend = useMemo(() => spendTrend(allRuns, filter), [allRuns, filter]);
+  const trend = useMemo(
+    () => spendTrend(allRuns, filter, unit),
+    [allRuns, filter, unit],
+  );
   const waste = useMemo(() => wasteByRule(runs), [runs]);
   const worstErr = useMemo(() => worstToolError(runs), [runs]);
   const priciest = useMemo(() => mostExpensiveCall(runs), [runs]);
+  const largestCall = useMemo(() => largestCallTokens(runs), [runs]);
   const setFilter = useAppStore((s) => s.setFilter);
-  const [metricMode, setMetricMode] = useState<'tokens' | 'costUSD'>('tokens');
+  const avgTokens = Math.round(totals.tokens / (totals.sessions || 1));
 
   const wastedShare =
     totals.costUSD > 0 ? (totals.wastedUSD / totals.costUSD) * 100 : 0;
@@ -106,10 +116,16 @@ export function Overview({
     worstErr !== null
       ? `worst: ${worstErr.name} failed ${worstErr.count}×`
       : 'no tool errors';
-  const avgNote =
-    priciest > 0
+  const sessionsNote = `${totals.sessions} ${totals.sessions === 1 ? 'session' : 'sessions'}`;
+  const avgNote = tokensLead
+    ? largestCall > 0
+      ? `largest single call ${formatTokensCompact(largestCall)} tokens`
+      : sessionsNote
+    : priciest > 0
       ? `priciest single call ${formatUSD(priciest)}`
-      : `${totals.sessions} ${totals.sessions === 1 ? 'session' : 'sessions'}`;
+      : sessionsNote;
+  const totalUSD =
+    totals.costUSD > 0 ? formatUSD(totals.costUSD) : 'Local / $0.00';
   const parseWarnings = useMemo(
     () => runs.reduce((n, r) => n + (r.warnings?.length ?? 0), 0),
     [runs],
@@ -140,22 +156,53 @@ export function Overview({
               Executive Overview · {periodLabel(filter)} · {totals.sessions}{' '}
               {totals.sessions === 1 ? 'session' : 'sessions'}
             </p>
-            <div className="mt-2 flex flex-wrap items-baseline gap-4">
-              <span className="font-display text-hero font-semibold text-text">
-                {formatTokensCompact(totals.tokens)}{' '}
-                <span className="text-body font-normal text-text-dim">
-                  tokens
-                </span>
-              </span>
-              <span className="font-mono text-[24px] font-semibold text-brand-bright">
-                {totals.costUSD > 0
-                  ? formatUSD(totals.costUSD)
-                  : 'Local / $0.00'}
-              </span>
+            {/* keyed by unit: a flip settles the pair in again (unit-swap),
+                so it reads as a change of unit, not of the numbers */}
+            <div
+              key={unit}
+              className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 motion-safe:animate-[unit-swap_240ms_var(--ease-out)_both]"
+            >
+              {tokensLead ? (
+                <>
+                  <span className="font-display text-hero font-semibold text-text">
+                    {formatTokensCompact(totals.tokens)}{' '}
+                    <span className="text-body font-normal text-text-dim">
+                      tokens
+                    </span>
+                  </span>
+                  <span className="font-mono text-[24px] font-semibold text-brand-bright">
+                    {totalUSD}
+                    {totals.costUSD > 0 && (
+                      // a real space, not just margin: the accessible name
+                      // must not read "$484.06at API prices"
+                      <span className="font-sans text-label font-normal text-text-dim">
+                        {' '}
+                        {AT_API_PRICES}
+                      </span>
+                    )}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-display text-hero font-semibold text-text">
+                    {totalUSD}
+                  </span>
+                  <span className="font-mono text-[24px] font-semibold text-brand-bright">
+                    {formatTokensCompact(totals.tokens)}{' '}
+                    <span className="font-sans text-body font-normal text-text-dim">
+                      tokens
+                    </span>
+                  </span>
+                </>
+              )}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-body text-text-dim">
               {trend !== null && (
-                <TrendChip trend={trend} periodDays={filter.periodDays} />
+                <TrendChip
+                  trend={trend}
+                  periodDays={filter.periodDays}
+                  unit={unit}
+                />
               )}
               <LimitStatementLine />
               {(totals.linesAdded > 0 || totals.linesRemoved > 0) && (
@@ -167,19 +214,27 @@ export function Overview({
             </div>
           </div>
 
-          <BurnLine days={days} />
+          <BurnLine days={days} unit={unit} />
         </div>
 
         {/* KPI indicators bar */}
         <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border-slate/60 pt-4 lg:grid-cols-4">
-          <KpiCard label="Wasted Spend" delayMs={40}>
-            <p className="flex items-baseline gap-2 font-display text-[24px] font-semibold leading-[1.1] text-heat-2">
+          <KpiCard
+            label={tokensLead ? 'Wasted share' : 'Wasted Spend'}
+            delayMs={40}
+          >
+            {/* waste is a dollar estimate (no token count behind cache or
+                model-choice findings): token mode leads with its share and
+                names the dollars for what they are */}
+            <p className="flex flex-wrap items-baseline gap-x-2 font-display text-[24px] font-semibold leading-[1.1] text-heat-2">
               <CoverageCaveat runs={runs} />
-              {totals.wastedUSD > 0
-                ? formatUSD(totals.wastedUSD)
-                : `${wastedShare.toFixed(1)}%`}
+              {tokensLead || totals.wastedUSD <= 0
+                ? `${wastedShare.toFixed(1)}%`
+                : formatUSD(totals.wastedUSD)}
               <span className="font-sans text-label font-normal text-text-dim">
-                ({wastedShare.toFixed(1)}%)
+                {tokensLead
+                  ? `${formatUSD(totals.wastedUSD)} ${AT_API_PRICES}`
+                  : `(${wastedShare.toFixed(1)}%)`}
               </span>
             </p>
             <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-2">
@@ -227,11 +282,16 @@ export function Overview({
 
           <KpiCard label="Avg Session" delayMs={190}>
             <p className="flex items-baseline gap-2 font-display text-[24px] font-semibold leading-[1.1] text-text">
-              {formatTokensCompact(
-                Math.round(totals.tokens / (totals.sessions || 1)),
-              )}
-              <span className="font-mono text-label font-normal text-text-dim">
-                {formatUSD(costStats.averageUSD)}
+              {tokensLead
+                ? formatTokensCompact(avgTokens)
+                : formatUSD(costStats.averageUSD)}
+              <span
+                className="font-mono text-label font-normal text-text-dim"
+                title={tokensLead ? AT_API_PRICES : undefined}
+              >
+                {tokensLead
+                  ? formatUSD(costStats.averageUSD)
+                  : `${formatTokensCompact(avgTokens)} tokens`}
               </span>
             </p>
             <p
@@ -251,44 +311,14 @@ export function Overview({
 
       {/* STREFA 3: SKONSOLIDOWANA ANALITYKA (Z PRZEŁĄCZNIKIEM METRYKI) */}
       <section aria-label="Struktura zużycia zasobów">
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-body font-semibold text-text">
-              Resource Breakdown
-            </h2>
-            <p className="micro-label text-text-faint">
-              Click a project, model, or source to filter the sessions below
-            </p>
-          </div>
-          <fieldset
-            aria-label="Metric view"
-            className="m-0 inline-flex overflow-hidden rounded border border-border-slate bg-surface-container-low p-0"
-          >
-            <button
-              type="button"
-              aria-pressed={metricMode === 'tokens'}
-              onClick={() => setMetricMode('tokens')}
-              className={`px-3 py-1 text-label transition-colors duration-150 ease-out ${
-                metricMode === 'tokens'
-                  ? 'bg-surface font-medium text-text'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              Tokens
-            </button>
-            <button
-              type="button"
-              aria-pressed={metricMode === 'costUSD'}
-              onClick={() => setMetricMode('costUSD')}
-              className={`border-l border-border-slate px-3 py-1 text-label transition-colors duration-150 ease-out ${
-                metricMode === 'costUSD'
-                  ? 'bg-surface font-medium text-text'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              Spend ($)
-            </button>
-          </fieldset>
+        <div className="mb-3">
+          <h2 className="font-display text-body font-semibold text-text">
+            Resource Breakdown
+          </h2>
+          <p className="micro-label text-text-faint">
+            {tokensLead ? 'Tokens' : 'Spend'} by project, model, and source ·
+            click one to filter the sessions below
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -298,7 +328,7 @@ export function Overview({
             delayMs={40}
           >
             <RankList
-              metricMode={metricMode}
+              unit={unit}
               entries={projects.map((p) => ({
                 key: p.name,
                 label: p.name,
@@ -318,7 +348,7 @@ export function Overview({
             delayMs={90}
           >
             <RankList
-              metricMode={metricMode}
+              unit={unit}
               entries={models.map((m) => ({
                 key: m.name,
                 label: m.name,
@@ -339,7 +369,7 @@ export function Overview({
             delayMs={140}
           >
             <RankList
-              metricMode={metricMode}
+              unit={unit}
               entries={sources.map((s) => ({
                 key: s.name,
                 label: s.name,
@@ -362,6 +392,7 @@ export function Overview({
 
       {/* STREFA 4: TREND CZASOWY W SPEND BY DAY */}
       <SpendSection
+        unit={unit}
         days={days}
         modelKeys={chartModels.map((m) => m.name)}
         modelVars={modelVars}
@@ -375,7 +406,7 @@ export function Overview({
         <section aria-label="Wasted spend">
           <SectionHead
             title="Wasted spend, by rule"
-            aside={`${wasteFindings} ${wasteFindings === 1 ? 'finding' : 'findings'} · ${formatUSD(wasteTotal)} estimated`}
+            aside={`${wasteFindings} ${wasteFindings === 1 ? 'finding' : 'findings'} · ${formatUSD(wasteTotal)} estimated${tokensLead ? ` ${AT_API_PRICES}` : ''}`}
           />
           <div className="mt-3 rounded border border-border-slate bg-surface-container-low px-4 py-1 shadow-card motion-safe:animate-[rise_500ms_var(--ease-out)_both]">
             <WasteBoard groups={waste} runs={runs} />
@@ -394,12 +425,18 @@ export function Overview({
 function TrendChip({
   trend,
   periodDays,
+  unit,
 }: {
   trend: SpendTrend;
   periodDays: number | null;
+  unit: DisplayUnit;
 }) {
   const up = trend.deltaFraction >= 0;
   const pct = Math.abs(trend.deltaFraction * 100);
+  const tokensLead = unit === 'tokens';
+  const title = tokensLead
+    ? `${formatTokensCompact(trend.currentTokens)} tokens this period vs ${formatTokensCompact(trend.previousTokens)} the previous ${periodDays ?? ''} days`
+    : `${formatUSD(trend.currentUSD)} this period vs ${formatUSD(trend.previousUSD)} the previous ${periodDays ?? ''} days`;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-label ${
@@ -407,11 +444,13 @@ function TrendChip({
           ? 'bg-heat-2/12 text-heat-2'
           : 'bg-cache-savings/12 text-cache-savings'
       }`}
-      title={`${formatUSD(trend.currentUSD)} this period vs ${formatUSD(trend.previousUSD)} the previous ${periodDays ?? ''} days`}
+      title={title}
     >
       {/* direction lives in the accessible name, not just the color+glyph
           (03-design.md §6: never color-alone) — mirrors SeverityPill */}
-      <span className="sr-only">spend {up ? 'up' : 'down'} </span>
+      <span className="sr-only">
+        {tokensLead ? 'tokens' : 'spend'} {up ? 'up' : 'down'}{' '}
+      </span>
       <span aria-hidden>{up ? '▲' : '▼'}</span>
       {pct.toFixed(0)}%
       <span className="text-text-faint">vs prev {periodDays ?? ''} days</span>
@@ -446,22 +485,26 @@ function KpiCard({
  * which can exceed them once `spendByDay` caps to 30 days) so the endpoint and
  * its label always agree. `pathLength=1` makes the draw-in animation unit-free.
  */
-function BurnLine({ days }: { days: DaySpend[] }) {
+function BurnLine({ days, unit }: { days: DaySpend[]; unit: DisplayUnit }) {
+  const tokensLead = unit === 'tokens';
   const plotted = useMemo(
-    () => days.reduce((s, d) => s + d.costUSD, 0),
-    [days],
+    () => days.reduce((s, d) => s + (tokensLead ? d.tokens : d.costUSD), 0),
+    [days, tokensLead],
   );
   const points = useMemo(() => {
     if (days.length < 2 || plotted <= 0) return null;
     let acc = 0;
     return days.map((d, i) => {
-      acc += d.costUSD;
+      acc += tokensLead ? d.tokens : d.costUSD;
       const x = (i / (days.length - 1)) * 400;
       const y = 76 - (acc / plotted) * 68;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     });
-  }, [days, plotted]);
+  }, [days, plotted, tokensLead]);
   if (points === null) return <div aria-hidden />;
+  const plottedLabel = tokensLead
+    ? `${formatTokensCompact(plotted)} tokens`
+    : formatUSD(plotted);
 
   const line = `M${points.join(' L')}`;
   const area = `${line} L400,80 L0,80 Z`;
@@ -473,11 +516,11 @@ function BurnLine({ days }: { days: DaySpend[] }) {
     <div className="min-w-0">
       <div className="flex items-baseline justify-between">
         <p className="micro-label text-text-faint">Burn line · cumulative</p>
-        <p className="font-mono text-label text-brand">{formatUSD(plotted)}</p>
+        <p className="font-mono text-label text-brand">{plottedLabel}</p>
       </div>
       <svg
         role="img"
-        aria-label={`Cumulative spend across ${days.length} days, ending at ${formatUSD(plotted)}.`}
+        aria-label={`Cumulative ${tokensLead ? 'tokens' : 'spend'} across ${days.length} days, ending at ${plottedLabel}.`}
         viewBox="0 0 400 80"
         preserveAspectRatio="none"
         className="mt-1 block h-16 w-full"
@@ -558,6 +601,7 @@ function isWeekend(day: string): boolean {
 
 /** Spend-by-day section: section head with the breakdown control, then chart. */
 function SpendSection({
+  unit,
   days,
   modelKeys,
   modelVars,
@@ -565,6 +609,7 @@ function SpendSection({
   activeDay,
   onDay,
 }: {
+  unit: DisplayUnit;
   days: DaySpend[];
   modelKeys: string[];
   modelVars: Map<string, string>;
@@ -578,9 +623,10 @@ function SpendSection({
     { value: 'model', label: 'By model' },
     { value: 'source', label: 'By source' },
   ];
+  const title = unit === 'tokens' ? 'Tokens by day' : 'Spend by day';
   return (
-    <section {...tourAttr('overview-trend')} aria-label="Spend by day">
-      <SectionHead title="Spend by day">
+    <section {...tourAttr('overview-trend')} aria-label={title}>
+      <SectionHead title={title}>
         <fieldset
           aria-label="Chart breakdown"
           className="m-0 inline-flex overflow-hidden rounded border border-border-slate bg-surface-container-low p-0"
@@ -606,6 +652,7 @@ function SpendSection({
       </SectionHead>
       <div className="mt-3 rounded border border-border-slate bg-surface-container-low px-4 py-3.5 shadow-card motion-safe:animate-[rise_500ms_var(--ease-out)_both]">
         <SpendChart
+          unit={unit}
           days={days}
           mode={mode}
           modelKeys={modelKeys}
@@ -620,6 +667,7 @@ function SpendSection({
 }
 
 function SpendChart({
+  unit,
   days,
   mode,
   modelKeys,
@@ -628,6 +676,7 @@ function SpendChart({
   activeDay,
   onDay,
 }: {
+  unit: DisplayUnit;
   days: DaySpend[];
   mode: ChartMode;
   modelKeys: string[];
@@ -641,11 +690,27 @@ function SpendChart({
     x: number;
     y: number;
   } | null>(null);
-  const max = Math.max(...days.map((d) => d.costUSD), 0);
+  const tokensLead = unit === 'tokens';
+  // bar heights in the display unit; the waste strip stays a share of the
+  // day's dollars (waste has no token count) and says so in token mode
+  const heightOf = (d: DaySpend) => (tokensLead ? d.tokens : d.costUSD);
+  const stackOf = (d: DaySpend, key: string) =>
+    (mode === 'model'
+      ? (tokensLead ? d.byModelTokens : d.byModel)[key]
+      : (tokensLead ? d.bySourceTokens : d.bySource)[key]) ?? 0;
+  const figure = (d: DaySpend) =>
+    tokensLead
+      ? `${formatTokensCompact(d.tokens)} tokens`
+      : formatUSD(d.costUSD);
+  const wasteNote = (d: DaySpend) =>
+    `${formatUSD(d.wastedUSD)} wasted${tokensLead ? ` ${AT_API_PRICES}` : ''}`;
+  const max = Math.max(...days.map(heightOf), 0);
   if (max === 0) {
     return (
       <p className="py-8 text-center text-label text-text-faint">
-        No priced sessions yet.
+        {tokensLead
+          ? 'No sessions with token counts yet.'
+          : 'No priced sessions yet.'}
       </p>
     );
   }
@@ -658,7 +723,7 @@ function SpendChart({
   const n = days.length;
   const slot = W / n;
   const barW = Math.min(slot * 0.62, 30);
-  const total = days.reduce((s, d) => s + d.costUSD, 0);
+  const total = days.reduce((s, d) => s + heightOf(d), 0);
   const stackKeys = mode === 'model' ? modelKeys : sourceKeys;
   const colorOf = (key: string) =>
     mode === 'model'
@@ -667,7 +732,7 @@ function SpendChart({
 
   let acc = 0;
   const burn = days.map((d, i) => {
-    acc += d.costUSD;
+    acc += heightOf(d);
     const x = (i + 0.5) * slot;
     const y = H - PAD_B - (total > 0 ? acc / total : 0) * plotH * 0.94;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
@@ -684,7 +749,7 @@ function SpendChart({
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
           role="img"
-          aria-label={`Daily spend across ${n} days. Bar height is cost; the strip under each bar warms with that day's share of wasted spend; the light line is cumulative burn.`}
+          aria-label={`Daily ${tokensLead ? 'tokens' : 'spend'} across ${n} days. Bar height is ${tokensLead ? 'tokens' : 'cost'}; the strip under each bar warms with that day's share of wasted spend${tokensLead ? ` ${AT_API_PRICES}` : ''}; the light line is cumulative burn.`}
           className="block h-40 w-full"
         >
           {[1, 2, 3].map((g) => {
@@ -715,7 +780,7 @@ function SpendChart({
                   : share < 0.18
                     ? 'var(--color-heat-2)'
                     : 'var(--color-heat-3)';
-            const totalH = Math.max((day.costUSD / max) * plotH, 3);
+            const totalH = Math.max((heightOf(day) / max) * plotH, 3);
             return (
               <g key={day.day}>
                 {isWeekend(day.day) && (
@@ -738,7 +803,7 @@ function SpendChart({
                     opacity={0.09}
                   />
                 )}
-                {day.costUSD > 0 &&
+                {heightOf(day) > 0 &&
                   (mode === 'total' ? (
                     <rect
                       x={x}
@@ -753,10 +818,7 @@ function SpendChart({
                     (() => {
                       let accH = 0;
                       return stackKeys.map((key) => {
-                        const val =
-                          (mode === 'model'
-                            ? day.byModel[key]
-                            : day.bySource[key]) ?? 0;
+                        const val = stackOf(day, key);
                         if (val <= 0) return null;
                         const h = (val / max) * plotH;
                         const y = H - PAD_B - accH - h;
@@ -776,7 +838,7 @@ function SpendChart({
                       });
                     })()
                   ))}
-                {day.costUSD > 0 && (
+                {heightOf(day) > 0 && (
                   <rect
                     x={x}
                     y={H - PAD_B + 4}
@@ -822,7 +884,7 @@ function SpendChart({
                 onMouseMove={onEnter(i)}
                 onMouseLeave={() => setHover(null)}
                 aria-pressed={activeDay === day.day}
-                aria-label={`Filter to ${day.day}, ${formatUSD(day.costUSD)}, ${day.runs} ${day.runs === 1 ? 'run' : 'runs'}${day.wastedUSD > 0 ? `, ${formatUSD(day.wastedUSD)} wasted` : ''}`}
+                aria-label={`Filter to ${day.day}, ${figure(day)}, ${day.runs} ${day.runs === 1 ? 'run' : 'runs'}${day.wastedUSD > 0 ? `, ${wasteNote(day)}` : ''}`}
                 className="flex-1 rounded-sm"
               />
             ) : (
@@ -842,12 +904,9 @@ function SpendChart({
             style={{ left: hover.x + 10, top: hover.y - 30 }}
           >
             {hovered.day} ·{' '}
-            <span className="text-brand">{formatUSD(hovered.costUSD)}</span>
+            <span className="text-brand">{figure(hovered)}</span>
             {hovered.wastedUSD > 0 && (
-              <span className="text-heat-2">
-                {' '}
-                · waste {formatUSD(hovered.wastedUSD)}
-              </span>
+              <span className="text-heat-2"> · {wasteNote(hovered)}</span>
             )}
             {hovered.runs > 0
               ? ` · ${hovered.runs} ${hovered.runs === 1 ? 'run' : 'runs'}`
@@ -860,6 +919,7 @@ function SpendChart({
         <span>{days[days.length - 1]?.day}</span>
       </div>
       <ChartLegend
+        unit={unit}
         mode={mode}
         modelKeys={modelKeys}
         modelVars={modelVars}
@@ -870,24 +930,32 @@ function SpendChart({
 }
 
 function ChartLegend({
+  unit,
   mode,
   modelKeys,
   modelVars,
   sourceKeys,
 }: {
+  unit: DisplayUnit;
   mode: ChartMode;
   modelKeys: string[];
   modelVars: Map<string, string>;
   sourceKeys: string[];
 }) {
+  const tokensLead = unit === 'tokens';
   const wasteItem = {
-    label: 'waste share (strip)',
+    label: tokensLead
+      ? `waste share ${AT_API_PRICES} (strip)`
+      : 'waste share (strip)',
     color: 'var(--color-heat-2)',
   };
   const items =
     mode === 'total'
       ? [
-          { label: 'daily cost', color: 'var(--color-brand)' },
+          {
+            label: tokensLead ? 'daily tokens' : 'daily cost',
+            color: 'var(--color-brand)',
+          },
           wasteItem,
           { label: 'cumulative burn', color: 'var(--color-brand-bright)' },
         ]
@@ -921,7 +989,7 @@ function RankList({
   entries,
   maxCost,
   maxTokens,
-  metricMode = 'tokens',
+  unit,
   onSelect,
   activeKey,
   filterNoun,
@@ -935,7 +1003,7 @@ function RankList({
   }[];
   maxCost: number;
   maxTokens?: number;
-  metricMode?: 'tokens' | 'costUSD';
+  unit: DisplayUnit;
   /** When set, each row is a button that drills the sessions to that entry. */
   onSelect?: (key: string) => void;
   /** The entry currently filtered on (brass active state), if any. */
@@ -948,7 +1016,7 @@ function RankList({
       <p className="py-6 text-center text-label text-text-faint">No data.</p>
     );
   }
-  const isTokens = metricMode === 'tokens';
+  const isTokens = unit === 'tokens';
   const maxValue = isTokens ? (maxTokens ?? 1) : maxCost;
 
   return (

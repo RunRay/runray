@@ -179,13 +179,37 @@ export function heatForShare(cost: number, maxCost: number): 0 | 1 | 2 | 3 {
   return rel > 2 / 3 ? 3 : rel > 1 / 3 ? 2 : 1;
 }
 
+/**
+ * Every token class one llm call carried — the same sum core uses for
+ * `run.totals.tokens.total`, so per-model, per-day and per-tool token
+ * figures add up to the run totals they sit beside.
+ */
+export function llmTokens(tok: {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  reasoning?: number;
+}): number {
+  return (
+    tok.input +
+    tok.output +
+    tok.cacheRead +
+    tok.cacheWrite +
+    (tok.reasoning ?? 0)
+  );
+}
+
 export interface ToolCost {
   name: string;
   costUSD: number;
   tokens: {
     input: number;
     output: number;
+    /** input + output — the Cost view's per-tool column. */
     total: number;
+    /** Every class, cache included (`llmTokens`) — the token-mode ranking. */
+    all: number;
   };
   calls: number;
   /** MCP server the tool belongs to (E5); absent for built-in tools. */
@@ -256,6 +280,7 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
       costUSD: number;
       input: number;
       output: number;
+      all: number;
       calls: number;
     }
   >();
@@ -263,18 +288,21 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
   let orchestrationCost = 0;
   let orchestrationInput = 0;
   let orchestrationOutput = 0;
+  let orchestrationAll = 0;
   let orchestrationCalls = 0;
 
   for (const llm of llmCalls) {
     const cost = llm.llm?.costUSD ?? 0;
     const input = llm.llm?.tokens?.input ?? 0;
     const output = llm.llm?.tokens?.output ?? 0;
+    const all = llm.llm === undefined ? 0 : llmTokens(llm.llm.tokens);
     const associatedTools = llmToTools.get(llm.id) ?? [];
 
     if (associatedTools.length === 0) {
       orchestrationCost += cost;
       orchestrationInput += input;
       orchestrationOutput += output;
+      orchestrationAll += all;
       orchestrationCalls += 1;
       continue;
     }
@@ -288,17 +316,20 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
     const distCost = cost / uniqueToolNames.length;
     const distInput = input / uniqueToolNames.length;
     const distOutput = output / uniqueToolNames.length;
+    const distAll = all / uniqueToolNames.length;
 
     for (const toolName of uniqueToolNames) {
       const stats = toolStats.get(toolName) ?? {
         costUSD: 0,
         input: 0,
         output: 0,
+        all: 0,
         calls: 0,
       };
       stats.costUSD += distCost;
       stats.input += distInput;
       stats.output += distOutput;
+      stats.all += distAll;
       toolStats.set(toolName, stats);
     }
   }
@@ -314,6 +345,7 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
       costUSD: 0,
       input: 0,
       output: 0,
+      all: 0,
       calls: 0,
     };
     stats.calls += 1;
@@ -330,17 +362,14 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
         input: Math.round(stats.input),
         output: Math.round(stats.output),
         total: Math.round(stats.input + stats.output),
+        all: Math.round(stats.all),
       },
       calls: stats.calls,
       ...(mcpServer === undefined ? {} : { mcpServer }),
     });
   }
 
-  if (
-    orchestrationCalls > 0 ||
-    orchestrationCost > 0 ||
-    orchestrationInput + orchestrationOutput > 0
-  ) {
+  if (orchestrationCalls > 0 || orchestrationCost > 0 || orchestrationAll > 0) {
     result.push({
       orchestration: true,
       name: 'Orchestration / Interface',
@@ -349,6 +378,7 @@ export function toolSpendLeaderboard(spans: readonly Span[]): ToolCost[] {
         input: Math.round(orchestrationInput),
         output: Math.round(orchestrationOutput),
         total: Math.round(orchestrationInput + orchestrationOutput),
+        all: Math.round(orchestrationAll),
       },
       calls: orchestrationCalls,
     });

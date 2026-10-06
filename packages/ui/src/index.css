@@ -240,6 +240,15 @@
   }
 }
 
+/* The display unit flipped (E6): the lead figure settles in from just below,
+   so a new unit reads as a new unit, not as the number jumping. */
+@keyframes unit-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
 @layer base {
   :root {
     color-scheme: dark;

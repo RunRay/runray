@@ -7,7 +7,9 @@ import {
 } from '../lib/cost-breakdown';
 import { formatClock, formatTokens, formatUSD } from '../lib/format';
 import { assignModelColors } from '../lib/model-colors';
+import { AT_API_PRICES } from '../lib/unit';
 import { computeTimeRange } from '../lib/waterfall';
+import { useAppStore } from '../store';
 import { CacheDial } from './CacheDial';
 import { CoverageBanner } from './CoverageNotices';
 import { LimitSuffix } from './LimitMode';
@@ -185,19 +187,40 @@ function ToolLeaderboard({ toolCosts, totalCost }: ToolLeaderboardProps) {
 function Hero({ run }: { run: Run }) {
   const { totals } = run;
   const wasted = totals.costUSD.wastedEstimate;
+  // the unit (E6) picks which figure leads; the other drops to a stat, and
+  // dollars in token mode say what they are
+  const tokensLead = useAppStore((s) => s.unit) === 'tokens';
   return (
     <div className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
       <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
         <div>
-          <p className="micro-label text-text-faint">total cost</p>
-          <p className="font-display text-hero font-semibold text-text">
-            {formatUSD(totals.costUSD.total)}
+          <p className="micro-label text-text-faint">
+            {tokensLead ? 'total tokens' : 'total cost'}
           </p>
-          <LimitSuffix valueUSD={totals.costUSD.total} />
+          <p
+            key={tokensLead ? 'tokens' : 'usd'}
+            className="font-display text-hero font-semibold text-text motion-safe:animate-[unit-swap_240ms_var(--ease-out)_both]"
+          >
+            {tokensLead
+              ? formatTokens(totals.tokens.total)
+              : formatUSD(totals.costUSD.total)}
+          </p>
+          <LimitSuffix
+            valueUSD={totals.costUSD.total}
+            tokens={totals.tokens.total}
+          />
         </div>
-        <HeroStat label="tokens">
-          <span className="font-mono">{formatTokens(totals.tokens.total)}</span>
-        </HeroStat>
+        {tokensLead ? (
+          <HeroStat label={`cost ${AT_API_PRICES}`}>
+            <span className="font-mono">{formatUSD(totals.costUSD.total)}</span>
+          </HeroStat>
+        ) : (
+          <HeroStat label="tokens">
+            <span className="font-mono">
+              {formatTokens(totals.tokens.total)}
+            </span>
+          </HeroStat>
+        )}
         <HeroStat label="cache hit-rate">
           <span className="flex items-center gap-1.5">
             <CacheDial rate={totals.cache.hitRate} />
@@ -206,7 +229,9 @@ function Hero({ run }: { run: Run }) {
             </span>
           </span>
         </HeroStat>
-        <HeroStat label="wasted estimate">
+        <HeroStat
+          label={tokensLead ? `wasted ${AT_API_PRICES}` : 'wasted estimate'}
+        >
           <span
             className={`font-mono ${wasted > 0 ? 'text-heat-2' : 'text-text-dim'}`}
           >

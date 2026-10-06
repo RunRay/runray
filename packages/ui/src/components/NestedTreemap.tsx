@@ -40,7 +40,10 @@ function descendants(node: AgentTreeNode): number {
 }
 
 export function NestedTreemap({ run }: { run: Run }) {
-  const [mode, setMode] = useState<SubtreeMapMode>('cost');
+  // opens in the display unit (E6); the map's own toggle still flips it
+  const [mode, setMode] = useState<SubtreeMapMode>(() =>
+    useAppStore.getState().unit === 'tokens' ? 'tokens' : 'cost',
+  );
   const tree = useMemo(
     () => agentSubtreeTree(run.spans, mode),
     [run.spans, mode],

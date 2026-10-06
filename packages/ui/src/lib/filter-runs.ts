@@ -1,5 +1,6 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { localDay } from './overview';
+import type { DisplayUnit } from './unit';
 
 /**
  * Global run filters (add-dashboard-extensions, D1/D2): pure, client-side
@@ -89,7 +90,10 @@ function dayBefore(day: string): string {
 export interface SpendTrend {
   currentUSD: number;
   previousUSD: number;
-  /** Signed fraction: +0.23 = the current period is up 23% on the previous. */
+  currentTokens: number;
+  previousTokens: number;
+  /** Signed fraction in the requested unit: +0.23 = the current period is up
+   * 23% on the previous. */
   deltaFraction: number;
 }
 
@@ -101,11 +105,13 @@ export interface SpendTrend {
  * previous window holds fewer than 2 runs, or the previous window spent nothing
  * (no percentage to take). Project/source/model filters apply to both windows;
  * the period anchor is the newest of ALL runs (matching filterRuns), so
- * combining filters never shifts the comparison.
+ * combining filters never shifts the comparison. `by` picks the unit the
+ * delta is taken in (E6); the baseline must be non-zero in that unit.
  */
 export function spendTrend(
   allRuns: readonly Run[],
   filter: RunFilter,
+  by: DisplayUnit = 'usd',
 ): SpendTrend | null {
   const { periodDays } = filter;
   if (periodDays === null || filter.day !== null) return null;
@@ -121,21 +127,31 @@ export function spendTrend(
   const scoped = filterRuns(allRuns, { ...filter, periodDays: null });
   let currentUSD = 0;
   let previousUSD = 0;
+  let currentTokens = 0;
+  let previousTokens = 0;
   let previousRuns = 0;
   for (const run of scoped) {
     const day = localDay(run.startedAt);
     if (day >= curStart) {
       currentUSD += run.totals.costUSD.total;
+      currentTokens += run.totals.tokens.total;
     } else if (day >= prevStart && day <= prevEnd) {
       previousUSD += run.totals.costUSD.total;
+      previousTokens += run.totals.tokens.total;
       previousRuns += 1;
     }
   }
-  if (previousRuns < 2 || previousUSD <= 0) return null;
+  const [current, previous] =
+    by === 'tokens'
+      ? [currentTokens, previousTokens]
+      : [currentUSD, previousUSD];
+  if (previousRuns < 2 || previous <= 0) return null;
   return {
     currentUSD,
     previousUSD,
-    deltaFraction: (currentUSD - previousUSD) / previousUSD,
+    currentTokens,
+    previousTokens,
+    deltaFraction: (current - previous) / previous,
   };
 }
 

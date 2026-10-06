@@ -23,6 +23,7 @@ import {
 } from './lib/load';
 import { DASHBOARD_ROUTE, formatHash, type Route, toHash } from './lib/router';
 import { setTheme as commitTheme, currentTheme, type Theme } from './lib/theme';
+import { type DisplayUnit, persistUnit, storedUnit } from './lib/unit';
 
 export type DataState =
   | { status: 'loading' }
@@ -139,6 +140,11 @@ export interface AppState {
    * `setTheme`/`toggleTheme`, which also persist to localStorage.
    */
   theme: Theme;
+  /**
+   * The unit headline figures lead with (E6): dollars at API prices, or
+   * tokens. Persisted like the theme; dollars until the person switches.
+   */
+  unit: DisplayUnit;
   selection: {
     spanId: string | null;
     /** Insight activated from the strip; drives evidence highlighting. */
@@ -203,6 +209,8 @@ export interface AppState {
   setTheme(theme: Theme): void;
   /** Flip ink ↔ paper (applies + persists). */
   toggleTheme(): void;
+  /** Set the display unit (persists). */
+  setUnit(unit: DisplayUnit): void;
   /** Insight staged for activation after a cross-run navigation. */
   pendingInsight: Insight | null;
   /**
@@ -282,6 +290,7 @@ export const useAppStore = create<AppState>()((set) => ({
   // The boot script already stamped the persisted choice on the root; mirror
   // it so React components (TopBar toggle, palette) render the right state.
   theme: currentTheme(),
+  unit: storedUnit(),
   selection: { spanId: null, insightId: null, focus: 'span' },
   ui: {
     inspectorOpen: true,
@@ -451,6 +460,10 @@ export const useAppStore = create<AppState>()((set) => ({
       commitTheme(next);
       return { theme: next };
     }),
+  setUnit: (unit) => {
+    persistUnit(unit);
+    set({ unit });
+  },
   // Selection is per-run: switching runs drops it (and the highlight),
   // switching views within the same run keeps it (evidence links select,
   // then navigate).
