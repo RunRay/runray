@@ -24,7 +24,10 @@
   --color-border-strong: #3a3a4e;
   --color-text: #e8e8f0;
   --color-text-dim: #a0a0b8;
-  --color-text-faint: #6b6b80;
+  /* Faint clears WCAG AA (4.5:1) on the page and panel grounds (bg,
+     bg-deep-gray, surface, surface-2, surface-container-low). Raised and
+     tinted grounds re-point it to dim; see "Faint on raised grounds". */
+  --color-text-faint: #85859d;
 
   /* Vibrant Accent */
   --color-brand: #7c5cff;
@@ -196,12 +199,17 @@
   --radius-control: 6px;
   --radius-panel: 12px;
 
-  /* Elevation in ink: layered card shadow on panels, heavier tier on popovers */
+  /* Elevation: layered card shadow on panels, heavier tier on popovers.
+     Tailwind copies these values into the shadow-card / shadow-popover
+     utilities at build time, so overriding --shadow-card per theme never
+     reaches them. Only the colours vary by theme: they stay var()
+     references, and the base layer below sets them for ink and paper. */
   --shadow-*: initial;
-  --shadow-card: 0 1px 0 rgb(0 0 0 / 0.35), 0 8px 22px rgb(0 0 0 / 0.35);
+  --shadow-card:
+    0 1px 0 var(--elevation-card-edge), 0 8px 22px var(--elevation-card-drop);
   --shadow-popover:
-    0 0 0 1px var(--color-border), 0 2px 8px rgb(0 0 0 / 0.5),
-    0 18px 44px rgb(0 0 0 / 0.5);
+    0 0 0 1px var(--color-border), 0 2px 8px var(--elevation-popover-near),
+    0 18px 44px var(--elevation-popover-far);
 
   /* ---- Motion: one orchestrated entrance, then 120–160ms hovers ---- */
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -248,6 +256,11 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* Ink-tinted (the bg hue, darker) rather than flat black */
+    --elevation-card-edge: rgb(4 4 12 / 0.35);
+    --elevation-card-drop: rgb(4 4 12 / 0.35);
+    --elevation-popover-near: rgb(4 4 12 / 0.5);
+    --elevation-popover-far: rgb(4 4 12 / 0.5);
   }
 
   /* "Paper ledger" light theme based on new Electric Indigo scheme */
@@ -260,7 +273,7 @@
     --color-border-strong: #d1d5db;
     --color-text: #1f2937;
     --color-text-dim: #4b5563;
-    --color-text-faint: #9ca3af;
+    --color-text-faint: #636b78; /* AA on the same grounds as in ink */
 
     --color-brand: #4f46e5;
     --color-brand-bright: #6366f1;
@@ -283,11 +296,11 @@
     --color-model-3: #818cf8;
     --color-model-4: #3730a3;
 
-    --shadow-card:
-      0 1px 0 rgb(31 41 55 / 0.04), 0 6px 18px rgb(31 41 55 / 0.08);
-    --shadow-popover:
-      0 0 0 1px var(--color-border), 0 2px 6px rgb(31 41 55 / 0.12),
-      0 14px 34px rgb(31 41 55 / 0.16);
+    /* Slate-tinted, so paper cards lift instead of wearing a dark rim */
+    --elevation-card-edge: rgb(31 41 55 / 0.04);
+    --elevation-card-drop: rgb(31 41 55 / 0.08);
+    --elevation-popover-near: rgb(31 41 55 / 0.12);
+    --elevation-popover-far: rgb(31 41 55 / 0.16);
 
     /* --- Design System specific tokens under data-theme="light" --- */
     --color-surface-container-lowest: #ffffff;
@@ -342,6 +355,36 @@
     --color-on-surface: #1f2937;
     --color-tertiary-container: #6b7280;
     --color-on-secondary-container: #1f2937;
+  }
+
+  /* Faint on raised grounds. Selected rows, active tabs, chips and table
+     heads sit on surface-variant or surface-container-high/-highest, and
+     tinted rows and cells on heat tints. Faint can't reach 4.5:1 there
+     (3.43:1 on ink's surface-variant), so every label inside such a ground
+     renders at dim instead, without each component choosing. The ground
+     list is checked against the components in theme-tokens.test.ts. */
+  .bg-surface-variant,
+  .bg-surface-container-high,
+  .bg-surface-container-highest,
+  .bg-heat-1\/10,
+  .bg-heat-1\/14,
+  .bg-heat-1\/15,
+  .bg-heat-2\/10,
+  .bg-heat-2\/12,
+  .bg-heat-2\/15,
+  .bg-heat-3\/15 {
+    --color-text-faint: var(--color-text-dim);
+  }
+  /* Matches Tailwind, which only applies hover: backgrounds where a
+     pointer can hover. */
+  @media (hover: hover) {
+    .hover\:bg-surface-variant:hover,
+    .hover\:bg-surface-variant\/30:hover,
+    .hover\:bg-surface-variant\/40:hover,
+    .hover\:bg-surface-container-high:hover,
+    .hover\:bg-surface-container-highest:hover {
+      --color-text-faint: var(--color-text-dim);
+    }
   }
 
   /* Custom scrollbar for data density look */
