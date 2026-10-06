@@ -24,6 +24,7 @@ import {
   hiddenFindings,
   insightsBySpan,
   matchingSpanIds,
+  SEVERITY_RANK,
   type SubtreeRollup,
   spanEndMs,
   spanStartMs,
@@ -78,12 +79,10 @@ const FINDING_TEXT: Record<Insight['severity'], string> = {
   critical: 'text-heat-3',
 };
 
+/** Where the pointer is; the row's findings are read fresh at render, so a
+ *  caret click under the cursor never leaves the card stale. */
 interface TooltipState {
   row: WaterfallRow;
-  /** Findings the row is evidence of, worst first (undefined = none). */
-  findings: Insight[] | undefined;
-  /** Findings hidden inside the collapsed row, worst first. */
-  hidden: Insight[] | undefined;
   x: number;
   y: number;
 }
@@ -411,9 +410,7 @@ export function Waterfall({ run }: { run: Run }) {
                   flash={flashing && highlighted.has(row.span.id)}
                   findings={findingsBySpan.get(row.span.id)}
                   onOpenFinding={(insight) => showInsight(insight, row.span.id)}
-                  hidden={
-                    row.collapsed ? hiddenBySpan.get(row.span.id) : undefined
-                  }
+                  hidden={hiddenBySpan.get(row.span.id)}
                   onOpenHidden={(insight) => showInsight(insight)}
                   animate={animate}
                   animationDelayMs={Math.min(item.index * 8, 300)}
@@ -435,7 +432,13 @@ export function Waterfall({ run }: { run: Run }) {
         </div>
       </div>
 
-      {tooltip !== null && <SpanTooltip tooltip={tooltip} />}
+      {tooltip !== null && (
+        <SpanTooltip
+          tooltip={tooltip}
+          findings={findingsBySpan.get(tooltip.row.span.id)}
+          hidden={hiddenBySpan.get(tooltip.row.span.id)}
+        />
+      )}
     </div>
   );
 }
@@ -509,6 +512,17 @@ export function SpanRow({
   const { span } = row;
   const worst = findings?.[0];
   const worstHidden = hidden?.[0];
+  // one notch at the left edge, for the worse of the row's own findings and
+  // the ones it hides (ties go to its own): solid for its own, hollow for
+  // hidden ones
+  const notch =
+    worst !== undefined &&
+    (worstHidden === undefined ||
+      SEVERITY_RANK[worst.severity] >= SEVERITY_RANK[worstHidden.severity])
+      ? FINDING_NOTCH[worst.severity]
+      : worstHidden !== undefined
+        ? `border ${HIDDEN_NOTCH[worstHidden.severity]}`
+        : undefined;
   const indent = span.depth * INDENT_PX;
   const total = range.end - range.start;
   const leftPct = ((spanStartMs(span) - range.start) / total) * 100;
@@ -545,6 +559,24 @@ export function SpanRow({
           ⚠{findings.length > 1 ? ` ${findings.length}` : ''}
         </button>
       )}
+      {worstHidden !== undefined && hidden !== undefined && (
+        // hidden findings (C), right after the row's own chip so a narrow
+        // waterfall never clips them off the end of the label; tinted by
+        // the worst. Click opens it like a deep link: the subtree expands
+        // onto its evidence. Keyboard users get the same list in the
+        // Inspector when the collapsed row is selected.
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenHidden(worstHidden);
+          }}
+          className={`${CHIP} ${FINDING_CHIP[worstHidden.severity]}`}
+        >
+          ⚠ {hidden.length} inside
+        </button>
+      )}
       {rollup !== undefined && rollup.llmCalls > 0 && (
         // always visible, collapsed or not (D3); unpriced calls surface
         // separately so the dollar figure stays honest
@@ -560,22 +592,6 @@ export function SpanRow({
           {' '}
           +{row.hiddenDescendants}
         </span>
-      )}
-      {worstHidden !== undefined && hidden !== undefined && (
-        // hidden findings (C): what the collapse hides, tinted by the worst;
-        // click opens it like a deep link, so the subtree expands and the
-        // view lands on its evidence
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenHidden(worstHidden);
-          }}
-          className={`${CHIP} ${FINDING_CHIP[worstHidden.severity]}`}
-        >
-          ⚠ {hidden.length} inside
-        </button>
       )}
     </>
   );
@@ -597,9 +613,7 @@ export function SpanRow({
           onSelect();
         }
       }}
-      onMouseMove={(e) =>
-        onHover({ row, findings, hidden, x: e.clientX, y: e.clientY })
-      }
+      onMouseMove={(e) => onHover({ row, x: e.clientX, y: e.clientY })}
       onMouseLeave={() => onHover(null)}
       className={`group cursor-pointer border-b border-outline-variant/30 transition-colors duration-150 ease-out ${
         selected
@@ -619,41 +633,33 @@ export function SpanRow({
         />
       )}
       {/* delegation rails (D): one per enclosing subagent, under its
-          caret, behind the bars; an expanded subagent starts its own just
+          caret, behind the bars and kept faint because bars sit by time and
+          a rail can cross a label; an expanded subagent starts its own just
           below its caret */}
       {rails.map((depth) => (
         <span
           key={depth}
           aria-hidden
-          className="absolute inset-y-0 w-0.5 bg-span-subagent/50"
+          className="absolute inset-y-0 w-0.5 bg-span-subagent/35"
           style={{ left: depth * INDENT_PX + RAIL_X }}
         />
       ))}
       {opensRail && (
         <span
           aria-hidden
-          className="absolute bottom-0 w-0.5 bg-span-subagent/50"
+          className="absolute bottom-0 w-0.5 bg-span-subagent/35"
           style={{ left: indent + RAIL_X, top: 'calc(50% + 6px)' }}
         />
       )}
-      {/* finding notch (A): this row is evidence of a finding; the full
-          rails (active evidence, selection) take over when present */}
-      {worst !== undefined && !highlighted && !selected && (
+      {/* finding notch (A, C): this row is evidence of a finding, or hides
+          one; the full rails (active evidence, selection) take over when
+          present */}
+      {notch !== undefined && !highlighted && !selected && (
         <span
-          className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 ${FINDING_NOTCH[worst.severity]}`}
+          className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 ${notch}`}
           aria-hidden
         />
       )}
-      {/* hollow notch (C): findings hidden inside this collapsed row */}
-      {worst === undefined &&
-        worstHidden !== undefined &&
-        !highlighted &&
-        !selected && (
-          <span
-            className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 border ${HIDDEN_NOTCH[worstHidden.severity]}`}
-            aria-hidden
-          />
-        )}
       {/* evidence rail (active insight) */}
       {highlighted && !selected && (
         <span
@@ -768,15 +774,26 @@ function CostBadge({ span }: { span: Span }) {
   );
 }
 
-function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
+function SpanTooltip({
+  tooltip,
+  findings,
+  hidden,
+}: {
+  tooltip: TooltipState;
+  /** Findings the row is evidence of, worst first (undefined = none). */
+  findings: Insight[] | undefined;
+  /** Findings hidden inside the collapsed row, worst first. */
+  hidden: Insight[] | undefined;
+}) {
   const { span } = tooltip.row;
-  const { findings, hidden } = tooltip;
-  // keep the whole card on screen, now that it can carry two lists
+  // keep the whole card on screen, now that it can carry two lists; the
+  // height changes with the content, not with every pointer move
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(180);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the card's content changes, not on every pointer move
   useLayoutEffect(() => {
     if (ref.current !== null) setHeight(ref.current.offsetHeight);
-  });
+  }, [span.id, findings, hidden]);
   const x = Math.min(tooltip.x + 12, window.innerWidth - 300);
   const y = Math.max(
     8,

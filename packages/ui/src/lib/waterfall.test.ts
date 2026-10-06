@@ -191,6 +191,10 @@ describe('subagentRails', () => {
     expect(rails.get('own')).toEqual([]);
     expect(rails.get('orphan')).toEqual([]);
   });
+
+  it('shares one array among siblings', () => {
+    expect(rails.get('read')).toBe(rails.get('inner'));
+  });
 });
 
 describe('subtreeRollups (D3)', () => {
@@ -354,7 +358,7 @@ describe('hiddenFindings', () => {
   const outside = finding('outside', 'info', ['own']);
   const all = [retry, loop, costly, outside];
 
-  it('rolls findings up onto the collapsed row that hides their evidence, worst first', () => {
+  it('rolls findings up onto the collapsed row that hides all their evidence, worst first', () => {
     const hidden = hiddenFindings(spans, all, new Set(['agent']));
     expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
     expect(hidden.has('session')).toBe(false);
@@ -370,9 +374,18 @@ describe('hiddenFindings', () => {
     expect(hidden.has('agent')).toBe(false);
   });
 
-  it('gives every collapsed ancestor its share', () => {
+  it('leaves out a finding with evidence outside the subtree', () => {
+    // a session-wide finding with one call inside the subagent is not the
+    // subagent's; its outside evidence keeps its own marker
+    const straddle = finding('straddle', 'critical', ['i1', 'own']);
+    const hidden = hiddenFindings(spans, [straddle], new Set(['agent']));
+    expect(hidden.size).toBe(0);
+  });
+
+  it('gives each collapsed ancestor only the findings it hides entirely', () => {
     const hidden = hiddenFindings(spans, all, new Set(['agent', 'inner']));
-    expect(hidden.get('inner')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+    // retry also has evidence in agent's own subtree, outside inner
+    expect(hidden.get('inner')?.map((f) => f.id)).toEqual(['loop']);
     expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
   });
 

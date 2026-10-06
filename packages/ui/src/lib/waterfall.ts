@@ -173,22 +173,28 @@ const NO_RAILS: readonly number[] = [];
  * inside (proper ancestors, outermost first). Bars are placed by time across
  * the full row, so without a rail per enclosing subagent the only sign of
  * nesting is the caret's indent. One forward pass — normalizer order puts
- * parents before children — and rows outside any subagent share one empty
- * array.
+ * parents before children — and siblings share their parent's array, so a
+ * run allocates one per subagent, not one per span.
  */
 export function subagentRails(
   spans: readonly Span[],
 ): Map<string, readonly number[]> {
   const byId = new Map(spans.map((s) => [s.id, s]));
   const rails = new Map<string, readonly number[]>();
+  const childRails = new Map<string, readonly number[]>();
   for (const span of spans) {
     const parent = span.parentId === null ? undefined : byId.get(span.parentId);
-    const above =
-      parent === undefined ? NO_RAILS : (rails.get(parent.id) ?? NO_RAILS);
-    rails.set(
-      span.id,
-      parent?.kind === 'subagent' ? [...above, parent.depth] : above,
-    );
+    if (parent === undefined) {
+      rails.set(span.id, NO_RAILS);
+      continue;
+    }
+    let inside = childRails.get(parent.id);
+    if (inside === undefined) {
+      const above = rails.get(parent.id) ?? NO_RAILS;
+      inside = parent.kind === 'subagent' ? [...above, parent.depth] : above;
+      childRails.set(parent.id, inside);
+    }
+    rails.set(span.id, inside);
   }
   return rails;
 }
@@ -328,12 +334,14 @@ export function insightsBySpan(
 
 /**
  * Findings a collapsed row hides, keyed by that row's id, worst first: the
- * ones with evidence among its hidden descendants, minus those that name
- * the row itself (its own marker already shows them). The row shows a
- * count and the worst severity, never a dollar total: a finding's evidence
- * can straddle the subtree's edge, and burned and opportunity estimates do
- * not add up. Every collapsed ancestor of the evidence gets an entry; only
- * the outermost is on screen.
+ * ones whose evidence lies entirely among its hidden descendants. A finding
+ * with any evidence elsewhere — the row itself, or a row outside — still
+ * shows there, so pinning it on this row would blame the subtree for work
+ * that is mostly not its own (a session-wide context bloat with one call
+ * inside a subagent). The row shows a count and the worst severity, never
+ * a dollar total: burned and opportunity estimates do not add up. Every
+ * collapsed ancestor that hides all the evidence gets an entry; only the
+ * outermost is on screen.
  */
 export function hiddenFindings(
   spans: readonly Span[],
@@ -344,8 +352,17 @@ export function hiddenFindings(
   if (collapsed.size === 0 || insights.length === 0) return out;
   const byId = new Map(spans.map((s) => [s.id, s]));
   for (const insight of insights) {
-    for (const holder of collapsedAbove(byId, insight.spanIds, collapsed)) {
-      if (insight.spanIds.includes(holder)) continue;
+    const evidence = insight.spanIds.filter((id) => byId.has(id));
+    let holders: Set<string> | undefined;
+    for (const id of evidence) {
+      const above = collapsedAbove(byId, [id], collapsed);
+      holders =
+        holders === undefined
+          ? above
+          : new Set([...holders].filter((h) => above.has(h)));
+      if (holders.size === 0) break;
+    }
+    for (const holder of holders ?? []) {
       const list = out.get(holder);
       if (list === undefined) out.set(holder, [insight]);
       else list.push(insight);

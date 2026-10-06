@@ -90,16 +90,23 @@ function over(fg: string, alpha: number, bg: string): Rgb {
   ];
 }
 
-// Everything that colours a waterfall row: the other bars, the error
-// marker, and the warning notch and chip (critical shares span-error).
+// Everything that colours a waterfall row: every other span-kind token,
+// read from the stylesheet so a new kind is checked as soon as it lands,
+// plus the warning notch and chip (critical shares span-error).
 const NEIGHBOURS = [
-  'span-llm',
-  'span-tool',
-  'span-mcp',
-  'span-hook',
-  'span-error',
+  ...new Set(
+    [...inkCss.matchAll(/--color-(span-[\w-]+):/g)].flatMap(([, name]) =>
+      name === undefined || name === 'span-subagent' ? [] : [name],
+    ),
+  ),
   'heat-2',
 ];
+
+it('finds the span palette it checks against', () => {
+  expect(NEIGHBOURS).toEqual(
+    expect.arrayContaining(['span-llm', 'span-tool', 'span-error', 'heat-2']),
+  );
+});
 
 const THEMES = [
   { name: 'ink', source: inkCss, fallback: undefined },
