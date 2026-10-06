@@ -7,7 +7,8 @@ The timeline waterfall SHALL make delegated work distinguishable from the orches
 
 - **Colour.** In both themes, the subagent bar colour SHALL be at least 12 OKLab ΔE (×100) from every other bar colour and from the warning colour of finding markers. This SHALL hold for normal vision and for simulated protanopia and deuteranopia. The colour SHALL reach 4.5:1 against the row ground.
 - **Rails.** Every row inside a subagent's subtree SHALL carry a rail in the subagent colour for each enclosing subagent, aligned under that subagent's caret.
-- **Hidden findings.** A collapsed row SHALL show the findings that have evidence among its hidden descendants and do not already name the row itself. It SHALL show their count, tinted by the worst severity, and name them in the row's accessible name and tooltip. Activating the count SHALL open the worst of them, expanding what hides its evidence.
+- **Hidden findings.** A collapsed row SHALL show the findings whose evidence lies entirely among its hidden descendants. It SHALL show their count, tinted by the worst severity, ahead of the subtree economics badge. It SHALL name them in the row's accessible name and tooltip. Activating the count SHALL open the worst of them, expanding what hides its evidence.
+- **Keyboard path.** When a collapsed row is selected, the Inspector SHALL list its hidden findings as keyboard-operable controls that open them the same way.
 
 #### Scenario: Subagent bar unlike an llm bar
 - GIVEN the ink theme and a run with a subagent
@@ -28,6 +29,16 @@ The timeline waterfall SHALL make delegated work distinguishable from the orches
 - GIVEN a collapsed subagent showing `⚠ 2 inside`
 - WHEN the user clicks the chip
 - THEN the worse finding opens, the subtree expands, and the view scrolls to its first evidence span
+
+#### Scenario: A finding with evidence outside is not pinned on the subagent
+- GIVEN a context-bloat finding with five evidence calls in the main agent and one inside a subagent
+- WHEN the subagent is collapsed
+- THEN the subagent's row does not count the finding, and the five calls outside keep their own markers
+
+#### Scenario: Keyboard users open a hidden finding
+- GIVEN a collapsed subagent that hides a duplicate-read finding
+- WHEN the user selects the row with the keyboard
+- THEN the Inspector lists the finding under "Hidden inside", and activating it opens the finding and expands the subtree onto its evidence
 
 #### Scenario: A finding on the row itself is not counted twice
 - GIVEN an `expensive-subagent` finding whose evidence includes the subagent's own span

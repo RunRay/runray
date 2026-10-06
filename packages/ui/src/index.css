@@ -35,10 +35,12 @@
      theme-aware via the brand override) instead of resolving to nothing. */
   --color-brass: var(--color-brand);
 
-  /* Span-kind palette. Subagent (chartreuse here, umber in paper) is the
-     hue furthest from every other bar and finding colour, also under
-     protanopia and deuteranopia, so delegated work never passes for the
-     orchestrator's own model calls (span-palette.test.ts). */
+  /* Span-kind palette. Subagent (chartreuse here, umber in paper) keeps
+     at least 12 OKLab ΔE from every other bar and finding colour, also
+     under protanopia and deuteranopia, so delegated work never passes for
+     the orchestrator's own model calls (span-palette.test.ts). A brighter
+     lime, or a navy in paper, would score higher; they were passed over as
+     too loud, and as the llm hue's own family. */
   --color-span-llm: #7c5cff;
   --color-span-tool: #00d4aa;
   --color-span-subagent: #c7e02b;

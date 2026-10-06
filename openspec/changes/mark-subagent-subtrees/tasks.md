@@ -38,4 +38,9 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - chip order and both notch cases in `waterfall-row.test.tsx`;
   - the Inspector list and its deep link in `inspector-hidden-findings.test.tsx` (jsdom);
   - the palette guard now reads every `--color-span-*` token instead of a fixed list.
-- [ ] 2.2 Proposal, spec and the colour comment describe the follow-ups and stop calling the colours the search's maxima. Browser check of the chip in the default layout, with the Inspector open.
+- [x] 2.2 Proposal, spec, changeset and the colour comment describe the follow-ups, and no longer call the colours the search's maxima.
+
+  Browser check in the default layout, with the sessions list and the Inspector open (a 500 px waterfall), all subagents collapsed:
+  - three subagents show `⚠ 1 inside`, each chip inside the frame;
+  - the straddling context-bloat finding no longer shows on the Explore subagent;
+  - selecting a collapsed row lists its finding under "Hidden inside" in the Inspector.
