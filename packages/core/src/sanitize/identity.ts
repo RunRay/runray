@@ -120,7 +120,10 @@ export function scrubIdentity(run: Run, table?: IdentityTable): Run {
     project = {
       ...project,
       ...(project.path !== undefined ? { path: projId } : {}),
-      name: projId,
+      // an OTLP run can carry only a branch; don't invent a project for it
+      ...(project.path !== undefined || project.name !== undefined
+        ? { name: projId }
+        : {}),
       ...(project.gitBranch !== undefined
         ? { gitBranch: t.branches.get(project.gitBranch) ?? 'branch-1' }
         : {}),

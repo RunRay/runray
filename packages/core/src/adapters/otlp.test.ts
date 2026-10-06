@@ -541,3 +541,148 @@ describe('otlp failed tool spans keep their status message', () => {
     expect(failed?.content).toEqual({ outputPreview: null });
   });
 });
+
+describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'runray-otlp-branch-'));
+  afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+  type Attrs = Record<string, string>;
+  const kv = (attrs: Attrs) =>
+    Object.entries(attrs).map(([key, v]) => ({
+      key,
+      value: { stringValue: v },
+    }));
+
+  let docs = 0;
+
+  /** One resource per entry, each holding one span of session `ses-g`. */
+  async function branchOf(
+    resources: { resource?: Attrs; span?: Attrs }[],
+  ): Promise<string | undefined> {
+    const file = join(tmp, `doc-${++docs}.json`);
+    writeFileSync(
+      file,
+      JSON.stringify({
+        resourceSpans: resources.map((r, i) => ({
+          ...(r.resource === undefined
+            ? {}
+            : { resource: { attributes: kv(r.resource) } }),
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId: 'f'.repeat(32),
+                  spanId: String(i + 1).repeat(16),
+                  name: 'claude_code.interaction',
+                  startTimeUnixNano: `178342568537500000${i}`,
+                  attributes: kv({ 'session.id': 'ses-g', ...r.span }),
+                },
+              ],
+            },
+          ],
+        })),
+      }),
+    );
+    const raw = await otlpAdapter.parse(
+      {
+        runRef: `${file}::ses-g`,
+        format: 'otlp-json',
+        files: [file],
+        mtimeMs: 0,
+        sizeBytes: 0,
+      },
+      { redact: false },
+    );
+    return raw.project?.gitBranch;
+  }
+
+  it('reads vcs.ref.head.name from the resource', async () => {
+    expect(
+      await branchOf([{ resource: { 'vcs.ref.head.name': 'feat/export' } }]),
+    ).toBe('feat/export');
+  });
+
+  it('prefers vcs.ref.head.name, then the deprecated key, then git.branch', async () => {
+    const all = {
+      'vcs.ref.head.name': 'head',
+      'vcs.repository.ref.name': 'deprecated',
+      'git.branch': 'informal',
+    };
+    expect(await branchOf([{ resource: all }])).toBe('head');
+    const { 'vcs.ref.head.name': _h, ...older } = all;
+    expect(await branchOf([{ resource: older }])).toBe('deprecated');
+    expect(await branchOf([{ resource: { 'git.branch': 'informal' } }])).toBe(
+      'informal',
+    );
+  });
+
+  it('skips a ref typed as a tag', async () => {
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'v1.2.0',
+            'vcs.ref.head.type': 'tag',
+          },
+        },
+      ]),
+    ).toBeUndefined();
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.repository.ref.name': 'v1.2.0',
+            'vcs.repository.ref.type': 'tag',
+            'git.branch': 'main',
+          },
+        },
+      ]),
+    ).toBe('main');
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'main',
+            'vcs.ref.head.type': 'branch',
+          },
+        },
+      ]),
+    ).toBe('main');
+  });
+
+  it('falls back to span attributes, and takes the first span that names one', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'service.name': 'agent' } },
+        { span: { 'vcs.ref.head.name': 'second' } },
+        { resource: { 'vcs.ref.head.name': 'third' } },
+      ]),
+    ).toBe('second');
+    // within one span, the resource wins over the span's own attributes
+    expect(
+      await branchOf([
+        {
+          resource: { 'git.branch': 'resource' },
+          span: { 'vcs.ref.head.name': 'span' },
+        },
+      ]),
+    ).toBe('resource');
+  });
+
+  it('treats an empty value as no branch, and leaves project unset without one', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'vcs.ref.head.name': '', 'git.branch': 'main' } },
+      ]),
+    ).toBe('main');
+    expect(await branchOf([{ resource: { 'vcs.ref.head.name': '' } }])).toBe(
+      undefined,
+    );
+    expect(await branchOf([{}])).toBeUndefined();
+  });
+
+  it('pinned Claude Code captures carry no branch, so their runs have no project', async () => {
+    const run = await runOn(SIMPLE_SESSION);
+    expect(run.project).toBeUndefined();
+  });
+});

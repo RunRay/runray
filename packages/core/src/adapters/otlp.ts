@@ -42,7 +42,9 @@ import { errorPreview } from './error-preview.js';
  * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`; identity
  * attrs (user.*, organization.id) are dropped and `user_prompt` maps to the
  * redactable `content.promptPreview`. Span events are skipped in v0.1 (they
- * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT).
+ * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT). A branch named in
+ * resource or span attributes becomes `project.gitBranch` (see BRANCH_ATTRS),
+ * the same identity field the transcript adapters fill.
  */
 
 const PREVIEW_CHARS = 200;
@@ -133,6 +135,8 @@ function durationBetween(
 interface OtlpSpan {
   json: Json;
   attrs: Map<string, unknown>;
+  /** The enclosing resource's attributes, shared by its spans. */
+  resource: Map<string, unknown>;
   groupKey: string;
 }
 
@@ -147,6 +151,9 @@ function collectSpans(
   if (!Array.isArray(resourceSpans)) return out;
   for (const rs of resourceSpans) {
     if (!isObj(rs)) continue;
+    const resource = attrsToMap(
+      isObj(rs.resource) ? rs.resource.attributes : undefined,
+    );
     const scopeSpans = rs.scopeSpans ?? rs.instrumentationLibrarySpans;
     if (!Array.isArray(scopeSpans)) continue;
     for (const ss of scopeSpans) {
@@ -159,7 +166,7 @@ function collectSpans(
         const attrs = attrsToMap(span.attributes);
         const sessionId = attrStr(attrs, 'session.id');
         const groupKey = sessionId ?? `trace:${str(span.traceId) ?? 'unknown'}`;
-        out.push({ json: span, attrs, groupKey });
+        out.push({ json: span, attrs, resource, groupKey });
       }
     }
   }
@@ -197,6 +204,36 @@ function collectMetricSessions(doc: Json): string[] {
     }
   }
   return [...sessions];
+}
+
+/**
+ * Branch attributes in precedence order: OTel's `vcs.ref.head.name`, the
+ * `vcs.repository.ref.name` it replaced, then the informal `git.branch`. A
+ * vcs value whose type attribute says `tag` names no branch.
+ */
+const BRANCH_ATTRS: readonly (readonly [name: string, type?: string])[] = [
+  ['vcs.ref.head.name', 'vcs.ref.head.type'],
+  ['vcs.repository.ref.name', 'vcs.repository.ref.type'],
+  ['git.branch'],
+];
+
+function branchIn(attrs: Map<string, unknown>): string | undefined {
+  for (const [name, type] of BRANCH_ATTRS) {
+    const value = attrStr(attrs, name);
+    if (value === undefined || value === '') continue;
+    if (type !== undefined && attrStr(attrs, type) === 'tag') continue;
+    return value;
+  }
+  return undefined;
+}
+
+/** The run's branch: the first span, in document order, that names one. */
+function branchOf(spans: readonly OtlpSpan[]): string | undefined {
+  for (const span of spans) {
+    const branch = branchIn(span.resource) ?? branchIn(span.attrs);
+    if (branch !== undefined) return branch;
+  }
+  return undefined;
 }
 
 /** Pinned Claude Code beta names → span kinds; everything else → other. */
@@ -704,8 +741,10 @@ export const otlpAdapter: SourceAdapter = {
       }
     }
 
+    const gitBranch = branchOf(spans);
     return {
       source: { tool: 'otlp', format: 'otlp-json', files: candidate.files },
+      ...(gitBranch === undefined ? {} : { project: { gitBranch } }),
       spans: [sessionSpan, ...rawSpans],
       warnings,
     };
