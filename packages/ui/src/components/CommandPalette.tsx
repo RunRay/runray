@@ -64,6 +64,7 @@ function buildCommands(
   clearFilter: () => void,
   theme: Theme,
   toggleTheme: () => void,
+  inspectorWide: boolean,
   isLive?: boolean,
   onClose?: () => void,
 ): Command[] {
@@ -254,10 +255,11 @@ function buildCommands(
     keywords: 'sidebar navigation rail menu collapse expand hide show',
     perform: () => useAppStore.getState().toggleNav(),
   });
+  // the width persists, so name what this does now, like the theme command
   cmds.push({
     id: 'layout:inspector-width',
     group: 'Layout',
-    label: 'Widen or narrow the inspector',
+    label: inspectorWide ? 'Narrow the inspector' : 'Widen the inspector',
     keywords: 'inspector panel drawer details width wide narrow expand resize',
     // a closed inspector opens, so the change shows
     perform: () => {
@@ -278,6 +280,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   const clearFilter = useAppStore((s) => s.clearFilter);
   const theme = useAppStore((s) => s.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
+  const inspectorWide = useAppStore((s) => s.ui.inspectorWide);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -296,6 +299,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         clearFilter,
         theme,
         toggleTheme,
+        inspectorWide,
         data.status === 'ready' && data.live,
         onClose,
       ),
@@ -307,6 +311,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       clearFilter,
       theme,
       toggleTheme,
+      inspectorWide,
       data,
       onClose,
     ],

@@ -469,7 +469,9 @@ automatically extends its fixture-parameterized equivalence matrix.
       (spec: visualizer "Inspector width and copy controls"):
       `ui.inspectorWide` persisted under `runray.inspectorWide`,
       `toggleInspectorWide`, a toggle in the Inspector header and a palette
-      command; wide the Inspector grows to at most 560px and leaves the
-      centre pane at least 400px. Copy controls with a 1.5 s confirmation
-      on the previews and the raw span record, through a `useCopy` hook the
+      command named for what it will do; wide the Inspector grows to at
+      most 560px and leaves the centre pane at least 400px, and without
+      room the toggle says so. Copy controls with a 1.5 s confirmation and
+      an on-button failure on the previews ("Copy preview" where core cut
+      the text) and the raw span record, through a `useCopy` hook the
       export dialog now shares. Asked by the user. Added 2026-10-06.

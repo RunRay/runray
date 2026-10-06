@@ -4,7 +4,14 @@ import {
   resolvePlaybookSource,
 } from '@runray/core/insights-meta';
 import type { Insight, Run, Span } from '@runray/schema';
-import { type ReactNode, useMemo, useState } from 'react';
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   formatDateTime,
   formatDuration,
@@ -31,9 +38,8 @@ import { TranscriptPane } from './TranscriptPane';
  * preview and the raw record carry a copy control.
  *
  * 360px wide, or up to 560px in wide mode. The extra width comes out of
- * the centre pane, which keeps at least 400px beside the rail (`ml-14` or
- * `ml-60` in App) and the 280px sessions pane. Like the rail, the width
- * changes without animation.
+ * the centre pane, which keeps at least 400px beside the 280px sessions
+ * pane. Like the rail, the width changes without animation.
  */
 export interface InspectorProps {
   run?: Run;
@@ -42,13 +48,15 @@ export interface InspectorProps {
   manifest?: SanitizationManifest;
 }
 
-// Static strings so Tailwind generates them: 400px for the centre pane,
-// plus 280px of sessions pane, plus the rail.
+// `100%` is the row the Inspector sits in, which already leaves out the
+// navigation rail; 680px is the sessions pane plus the centre's 400px.
 const WIDTH = {
   narrow: 'w-[360px]',
-  wideBesideRail: 'w-[min(560px,max(360px,calc(100vw_-_920px)))]', // 240px rail
-  wideBesideIcons: 'w-[min(560px,max(360px,calc(100vw_-_736px)))]', // 56px rail
+  wide: 'w-[min(560px,max(360px,calc(100%_-_680px)))]',
 } as const;
+
+/** The row width wide mode needs before it adds anything to the 360px. */
+const ROOM_TO_WIDEN_PX = 680 + 360;
 
 /** How long a copy control says "Copied". */
 const COPIED_MS = 1500;
@@ -66,8 +74,9 @@ export function Inspector(props: InspectorProps = {}) {
   const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const wide = useAppStore((s) => s.ui.inspectorWide);
-  const navCollapsed = useAppStore((s) => s.ui.navCollapsed);
   const toggleInspectorWide = useAppStore((s) => s.toggleInspectorWide);
+  const asideRef = useRef<HTMLElement>(null);
+  const room = useRoomToWiden(asideRef);
   const showInsight = useAppStore((s) => s.showInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
 
@@ -108,25 +117,31 @@ export function Inspector(props: InspectorProps = {}) {
 
   return (
     <aside
+      ref={asideRef}
       aria-label="Inspector"
-      className={`flex ${
-        !wide
-          ? WIDTH.narrow
-          : navCollapsed
-            ? WIDTH.wideBesideIcons
-            : WIDTH.wideBesideRail
-      } shrink-0 h-full flex-col border-l border-border bg-surface min-h-0`}
+      className={`flex ${wide ? WIDTH.wide : WIDTH.narrow} shrink-0 h-full flex-col border-l border-border bg-surface min-h-0`}
     >
       <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
         <p className="micro-label text-text-faint">Inspector</p>
         <div className="flex items-center gap-0.5">
+          {/* Without room the toggle says so instead of seeming to do
+              nothing; turning wide mode off always works. */}
           <button
             type="button"
-            onClick={toggleInspectorWide}
+            onClick={() => {
+              if (wide || room) toggleInspectorWide();
+            }}
             aria-pressed={wide}
+            aria-disabled={!wide && !room ? true : undefined}
             aria-label="Wide inspector"
-            title={wide ? 'Narrow the inspector' : 'Widen the inspector'}
-            className={HEADER_BUTTON}
+            title={
+              !room
+                ? 'No room to widen: collapse the navigation ( [ ) or widen the window'
+                : wide
+                  ? 'Narrow the inspector'
+                  : 'Widen the inspector'
+            }
+            className={`${HEADER_BUTTON} aria-disabled:cursor-not-allowed aria-disabled:opacity-40`}
           >
             <WidthIcon wide={wide} />
           </button>
@@ -645,7 +660,7 @@ function SpanDetail({ span }: { span: Span }) {
       {span.content?.promptPreview !== undefined && (
         <Section
           title="Prompt"
-          action={copyOf(span.content.promptPreview, 'prompt')}
+          action={copyOf(span.content.promptPreview, 'prompt', 'preview')}
         >
           <PreviewText value={span.content.promptPreview} />
         </Section>
@@ -653,7 +668,7 @@ function SpanDetail({ span }: { span: Span }) {
       {span.content?.outputPreview !== undefined && (
         <Section
           title="Output"
-          action={copyOf(span.content.outputPreview, 'output')}
+          action={copyOf(span.content.outputPreview, 'output', 'preview')}
         >
           <PreviewText value={span.content.outputPreview} />
         </Section>
@@ -680,7 +695,7 @@ function SpanDetail({ span }: { span: Span }) {
             {span.provenance.line !== undefined && `:${span.provenance.line}`}
           </p>
           <span className="flex shrink-0 items-center gap-1">
-            {showRaw && <CopyButton text={raw} noun="JSON" showNoun />}
+            {showRaw && <CopyButton text={raw} of="span" what="JSON" />}
             <button
               type="button"
               onClick={() => setShowRaw((v) => !v)}
@@ -726,28 +741,45 @@ function Section({
   );
 }
 
-/** A copy control for a preview; a redacted (`null`) one gets none. */
-function copyOf(value: string | null, noun: string): ReactNode {
-  return value === null ? undefined : <CopyButton text={value} noun={noun} />;
+/**
+ * A copy control for a preview; a redacted (`null`) one gets none. `what`
+ * is "preview" where core cut the text (prompt and output stop at 200
+ * characters), so the button doesn't pass a fragment off as the whole.
+ */
+function copyOf(value: string | null, of: string, what?: string): ReactNode {
+  return value === null ? undefined : (
+    <CopyButton text={value} of={of} what={what} />
+  );
 }
 
 /**
  * Puts `text` on the clipboard. It reads "Copied" for 1.5 s; a failure
- * stays until the next try and says how to copy by hand. The noun gives
- * each control its own accessible name ("Copy prompt"), and is shown only
- * where the title row doesn't already say what is copied.
+ * stays until the next try and says, on the button itself, to select the
+ * text instead. The visible label is short ("Copy preview"); the rest of
+ * the accessible name says whose text it is ("… of the prompt").
  */
 function CopyButton({
   text,
-  noun,
-  showNoun = false,
+  of,
+  what,
 }: {
   text: string;
-  noun: string;
-  showNoun?: boolean;
+  /** Whose text: "prompt", "delegation reason", "span". */
+  of: string;
+  /** What of it, when not the whole thing: "preview", "JSON". */
+  what?: string;
 }) {
   const { stateOf, copy } = useCopy(COPIED_MS);
   const state = stateOf(text);
+  const subject = what === undefined ? of : `${of} ${what}`;
+  const [shown, rest] =
+    state === 'copied'
+      ? ['Copied', ` the ${subject}`]
+      : state === 'failed'
+        ? ['Copy failed: select the text', ` of the ${subject}`]
+        : what === undefined
+          ? ['Copy', ` the ${of}`]
+          : [`Copy ${what}`, ` of the ${of}`];
   return (
     <>
       <button
@@ -755,31 +787,20 @@ function CopyButton({
         onClick={() => void copy(text)}
         title={
           state === 'failed'
-            ? 'The browser blocked clipboard access. Select the text to copy it.'
+            ? 'The browser blocked clipboard access. Select the text and copy it with Ctrl+C or ⌘C.'
             : undefined
         }
         className={`-my-0.5 inline-flex shrink-0 items-center gap-1 rounded-control px-1.5 py-0.5 text-label transition-colors duration-150 ease-out hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg ${COPY_TONE[state]}`}
       >
         <CopyGlyph state={state} />
-        {state === 'copied'
-          ? 'Copied'
-          : state === 'failed'
-            ? 'Copy failed'
-            : 'Copy'}
-        {state !== 'failed' && (
-          <span
-            className={showNoun && state === 'idle' ? undefined : 'sr-only'}
-          >
-            {' '}
-            {noun}
-          </span>
-        )}
+        {shown}
+        <span className="sr-only">{rest}</span>
       </button>
       <span role="status" className="sr-only">
         {state === 'copied'
-          ? `Copied the ${noun}`
+          ? `Copied the ${subject}`
           : state === 'failed'
-            ? `Could not copy the ${noun}. Select the text to copy it.`
+            ? `Could not copy the ${subject}. Select the text to copy it.`
             : ''}
       </span>
     </>
@@ -816,6 +837,27 @@ function CopyGlyph({ state }: { state: CopyState }) {
       )}
     </svg>
   );
+}
+
+/**
+ * Whether the row holding the Inspector is wide enough for wide mode to
+ * add anything. Without ResizeObserver (tests, old browsers) it assumes
+ * there is room, which is the behaviour before this check existed.
+ */
+function useRoomToWiden(ref: RefObject<HTMLElement | null>): boolean {
+  const [room, setRoom] = useState(true);
+  useEffect(() => {
+    const row = ref.current?.parentElement;
+    if (row == null || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry !== undefined) {
+        setRoom(entry.contentRect.width > ROOM_TO_WIDEN_PX);
+      }
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [ref]);
+  return room;
 }
 
 const HEADER_BUTTON =
