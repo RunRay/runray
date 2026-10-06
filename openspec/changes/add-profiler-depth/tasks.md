@@ -462,3 +462,14 @@ automatically extends its fixture-parameterized equivalence matrix.
       rail's header, the `[` key, a palette command and a help-sheet entry;
       collapsed the rail keeps icons with names and tooltips and the shell
       follows its width. Asked by the user. Added 2026-09-04.
+
+## 15. Inspector
+
+- [x] 15.1 B [UI → /frontend-design] Inspector width and copy controls
+      (spec: visualizer "Inspector width and copy controls"):
+      `ui.inspectorWide` persisted under `runray.inspectorWide`,
+      `toggleInspectorWide`, a toggle in the Inspector header and a palette
+      command; wide the Inspector grows to at most 560px and leaves the
+      centre pane at least 400px. Copy controls with a 1.5 s confirmation
+      on the previews and the raw span record, through a `useCopy` hook the
+      export dialog now shares. Asked by the user. Added 2026-10-06.

@@ -635,3 +635,38 @@ way the theme does.
 - GIVEN the person collapsed the rail
 - WHEN the page is reloaded
 - THEN the rail opens collapsed
+
+### Requirement: Inspector width and copy controls
+The Inspector SHALL offer a wide mode on the person's request: a toggle
+in its header and a palette command. Wide, it SHALL grow from 360px to
+at most 560px, taking the width from the centre pane but leaving that
+pane at least 400px beside the navigation rail and the sessions pane;
+the sessions pane SHALL keep its width. The choice SHALL persist across
+reloads the way the theme does. Each prompt, output and delegation-reason
+preview and the raw span record SHALL carry a copy control that puts that
+text on the clipboard. The control SHALL confirm a copy for 1.5 seconds
+and SHALL state a failure rather than stay silent. A redacted preview
+SHALL carry no copy control.
+
+#### Scenario: Wide mode yields to the centre pane
+- GIVEN a 1440px window with the navigation rail expanded
+- WHEN the person turns on wide mode
+- THEN the Inspector is 520px wide, the centre pane 400px, and the
+  sessions pane stays 280px
+
+#### Scenario: A copied preview is confirmed
+- GIVEN a span with a prompt preview
+- WHEN the person activates the prompt's copy control
+- THEN the preview text is on the clipboard and the control reads
+  "Copied" for 1.5 seconds
+
+#### Scenario: A denied clipboard is stated
+- GIVEN the browser denies clipboard access
+- WHEN the person activates a copy control
+- THEN the control reads "Copy failed" and points at selecting the text
+  by hand
+
+#### Scenario: A redacted preview offers nothing to copy
+- GIVEN a span whose prompt preview is redacted
+- WHEN the Inspector renders it
+- THEN the Prompt section shows "redacted" and no copy control

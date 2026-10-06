@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { exportCommand, type SanitizeProfile } from '../lib/export-command';
 import type { RunFilter } from '../lib/filter-runs';
 import type { Route } from '../lib/router';
+import { useCopy } from '../lib/use-copy';
 import { useAppStore, useVisibleRuns } from '../store';
 
 const PROFILES: Array<{
@@ -49,8 +50,7 @@ export function ExportDialog({
   visibleRuns: propVisibleRuns,
 }: ExportDialogProps) {
   const [profile, setProfile] = useState<SanitizeProfile>('sanitized');
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
+  const { stateOf, copy } = useCopy(2000);
 
   const storeRoute = useAppStore((s) => s.route);
   const storeFilter = useAppStore((s) => s.filter);
@@ -117,19 +117,10 @@ export function ExportDialog({
     );
   }, [route, filter, allRuns, visibleRuns, profile]);
 
-  const handleCopy = async () => {
-    setCopyError(false);
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error('Clipboard API unavailable');
-      }
-      await navigator.clipboard.writeText(commandInfo.command);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopyError(true);
-    }
-  };
+  const copyState = stateOf(commandInfo.command);
+  const copied = copyState === 'copied';
+  const copyError = copyState === 'failed';
+  const handleCopy = () => copy(commandInfo.command);
 
   return (
     <div

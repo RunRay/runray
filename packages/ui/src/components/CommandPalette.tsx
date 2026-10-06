@@ -254,6 +254,18 @@ function buildCommands(
     keywords: 'sidebar navigation rail menu collapse expand hide show',
     perform: () => useAppStore.getState().toggleNav(),
   });
+  cmds.push({
+    id: 'layout:inspector-width',
+    group: 'Layout',
+    label: 'Widen or narrow the inspector',
+    keywords: 'inspector panel drawer details width wide narrow expand resize',
+    // a closed inspector opens, so the change shows
+    perform: () => {
+      const state = useAppStore.getState();
+      state.toggleInspectorWide();
+      if (!state.ui.inspectorOpen) state.toggleInspector();
+    },
+  });
 
   return cmds;
 }
