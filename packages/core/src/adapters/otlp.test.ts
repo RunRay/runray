@@ -5,9 +5,10 @@ import { fileURLToPath } from 'node:url';
 import type { Run } from '@runray/schema';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { Candidate } from '../adapter.js';
-import { isGenAiMetadataKey } from '../genai-keys.js';
+import { isGenAiMetadataKey } from '../attribute-keys.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
+import { scrubAttributes } from '../sanitize/identity.js';
 import { stripBom } from '../text.js';
 import { otlpAdapter } from './otlp.js';
 
@@ -319,6 +320,11 @@ describe('otlp unknown shapes (spec scenario)', () => {
                         key: 'runray.target',
                         value: { stringValue: 'secret-project-plan.md' },
                       },
+                      {
+                        // a reserved-prefix key of the emitter's own
+                        key: 'runray.notes',
+                        value: { stringValue: '/Users/alex/acme/.env' },
+                      },
                     ],
                   },
                 ],
@@ -342,10 +348,15 @@ describe('otlp unknown shapes (spec scenario)', () => {
 
     const redacted = await otlpAdapter.parse(candidate, { redact: true });
     const redTool = redacted.spans.find((s) => s.name === 'claude_code.tool');
-    // identity survives, the display token does not
+    // identity survives, the display token and the emitter's own key do not
     expect(redTool?.attributes['runray.targetKey']).toBe('deadbeefdeadbeef');
     expect(redTool?.attributes['runray.targetKind']).toBe('file-read');
     expect('runray.target' in (redTool?.attributes ?? {})).toBe(false);
+    expect('runray.notes' in (redTool?.attributes ?? {})).toBe(false);
+
+    // and sanitizing the unredacted parse lands on the same attributes (D4)
+    const sanitizedOpen = scrubAttributes(openTool?.attributes);
+    expect(sanitizedOpen).toEqual(redTool?.attributes);
   });
 
   it('detects and parses .jsonl files with multiple OTLP objects separated by newlines', async () => {

@@ -88,7 +88,7 @@ input and output messages, tool definitions and OpenLLMetry-style
 `gen_ai.prompt.N.content` / `gen_ai.completion.N.content`, and an
 `execute_tool` span with `gen_ai.tool.call.arguments` and `.result`. It exists
 for the redaction tests: under `--redact`, `--anonymize` and `--metadata-only`
-only the `gen_ai.*` metadata keys may survive (`packages/core/src/genai-keys.ts`).
+only the `gen_ai.*` metadata keys may survive (`packages/core/src/attribute-keys.ts`).
 
 The source document was written with made-up text and scrubbed like any capture
 (`pnpm scrub <source> -o fixtures/otlp/genai-semconv/content.json --source otlp`),
