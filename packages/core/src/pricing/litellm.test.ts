@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { convertLitellmPricing } from './litellm.js';
+import {
+  convertLitellmPricing,
+  PriceListTooShortError,
+  priceListFromText,
+} from './litellm.js';
 
 const sample: Record<string, unknown> = {
   'claude-x': {
@@ -141,6 +145,11 @@ describe('convertLitellmPricing with corrupted rates', () => {
     'infinite-input': chat({ input_cost_per_token: JSON.parse('1e400') }),
     'null-cache-read': chat({ cache_read_input_token_cost: null }),
     'free-model': chat({ input_cost_per_token: 0, output_cost_per_token: 0 }),
+    // no input price: never priced, so an odd field is not worth a warning
+    'no-input-odd-output': chat({
+      input_cost_per_token: undefined,
+      output_cost_per_token: 'TBD',
+    }),
     // outside our providers: skipped before any rate check, never reported
     'foreign-negative': {
       litellm_provider: 'somewhere-else',
@@ -186,5 +195,48 @@ describe('convertLitellmPricing with corrupted rates', () => {
     expect(nulled?.cacheReadPerMTok).toBe(3); // falls back to the input rate
     const free = table.entries.find((e) => e.modelPattern === 'free-model');
     expect(free?.inputPerMTok).toBe(0);
+  });
+});
+
+describe('priceListFromText', () => {
+  const model = {
+    litellm_provider: 'anthropic',
+    mode: 'chat',
+    input_cost_per_token: 3e-6,
+    output_cost_per_token: 15e-6,
+  };
+  const options = { snapshotDate: '2026-10-06', minEntries: 2 };
+
+  it('parses, converts and keeps a list that is long enough', () => {
+    const text = `﻿${JSON.stringify({ 'claude-a': model, 'claude-b': model })}`;
+    expect(
+      priceListFromText(text, options).entries.map((e) => e.modelPattern),
+    ).toEqual(['claude-a', 'claude-b']);
+  });
+
+  it.each([
+    ['text that is not JSON', '{"claude-a": ', /not valid JSON/],
+    ['a top-level array', '[]', /not a JSON object keyed by model/],
+    ['a bare value', '42', /not a JSON object keyed by model/],
+  ])('refuses %s', (_case, text, message) => {
+    expect(() => priceListFromText(text, options)).toThrow(message);
+  });
+
+  it('refuses a list shorter than minEntries, saying how short', () => {
+    const text = JSON.stringify({ 'claude-a': model });
+    expect(() => priceListFromText(text, options)).toThrow(
+      PriceListTooShortError,
+    );
+    try {
+      priceListFromText(text, options);
+    } catch (err) {
+      expect(err).toMatchObject({ models: 1, expected: 2 });
+    }
+  });
+
+  it('never accepts an empty list, whatever minEntries says', () => {
+    expect(() =>
+      priceListFromText('{}', { ...options, minEntries: 0 }),
+    ).toThrow(/only 0 usable models, fewer than the 1 expected/);
   });
 });

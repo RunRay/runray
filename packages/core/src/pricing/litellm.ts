@@ -1,3 +1,4 @@
+import { stripBom } from '../text.js';
 import type { PricingEntry, PricingTable } from './engine.js';
 
 /**
@@ -92,6 +93,12 @@ export function convertLitellmPricing(
       !providers.has(value.litellm_provider)
     )
       continue;
+    // no input price published: never priced, so nothing to report
+    if (
+      value.input_cost_per_token === undefined ||
+      value.input_cost_per_token === null
+    )
+      continue;
     const problem = RATE_FIELDS.map((field) => {
       const reason = rateProblem(value[field]);
       return reason === undefined ? undefined : `${field} ${reason}`;
@@ -100,7 +107,6 @@ export function convertLitellmPricing(
       options.onInvalid?.(key, problem);
       continue;
     }
-    if (typeof value.input_cost_per_token !== 'number') continue;
 
     const pattern = canonicalKey(key);
     const hadPrefix = key.includes('/');
@@ -140,4 +146,52 @@ export function convertLitellmPricing(
     aliases: {},
     entries,
   };
+}
+
+/** A price list that converts to fewer models than the caller expects. */
+export class PriceListTooShortError extends Error {
+  override readonly name = 'PriceListTooShortError';
+  constructor(
+    readonly models: number,
+    readonly expected: number,
+  ) {
+    super(
+      `the price list has only ${models} usable models, fewer than the ${expected} expected; it looks truncated`,
+    );
+  }
+}
+
+export interface PriceListOptions extends ConvertOptions {
+  /** Fewer usable models than this refuses the list (at least 1). */
+  minEntries: number;
+}
+
+/**
+ * Turns the downloaded price list, untrusted text, into a PricingTable. It
+ * must be JSON, an object keyed by model, and convert to at least
+ * `minEntries` models. Shared by `pricing --refresh` and the snapshot build
+ * script, which keep their own transport.
+ */
+export function priceListFromText(
+  text: string,
+  options: PriceListOptions,
+): PricingTable {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stripBom(text));
+  } catch (err) {
+    throw new Error(
+      `the price list is not valid JSON (${(err as Error).message})`,
+    );
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
+    throw new Error('the price list is not a JSON object keyed by model');
+  const table = convertLitellmPricing(
+    parsed as Record<string, unknown>,
+    options,
+  );
+  const expected = Math.max(1, options.minEntries);
+  if (table.entries.length < expected)
+    throw new PriceListTooShortError(table.entries.length, expected);
+  return table;
 }

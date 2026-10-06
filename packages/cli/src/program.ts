@@ -635,12 +635,18 @@ export function createProgram(): Command {
       '--refresh',
       'fetch current prices from LiteLLM — the ONLY network operation in runray',
     )
+    .option(
+      '--allow-short-list',
+      'with --refresh: accept a price list under half the bundled snapshot',
+    )
     .action(async (opts: Record<string, unknown>) => {
       if (opts.refresh === true) {
         console.log('fetching current prices (explicit opt-in network call)…');
         let result: RefreshResult;
         try {
-          result = await refreshPricing();
+          result = await refreshPricing({
+            allowShortList: opts.allowShortList === true,
+          });
         } catch (err) {
           throw new Error(
             `${(err as Error).message}\nNothing was written; runray keeps its current prices.`,

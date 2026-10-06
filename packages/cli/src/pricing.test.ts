@@ -5,6 +5,8 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createServer, type RequestListener } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bundledPricing } from '@runray/core';
@@ -49,6 +51,23 @@ function replyWith(
     return new Response(body, { status: 200, ...init });
   }) as typeof fetch;
   return { fetchImpl, calls };
+}
+
+/** A local HTTP server reached through the real fetch. */
+async function localServer(handler: RequestListener) {
+  const server = createServer(handler);
+  await new Promise<void>((resolve) =>
+    server.listen(0, '127.0.0.1', () => resolve()),
+  );
+  const { port } = server.address() as AddressInfo;
+  const fetchImpl = ((_url: string | URL | Request, req?: RequestInit) =>
+    fetch(`http://127.0.0.1:${port}/`, req)) as typeof fetch;
+  const close = () =>
+    new Promise<void>((resolve) => {
+      server.closeAllConnections();
+      server.close(() => resolve());
+    });
+  return { fetchImpl, close };
 }
 
 function freshDir(): string {
@@ -110,7 +129,7 @@ describe('refreshPricing', () => {
     async function refused(
       fetchImpl: typeof fetch,
       message: RegExp,
-      extra: { timeoutMs?: number; maxBytes?: number } = {},
+      extra: Parameters<typeof refreshPricing>[0] = {},
     ) {
       const caseDir = freshDir();
       const path = join(caseDir, 'pricing.json');
@@ -123,14 +142,16 @@ describe('refreshPricing', () => {
     }
 
     it('an empty object', async () => {
-      await refused(replyWith('{}').fetchImpl, /only 0 usable models/);
+      await refused(replyWith('{}').fetchImpl, /no usable models/);
     });
 
     it('a list under half the bundled snapshot', async () => {
       const short = Math.ceil(bundledCount / 2) - 1;
       await refused(
         replyWith(JSON.stringify(priceList(short))).fetchImpl,
-        new RegExp(`only ${short} usable models.*looks truncated`),
+        new RegExp(
+          `only ${short} usable models.*looks truncated.*--allow-short-list`,
+        ),
       );
     });
 
@@ -163,7 +184,7 @@ describe('refreshPricing', () => {
         replyWith(body, { headers: { 'content-length': String(2 << 20) } })
           .fetchImpl,
         /larger than 1 MiB/,
-        { maxBytes: 1 << 20 },
+        { limits: { maxBytes: 1 << 20 } },
       );
       expect(pulled).toBeLessThanOrEqual(1); // the stream's initial pull
     });
@@ -177,7 +198,7 @@ describe('refreshPricing', () => {
         },
       });
       await refused(replyWith(body).fetchImpl, /larger than 1 MiB/, {
-        maxBytes: 1 << 20,
+        limits: { maxBytes: 1 << 20 },
       });
       expect(pulled).toBeLessThan(20); // 1 MiB is 16 chunks of 64 KiB
     });
@@ -189,8 +210,71 @@ describe('refreshPricing', () => {
             reject(req.signal?.reason),
           );
         })) as typeof fetch;
-      await refused(fetchImpl, /timed out after 0.05s/, { timeoutMs: 50 });
+      await refused(fetchImpl, /timed out: no data arrived for 0.05s/, {
+        limits: { idleTimeoutMs: 50 },
+      });
     });
+
+    it('a server that stalls after the headers (real fetch)', async () => {
+      const server = await localServer((_req, res) => {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        res.write('{');
+      });
+      try {
+        await refused(server.fetchImpl, /timed out: no data arrived for 0.2s/, {
+          limits: { idleTimeoutMs: 200 },
+        });
+      } finally {
+        await server.close();
+      }
+    });
+
+    it('a server that drips just often enough to dodge the idle limit', async () => {
+      const server = await localServer((req, res) => {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        res.write('{');
+        const drip = setInterval(() => res.write(' '), 50);
+        req.on('close', () => clearInterval(drip));
+      });
+      try {
+        await refused(server.fetchImpl, /timed out: it took longer than 0.6s/, {
+          limits: { idleTimeoutMs: 300, totalTimeoutMs: 600 },
+        });
+      } finally {
+        await server.close();
+      }
+    });
+
+    it('an unreachable host, naming the reason', async () => {
+      const fetchImpl = (async () => {
+        throw Object.assign(new TypeError('fetch failed'), {
+          cause: new Error('getaddrinfo ENOTFOUND raw.githubusercontent.com'),
+        });
+      }) as typeof fetch;
+      await refused(
+        fetchImpl,
+        /could not reach raw\.githubusercontent\.com \(getaddrinfo ENOTFOUND/,
+      );
+    });
+  });
+
+  it('accepts a short list when asked, but never an empty one', async () => {
+    const short = priceList(3);
+    const path = join(freshDir(), 'pricing.json');
+    const result = await refreshPricing({
+      path,
+      fetchImpl: replyWith(JSON.stringify(short)).fetchImpl,
+      allowShortList: true,
+    });
+    expect(result.entries).toBe(3);
+    await expect(
+      refreshPricing({
+        path,
+        fetchImpl: replyWith('{}').fetchImpl,
+        allowShortList: true,
+      }),
+    ).rejects.toThrow(/no usable models/);
+    expect(loadUserPricing(path)?.entries).toHaveLength(3);
   });
 });
 

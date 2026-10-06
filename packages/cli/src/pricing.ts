@@ -3,9 +3,10 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import {
   bundledPricing,
-  convertLitellmPricing,
   LITELLM_PRICING_URL,
+  PriceListTooShortError,
   type PricingTable,
+  priceListFromText,
   stripBom,
 } from '@runray/core';
 import { z } from 'zod';
@@ -100,14 +101,27 @@ export interface RefreshResult {
 
 /** About ten times today's list (3 MB uncompressed). */
 const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
-const REFRESH_TIMEOUT_MS = 60_000;
+/** Silence this long ends the download: a stalled server. */
+const IDLE_TIMEOUT_MS = 30_000;
+/** Room for a slow link, while still ending a server that drips just often
+ * enough to dodge the idle limit. */
+const TOTAL_TIMEOUT_MS = 10 * 60_000;
 
-/** The top level of LiteLLM's list: one object, keyed by model. */
-const litellmListSchema = z.record(z.string(), z.unknown());
+export interface DownloadLimits {
+  maxBytes: number;
+  idleTimeoutMs: number;
+  totalTimeoutMs: number;
+}
+
+const seconds = (ms: number) => `${ms / 1000}s`;
 
 /** Reads the body, refusing it as soon as it passes `maxBytes`. The
  * declared length is checked first, so an oversized reply is never read. */
-async function readCapped(res: Response, maxBytes: number): Promise<string> {
+async function readCapped(
+  res: Response,
+  maxBytes: number,
+  onData: () => void,
+): Promise<string> {
   const tooLarge = () =>
     new Error(
       `the price list is larger than ${maxBytes / 1024 / 1024} MiB; refusing to read it`,
@@ -123,6 +137,7 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
+    onData();
     size += value.byteLength;
     if (size > maxBytes) {
       await reader.cancel();
@@ -133,15 +148,49 @@ async function readCapped(res: Response, maxBytes: number): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+/** undici reports every connection failure as "fetch failed" and keeps the
+ * reason (DNS, refused, TLS, proxy) in `cause`. */
+function unreachable(err: unknown): Error | undefined {
+  if (!(err instanceof TypeError)) return undefined;
+  const cause = (err as { cause?: unknown }).cause;
+  const causes = cause instanceof AggregateError ? cause.errors : [cause];
+  const reasons = causes
+    .filter((c): c is Error => c instanceof Error)
+    .map((c) => c.message);
+  if (reasons.length === 0) return undefined;
+  return new Error(
+    `pricing fetch failed: could not reach ${new URL(LITELLM_PRICING_URL).host} (${reasons.join('; ')})`,
+  );
+}
+
 async function fetchPriceList(
   fetchImpl: typeof fetch,
-  timeoutMs: number,
-  maxBytes: number,
+  limits: DownloadLimits,
 ): Promise<string> {
+  const controller = new AbortController();
+  let expired: string | undefined;
+  const expire = (why: string) => {
+    expired = why;
+    controller.abort(new Error(why));
+  };
+  const total = setTimeout(
+    () => expire(`it took longer than ${seconds(limits.totalTimeoutMs)}`),
+    limits.totalTimeoutMs,
+  );
+  let idle: ReturnType<typeof setTimeout> | undefined;
+  const touch = () => {
+    clearTimeout(idle);
+    idle = setTimeout(
+      () => expire(`no data arrived for ${seconds(limits.idleTimeoutMs)}`),
+      limits.idleTimeoutMs,
+    );
+  };
+  touch();
   try {
     const res = await fetchImpl(LITELLM_PRICING_URL, {
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: controller.signal,
     });
+    touch();
     if (!res.ok)
       throw new Error(`pricing fetch failed: ${res.status} ${res.statusText}`);
     // GitHub serves the list as text/plain, so only an HTML page is refused
@@ -152,57 +201,57 @@ async function fetchPriceList(
         'pricing fetch returned an HTML page, not the price list (a proxy or captive portal?)',
       );
     }
-    return await readCapped(res, maxBytes);
+    return await readCapped(res, limits.maxBytes, touch);
   } catch (err) {
-    if ((err as Error).name === 'TimeoutError')
-      throw new Error(`pricing fetch timed out after ${timeoutMs / 1000}s`);
-    throw err;
+    if (expired !== undefined)
+      throw new Error(`pricing fetch timed out: ${expired}`);
+    throw unreachable(err) ?? err;
+  } finally {
+    clearTimeout(total);
+    clearTimeout(idle);
   }
 }
 
 /**
  * Explicit opt-in network fetch; everything else in the product is offline.
- * The reply is untrusted: it is size-capped, parsed, shape-checked and
- * converted (which drops models with unusable rates), and must still hold
- * at least half as many models as the bundled snapshot. Only then is the
+ * The reply is untrusted: it is size- and time-capped, then parsed,
+ * shape-checked and converted by `priceListFromText` (which drops models
+ * with unusable rates), and must hold at least half as many models as the
+ * bundled snapshot unless `allowShortList` is set. Only then is the
  * override replaced, atomically; any failure leaves it untouched.
  */
 export async function refreshPricing(
   options: {
     path?: string;
     fetchImpl?: typeof fetch;
-    timeoutMs?: number;
-    maxBytes?: number;
+    /** Accept a list under half the bundled snapshot's size (never empty). */
+    allowShortList?: boolean;
+    limits?: Partial<DownloadLimits>;
   } = {},
 ): Promise<RefreshResult> {
   const path = options.path ?? userPricingPath();
-  const text = await fetchPriceList(
-    options.fetchImpl ?? fetch,
-    options.timeoutMs ?? REFRESH_TIMEOUT_MS,
-    options.maxBytes ?? MAX_RESPONSE_BYTES,
-  );
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stripBom(text));
-  } catch (err) {
-    throw new Error(
-      `the price list is not valid JSON (${(err as Error).message})`,
-    );
-  }
-  const list = litellmListSchema.safeParse(parsed);
-  if (!list.success)
-    throw new Error('the price list is not a JSON object keyed by model');
-
-  const skipped: RefreshResult['skipped'] = [];
-  const table = convertLitellmPricing(list.data, {
-    snapshotDate: new Date().toISOString().slice(0, 10),
-    onInvalid: (model, problem) => skipped.push({ model, problem }),
+  const text = await fetchPriceList(options.fetchImpl ?? fetch, {
+    maxBytes: MAX_RESPONSE_BYTES,
+    idleTimeoutMs: IDLE_TIMEOUT_MS,
+    totalTimeoutMs: TOTAL_TIMEOUT_MS,
+    ...options.limits,
   });
+
   const bundled = bundledPricing().entries.length;
-  if (table.entries.length < Math.ceil(bundled / 2)) {
+  const skipped: RefreshResult['skipped'] = [];
+  let table: PricingTable;
+  try {
+    table = priceListFromText(text, {
+      snapshotDate: new Date().toISOString().slice(0, 10),
+      onInvalid: (model, problem) => skipped.push({ model, problem }),
+      minEntries: options.allowShortList === true ? 1 : Math.ceil(bundled / 2),
+    });
+  } catch (err) {
+    if (!(err instanceof PriceListTooShortError)) throw err;
+    if (err.models === 0)
+      throw new Error('the price list has no usable models');
     throw new Error(
-      `the price list has only ${table.entries.length} usable models, under half of the ${bundled} in the bundled snapshot; it looks truncated`,
+      `the price list has only ${err.models} usable models, under half of the ${bundled} in the bundled snapshot, so it looks truncated. If LiteLLM really dropped those models, run \`runray pricing --refresh --allow-short-list\`.`,
     );
   }
 

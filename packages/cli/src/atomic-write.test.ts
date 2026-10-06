@@ -13,7 +13,11 @@ import { writeFileAtomic } from './atomic-write.js';
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
-  return { ...actual, renameSync: vi.fn(actual.renameSync) };
+  return {
+    ...actual,
+    renameSync: vi.fn(actual.renameSync),
+    writeFileSync: vi.fn(actual.writeFileSync),
+  };
 });
 
 const dir = mkdtempSync(join(tmpdir(), 'runray-atomic-'));
@@ -42,6 +46,18 @@ describe('writeFileAtomic', () => {
       throw new Error('EXDEV: cross-device link not permitted');
     });
     expect(() => writeFileAtomic(path, 'new')).toThrow(/EXDEV/);
+    expect(readFileSync(path, 'utf8')).toBe('old');
+    expect(readdirSync(caseDir)).toEqual(['file.json']);
+  });
+
+  it('keeps the old file and removes the temp file when the write fails', () => {
+    const caseDir = mkdtempSync(join(dir, 'full-'));
+    const path = join(caseDir, 'file.json');
+    writeFileSync(path, 'old');
+    vi.mocked(writeFileSync).mockImplementationOnce(() => {
+      throw new Error('ENOSPC: no space left on device');
+    });
+    expect(() => writeFileAtomic(path, 'new')).toThrow(/ENOSPC/);
     expect(readFileSync(path, 'utf8')).toBe('old');
     expect(readdirSync(caseDir)).toEqual(['file.json']);
   });

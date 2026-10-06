@@ -17,18 +17,26 @@ import {
   matchModel,
 } from '../packages/core/src/pricing/engine.js';
 import {
-  convertLitellmPricing,
   DEFAULT_PRICING_PROVIDERS,
   LITELLM_PRICING_URL,
+  priceListFromText,
 } from '../packages/core/src/pricing/litellm.js';
+import { BUNDLED_PRICING } from '../packages/core/src/pricing/snapshot.js';
 
-const res = await fetch(LITELLM_PRICING_URL);
+const res = await fetch(LITELLM_PRICING_URL, {
+  signal: AbortSignal.timeout(5 * 60_000),
+});
 if (!res.ok) throw new Error(`fetch failed: ${res.status} ${res.statusText}`);
-const raw = (await res.json()) as Record<string, unknown>;
 
+// Same checks as `runray pricing --refresh`: a list under half the current
+// snapshot is refused as truncated, since a tiny snapshot would also lower
+// the bar for every user refresh. Pass --allow-short-list to accept it.
 const snapshotDate = new Date().toISOString().slice(0, 10);
-const table = convertLitellmPricing(raw, {
+const table = priceListFromText(await res.text(), {
   snapshotDate,
+  minEntries: process.argv.includes('--allow-short-list')
+    ? 1
+    : Math.ceil(BUNDLED_PRICING.entries.length / 2),
   onInvalid: (key, problem) =>
     console.warn(`warning: left out ${key}: ${problem}`),
 });
