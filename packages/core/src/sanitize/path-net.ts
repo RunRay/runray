@@ -8,9 +8,15 @@
  * - UNC paths: `\\server\share`
  * - `\\?\` device/extended paths
  * - `file://…` URLs
+ *
+ * A drive path's separator run is one character class, `[\\/]+`, which also
+ * covers JSON-escaped (doubled) backslashes. Spelling it as a repeated choice
+ * of one backslash, a slash or two backslashes reads a backslash run in
+ * exponentially many ways, and a long run that never reaches `users` then
+ * backtracks for minutes.
  */
 const PATH_SHAPE_REGEX =
-  /(?:file:\/\/[^\s"'`<>]*)|(?:(?:\/users\/|\/home\/)[^\s"'`<>]+)|(?:[a-zA-Z]:(?:\\|\/|\\\\)+(?:users)(?:\\|\/|\\\\)+[^\s"'`<>]+)|(?:\\\\\\\?\\|\\\\\?\\|\/\/\?\/|\\\\\\\\\\?\\\\)[^\s"'`<>]*|(?:\\\\[a-zA-Z0-9._$-]+\\[a-zA-Z0-9._$-]+|\\\\\\\\[a-zA-Z0-9._$-]+\\\\[a-zA-Z0-9._$-]+)/gi;
+  /(?:file:\/\/[^\s"'`<>]*)|(?:(?:\/users\/|\/home\/)[^\s"'`<>]+)|(?:[a-zA-Z]:[\\/]+(?:users)[\\/]+[^\s"'`<>]+)|(?:\\\\\\\?\\|\\\\\?\\|\/\/\?\/|\\\\\\\\\\?\\\\)[^\s"'`<>]*|(?:\\\\[a-zA-Z0-9._$-]+\\[a-zA-Z0-9._$-]+|\\\\\\\\[a-zA-Z0-9._$-]+\\\\[a-zA-Z0-9._$-]+)/gi;
 
 export function findPathShapes(text: string): string[] {
   const matches: string[] = [];

@@ -337,6 +337,32 @@ describe('1.4 Path-shape net matcher & assertion', () => {
     expect(findPathShapes('D:\\\\Users\\\\runner\\\\work')).toHaveLength(1);
   });
 
+  it('matches a drive path whole, whatever mix of separators it uses', () => {
+    expect(findPathShapes('at C:\\\\Users\\\\runner\\\\work now')).toEqual([
+      'C:\\\\Users\\\\runner\\\\work',
+    ]);
+    expect(findPathShapes('"C:\\/Users//alex\\app"')).toEqual([
+      'C:\\/Users//alex\\app',
+    ]);
+  });
+
+  it('stays linear on long separator runs that never reach users', () => {
+    // Read as single and doubled backslashes, a run of n backslashes splits
+    // Fibonacci-many ways: the old separator took about 2 s at n = 40. The
+    // short run fails fast if that comes back; the long ones catch slower growth.
+    const texts = [
+      `C:${'\\'.repeat(40)}Program Files`,
+      `C:${'\\'.repeat(50_000)}x`,
+      `C:${'\\/'.repeat(25_000)}x`,
+      `C:\\Users${'\\'.repeat(50_000)}`,
+    ];
+    for (const text of texts) {
+      const start = performance.now();
+      findPathShapes(text);
+      expect(performance.now() - start).toBeLessThan(50);
+    }
+  });
+
   it('detects file:// URLs, UNC paths, and \\\\?\\ device paths', () => {
     expect(findPathShapes('file:///Users/alex/code/index.ts')).toHaveLength(1);
     expect(findPathShapes('\\\\server\\share\\path')).toHaveLength(1);
