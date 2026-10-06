@@ -7,6 +7,7 @@ import {
   insightsBySpan,
   laneMarks,
   matchingSpanIds,
+  subagentRails,
   subagentSpanIds,
   subtreeRollups,
 } from './waterfall';
@@ -157,6 +158,37 @@ describe('subagentSpanIds', () => {
       stubSpan({ id: 's2', kind: 'subagent' }),
     ]);
     expect(ids).toEqual(['s1', 's2']);
+  });
+});
+
+describe('subagentRails', () => {
+  const spans = [
+    stubSpan({ id: 'session', kind: 'session' }),
+    stubSpan({ id: 'own', parentId: 'session', depth: 1 }),
+    stubSpan({ id: 'outer', parentId: 'session', kind: 'subagent', depth: 1 }),
+    stubSpan({ id: 'turn', parentId: 'outer', kind: 'turn', depth: 2 }),
+    stubSpan({ id: 'read', parentId: 'turn', depth: 3 }),
+    stubSpan({ id: 'inner', parentId: 'turn', kind: 'subagent', depth: 3 }),
+    stubSpan({ id: 'grep', parentId: 'inner', depth: 4 }),
+    stubSpan({ id: 'orphan', parentId: 'gone', depth: 2 }),
+  ];
+  const rails = subagentRails(spans);
+
+  it('lists the depth of every enclosing subagent, outermost first', () => {
+    expect(rails.get('turn')).toEqual([1]);
+    expect(rails.get('read')).toEqual([1]);
+    expect(rails.get('inner')).toEqual([1]);
+    expect(rails.get('grep')).toEqual([1, 3]);
+  });
+
+  it('gives a subagent only the rails of the subagents above it', () => {
+    expect(rails.get('outer')).toEqual([]);
+  });
+
+  it('draws nothing for the orchestrator’s own spans or orphans', () => {
+    expect(rails.get('session')).toEqual([]);
+    expect(rails.get('own')).toEqual([]);
+    expect(rails.get('orphan')).toEqual([]);
   });
 });
 

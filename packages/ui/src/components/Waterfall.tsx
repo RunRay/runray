@@ -25,6 +25,7 @@ import {
   type SubtreeRollup,
   spanEndMs,
   spanStartMs,
+  subagentRails,
   subagentSpanIds,
   subtreeRollups,
   type WaterfallRow,
@@ -40,6 +41,8 @@ import { SpendSpine } from './SpendSpine';
 
 const ROW_PX = 32;
 const INDENT_PX = 16;
+/** A delegation rail's x within its depth step: under that depth's caret. */
+const RAIL_X = 13;
 /** Label flips to the left of the bar when it starts past this point. */
 const LABEL_FLIP_PCT = 55;
 /** How long the evidence rows stay lit after an insight lands the view. */
@@ -95,6 +98,8 @@ export function Waterfall({ run }: { run: Run }) {
   );
   const range = useMemo(() => computeTimeRange(run.spans), [run.spans]);
   const subagents = useMemo(() => subagentSpanIds(run.spans), [run.spans]);
+  // delegation rails (D): which subagent depths each row sits inside
+  const rails = useMemo(() => subagentRails(run.spans), [run.spans]);
   // subtree economics badges for container rows (D3) — a collapsed
   // subagent is no longer economically opaque
   const rollups = useMemo(() => subtreeRollups(run.spans), [run.spans]);
@@ -364,10 +369,19 @@ export function Waterfall({ run }: { run: Run }) {
             {virtualizer.getVirtualItems().map((item) => {
               const row = rows[item.index];
               if (row === undefined) return null;
+              const next = rows[item.index + 1];
               return (
                 <SpanRow
                   key={row.span.id}
                   row={row}
+                  rails={rails.get(row.span.id) ?? []}
+                  // depth-first order: the next row sits inside this
+                  // subagent exactly when it carries this depth's rail
+                  opensRail={
+                    row.span.kind === 'subagent' &&
+                    next !== undefined &&
+                    (rails.get(next.span.id) ?? []).includes(row.span.depth)
+                  }
                   rollup={
                     row.span.kind === 'subagent' || row.span.kind === 'session'
                       ? rollups.get(row.span.id)
@@ -424,6 +438,8 @@ function ToolbarButton({
 
 function SpanRow({
   row,
+  rails,
+  opensRail,
   rollup,
   range,
   selected,
@@ -439,6 +455,10 @@ function SpanRow({
   onHover,
 }: {
   row: WaterfallRow;
+  /** Depths of the subagents this row sits inside, outermost first. */
+  rails: readonly number[];
+  /** An expanded subagent whose subtree follows: its rail starts here. */
+  opensRail: boolean;
   /** Subtree economics for container rows (subagent, session). */
   rollup?: SubtreeRollup;
   range: { start: number; end: number };
@@ -554,6 +574,24 @@ function SpanRow({
           className="pointer-events-none absolute inset-0 bg-heat-2/35 motion-safe:animate-[evidence-flash_var(--ease-out)_both]"
           style={{ animationDuration: `${FLASH_MS}ms` }}
           aria-hidden
+        />
+      )}
+      {/* delegation rails (D): one per enclosing subagent, under its
+          caret, behind the bars; an expanded subagent starts its own just
+          below its caret */}
+      {rails.map((depth) => (
+        <span
+          key={depth}
+          aria-hidden
+          className="absolute inset-y-0 w-0.5 bg-span-subagent/50"
+          style={{ left: depth * INDENT_PX + RAIL_X }}
+        />
+      ))}
+      {opensRail && (
+        <span
+          aria-hidden
+          className="absolute bottom-0 w-0.5 bg-span-subagent/50"
+          style={{ left: indent + RAIL_X, top: 'calc(50% + 6px)' }}
         />
       )}
       {/* finding notch (A): this row is evidence of a finding; the full

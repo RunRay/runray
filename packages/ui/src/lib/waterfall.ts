@@ -166,6 +166,33 @@ export function subagentSpanIds(spans: readonly Span[]): string[] {
   return spans.filter((s) => s.kind === 'subagent').map((s) => s.id);
 }
 
+const NO_RAILS: readonly number[] = [];
+
+/**
+ * Delegation rails: for each span, the depths of the subagent spans it sits
+ * inside (proper ancestors, outermost first). Bars are placed by time across
+ * the full row, so without a rail per enclosing subagent the only sign of
+ * nesting is the caret's indent. One forward pass — normalizer order puts
+ * parents before children — and rows outside any subagent share one empty
+ * array.
+ */
+export function subagentRails(
+  spans: readonly Span[],
+): Map<string, readonly number[]> {
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  const rails = new Map<string, readonly number[]>();
+  for (const span of spans) {
+    const parent = span.parentId === null ? undefined : byId.get(span.parentId);
+    const above =
+      parent === undefined ? NO_RAILS : (rails.get(parent.id) ?? NO_RAILS);
+    rails.set(
+      span.id,
+      parent?.kind === 'subagent' ? [...above, parent.depth] : above,
+    );
+  }
+  return rails;
+}
+
 /**
  * Subtree economics rollup (D3): cost/tokens/llm-call count of every span's
  * subtree, one O(n) reverse pass — normalizer order guarantees parents

@@ -10,7 +10,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - at least 4.5:1 as text on its own 12% tint, the sessions-table badge.
 
   The old colours fail 7 of the 8 cases.
-- [ ] 1.2 Delegation rails [UI → /frontend-design]: `subagentRails` in `packages/ui/src/lib/waterfall.ts` gives each span the depths of its enclosing subagents. `Waterfall.tsx` draws a 2 px rail per depth under that depth's caret, and starts an expanded subagent's own rail below its caret. Tests: nested subagents, a subagent's own rails, orchestrator spans and orphans.
+- [x] 1.2 Delegation rails [UI → /frontend-design]: `subagentRails` in `packages/ui/src/lib/waterfall.ts` gives each span the depths of its enclosing subagents. `Waterfall.tsx` draws a 2 px rail per depth under that depth's caret, and starts an expanded subagent's own rail below its caret. Tests: nested subagents, a subagent's own rails, orchestrator spans and orphans.
 - [ ] 1.3 Hidden findings [UI → /frontend-design]: `hiddenFindings` in `packages/ui/src/lib/waterfall.ts` lists, for each collapsed row, the findings with evidence among its hidden descendants, worst first, leaving out the ones that name the row itself. A collapsed row shows:
   - a `⚠ N inside` chip that opens the worst one like a deep link;
   - a hollow notch at the left edge;
