@@ -23,6 +23,7 @@ describe('waste route (waste-grouping / visualizer "Waste tab")', () => {
           model: null,
           day: null,
           tool: null,
+          branch: null,
         },
       ),
     ).toBe('#/run/r1/waste?project=p&period=7');

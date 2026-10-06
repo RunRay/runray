@@ -19,6 +19,8 @@ export interface RunFilter {
   day: string | null;
   /** A tool/MCP name; drill-down from the dashboard By-tool card (E5). */
   tool: string | null;
+  /** A branch key (see `branchKey`); drill-down from the Top branches card. */
+  branch: string | null;
 }
 
 export const EMPTY_FILTER: RunFilter = {
@@ -28,7 +30,21 @@ export const EMPTY_FILTER: RunFilter = {
   model: null,
   day: null,
   tool: null,
+  branch: null,
 };
+
+/** Whether any dimension narrows the runs (the "Reset" and "Clear" gate). */
+export function isFilterActive(filter: RunFilter): boolean {
+  return (
+    filter.project !== null ||
+    filter.source !== null ||
+    filter.periodDays !== null ||
+    filter.model !== null ||
+    filter.day !== null ||
+    filter.tool !== null ||
+    filter.branch !== null
+  );
+}
 
 /** A run "uses" a tool when any tool/mcp span carries that name. */
 export function runUsesTool(run: Run, tool: string): boolean {
@@ -51,6 +67,14 @@ export function runUsesModel(run: Run, model: string): boolean {
  */
 export function projectKey(run: Run): string {
   return run.project?.name ?? '—';
+}
+
+/** Runs without a recorded branch share this key (and one ranking row). */
+export const NO_BRANCH = '—';
+
+/** The branch grouping key, the same placeholder rule as `projectKey`. */
+export function branchKey(run: Run): string {
+  return run.project?.gitBranch ?? NO_BRANCH;
 }
 
 /**
@@ -176,16 +200,21 @@ export function reconcileFilter(
     runs.some((r) => runUsesTool(r, filter.tool as string))
       ? filter.tool
       : null;
+  const branch =
+    filter.branch === null || runs.some((r) => branchKey(r) === filter.branch)
+      ? filter.branch
+      : null;
   if (
     project === filter.project &&
     source === filter.source &&
     model === filter.model &&
     day === filter.day &&
-    tool === filter.tool
+    tool === filter.tool &&
+    branch === filter.branch
   ) {
     return filter;
   }
-  return { ...filter, project, source, model, day, tool };
+  return { ...filter, project, source, model, day, tool, branch };
 }
 
 export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
@@ -209,6 +238,9 @@ export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
       return false;
     }
     if (filter.tool !== null && !runUsesTool(run, filter.tool)) {
+      return false;
+    }
+    if (filter.branch !== null && branchKey(run) !== filter.branch) {
       return false;
     }
     // Day strings are YYYY-MM-DD — lexicographic order IS date order.

@@ -63,7 +63,13 @@ export function exportCommand(
     if (filter.periodDays !== null) {
       parts.push('--since', `${filter.periodDays}d`);
     }
-    if (filter.project || filter.model || filter.day || filter.tool) {
+    if (
+      filter.project ||
+      filter.model ||
+      filter.day ||
+      filter.tool ||
+      filter.branch
+    ) {
       hasStoreOnlyFilter = true;
     }
   }
@@ -79,7 +85,7 @@ export function exportCommand(
 
   let scopeSentence: string;
   if (hasStoreOnlyFilter) {
-    scopeSentence = `Exports all ${allCount} runs matching CLI flags. Note: active in-browser filters (project, model, day, tool) have no CLI equivalent and are not applied.`;
+    scopeSentence = `Exports all ${allCount} runs matching CLI flags. Note: active in-browser filters (project, model, day, tool, branch) have no CLI equivalent and are not applied.`;
   } else if (filter?.source && filter?.periodDays) {
     scopeSentence = `Exports all runs from ${filter.source} in the last ${filter.periodDays} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
   } else if (filter?.source) {
