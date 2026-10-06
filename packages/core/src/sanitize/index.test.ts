@@ -281,9 +281,14 @@ describe('1.2 scrubIdentity & deterministic mapping', () => {
 });
 
 describe('1.3 Attribute allowlist', () => {
-  it('allows gen_ai.*, runray.* (except target), and tracepulse.* (except target)', () => {
+  it('allows gen_ai.* metadata, runray.* (except target), and tracepulse.* (except target)', () => {
     expect(isAttributeAllowed('gen_ai.request.model')).toBe(true);
     expect(isAttributeAllowed('gen_ai.usage.input_tokens')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.usage.cache_read.input_tokens')).toBe(
+      true,
+    );
+    expect(isAttributeAllowed('gen_ai.response.finish_reasons')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.tool.call.id')).toBe(true);
     expect(isAttributeAllowed('runray.targetKey')).toBe(true);
     expect(isAttributeAllowed('runray.targetKind')).toBe(true);
     expect(isAttributeAllowed('runray.cache_write_1h_tokens')).toBe(true);
@@ -296,6 +301,59 @@ describe('1.3 Attribute allowlist', () => {
     expect(isAttributeAllowed('custom.vendor_path')).toBe(false);
     expect(isAttributeAllowed('http.url')).toBe(false);
     expect(isAttributeAllowed('file.path')).toBe(false);
+  });
+
+  it('drops the gen_ai.* keys that carry prompt and tool text, and any it does not know', () => {
+    // GenAI semantic conventions, opt-in content attributes
+    for (const key of [
+      'gen_ai.input.messages',
+      'gen_ai.output.messages',
+      'gen_ai.system_instructions',
+      'gen_ai.tool.definitions',
+      'gen_ai.tool.call.arguments',
+      'gen_ai.tool.call.result',
+      // OpenLLMetry-style and older instrumentations
+      'gen_ai.prompt',
+      'gen_ai.completion',
+      'gen_ai.prompt.0.content',
+      'gen_ai.prompt.0.role',
+      'gen_ai.completion.0.content',
+      // text, though it sits among the request parameters
+      'gen_ai.request.stop_sequences',
+      // a key the conventions might add later: dropped until listed
+      'gen_ai.future.thing',
+    ]) {
+      expect(isAttributeAllowed(key), key).toBe(false);
+    }
+  });
+
+  it('drops GenAI message content from a container span that metadata-only keeps', () => {
+    // OTLP spans prune today, but a subagent or session span with content
+    // must not keep it either
+    const run: Run = {
+      ...createMockRun(),
+      spans: [
+        {
+          ...createMockSpan('s1', 'subagent'),
+          attributes: {
+            'gen_ai.operation.name': 'invoke_agent',
+            'gen_ai.agent.name': 'researcher',
+            'gen_ai.input.messages':
+              '[{"role":"user","parts":[{"type":"text","content":"see /Users/alex/acme/.env"}]}]',
+            'gen_ai.system_instructions': 'You are a research assistant.',
+          },
+        },
+      ],
+    };
+
+    const pruned = pruneToMetadata(
+      sanitizeRun(run, 'sanitized', createIdentityTable([run])),
+    );
+    expect(pruned.spans[0]?.attributes).toEqual({
+      'gen_ai.operation.name': 'invoke_agent',
+      'gen_ai.agent.name': 'researcher',
+    });
+    expect(findPathShapes(JSON.stringify(pruned))).toEqual([]);
   });
 
   it('drops vendor attributes with paths from OTLP spans without inspecting values', () => {

@@ -124,3 +124,18 @@ run under the `/frontend-design` skill per CLAUDE.md.
       section states that the dashboard generates nothing
 - [x] 6.4 A `pnpm changeset` — user-visible: new export flags and a sanitized
       sharing path
+
+## 7. Follow-ups
+
+- [x] 7.1 A `gen_ai.*` gets an allowlist of its own (spec: trace-sanitization
+      "Attribute allowlist", trace-ingestion "OTLP JSON import"; D2): the GenAI
+      conventions carry prompt and tool text under that prefix, so
+      `isGenAiMetadataKey` (`packages/core/src/genai-keys.ts`) keeps provider,
+      operation, model and numeric request parameters, response id, model and
+      finish reasons, tool name, call id and type, conversation and agent ids,
+      and `gen_ai.usage.*`, and drops every other key. The OTLP adapter applies
+      it under `--redact` and `isAttributeAllowed` under `sanitized` and
+      `metadata-only`. New synthetic fixture `fixtures/otlp/genai-semconv/`
+      (content attributes on agent, chat and tool spans) with its goldens; the
+      invariants suite asserts that no other `gen_ai.*` key survives redaction
+      or a sanitizing profile across every fixture. Added 2026-10-06.

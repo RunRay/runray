@@ -39,10 +39,22 @@ Under `sanitized` and `metadata-only`, the system SHALL replace or remove every 
 - THEN that attribute is absent, and no insight text names the target
 
 ### Requirement: Attribute allowlist
-`span.attributes` is an open map in the frozen schema, so under `sanitized` and `metadata-only` the system SHALL retain only allowlisted keys — the reserved `runray.*` counters, `gen_ai.*`, and legacy `tracepulse.*` metadata keys (excluding deleted `tracepulse.target`) — and SHALL drop every other key. Retention SHALL NOT depend on inspecting the value.
+`span.attributes` is an open map in the frozen schema, so under `sanitized` and `metadata-only` the system SHALL retain only allowlisted keys — the reserved `runray.*` counters, the metadata keys of `gen_ai.*`, and legacy `tracepulse.*` metadata keys (excluding deleted `tracepulse.target`) — and SHALL drop every other key. Retention SHALL NOT depend on inspecting the value.
+
+`gen_ai.*` is not metadata by prefix: the OpenTelemetry GenAI conventions carry message text, system instructions, tool definitions and tool arguments and results under it as opt-in attributes, and older instrumentations write `gen_ai.prompt.N.content` and `gen_ai.completion.N.content`. The system SHALL retain only these `gen_ai.*` keys: `gen_ai.system`, `gen_ai.provider.name`, `gen_ai.operation.name`, `gen_ai.output.type`, `gen_ai.conversation.id`, `gen_ai.agent.id`, `gen_ai.agent.name`, `gen_ai.request.model` and the numeric request parameters (`max_tokens`, `temperature`, `top_p`, `top_k`, `frequency_penalty`, `presence_penalty`, `seed`, `choice.count`), `gen_ai.response.id`, `gen_ai.response.model`, `gen_ai.response.finish_reasons`, `gen_ai.tool.name`, `gen_ai.tool.call.id`, `gen_ai.tool.type`, and every key under `gen_ai.usage.`. Any other `gen_ai.*` key, including one the conventions add later, SHALL be dropped. The same list SHALL govern parse-time redaction of OTLP imports, so the redaction parity invariant covers it.
 
 #### Scenario: Unknown imported attribute is dropped
 - GIVEN an OTLP-imported span carrying a vendor attribute with an absolute path in its value
+- WHEN the `sanitized` profile is applied
+- THEN the attribute is absent from the output
+
+#### Scenario: GenAI message content is dropped
+- GIVEN an OTLP-imported chat span carrying `gen_ai.input.messages`, `gen_ai.output.messages` and `gen_ai.prompt.0.content` next to `gen_ai.request.model` and `gen_ai.usage.input_tokens`
+- WHEN the `sanitized` or `metadata-only` profile is applied
+- THEN the three content attributes are absent and the model and token count remain on every span that survives
+
+#### Scenario: A GenAI key the list does not name is dropped
+- GIVEN an OTLP-imported span carrying a `gen_ai.*` attribute absent from the list
 - WHEN the `sanitized` profile is applied
 - THEN the attribute is absent from the output
 

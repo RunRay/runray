@@ -9,6 +9,7 @@ import type {
   RunWarning,
   SourceAdapter,
 } from '../adapter.js';
+import { isGenAiMetadataKey } from '../genai-keys.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
 import { errorPreview } from './error-preview.js';
@@ -39,8 +40,9 @@ import { errorPreview } from './error-preview.js';
  * import never fails on shape. Subagent nesting needs no synthesis: the
  * parent links carry it (a subagent's spans nest under the spawning tool's
  * execution span), and dangling parentSpanIds fall to the normalizer's Flat
- * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`; identity
- * attrs (user.*, organization.id) are dropped and `user_prompt` maps to the
+ * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`, and under
+ * redaction only its metadata keys (`isGenAiMetadataKey`); identity attrs
+ * (user.*, organization.id) are dropped and `user_prompt` maps to the
  * redactable `content.promptPreview`. Span events are skipped in v0.1 (they
  * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT).
  */
@@ -248,15 +250,17 @@ const REDACT_SAFE_RUNRAY = new Set([
 
 /** gen_ai.* passthrough — keys and values unchanged (values decoded from the
  * OTLP AnyValue envelope; that encoding is transport, not data). Under
- * redaction, runray.* / tracepulse.* is filtered to the identity allowlist so an emitter's
- * `runray.target` display text never survives --redact (privacy is enforced
- * in core, not the UI). */
+ * redaction, gen_ai.* is filtered to its metadata keys, because the GenAI
+ * conventions carry prompt and tool text there too, and runray.* /
+ * tracepulse.* to the identity allowlist so an emitter's `runray.target`
+ * display text never survives --redact (privacy is enforced in core, not
+ * the UI). */
 function genAiAttributes(attrs: Map<string, unknown>, redact: boolean): Json {
   const out: Json = {};
   for (const [key, value] of attrs) {
     if (value === undefined) continue;
     if (key.startsWith('gen_ai.')) {
-      out[key] = value;
+      if (!redact || isGenAiMetadataKey(key)) out[key] = value;
     } else if (key.startsWith('runray.') || key.startsWith('tracepulse.')) {
       // reserved prefix survives passthrough (X2), but redaction keeps only
       // identity keys — never the display token or any other content key

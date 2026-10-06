@@ -1,4 +1,5 @@
 import type { Run, Span } from '@runray/schema';
+import { isGenAiMetadataKey } from '../genai-keys.js';
 
 export interface IdentityTable {
   projects: Map<string, string>;
@@ -8,16 +9,18 @@ export interface IdentityTable {
 
 /**
  * Attribute allowlist (D2, trace-sanitization spec):
- * Retain reserved `runray.*` counters, `gen_ai.*`, and legacy `tracepulse.*`
- * internal metadata keys (excluding deleted display `tracepulse.target`).
- * Drop every other key without inspecting its value.
+ * Retain reserved `runray.*` counters, the metadata keys of `gen_ai.*`
+ * (`isGenAiMetadataKey`: the GenAI conventions put prompt and tool text
+ * under the same prefix), and legacy `tracepulse.*` internal metadata keys
+ * (excluding deleted display `tracepulse.target`). Drop every other key
+ * without inspecting its value.
  */
 export function isAttributeAllowed(key: string): boolean {
   if (key === 'runray.target' || key === 'tracepulse.target') {
     return false;
   }
   if (key.startsWith('gen_ai.')) {
-    return true;
+    return isGenAiMetadataKey(key);
   }
   if (key.startsWith('runray.')) {
     return true;
