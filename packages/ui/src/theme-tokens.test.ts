@@ -246,7 +246,7 @@ describe('faint on raised grounds', () => {
   it.each(used)('%s re-points faint to dim', (token) => {
     expect(
       raisedGrounds,
-      `add .${token.replace(/[:/]/g, '\\$&')} to "Faint on raised grounds" in index.css`,
+      `add .${token.replace(/[\\:/]/g, '\\$&')} to "Faint on raised grounds" in index.css`,
     ).toContain(token);
   });
 
