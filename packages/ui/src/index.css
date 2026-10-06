@@ -35,10 +35,13 @@
      theme-aware via the brand override) instead of resolving to nothing. */
   --color-brass: var(--color-brand);
 
-  /* Span-kind palette */
+  /* Span-kind palette. Subagent (chartreuse here, umber in paper) is the
+     hue furthest from every other bar and finding colour, also under
+     protanopia and deuteranopia, so delegated work never passes for the
+     orchestrator's own model calls (span-palette.test.ts). */
   --color-span-llm: #7c5cff;
   --color-span-tool: #00d4aa;
-  --color-span-subagent: #8b5cf6;
+  --color-span-subagent: #c7e02b;
   --color-span-mcp: #0ea5e9;
   --color-span-hook: #6b6b80;
   --color-span-error: #ef4444;
@@ -262,7 +265,7 @@
 
     --color-span-llm: #4f46e5;
     --color-span-tool: #4b5563;
-    --color-span-subagent: #374151;
+    --color-span-subagent: #4f2b0a;
     --color-span-mcp: #6b7280;
     --color-span-hook: #9ca3af;
     --color-span-error: #dc2626;
