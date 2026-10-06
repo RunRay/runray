@@ -30,3 +30,4 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - the FilterChip comment is rewrapped.
 
   Tests: clipping and both table widths in `session-branch.test.tsx`, rows lit by a branch-only filter in `overview-branches.test.tsx`, and row clicks through the store in `overview-branches-click.test.tsx` (jsdom). Browser check at 1,280 px: with a long project name the branch cell clips to 0 px with no glyph outside it; the table stays 1,247 px wide, and 1,083 px with the old widths when only runs without a branch are listed; `#/dashboard?branch=feat%2Finvoices-table` lights that row.
+- [x] 3.3 Proposal and specs follow the review: the trace-ingestion spec states the OTLP precedence (resource first, then the earliest-starting span) with a scenario for a tool span exported first, and the visualizer spec states the sessions CSV's last `gitBranch` column.

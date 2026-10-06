@@ -11,14 +11,14 @@
 ## What Changes
 
 - **Ingestion.**
-  - The OTLP adapter takes the run's branch from the first span, in document order, whose resource or span attributes name one. It reads `vcs.ref.head.name`, then the deprecated `vcs.repository.ref.name`, then `git.branch`. It skips a `vcs.*` value whose matching `….type` attribute says `tag`.
+  - The OTLP adapter takes the run's branch from the first resource that names one. It reads `vcs.ref.head.name`, then the deprecated `vcs.repository.ref.name`, then `git.branch`, and skips a `vcs.*` value whose matching `….type` attribute says `tag`. Without a resource branch it falls back to the earliest-starting span whose attributes name one. Exporters write spans as they end, so the first span in the file can be a tool span naming the ref it acted on.
   - An empty branch value counts as no branch, in both the OTLP and Claude Code adapters.
   - **OpenCode stays without a branch.** Its session and project records name the directory but no branch. Reading `.git/HEAD` at scan time would report the branch checked out today, not the one the session ran on, and would make parse output depend on the state of a repository outside the trace. The adapter keeps leaving the field unset.
 - **CLI.** Each `runray list --json` summary gains `gitBranch` when the run has one. The shape stays additive. The human table is unchanged.
 - **Dashboard.**
   - A **Top branches** card joins Resource Breakdown when any visible run has a branch, and stays while a branch filter is active. It ranks project and branch pairs by cost or tokens, so `main` in two repositories stays two rows. Runs without a branch share one "no branch" row.
   - Activating a row filters to that project and branch. `branch` is a new drill-down filter: a clearable chip, the last parameter of the canonical hash order, and an in-browser filter that `runray export` can't reproduce (the export dialog says so).
-- **Session.** The run header shows the project and branch next to the date and source, the sessions table shows the branch after the project name, and the sessions CSV gains a last `gitBranch` column.
+- **Session.** The run header shows the project and branch next to the date and source. The sessions table shows the branch after the project name; when a listed run has a branch, the project column takes 48px from the title column, so the table is no wider. The sessions CSV gains a last `gitBranch` column.
 
 ## Non-goals
 
