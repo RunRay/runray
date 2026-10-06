@@ -241,8 +241,10 @@ function CellLayer({
                 <p className="truncate text-label text-text">{item.name}</p>
                 <p className={`font-mono text-label ${HEAT_TEXT[heat]}`}>
                   {format(item.value)}
+                  {/* cells are raised grounds, so faint renders at dim here;
+                      the sans face keeps the note apart from the figure */}
                   {hiddenNested > 0 && (
-                    <span className="ml-1 text-text-faint">
+                    <span className="ml-1 font-sans text-text-faint">
                       +{hiddenNested} nested
                     </span>
                   )}
