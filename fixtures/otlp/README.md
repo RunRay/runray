@@ -77,3 +77,21 @@ pnpm scrub "$env:USERPROFILE\otlp-subagents.json" `
 to be explicit. Verify (`docs/04-SAMPLE-LOGS.md §5`): the `SCRUBBED` marker is
 present, the file parses, and `grep -ri "<your-username>"` / your email return
 nothing.
+
+## Variant: `genai-semconv/` (synthetic)
+
+`genai-semconv/content.json` is not a capture. It is a hand-written OTLP/JSON
+document in the shape a GenAI-semconv instrumentation emits with its opt-in
+content attributes turned on: an `invoke_agent` span with
+`gen_ai.system_instructions` and `gen_ai.input.messages`, two `chat` spans with
+input and output messages, tool definitions and OpenLLMetry-style
+`gen_ai.prompt.N.content` / `gen_ai.completion.N.content`, and an
+`execute_tool` span with `gen_ai.tool.call.arguments` and `.result`. It exists
+for the redaction tests: under `--redact`, `--anonymize` and `--metadata-only`
+only the `gen_ai.*` metadata keys may survive (`packages/core/src/genai-keys.ts`).
+
+The source document was written with made-up text and scrubbed like any capture
+(`pnpm scrub <source> -o fixtures/otlp/genai-semconv/content.json --source otlp`),
+so its content values are lorem; the attribute keys, ids, model names and token
+counts are what the tests read. The adapter maps these generic span names to
+`kind: other`.

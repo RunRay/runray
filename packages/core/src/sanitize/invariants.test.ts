@@ -10,6 +10,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import type { Candidate, SourceAdapter } from '../adapter.js';
 import { adapters } from '../adapters/index.js';
+import { isGenAiMetadataKey } from '../genai-keys.js';
 import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
@@ -220,6 +221,43 @@ describe('2. Invariants, fixtures, goldens', () => {
           ).not.toThrow();
         }
       }
+    }, 60_000);
+
+    it('keeps no gen_ai.* content key under --redact or a sanitizing profile across every fixture', async () => {
+      const targets = await allFixtureTargets();
+      const genAiKeys = (spans: readonly { attributes?: object }[]) =>
+        spans.flatMap((s) =>
+          Object.keys(s.attributes ?? {}).filter((k) =>
+            k.startsWith('gen_ai.'),
+          ),
+        );
+      // the GenAI-semconv fixture carries content keys, so this can fail
+      let contentKeysInFull = 0;
+
+      for (const { adapter, variant, candidateIndex, candidate } of targets) {
+        const label = `${adapter.id}/${variant}#${candidateIndex}`;
+        const rawUnredacted = await adapter.parse(candidate, { redact: false });
+        contentKeysInFull += genAiKeys(rawUnredacted.spans).filter(
+          (k) => !isGenAiMetadataKey(k),
+        ).length;
+
+        const rawRedacted = await adapter.parse(candidate, { redact: true });
+        for (const key of genAiKeys(rawRedacted.spans)) {
+          expect(isGenAiMetadataKey(key), `${label} --redact kept ${key}`).toBe(
+            true,
+          );
+        }
+        for (const profile of sanitizingProfiles) {
+          const run = buildPipelineRun(rawUnredacted, profile);
+          for (const key of genAiKeys(run.spans)) {
+            expect(
+              isGenAiMetadataKey(key),
+              `${label} ${profile} kept ${key}`,
+            ).toBe(true);
+          }
+        }
+      }
+      expect(contentKeysInFull).toBeGreaterThan(0);
     }, 60_000);
 
     it('fails the test when a path shape or known project basename survives', () => {

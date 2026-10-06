@@ -1,0 +1,60 @@
+{
+  "id": "run_c7cdbb29f887e61d",
+  "source": {
+    "tool": "otlp",
+    "format": "otlp-json",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "startedAt": "2026-10-06T15:20:00.000Z",
+  "endedAt": "2026-10-06T15:20:09.500Z",
+  "durationMs": 9500,
+  "spans": [
+    {
+      "id": "ses-genai-semconv-1",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:00.000Z",
+      "endedAt": "2026-10-06T15:20:09.500Z",
+      "durationMs": 9500,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ses-genai-semconv-1"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "recordId": "ses-genai-semconv-1"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "reasoning": 0,
+      "total": 0
+    },
+    "costUSD": {
+      "total": 0,
+      "wastedEstimate": 0,
+      "byModel": {}
+    },
+    "counts": {
+      "llmCalls": 0,
+      "toolCalls": 0,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0
+    }
+  },
+  "insights": []
+}
