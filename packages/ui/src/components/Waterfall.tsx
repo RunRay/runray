@@ -321,7 +321,7 @@ export function Waterfall({ run }: { run: Run }) {
           }}
           placeholder="filter spans · /"
           aria-label="Filter spans by name"
-          className="h-6 w-44 min-w-0 rounded border border-border-slate bg-surface px-2 text-label text-on-surface placeholder:text-outline transition-colors duration-150 ease-out hover:bg-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="h-6 w-44 min-w-0 rounded border border-border-slate bg-surface px-2 text-label text-on-surface placeholder:text-text-faint transition-colors duration-150 ease-out hover:bg-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
         <div className="flex shrink-0 gap-1.5">
           {subagents.length > 0 && (
