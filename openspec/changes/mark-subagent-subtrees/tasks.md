@@ -18,4 +18,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - a "Hidden inside" list in its tooltip.
 
   Tests: the lib function, and a static render of the row.
-- [ ] 1.4 `patch` changeset for `runray`. Browser check in ink and paper on the demo's delegation-heavy run: rails, colour, and hidden findings with all subagents collapsed.
+- [x] 1.4 `patch` changeset for `runray`. Browser check in ink and paper on the demo's delegation-heavy run (1,439 spans, 19 subagents, 8 of them nested):
+  - the rail runs under an expanded subagent's caret;
+  - with all subagents collapsed (485 rows), the four findings that sit inside subagents show as `⚠ 1 inside` on their rows, with the hollow notch and the "Hidden inside" tooltip;
+  - clicking one clears the `/` filter and expands that subagent: 75 more rows, matching its `+75`. Its evidence rows light up, and the Inspector opens the finding.
