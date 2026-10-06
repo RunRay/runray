@@ -74,6 +74,7 @@ export function SavingsPanel({
                 {formatUSD(summary.burnedUSD)}
                 {tokensLead && (
                   <span className="font-sans text-label font-normal text-text-dim">
+                    {' '}
                     {AT_API_PRICES}
                     {summary.burnedShare > 0 &&
                       ` · ${(summary.burnedShare * 100).toFixed(1)}% of spend`}
@@ -90,6 +91,7 @@ export function SavingsPanel({
                 {formatUSD(summary.opportunityUSD)}
                 {tokensLead && (
                   <span className="font-sans text-label font-normal text-text-dim">
+                    {' '}
                     {AT_API_PRICES}
                   </span>
                 )}

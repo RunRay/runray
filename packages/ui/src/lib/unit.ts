@@ -36,12 +36,29 @@ export function persistUnit(unit: DisplayUnit): void {
   }
 }
 
-/** One figure in the active unit: `$12.41` or `382.9M` (no suffix). */
+/** Anything measured both ways: a run, a day, a ranking row, a tool. */
+export interface Figure {
+  costUSD: number;
+  tokens: number;
+}
+
+/** The figure's value in the display unit — what leads, sorts and sizes. */
+export function inUnit(unit: DisplayUnit, figure: Figure): number {
+  return unit === 'tokens' ? figure.tokens : figure.costUSD;
+}
+
+/**
+ * One figure in the display unit: `$12.41`, or `382.9M` for tokens. Rows
+ * under a heading that names the unit leave the count bare; a figure
+ * standing on its own (a list row, a hint, a tooltip) passes `named` and
+ * reads `382.9M tokens`.
+ */
 export function formatFigure(
   unit: DisplayUnit,
-  value: { usd: number; tokens: number },
+  figure: Figure,
+  { named = false }: { named?: boolean } = {},
 ): string {
-  return unit === 'tokens'
-    ? formatTokensCompact(value.tokens)
-    : formatUSD(value.usd);
+  if (unit === 'usd') return formatUSD(figure.costUSD);
+  const count = formatTokensCompact(figure.tokens);
+  return named ? `${count} tokens` : count;
 }

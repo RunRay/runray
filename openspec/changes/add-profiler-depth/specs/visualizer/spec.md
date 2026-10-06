@@ -319,14 +319,21 @@ with, dollars or tokens, from a control in the top bar beside the limit
 mode toggle and from the command palette; the choice SHALL default to
 dollars and persist across reloads the way the theme does. In token mode
 the overview spend statement, burn line, key indicators, resource
-rankings, cross-run tool ranking, spend-by-day chart and period trend,
-the Explorer session list, and the run header and cost hero SHALL lead
-with token counts, rankings SHALL be ordered by tokens, and the dollar
-figure SHALL remain beside them as secondary. Estimates that exist only in
-dollars (waste, potential savings, what-if repricing) SHALL stay in
-dollars and SHALL be labelled "at API prices" in token mode; no token
-count SHALL be derived from a dollar estimate. The sessions table SHALL
-keep both its token and cost columns in either unit.
+rankings, cross-run tool ranking, run preview, spend-by-day chart and
+period trend, the Explorer session list, and the run header, cost hero,
+tool leaderboard and subtree map SHALL lead with token counts, and
+rankings SHALL be ordered by tokens. The spend statement, the run header
+and the cost hero SHALL keep the dollar figure beside the token count as
+secondary; rankings, charts and lists SHALL show the token count alone,
+under a heading or with a suffix that names the unit. Estimates that exist
+only in dollars (waste, potential savings, what-if repricing) SHALL stay
+in dollars, and no token count SHALL be derived from a dollar estimate. In
+token mode their headline figures (the wasted indicator, the savings
+panel, the waste-by-rule total, the run header's burned figure, and the
+Waste tab's burned and opportunity figures) SHALL be labelled "at API
+prices"; per-finding amounts and the what-if panel, which already names
+the rates it repriced at, keep their dollar figures unchanged. The
+sessions table SHALL keep both its token and cost columns in either unit.
 
 #### Scenario: Token mode leads with tokens
 - GIVEN runs totalling 381.5M tokens and $484.06

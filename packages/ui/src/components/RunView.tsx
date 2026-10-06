@@ -87,6 +87,7 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
           <div>
             <p className="micro-label text-text-faint">
               Burned / Opportunities
+              {tokensLead && ` · ${AT_API_PRICES}`}
             </p>
             <p
               className={`font-mono text-body font-semibold ${wasted > 0 ? 'text-heat-2' : 'text-text-dim'}`}

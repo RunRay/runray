@@ -732,6 +732,13 @@ describe('display unit (E6)', () => {
     expect(byTokens.map((t) => t.name)).toEqual(['ctx7_query', 'bash']);
     expect(byTokens[0]?.tokens).toBe(900);
 
+    // one runs array, both units: the merge is cached, the order is not
+    const runs = [run];
+    expect(topTools(runs, 8, 'tokens')[0]?.name).toBe('ctx7_query');
+    expect(topTools(runs)[0]?.name).toBe('bash');
+    expect(mcpShare(runs, 'tokens').share).toBeCloseTo(0.9, 6);
+    expect(topTools(runs, 8, 'tokens')[0]?.name).toBe('ctx7_query');
+
     expect(mcpShare([run]).share).toBeCloseTo(0.1, 6);
     const tokenShare = mcpShare([run], 'tokens');
     expect(tokenShare.share).toBeCloseTo(0.9, 6);

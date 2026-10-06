@@ -28,7 +28,7 @@ import {
   worstToolError,
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
-import { AT_API_PRICES, type DisplayUnit } from '../lib/unit';
+import { AT_API_PRICES, type DisplayUnit, inUnit } from '../lib/unit';
 import { useAppStore } from '../store';
 import { CacheDial } from './CacheDial';
 import { CoverageCaveat } from './CoverageNotices';
@@ -225,16 +225,21 @@ export function Overview({
           >
             {/* waste is a dollar estimate (no token count behind cache or
                 model-choice findings): token mode leads with its share and
-                names the dollars for what they are */}
+                names the dollars for what they are. Nothing priced means
+                the waste is unknown, never a measured zero. */}
             <p className="flex flex-wrap items-baseline gap-x-2 font-display text-[24px] font-semibold leading-[1.1] text-heat-2">
               <CoverageCaveat runs={runs} />
-              {tokensLead || totals.wastedUSD <= 0
-                ? `${wastedShare.toFixed(1)}%`
-                : formatUSD(totals.wastedUSD)}
+              {totals.costUSD <= 0
+                ? '—'
+                : tokensLead || totals.wastedUSD <= 0
+                  ? `${wastedShare.toFixed(1)}%`
+                  : formatUSD(totals.wastedUSD)}
               <span className="font-sans text-label font-normal text-text-dim">
-                {tokensLead
-                  ? `${formatUSD(totals.wastedUSD)} ${AT_API_PRICES}`
-                  : `(${wastedShare.toFixed(1)}%)`}
+                {totals.costUSD <= 0
+                  ? 'no priced calls'
+                  : tokensLead
+                    ? `${formatUSD(totals.wastedUSD)} ${AT_API_PRICES}`
+                    : `(${wastedShare.toFixed(1)}%)`}
               </span>
             </p>
             <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-surface-2">
@@ -281,17 +286,17 @@ export function Overview({
           </KpiCard>
 
           <KpiCard label="Avg Session" delayMs={190}>
-            <p className="flex items-baseline gap-2 font-display text-[24px] font-semibold leading-[1.1] text-text">
+            <p className="flex flex-wrap items-baseline gap-x-2 font-display text-[24px] font-semibold leading-[1.1] text-text">
               {tokensLead
                 ? formatTokensCompact(avgTokens)
                 : formatUSD(costStats.averageUSD)}
-              <span
-                className="font-mono text-label font-normal text-text-dim"
-                title={tokensLead ? AT_API_PRICES : undefined}
-              >
+              <span className="font-mono text-label font-normal text-text-dim">
                 {tokensLead
                   ? formatUSD(costStats.averageUSD)
                   : `${formatTokensCompact(avgTokens)} tokens`}
+                {tokensLead && (
+                  <span className="font-sans"> {AT_API_PRICES}</span>
+                )}
               </span>
             </p>
             <p
@@ -309,7 +314,7 @@ export function Overview({
         <SavingsPanel runs={runs} filter={filter} />
       </section>
 
-      {/* STREFA 3: SKONSOLIDOWANA ANALITYKA (Z PRZEŁĄCZNIKIEM METRYKI) */}
+      {/* Resource breakdown: the rankings follow the display unit (E6) */}
       <section aria-label="Struktura zużycia zasobów">
         <div className="mb-3">
           <h2 className="font-display text-body font-semibold text-text">
@@ -488,19 +493,19 @@ function KpiCard({
 function BurnLine({ days, unit }: { days: DaySpend[]; unit: DisplayUnit }) {
   const tokensLead = unit === 'tokens';
   const plotted = useMemo(
-    () => days.reduce((s, d) => s + (tokensLead ? d.tokens : d.costUSD), 0),
-    [days, tokensLead],
+    () => days.reduce((s, d) => s + inUnit(unit, d), 0),
+    [days, unit],
   );
   const points = useMemo(() => {
     if (days.length < 2 || plotted <= 0) return null;
     let acc = 0;
     return days.map((d, i) => {
-      acc += tokensLead ? d.tokens : d.costUSD;
+      acc += inUnit(unit, d);
       const x = (i / (days.length - 1)) * 400;
       const y = 76 - (acc / plotted) * 68;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     });
-  }, [days, plotted, tokensLead]);
+  }, [days, plotted, unit]);
   if (points === null) return <div aria-hidden />;
   const plottedLabel = tokensLead
     ? `${formatTokensCompact(plotted)} tokens`
@@ -693,7 +698,7 @@ function SpendChart({
   const tokensLead = unit === 'tokens';
   // bar heights in the display unit; the waste strip stays a share of the
   // day's dollars (waste has no token count) and says so in token mode
-  const heightOf = (d: DaySpend) => (tokensLead ? d.tokens : d.costUSD);
+  const heightOf = (d: DaySpend) => inUnit(unit, d);
   const stackOf = (d: DaySpend, key: string) =>
     (mode === 'model'
       ? (tokensLead ? d.byModelTokens : d.byModel)[key]

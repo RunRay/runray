@@ -58,11 +58,14 @@ export function SessionsPane({ runs }: { runs: Run[] }) {
                     {run.title ?? run.project?.name ?? run.source.tool}
                   </span>
                   <span className="shrink-0 font-mono text-label text-text-dim">
-                    {formatFigure(unit, {
-                      usd: run.totals.costUSD.total,
-                      tokens: run.totals.tokens.total,
-                    })}
-                    {unit === 'tokens' && ' tok'}
+                    {formatFigure(
+                      unit,
+                      {
+                        costUSD: run.totals.costUSD.total,
+                        tokens: run.totals.tokens.total,
+                      },
+                      { named: true },
+                    )}
                   </span>
                 </span>
                 <span className="mt-0.5 flex items-baseline justify-between gap-2 text-label text-text-faint">

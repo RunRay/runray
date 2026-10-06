@@ -41,7 +41,7 @@ export function UnitSwitch() {
               i > 0 ? 'border-l border-border-slate' : ''
             } ${
               on
-                ? 'bg-brass/15 text-text'
+                ? 'bg-brass/15 text-text hover:bg-brass/25'
                 : 'text-text-dim hover:bg-surface-variant hover:text-text'
             }`}
           >

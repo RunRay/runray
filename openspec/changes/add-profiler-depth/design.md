@@ -332,18 +332,22 @@ A subscriber on a flat seat is never billed the dollars RunRay computes;
 their limit is spent in tokens. So the top bar gets a `USD | tokens`
 switch (store `unit`, persisted like the theme, dollars by default) that
 picks which figure leads: the overview spend statement, burn line, key
-indicators, rankings, tool ranking, spend-by-day chart and trend, the
-Explorer list, and the run header and cost hero. The other figure stays
-beside it as secondary. Rankings sort by the lead unit, so a top-five cut is
-the top five of what the card shows.
+indicators, rankings, tool ranking, run preview, spend-by-day chart and
+trend, the Explorer list, and the run header, cost hero, tool leaderboard
+and subtree map. The dollars stay beside the tokens where there is room
+for two figures (the spend statement, the run header, the cost hero);
+rankings, charts and lists show the token count alone, under a heading or
+with a "tokens" suffix that names the unit. Rankings sort by the lead unit,
+so a top-five cut is the top five of what the card shows.
 
 It does not merge with limit mode. A three-state `$ · tokens · %` switch
 would put a percentage on every figure, the doubling E1 rules out. The two
 compose instead: the unit picks the figures, `%win` frames three of them,
 in that unit.
 
-Waste, savings and what-if stay in dollars, labelled "at API prices" in
-token mode. Five of the twelve rules (cache misses, prefix breaks, idle
+Waste, savings and what-if stay in dollars. In token mode their headline
+figures read "at API prices"; per-finding amounts stay as they are, and the
+what-if panel already names the rates it repriced at. Five of the twelve rules (cache misses, prefix breaks, idle
 expiry, model mismatch, the expensive-subagent downgrade) estimate a price
 difference; the token count is the same either way, so a wasted-token
 figure derived from dollars would be fiction. The savings panel's old

@@ -71,10 +71,11 @@ function buildCommands(
 ): Command[] {
   const cmds: Command[] = [];
   const figureOf = (run: Run) =>
-    `${formatFigure(unit, {
-      usd: run.totals.costUSD.total,
-      tokens: run.totals.tokens.total,
-    })}${unit === 'tokens' ? ' tokens' : ''}`;
+    formatFigure(
+      unit,
+      { costUSD: run.totals.costUSD.total, tokens: run.totals.tokens.total },
+      { named: true },
+    );
   const nav = (route: Route) => () => {
     useAppStore.getState().navigateTo(route);
   };

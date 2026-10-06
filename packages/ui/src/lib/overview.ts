@@ -8,7 +8,7 @@ import { ruleClass } from '@runray/core/insights-meta';
 import type { Insight, Run } from '@runray/schema';
 import { llmTokens, toolSpendLeaderboard } from './cost-breakdown';
 import { toolDurationStatsAcrossRuns } from './time-breakdown';
-import type { DisplayUnit } from './unit';
+import { type DisplayUnit, inUnit } from './unit';
 
 const tokensByModelCache = new WeakMap<Run, Record<string, number>>();
 
@@ -214,13 +214,14 @@ function rank(
   limit: number,
   by: DisplayUnit,
 ): RankEntry[] {
-  const lead = (e: RankEntry) => (by === 'tokens' ? e.tokens : e.costUSD);
-  const next = (e: RankEntry) => (by === 'tokens' ? e.costUSD : e.tokens);
+  const other: DisplayUnit = by === 'tokens' ? 'usd' : 'tokens';
   return [...byName.entries()]
     .map(([name, { costUSD, tokens }]) => ({ name, costUSD, tokens }))
     .sort(
       (a, b) =>
-        lead(b) - lead(a) || next(b) - next(a) || (a.name < b.name ? -1 : 1),
+        inUnit(by, b) - inUnit(by, a) ||
+        inUnit(other, b) - inUnit(other, a) ||
+        (a.name < b.name ? -1 : 1),
     )
     .slice(0, limit);
 }
@@ -496,12 +497,30 @@ export interface ToolRankEntry {
   p95Ms: number;
 }
 
+/**
+ * Merged attribution per visible-runs array, unsorted. `topTools` and
+ * `mcpShare` both need it, and flipping the unit only re-sorts: the walk
+ * over every span of every run happens once per runs array.
+ */
+const toolEntriesCache = new WeakMap<readonly Run[], ToolRankEntry[]>();
+
 /** Full attributed-tool leaderboard (all tools, sorted by the display unit)
  * — the honest denominator for mcpShare; `topTools` is just its head. */
 function allToolEntries(
   runs: readonly Run[],
   by: DisplayUnit,
 ): ToolRankEntry[] {
+  let entries = toolEntriesCache.get(runs);
+  if (entries === undefined) {
+    entries = mergeToolEntries(runs);
+    toolEntriesCache.set(runs, entries);
+  }
+  return [...entries].sort(
+    (a, b) => inUnit(by, b) - inUnit(by, a) || (a.name < b.name ? -1 : 1),
+  );
+}
+
+function mergeToolEntries(runs: readonly Run[]): ToolRankEntry[] {
   const merged = new Map<
     string,
     { costUSD: number; tokens: number; calls: number; mcpServer?: string }
@@ -524,7 +543,7 @@ function allToolEntries(
   const p95ByName = new Map(
     toolDurationStatsAcrossRuns(runs).map((s) => [s.name, s.p95Ms]),
   );
-  const entries: ToolRankEntry[] = [...merged.entries()].map(([name, e]) => ({
+  return [...merged.entries()].map(([name, e]) => ({
     name,
     ...(e.mcpServer === undefined ? {} : { mcpServer: e.mcpServer }),
     costUSD: e.costUSD,
@@ -532,9 +551,6 @@ function allToolEntries(
     calls: e.calls,
     p95Ms: p95ByName.get(name) ?? 0,
   }));
-  const lead = (e: ToolRankEntry) => (by === 'tokens' ? e.tokens : e.costUSD);
-  entries.sort((a, b) => lead(b) - lead(a) || (a.name < b.name ? -1 : 1));
-  return entries;
 }
 
 export function topTools(
@@ -562,8 +578,7 @@ export function mcpShare(
   by: DisplayUnit = 'usd',
 ): McpShare {
   const entries = allToolEntries(runs, by);
-  const lead = (e: ToolRankEntry) => (by === 'tokens' ? e.tokens : e.costUSD);
-  const total = entries.reduce((acc, e) => acc + lead(e), 0);
+  const total = entries.reduce((acc, e) => acc + inUnit(by, e), 0);
   const byServer = new Map<string, number>();
   let mcpUSD = 0;
   let mcpTokens = 0;
@@ -571,17 +586,16 @@ export function mcpShare(
     if (e.mcpServer === undefined) continue;
     mcpUSD += e.costUSD;
     mcpTokens += e.tokens;
-    byServer.set(e.mcpServer, (byServer.get(e.mcpServer) ?? 0) + lead(e));
+    byServer.set(e.mcpServer, (byServer.get(e.mcpServer) ?? 0) + inUnit(by, e));
   }
   const topServer =
     [...byServer.entries()].sort(
       (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
     )[0]?.[0] ?? null;
-  const mcpLead = by === 'tokens' ? mcpTokens : mcpUSD;
+  const mcp = { costUSD: mcpUSD, tokens: mcpTokens };
   return {
-    costUSD: mcpUSD,
-    tokens: mcpTokens,
-    share: total > 0 ? mcpLead / total : 0,
+    ...mcp,
+    share: total > 0 ? inUnit(by, mcp) / total : 0,
     topServer,
   };
 }

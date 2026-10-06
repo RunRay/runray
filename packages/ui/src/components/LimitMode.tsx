@@ -133,6 +133,10 @@ export function LimitSuffix({
   );
 }
 
+/** Popover fields: hover and keyboard focus visible, like every control. */
+const FIELD =
+  'rounded-control border border-border-slate bg-surface px-1.5 font-mono text-text transition-colors duration-150 ease-out hover:border-border-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass';
+
 const DAYS: NonNullable<LimitWindowConfig['resetDay']>[] = [
   'mon',
   'tue',
@@ -203,7 +207,7 @@ export function LimitModeToggle() {
                 max={90}
                 value={draft.days ?? 7}
                 onChange={(e) => patch({ days: Number(e.target.value) || 7 })}
-                className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
+                className={`${FIELD} py-0.5`}
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -215,7 +219,7 @@ export function LimitModeToggle() {
                     resetDay: e.target.value as LimitWindowConfig['resetDay'],
                   })
                 }
-                className="rounded-control border border-border-slate bg-surface px-1.5 py-1 font-mono text-text"
+                className={`${FIELD} py-1`}
               >
                 {DAYS.map((d) => (
                   <option key={d} value={d}>
@@ -234,7 +238,7 @@ export function LimitModeToggle() {
                 onChange={(e) =>
                   patch({ resetHour: Number(e.target.value) || 0 })
                 }
-                className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
+                className={`${FIELD} py-0.5`}
               />
             </label>
           </div>
@@ -249,7 +253,7 @@ export function LimitModeToggle() {
                   const v = Number(e.target.value);
                   patch({ budgetUSD: v > 0 ? v : undefined });
                 }}
-                className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
+                className={`${FIELD} py-0.5`}
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -257,13 +261,12 @@ export function LimitModeToggle() {
               <input
                 type="number"
                 min={0}
-                step={1_000_000}
                 value={draft.budgetTokens ?? ''}
                 onChange={(e) => {
                   const v = Math.round(Number(e.target.value));
                   patch({ budgetTokens: v > 0 ? v : undefined });
                 }}
-                className="rounded-control border border-border-slate bg-surface px-1.5 py-0.5 font-mono text-text"
+                className={`${FIELD} py-0.5`}
               />
               {(draft.budgetTokens ?? 0) > 0 && (
                 <span className="font-mono text-text-faint">

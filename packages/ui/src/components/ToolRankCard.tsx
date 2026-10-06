@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { formatDuration } from '../lib/format';
 import { mcpShare, topTools } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
-import { formatFigure } from '../lib/unit';
+import { formatFigure, inUnit } from '../lib/unit';
 import { useAppStore } from '../store';
 
 /**
@@ -28,9 +28,7 @@ export function ToolRankCard({
   const setFilter = useAppStore((s) => s.setFilter);
   if (tools.length === 0) return null;
   const tokensLead = unit === 'tokens';
-  const lead = (t: { costUSD: number; tokens: number }) =>
-    tokensLead ? t.tokens : t.costUSD;
-  const max = tools[0] === undefined ? 0 : lead(tools[0]);
+  const max = tools[0] === undefined ? 0 : inUnit(unit, tools[0]);
 
   return (
     <section
@@ -64,7 +62,7 @@ export function ToolRankCard({
                     aria-hidden
                     className="absolute inset-y-0.5 left-0 rounded-sm bg-brass/15"
                     style={{
-                      width: `${max > 0 ? (lead(tool) / max) * 100 : 0}%`,
+                      width: `${max > 0 ? (inUnit(unit, tool) / max) * 100 : 0}%`,
                     }}
                   />
                   <span className="relative flex min-w-0 items-baseline gap-2 px-1">
@@ -85,22 +83,18 @@ export function ToolRankCard({
                   p95 {formatDuration(tool.p95Ms)}
                 </span>
                 <span className="whitespace-nowrap font-mono text-label text-text">
-                  {formatFigure(unit, {
-                    usd: tool.costUSD,
-                    tokens: tool.tokens,
-                  })}
+                  {formatFigure(unit, tool)}
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-      {lead(share) > 0 && (
+      {inUnit(unit, share) > 0 && (
         <p className="mt-2 border-t border-border-slate pt-2 text-label text-text-dim">
           MCP servers:{' '}
           <span className="font-mono text-text">
-            {formatFigure(unit, { usd: share.costUSD, tokens: share.tokens })}
-            {tokensLead && ' tokens'}
+            {formatFigure(unit, share, { named: true })}
           </span>{' '}
           · {(share.share * 100).toFixed(0)}% of attributed{' '}
           {tokensLead ? 'tokens' : 'spend'}
