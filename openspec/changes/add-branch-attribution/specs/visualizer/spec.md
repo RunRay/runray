@@ -34,7 +34,7 @@ SHALL parse exactly as before.
 The system SHALL show the git branch a run started on wherever the run is identified, and SHALL rank spend by branch when the visible runs record any.
 
 - **Run.** The run header SHALL show the run's project and branch, and the sessions table SHALL show the branch with the project.
-- **Ranking.** Resource Breakdown SHALL include a branch ranking, by cost or tokens with the shared metric switch, when at least one visible run has a branch. Entries SHALL be project and branch pairs, so one branch name in two projects ranks twice. Runs without a branch SHALL share one entry.
+- **Ranking.** Resource Breakdown SHALL include a branch ranking, by cost or tokens with the shared metric switch, when at least one visible run has a branch or a branch filter is active. Entries SHALL be project and branch pairs, so one branch name in two projects ranks twice. Runs without a branch SHALL share one entry.
 - **Drill-down.** Activating an entry SHALL filter the visible runs to that project and branch, announced as clearable chips. The shared entry SHALL filter to runs without a branch.
 
 #### Scenario: Same branch name in two projects

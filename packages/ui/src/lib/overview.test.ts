@@ -2,13 +2,17 @@ import type { Insight, Run, SourceTool, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
   aggregateTotals,
+  anyBranch,
+  branchRowKey,
   cacheAggregate,
   errorRate,
   mcpShare,
   mostExpensiveCall,
+  NO_BRANCH_ROW,
   savingsSummary,
   sessionCostStats,
   spendByDay,
+  topBranches,
   topModels,
   topProjects,
   topSources,
@@ -65,6 +69,7 @@ function stubRun(overrides: {
   toolErrors?: number;
   source?: SourceTool;
   project?: string;
+  branch?: string;
   byModel?: Record<string, number>;
   codeChanges?: { linesAdded: number; linesRemoved: number };
   insights?: Insight[];
@@ -77,8 +82,11 @@ function stubRun(overrides: {
       format: 'claude-jsonl',
       files: [],
     },
-    ...(overrides.project !== undefined && {
-      project: { name: overrides.project },
+    ...((overrides.project !== undefined || overrides.branch !== undefined) && {
+      project: {
+        ...(overrides.project !== undefined && { name: overrides.project }),
+        ...(overrides.branch !== undefined && { gitBranch: overrides.branch }),
+      },
     }),
     startedAt: overrides.startedAt ?? '2026-07-07T10:00:00',
     spans: overrides.spans ?? [],
@@ -218,6 +226,64 @@ describe('rankings', () => {
       { name: '—', costUSD: 5, tokens: 0 },
       { name: 'alpha', costUSD: 3, tokens: 0 },
     ]);
+  });
+
+  it('ranks project and branch pairs, so one branch name ranks per project', () => {
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', branch: 'main', cost: 1, tokens: 10 }),
+      stubRun({ id: 'b', project: 'web', branch: 'main', cost: 4, tokens: 40 }),
+      stubRun({ id: 'c', project: 'api', branch: 'main', cost: 2, tokens: 20 }),
+      // an OTLP run can name a branch but no project
+      stubRun({ id: 'd', branch: 'feat/x', cost: 0.5, tokens: 5 }),
+    ]);
+    expect(ranks).toEqual([
+      {
+        name: branchRowKey('web', 'main'),
+        project: 'web',
+        branch: 'main',
+        costUSD: 4,
+        tokens: 40,
+      },
+      {
+        name: branchRowKey('api', 'main'),
+        project: 'api',
+        branch: 'main',
+        costUSD: 3,
+        tokens: 30,
+      },
+      {
+        name: branchRowKey('—', 'feat/x'),
+        project: '—',
+        branch: 'feat/x',
+        costUSD: 0.5,
+        tokens: 5,
+      },
+    ]);
+  });
+
+  it('runs without a branch share one row, whatever their project', () => {
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', cost: 1 }),
+      stubRun({ id: 'b', project: 'web', cost: 2 }),
+      stubRun({ id: 'c', cost: 0.25 }),
+      stubRun({ id: 'd', project: 'api', branch: 'main', cost: 1 }),
+    ]);
+    expect(ranks[0]).toEqual({
+      name: NO_BRANCH_ROW,
+      costUSD: 3.25,
+      tokens: 0,
+    });
+    expect(ranks).toHaveLength(2);
+  });
+
+  it('gates the branch card on any run recording a branch', () => {
+    expect(anyBranch([stubRun({ id: 'a', project: 'api' })])).toBe(false);
+    expect(
+      anyBranch([
+        stubRun({ id: 'a', project: 'api' }),
+        stubRun({ id: 'b', project: 'api', branch: 'main' }),
+      ]),
+    ).toBe(true);
   });
 
   it('ranks models from byModel rollups across runs', () => {

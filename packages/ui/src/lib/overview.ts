@@ -142,6 +142,51 @@ export function topProjects(runs: readonly Run[], limit = 5): RankEntry[] {
   return rank(byName, limit);
 }
 
+export interface BranchEntry extends RankEntry {
+  /** The run's project name (`—` without one); absent on the shared row. */
+  project?: string;
+  /** Absent on the one row shared by runs that record no branch. */
+  branch?: string;
+}
+
+/** The Top branches row key of a project and branch pair. */
+export function branchRowKey(project: string, branch: string): string {
+  return `${project}\u0000${branch}`;
+}
+
+/** The key of the row shared by runs without a branch. */
+export const NO_BRANCH_ROW = '';
+
+/**
+ * Cost/Tokens ranked by project and branch pair, so `main` in two
+ * repositories ranks twice. Runs without a branch share one row whatever
+ * their project. `name` is the row's unique key, not a display label.
+ */
+export function topBranches(runs: readonly Run[], limit = 5): BranchEntry[] {
+  const byKey = new Map<string, { costUSD: number; tokens: number }>();
+  const pairs = new Map<string, { project?: string; branch?: string }>();
+  for (const run of runs) {
+    const branch = run.project?.gitBranch;
+    const project = run.project?.name ?? '—';
+    const key =
+      branch === undefined ? NO_BRANCH_ROW : branchRowKey(project, branch);
+    const entry = byKey.get(key) ?? { costUSD: 0, tokens: 0 };
+    entry.costUSD += run.totals.costUSD.total;
+    entry.tokens += run.totals.tokens.total;
+    byKey.set(key, entry);
+    if (branch !== undefined) pairs.set(key, { project, branch });
+  }
+  return rank(byKey, limit).map((entry) => ({
+    ...entry,
+    ...pairs.get(entry.name),
+  }));
+}
+
+/** Whether any run records a branch (the Top branches card's gate). */
+export function anyBranch(runs: readonly Run[]): boolean {
+  return runs.some((run) => run.project?.gitBranch !== undefined);
+}
+
 /** Cost/Tokens ranked by model, straight from the per-run byModel rollups. */
 export function topModels(runs: readonly Run[], limit = 5): RankEntry[] {
   const byName = new Map<string, { costUSD: number; tokens: number }>();
