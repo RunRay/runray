@@ -18,7 +18,7 @@
 - **Dashboard.**
   - A **Top branches** card joins Resource Breakdown when any visible run has a branch, and stays while a branch filter is active. It ranks project and branch pairs by cost or tokens, so `main` in two repositories stays two rows. Runs without a branch share one "no branch" row.
   - Activating a row filters to that project and branch. `branch` is a new drill-down filter: a clearable chip, the last parameter of the canonical hash order, and an in-browser filter that `runray export` can't reproduce (the export dialog says so).
-- **Session.** The run header shows the project and branch next to the date and source, and the sessions table shows the branch under the project name.
+- **Session.** The run header shows the project and branch next to the date and source, the sessions table shows the branch after the project name, and the sessions CSV gains a last `gitBranch` column.
 
 ## Non-goals
 

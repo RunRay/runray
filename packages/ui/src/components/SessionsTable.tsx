@@ -13,6 +13,7 @@ import { DEFAULT_SORT, type SortKey, sortRuns } from '../lib/sort-runs';
 import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
 import { useAppStore } from '../store';
+import { BranchMark } from './BranchMark';
 
 /**
  * Sessions list table (03-design.md §4.1, redesign mockup): When · Project ·
@@ -338,10 +339,28 @@ function SessionRow({
       >
         {formatRelativeTime(run.startedAt, generatedAt)}
       </td>
-      <td className="max-w-32 truncate px-3 text-text-dim">
-        {run.project?.name ?? '—'}
+      <td
+        className="max-w-44 px-3 text-text-dim"
+        title={
+          run.project?.gitBranch === undefined
+            ? undefined
+            : `${run.project?.name ?? '—'} · ${run.project.gitBranch}`
+        }
+      >
+        {/* the branch takes only the room the project leaves; the title gives
+            up the 48px the project gained, so the table is no wider */}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate">{run.project?.name ?? '—'}</span>
+          {run.project?.gitBranch !== undefined && (
+            <span className="flex min-w-0 flex-1 basis-0 items-center gap-1 font-mono text-label text-text-faint">
+              <BranchMark />
+              <span className="sr-only">branch </span>
+              <span className="truncate">{run.project.gitBranch}</span>
+            </span>
+          )}
+        </span>
       </td>
-      <td className="max-w-72 truncate px-3 text-text">
+      <td className="max-w-60 truncate px-3 text-text">
         {run.title ?? `${run.source.tool} session`}
       </td>
       <td className="whitespace-nowrap px-3">
