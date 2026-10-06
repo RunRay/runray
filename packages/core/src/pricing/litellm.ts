@@ -19,18 +19,39 @@ export const DEFAULT_PRICING_PROVIDERS: readonly string[] = [
   'mistral',
 ];
 
-interface LitellmEntry {
-  litellm_provider?: string;
-  mode?: string;
-  input_cost_per_token?: number;
-  output_cost_per_token?: number;
-  cache_read_input_token_cost?: number;
-  cache_creation_input_token_cost?: number;
-  cache_creation_input_token_cost_above_1hr?: number;
-}
+const RATE_FIELDS = [
+  'input_cost_per_token',
+  'output_cost_per_token',
+  'cache_read_input_token_cost',
+  'cache_creation_input_token_cost',
+  'cache_creation_input_token_cost_above_1hr',
+] as const;
+
+/** Rates stay `unknown` until checked: the list is remote, untrusted JSON. */
+type LitellmEntry = { litellm_provider?: unknown; mode?: unknown } & {
+  [K in (typeof RATE_FIELDS)[number]]?: unknown;
+};
 
 function isEntry(v: unknown): v is LitellmEntry {
   return typeof v === 'object' && v !== null;
+}
+
+/**
+ * Highest per-token rate taken as a real price: $10,000 per million tokens,
+ * far above anything published (2026: o1-pro output at $600). A higher,
+ * negative or non-numeric rate means a corrupted entry, not a price.
+ */
+const MAX_RATE_PER_TOKEN = 0.01;
+
+/** Why a rate can't be used; undefined when it can. Absent and null mean
+ * "not published" and fall back like before. */
+function rateProblem(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'number' || !Number.isFinite(value))
+    return 'is not a number';
+  if (value < 0) return 'is negative';
+  if (value > MAX_RATE_PER_TOKEN) return 'is above $10,000 per million tokens';
+  return undefined;
 }
 
 function canonicalKey(key: string): string {
@@ -40,7 +61,7 @@ function canonicalKey(key: string): string {
     .replace(/-latest$/, '');
 }
 
-function perMTok(perToken: number | undefined, fallback: number): number {
+function perMTok(perToken: unknown, fallback: number): number {
   if (typeof perToken !== 'number' || !Number.isFinite(perToken))
     return fallback;
   return Math.round(perToken * 1e6 * 1e6) / 1e6; // per-MTok, 6 decimals
@@ -49,6 +70,9 @@ function perMTok(perToken: number | undefined, fallback: number): number {
 export interface ConvertOptions {
   snapshotDate: string;
   providers?: readonly string[];
+  /** Called for each chat model of a known provider that is left out
+   * because a published rate is unusable (negative, absurd, not a number). */
+  onInvalid?: (key: string, problem: string) => void;
 }
 
 export function convertLitellmPricing(
@@ -64,10 +88,18 @@ export function convertLitellmPricing(
     if (!isEntry(value)) continue;
     if (value.mode !== 'chat') continue;
     if (
-      value.litellm_provider === undefined ||
+      typeof value.litellm_provider !== 'string' ||
       !providers.has(value.litellm_provider)
     )
       continue;
+    const problem = RATE_FIELDS.map((field) => {
+      const reason = rateProblem(value[field]);
+      return reason === undefined ? undefined : `${field} ${reason}`;
+    }).find((reason) => reason !== undefined);
+    if (problem !== undefined) {
+      options.onInvalid?.(key, problem);
+      continue;
+    }
     if (typeof value.input_cost_per_token !== 'number') continue;
 
     const pattern = canonicalKey(key);

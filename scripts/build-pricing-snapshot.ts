@@ -27,7 +27,11 @@ if (!res.ok) throw new Error(`fetch failed: ${res.status} ${res.statusText}`);
 const raw = (await res.json()) as Record<string, unknown>;
 
 const snapshotDate = new Date().toISOString().slice(0, 10);
-const table = convertLitellmPricing(raw, { snapshotDate });
+const table = convertLitellmPricing(raw, {
+  snapshotDate,
+  onInvalid: (key, problem) =>
+    console.warn(`warning: left out ${key}: ${problem}`),
+});
 
 // tier-ladder targets must stay resolvable, or suggestedDowngrade degrades
 // to "no suggestion" — surface it at refresh time, not at a user's runtime

@@ -124,3 +124,67 @@ describe('convertLitellmPricing', () => {
     expect('cacheWrite1hPerMTok' in (absurd ?? {})).toBe(false);
   });
 });
+
+describe('convertLitellmPricing with corrupted rates', () => {
+  const chat = (rates: Record<string, unknown>) => ({
+    litellm_provider: 'anthropic',
+    mode: 'chat',
+    input_cost_per_token: 3e-6,
+    output_cost_per_token: 15e-6,
+    ...rates,
+  });
+  const raw: Record<string, unknown> = {
+    'negative-output': chat({ output_cost_per_token: -15e-6 }),
+    'string-input': chat({ input_cost_per_token: '0.000003' }),
+    'absurd-cache-read': chat({ cache_read_input_token_cost: 0.5 }),
+    // JSON.parse turns an overflowing literal into Infinity
+    'infinite-input': chat({ input_cost_per_token: JSON.parse('1e400') }),
+    'null-cache-read': chat({ cache_read_input_token_cost: null }),
+    'free-model': chat({ input_cost_per_token: 0, output_cost_per_token: 0 }),
+    // outside our providers: skipped before any rate check, never reported
+    'foreign-negative': {
+      litellm_provider: 'somewhere-else',
+      mode: 'chat',
+      input_cost_per_token: -1,
+    },
+    sample_spec: {
+      litellm_provider: 'one of https://docs.litellm.ai/docs/providers',
+      mode: 'one of: chat, embedding, completion',
+      input_cost_per_token: 0,
+    },
+  };
+
+  const invalid: Array<[string, string]> = [];
+  const table = convertLitellmPricing(raw, {
+    snapshotDate: '2026-10-06',
+    onInvalid: (key, problem) => invalid.push([key, problem]),
+  });
+
+  it('leaves out chat models whose published rates are unusable', () => {
+    expect(table.entries.map((e) => e.modelPattern)).toEqual([
+      'free-model',
+      'null-cache-read',
+    ]);
+  });
+
+  it('reports each one with the field and the reason', () => {
+    expect(invalid).toEqual([
+      ['negative-output', 'output_cost_per_token is negative'],
+      ['string-input', 'input_cost_per_token is not a number'],
+      [
+        'absurd-cache-read',
+        'cache_read_input_token_cost is above $10,000 per million tokens',
+      ],
+      ['infinite-input', 'input_cost_per_token is not a number'],
+    ]);
+  });
+
+  it('treats null like an absent rate and keeps zero prices', () => {
+    const nulled = table.entries.find(
+      (e) => e.modelPattern === 'null-cache-read',
+    );
+    expect(nulled?.cacheReadPerMTok).toBe(3); // falls back to the input rate
+    const free = table.entries.find((e) => e.modelPattern === 'free-model');
+    expect(free?.inputPerMTok).toBe(0);
+  });
+});
