@@ -36,7 +36,7 @@ TraceFile
 | `source.tool` | enum | `claude-code` \| `opencode` \| `otlp` \| `unknown` |
 | `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `otlp-json` |
 | `source.files[]` | string | Absolute paths read. |
-| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. |
+| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
 | `title?` | string | Session title if the source provides one. |
 | `startedAt` / `endedAt` | ISO 8601 | UTC. |
 | `spans[]` | Span | Ordered by `startedAt`. |
