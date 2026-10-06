@@ -10,7 +10,7 @@ import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
 import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
-import { BranchMark } from './BranchMark';
+import { BranchName } from './BranchMark';
 import { CostView } from './CostView';
 import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
@@ -36,14 +36,11 @@ function RunPlace({ run }: { run: Run }) {
           <span className="truncate text-on-surface">{project}</span>
         )}
         {branch !== undefined && (
-          <span
-            className="flex min-w-0 items-center gap-1 font-mono text-text-dim"
-            title={branch}
-          >
-            <BranchMark className="text-text-faint" />
-            <span className="sr-only">branch </span>
-            <span className="truncate">{branch}</span>
-          </span>
+          <BranchName
+            name={branch}
+            className="text-text-dim"
+            markClassName="text-text-faint"
+          />
         )}
       </span>
     </span>

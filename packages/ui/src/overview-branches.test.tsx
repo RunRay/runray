@@ -112,4 +112,22 @@ describe('Top branches card', () => {
       'aria-pressed="true" aria-label="Filter to sessions without a recorded branch"',
     );
   });
+
+  it('lights every row of the branch when no project narrows it', () => {
+    const pressed = (filter: RunFilter) =>
+      [
+        ...(card(render(branched, filter), 'Top branches') ?? '').matchAll(
+          /aria-pressed="true" aria-label="([^"]+)"/g,
+        ),
+      ].map(([, label]) => label);
+    // a shared #/dashboard?branch=main link, or the project chip cleared
+    expect(pressed({ ...EMPTY_FILTER, branch: 'main' })).toEqual([
+      'Filter to branch main in api',
+      'Filter to branch main in web',
+    ]);
+    expect(
+      pressed({ ...EMPTY_FILTER, project: 'web', branch: 'main' }),
+    ).toEqual(['Filter to branch main in web']);
+    expect(pressed(EMPTY_FILTER)).toEqual([]);
+  });
 });

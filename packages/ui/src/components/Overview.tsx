@@ -16,12 +16,10 @@ import {
   aggregateTotals,
   anyBranch,
   type BranchEntry,
-  branchRowKey,
   cacheAggregate,
   type DaySpend,
   errorRate,
   mostExpensiveCall,
-  NO_BRANCH_ROW,
   type RuleGroup,
   sessionCostStats,
   spendByDay,
@@ -965,7 +963,8 @@ function ChartLegend({
 /**
  * Top branches rows: the branch in mono after the branch mark, its project
  * faint beside it (dropped while a project filter makes it the same on every
- * row), and one muted row for runs that record no branch.
+ * row), and one muted row for runs that record no branch. A branch filter
+ * without a project lights every row of that branch.
  */
 function BranchRankList({
   branches,
@@ -979,14 +978,11 @@ function BranchRankList({
   onSelect: (entry: BranchEntry) => void;
 }) {
   const byKey = new Map(branches.map((b) => [b.name, b]));
-  const activeKey =
-    filter.branch === null
-      ? null
-      : filter.branch === NO_BRANCH
-        ? NO_BRANCH_ROW
-        : filter.project === null
-          ? null
-          : branchRowKey(filter.project, filter.branch);
+  const isActive = (b: BranchEntry) =>
+    filter.branch === (b.branch ?? NO_BRANCH) &&
+    (b.project === undefined ||
+      filter.project === null ||
+      filter.project === b.project);
   return (
     <RankList
       metricMode={metricMode}
@@ -996,6 +992,7 @@ function BranchRankList({
               key: b.name,
               label: 'No branch recorded',
               muted: true,
+              active: isActive(b),
               costUSD: b.costUSD,
               tokens: b.tokens,
               ariaLabel: 'Filter to sessions without a recorded branch',
@@ -1005,6 +1002,7 @@ function BranchRankList({
               label: b.branch,
               prefix: <BranchMark />,
               mono: true,
+              active: isActive(b),
               ...(filter.project === null && b.project !== undefined
                 ? { detail: b.project }
                 : {}),
@@ -1019,7 +1017,6 @@ function BranchRankList({
         const entry = byKey.get(key);
         if (entry !== undefined) onSelect(entry);
       }}
-      activeKey={activeKey}
     />
   );
 }
@@ -1050,6 +1047,8 @@ function RankList({
     detail?: string;
     /** Overrides the "Filter to <noun> <label>" accessible name. */
     ariaLabel?: string;
+    /** Overrides the `activeKey` match for this row. */
+    active?: boolean;
   }[];
   maxCost: number;
   maxTokens?: number;
@@ -1072,7 +1071,7 @@ function RankList({
   return (
     <ul className="space-y-2">
       {entries.map((entry) => {
-        const active = activeKey === entry.key;
+        const active = entry.active ?? activeKey === entry.key;
         const value = isTokens ? entry.tokens : entry.costUSD;
         const body = (
           <>

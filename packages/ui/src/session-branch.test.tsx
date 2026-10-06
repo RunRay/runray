@@ -99,4 +99,34 @@ describe('sessions table', () => {
     expect(html).toContain('>docs</span>');
     expect(html).not.toContain('sr-only');
   });
+
+  it('clips the branch, glyph included, when the project leaves no room', () => {
+    const html = row('On a branch');
+    const wrapper = html.slice(
+      html.lastIndexOf('<span', html.indexOf('title="feat/export"')),
+      html.indexOf('title="feat/export"'),
+    );
+    expect(wrapper).toContain('overflow-hidden');
+  });
+
+  it('moves 48px from the title to the project only when a run has a branch', () => {
+    // with a branch: project 176px, title 240px
+    expect(row('No branch')).toContain('max-w-44');
+    expect(row('No branch')).toContain('max-w-60');
+    const plain = renderToStaticMarkup(
+      <SessionsTable
+        generatedAt="2026-08-10T12:00:00.000Z"
+        runs={[
+          stubRun('opencode-only', {
+            title: 'Plain',
+            project: { name: 'docs' },
+          }),
+        ]}
+      />,
+    );
+    // without: the widths develop had
+    expect(plain).toContain('max-w-32');
+    expect(plain).toContain('max-w-72');
+    expect(plain).not.toContain('max-w-44');
+  });
 });

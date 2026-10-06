@@ -1,5 +1,8 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { localDay } from './overview';
+import { branchKey, projectKey } from './run-keys';
+
+export { branchKey, NO_BRANCH, projectKey } from './run-keys';
 
 /**
  * Global run filters (add-dashboard-extensions, D1/D2): pure, client-side
@@ -58,23 +61,6 @@ export function runUsesTool(run: Run, tool: string): boolean {
 /** A run "uses" a model when it spent on it (a key in the byModel rollup). */
 export function runUsesModel(run: Run, model: string): boolean {
   return Object.hasOwn(run.totals.costUSD.byModel, model);
-}
-
-/**
- * The one project grouping key: runs without a project name group under the
- * same `—` placeholder the overview ranking renders — clicking that row must
- * filter to exactly the runs it counted.
- */
-export function projectKey(run: Run): string {
-  return run.project?.name ?? '—';
-}
-
-/** Runs without a recorded branch share this key (and one ranking row). */
-export const NO_BRANCH = '—';
-
-/** The branch grouping key, the same placeholder rule as `projectKey`. */
-export function branchKey(run: Run): string {
-  return run.project?.gitBranch ?? NO_BRANCH;
 }
 
 /**

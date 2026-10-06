@@ -7,6 +7,7 @@
 import { ruleClass } from '@runray/core/insights-meta';
 import type { Insight, Run } from '@runray/schema';
 import { toolSpendLeaderboard } from './cost-breakdown';
+import { branchKey, NO_BRANCH, projectKey } from './run-keys';
 import { toolDurationStatsAcrossRuns } from './time-breakdown';
 
 export interface OverviewTotals {
@@ -133,7 +134,7 @@ export interface RankEntry {
 export function topProjects(runs: readonly Run[], limit = 5): RankEntry[] {
   const byName = new Map<string, { costUSD: number; tokens: number }>();
   for (const run of runs) {
-    const name = run.project?.name ?? '—';
+    const name = projectKey(run);
     const entry = byName.get(name) ?? { costUSD: 0, tokens: 0 };
     entry.costUSD += run.totals.costUSD.total;
     entry.tokens += run.totals.tokens.total;
@@ -143,38 +144,32 @@ export function topProjects(runs: readonly Run[], limit = 5): RankEntry[] {
 }
 
 export interface BranchEntry extends RankEntry {
-  /** The run's project name (`—` without one); absent on the shared row. */
+  /** The project key (see `projectKey`); absent on the shared row. */
   project?: string;
-  /** Absent on the one row shared by runs that record no branch. */
+  /** The branch; absent on the one row shared by runs without one. */
   branch?: string;
 }
 
-/** The Top branches row key of a project and branch pair. */
-export function branchRowKey(project: string, branch: string): string {
-  return `${project}\u0000${branch}`;
-}
-
-/** The key of the row shared by runs without a branch. */
-export const NO_BRANCH_ROW = '';
-
 /**
  * Cost/Tokens ranked by project and branch pair, so `main` in two
- * repositories ranks twice. Runs without a branch share one row whatever
- * their project. `name` is the row's unique key, not a display label.
+ * repositories ranks twice. Runs without a branch share one row, keyed
+ * `NO_BRANCH`, whatever their project. `name` is the row's unique key, not
+ * a display label.
  */
 export function topBranches(runs: readonly Run[], limit = 5): BranchEntry[] {
   const byKey = new Map<string, { costUSD: number; tokens: number }>();
-  const pairs = new Map<string, { project?: string; branch?: string }>();
+  const pairs = new Map<string, { project: string; branch: string }>();
   for (const run of runs) {
-    const branch = run.project?.gitBranch;
-    const project = run.project?.name ?? '—';
-    const key =
-      branch === undefined ? NO_BRANCH_ROW : branchRowKey(project, branch);
+    const branch = branchKey(run);
+    const project = projectKey(run);
+    // NUL can't occur in a project or branch name, so pair keys never
+    // collide with each other or with the shared row's NO_BRANCH
+    const key = branch === NO_BRANCH ? NO_BRANCH : `${project}\u0000${branch}`;
     const entry = byKey.get(key) ?? { costUSD: 0, tokens: 0 };
     entry.costUSD += run.totals.costUSD.total;
     entry.tokens += run.totals.tokens.total;
     byKey.set(key, entry);
-    if (branch !== undefined) pairs.set(key, { project, branch });
+    if (branch !== NO_BRANCH) pairs.set(key, { project, branch });
   }
   return rank(byKey, limit).map((entry) => ({
     ...entry,

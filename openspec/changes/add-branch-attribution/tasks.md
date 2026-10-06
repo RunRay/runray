@@ -22,3 +22,11 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 ## 3. Review follow-ups
 
 - [x] 3.1 OTLP branch precedence: a resource that names a branch wins wherever it appears. Failing that, the branch comes from the earliest-starting span whose attributes name one, not the first span in the file; exporters write spans as they end, so a tool span naming the ref it pushed to used to win. Tests: a later resource beats an earlier span attribute; a span exported first but started later loses; spans without a start time keep document order.
+- [x] 3.2 Branch UI follow-ups [UI → /frontend-design]:
+  - one `BranchName` component holds the glyph, the screen-reader "branch" and the truncated name for the run header, the sessions table and the filter chip. It clips, so a squeezed branch hides its glyph instead of spilling it past the cell;
+  - the sessions table moves 48px from the title to the project column only when a listed run has a branch, so tables without branches keep develop's widths;
+  - a branch filter without a project (a shared `?branch=` link, or the project chip cleared) lights every Top branches row of that branch;
+  - `projectKey`, `branchKey` and `NO_BRANCH` move to `packages/ui/src/lib/run-keys.ts`, which the filter and the ranking share, so the shared row is keyed `NO_BRANCH` like the filter it sets;
+  - the FilterChip comment is rewrapped.
+
+  Tests: clipping and both table widths in `session-branch.test.tsx`, rows lit by a branch-only filter in `overview-branches.test.tsx`, and row clicks through the store in `overview-branches-click.test.tsx` (jsdom). Browser check at 1,280 px: with a long project name the branch cell clips to 0 px with no glyph outside it; the table stays 1,247 px wide, and 1,083 px with the old widths when only runs without a branch are listed; `#/dashboard?branch=feat%2Finvoices-table` lights that row.

@@ -2,7 +2,7 @@ import type { SourceTool } from '@runray/schema';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { isFilterActive, NO_BRANCH, projectKey } from '../lib/filter-runs';
 import { useAppStore } from '../store';
-import { BranchMark } from './BranchMark';
+import { BranchName } from './BranchMark';
 
 /**
  * Global filter dropdowns (add-dashboard-extensions 1.2, 03-design.md §3):
@@ -106,13 +106,11 @@ export function FilterBar() {
             filter.branch === NO_BRANCH ? (
               'none recorded'
             ) : (
-              <span
-                className="flex min-w-0 items-center gap-1 font-mono"
-                title={filter.branch}
-              >
-                <BranchMark />
-                <span className="max-w-48 truncate">{filter.branch}</span>
-              </span>
+              <BranchName
+                name={filter.branch}
+                announce={false}
+                className="max-w-52"
+              />
             )
           }
           onClear={() => setFilter({ branch: null })}
@@ -133,8 +131,9 @@ export function FilterBar() {
 
 /**
  * A standalone active-filter chip for a drill-down dimension (model, day,
- * tool, branch) that has no dropdown. Brass active state + a dedicated ✕, matching the
- * active-dropdown chip look so all active filters read as one family.
+ * tool, branch) that has no dropdown. Brass active state + a dedicated ✕,
+ * matching the active-dropdown chip look so all active filters read as one
+ * family.
  */
 function FilterChip({
   label,

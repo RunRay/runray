@@ -3,12 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
   aggregateTotals,
   anyBranch,
-  branchRowKey,
   cacheAggregate,
   errorRate,
   mcpShare,
   mostExpensiveCall,
-  NO_BRANCH_ROW,
   savingsSummary,
   sessionCostStats,
   spendByDay,
@@ -20,6 +18,7 @@ import {
   wasteByRule,
   worstToolError,
 } from './overview';
+import { NO_BRANCH } from './run-keys';
 
 function toolSpan(name: string, isError: boolean): Span {
   return {
@@ -236,29 +235,19 @@ describe('rankings', () => {
       // an OTLP run can name a branch but no project
       stubRun({ id: 'd', branch: 'feat/x', cost: 0.5, tokens: 5 }),
     ]);
-    expect(ranks).toEqual([
-      {
-        name: branchRowKey('web', 'main'),
-        project: 'web',
-        branch: 'main',
-        costUSD: 4,
-        tokens: 40,
-      },
-      {
-        name: branchRowKey('api', 'main'),
-        project: 'api',
-        branch: 'main',
-        costUSD: 3,
-        tokens: 30,
-      },
-      {
-        name: branchRowKey('—', 'feat/x'),
-        project: '—',
-        branch: 'feat/x',
-        costUSD: 0.5,
-        tokens: 5,
-      },
+    expect(
+      ranks.map(({ project, branch, costUSD, tokens }) => ({
+        project,
+        branch,
+        costUSD,
+        tokens,
+      })),
+    ).toEqual([
+      { project: 'web', branch: 'main', costUSD: 4, tokens: 40 },
+      { project: 'api', branch: 'main', costUSD: 3, tokens: 30 },
+      { project: '—', branch: 'feat/x', costUSD: 0.5, tokens: 5 },
     ]);
+    expect(new Set(ranks.map((r) => r.name)).size).toBe(3);
   });
 
   it('runs without a branch share one row, whatever their project', () => {
@@ -268,11 +257,8 @@ describe('rankings', () => {
       stubRun({ id: 'c', cost: 0.25 }),
       stubRun({ id: 'd', project: 'api', branch: 'main', cost: 1 }),
     ]);
-    expect(ranks[0]).toEqual({
-      name: NO_BRANCH_ROW,
-      costUSD: 3.25,
-      tokens: 0,
-    });
+    // keyed like the filter, so the row and the filter it sets agree
+    expect(ranks[0]).toEqual({ name: NO_BRANCH, costUSD: 3.25, tokens: 0 });
     expect(ranks).toHaveLength(2);
   });
 

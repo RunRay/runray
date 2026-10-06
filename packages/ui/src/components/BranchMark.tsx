@@ -24,3 +24,33 @@ export function BranchMark({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * A branch name after its glyph, in mono, truncating from the end. The
+ * wrapper clips, so when there is no room left the glyph disappears with
+ * the name instead of spilling past it. `announce` adds a visually hidden
+ * "branch" for screen readers; leave it off where a visible label already
+ * says so.
+ */
+export function BranchName({
+  name,
+  announce = true,
+  className = '',
+  markClassName = '',
+}: {
+  name: string;
+  announce?: boolean;
+  className?: string;
+  markClassName?: string;
+}) {
+  return (
+    <span
+      className={`flex min-w-0 items-center gap-1 overflow-hidden font-mono ${className}`}
+      title={name}
+    >
+      <BranchMark className={markClassName} />
+      {announce && <span className="sr-only">branch </span>}
+      <span className="truncate">{name}</span>
+    </span>
+  );
+}
