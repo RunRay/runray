@@ -4,6 +4,7 @@ import {
   collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  hiddenFindings,
   insightsBySpan,
   laneMarks,
   matchingSpanIds,
@@ -323,5 +324,60 @@ describe('insightsBySpan', () => {
 
   it('is empty for a run without findings', () => {
     expect(insightsBySpan([]).size).toBe(0);
+  });
+});
+
+describe('hiddenFindings', () => {
+  const finding = (
+    id: string,
+    severity: 'info' | 'warning' | 'critical',
+    spanIds: string[],
+  ) => ({
+    id,
+    ruleId: 'retry-loop',
+    severity,
+    title: id,
+    detail: '',
+    spanIds,
+  });
+  const spans = [
+    stubSpan({ id: 'session', kind: 'session' }),
+    stubSpan({ id: 'agent', parentId: 'session', kind: 'subagent', depth: 1 }),
+    stubSpan({ id: 'a1', parentId: 'agent', depth: 2 }),
+    stubSpan({ id: 'inner', parentId: 'agent', kind: 'subagent', depth: 2 }),
+    stubSpan({ id: 'i1', parentId: 'inner', depth: 3 }),
+    stubSpan({ id: 'own', parentId: 'session', depth: 1 }),
+  ];
+  const retry = finding('retry', 'warning', ['a1', 'i1']);
+  const loop = finding('loop', 'critical', ['i1']);
+  const costly = finding('costly', 'warning', ['agent', 'a1']);
+  const outside = finding('outside', 'info', ['own']);
+  const all = [retry, loop, costly, outside];
+
+  it('rolls findings up onto the collapsed row that hides their evidence, worst first', () => {
+    const hidden = hiddenFindings(spans, all, new Set(['agent']));
+    expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+    expect(hidden.has('session')).toBe(false);
+  });
+
+  it('counts a finding once, however many of its spans the row hides', () => {
+    const hidden = hiddenFindings(spans, [retry], new Set(['agent']));
+    expect(hidden.get('agent')).toEqual([retry]);
+  });
+
+  it('leaves out a finding that already names the row itself', () => {
+    const hidden = hiddenFindings(spans, [costly], new Set(['agent']));
+    expect(hidden.has('agent')).toBe(false);
+  });
+
+  it('gives every collapsed ancestor its share', () => {
+    const hidden = hiddenFindings(spans, all, new Set(['agent', 'inner']));
+    expect(hidden.get('inner')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+    expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+  });
+
+  it('is empty when nothing is collapsed or nothing is hidden', () => {
+    expect(hiddenFindings(spans, all, new Set()).size).toBe(0);
+    expect(hiddenFindings(spans, [outside], new Set(['agent'])).size).toBe(0);
   });
 });

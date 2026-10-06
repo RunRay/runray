@@ -266,9 +266,20 @@ export function collapsedAncestorsOf(
   targets: ReadonlySet<string>,
   collapsed: ReadonlySet<string>,
 ): Set<string> {
+  if (targets.size === 0 || collapsed.size === 0) return new Set();
+  return collapsedAbove(
+    new Map(spans.map((s) => [s.id, s])),
+    targets,
+    collapsed,
+  );
+}
+
+function collapsedAbove(
+  byId: ReadonlyMap<string, Span>,
+  targets: Iterable<string>,
+  collapsed: ReadonlySet<string>,
+): Set<string> {
   const out = new Set<string>();
-  if (targets.size === 0 || collapsed.size === 0) return out;
-  const byId = new Map(spans.map((s) => [s.id, s]));
   for (const id of targets) {
     let cursor = byId.get(id);
     while (cursor !== undefined && cursor.parentId !== null) {
@@ -286,6 +297,15 @@ export const SEVERITY_RANK: Record<Insight['severity'], number> = {
   critical: 2,
 };
 
+/** Worst first: severity, then estimated waste, then id. */
+function worstFirst(a: Insight, b: Insight): number {
+  return (
+    SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
+    (b.estimatedWasteUSD ?? 0) - (a.estimatedWasteUSD ?? 0) ||
+    (a.id < b.id ? -1 : 1)
+  );
+}
+
 /**
  * Findings keyed by evidence span id, each list worst-first (severity, then
  * estimated waste, then id) — the waterfall's per-row finding marker and
@@ -302,13 +322,35 @@ export function insightsBySpan(
       else list.push(insight);
     }
   }
-  for (const list of map.values()) {
-    list.sort(
-      (a, b) =>
-        SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
-        (b.estimatedWasteUSD ?? 0) - (a.estimatedWasteUSD ?? 0) ||
-        (a.id < b.id ? -1 : 1),
-    );
-  }
+  for (const list of map.values()) list.sort(worstFirst);
   return map;
+}
+
+/**
+ * Findings a collapsed row hides, keyed by that row's id, worst first: the
+ * ones with evidence among its hidden descendants, minus those that name
+ * the row itself (its own marker already shows them). The row shows a
+ * count and the worst severity, never a dollar total: a finding's evidence
+ * can straddle the subtree's edge, and burned and opportunity estimates do
+ * not add up. Every collapsed ancestor of the evidence gets an entry; only
+ * the outermost is on screen.
+ */
+export function hiddenFindings(
+  spans: readonly Span[],
+  insights: readonly Insight[],
+  collapsed: ReadonlySet<string>,
+): Map<string, Insight[]> {
+  const out = new Map<string, Insight[]>();
+  if (collapsed.size === 0 || insights.length === 0) return out;
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  for (const insight of insights) {
+    for (const holder of collapsedAbove(byId, insight.spanIds, collapsed)) {
+      if (insight.spanIds.includes(holder)) continue;
+      const list = out.get(holder);
+      if (list === undefined) out.set(holder, [insight]);
+      else list.push(insight);
+    }
+  }
+  for (const list of out.values()) list.sort(worstFirst);
+  return out;
 }

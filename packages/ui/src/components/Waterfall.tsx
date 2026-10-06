@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   type CSSProperties,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,6 +21,7 @@ import {
   collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  hiddenFindings,
   insightsBySpan,
   matchingSpanIds,
   type SubtreeRollup,
@@ -57,6 +59,14 @@ const FINDING_NOTCH: Record<Insight['severity'], string> = {
   warning: 'bg-heat-2',
   critical: 'bg-heat-3',
 };
+/** The hollow notch: findings hidden inside a collapsed row (C). */
+const HIDDEN_NOTCH: Record<Insight['severity'], string> = {
+  info: 'border-outline',
+  warning: 'border-heat-2',
+  critical: 'border-heat-3',
+};
+const CHIP =
+  'ml-1.5 inline-block rounded-control px-1 py-px align-middle font-mono text-[10px] leading-[14px] transition-colors duration-150 ease-out active:bg-bg-deep-gray';
 const FINDING_CHIP: Record<Insight['severity'], string> = {
   info: 'bg-surface-2 text-text-dim hover:bg-surface-variant hover:text-text',
   warning: 'bg-heat-2/15 text-heat-2 hover:bg-heat-2/30',
@@ -72,6 +82,8 @@ interface TooltipState {
   row: WaterfallRow;
   /** Findings the row is evidence of, worst first (undefined = none). */
   findings: Insight[] | undefined;
+  /** Findings hidden inside the collapsed row, worst first. */
+  hidden: Insight[] | undefined;
   x: number;
   y: number;
 }
@@ -108,6 +120,12 @@ export function Waterfall({ run }: { run: Run }) {
   const findingsBySpan = useMemo(
     () => insightsBySpan(run.insights),
     [run.insights],
+  );
+  // Findings a collapsed row hides (C), rolled up onto it so collapsing the
+  // subagents never makes a finding vanish from the timeline.
+  const hiddenBySpan = useMemo(
+    () => hiddenFindings(run.spans, run.insights, collapsed),
+    [run.spans, run.insights, collapsed],
   );
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -393,6 +411,10 @@ export function Waterfall({ run }: { run: Run }) {
                   flash={flashing && highlighted.has(row.span.id)}
                   findings={findingsBySpan.get(row.span.id)}
                   onOpenFinding={(insight) => showInsight(insight, row.span.id)}
+                  hidden={
+                    row.collapsed ? hiddenBySpan.get(row.span.id) : undefined
+                  }
+                  onOpenHidden={(insight) => showInsight(insight)}
                   animate={animate}
                   animationDelayMs={Math.min(item.index * 8, 300)}
                   style={{
@@ -436,7 +458,7 @@ function ToolbarButton({
   );
 }
 
-function SpanRow({
+export function SpanRow({
   row,
   rails,
   opensRail,
@@ -447,6 +469,8 @@ function SpanRow({
   flash,
   findings,
   onOpenFinding,
+  hidden,
+  onOpenHidden,
   animate,
   animationDelayMs,
   style,
@@ -471,6 +495,10 @@ function SpanRow({
   findings: Insight[] | undefined;
   /** The marker chip: open a finding with this row as the anchor. */
   onOpenFinding: (insight: Insight) => void;
+  /** Findings hidden inside this collapsed row, worst first. */
+  hidden: Insight[] | undefined;
+  /** The inside chip: open a hidden finding the way a deep link does. */
+  onOpenHidden: (insight: Insight) => void;
   animate: boolean;
   animationDelayMs: number;
   style: CSSProperties;
@@ -480,6 +508,7 @@ function SpanRow({
 }) {
   const { span } = row;
   const worst = findings?.[0];
+  const worstHidden = hidden?.[0];
   const indent = span.depth * INDENT_PX;
   const total = range.end - range.start;
   const leftPct = ((spanStartMs(span) - range.start) / total) * 100;
@@ -511,7 +540,7 @@ function SpanRow({
             e.stopPropagation();
             onOpenFinding(worst);
           }}
-          className={`ml-1.5 inline-block rounded-control px-1 py-px align-middle font-mono text-[10px] leading-[14px] transition-colors duration-150 ease-out active:bg-bg-deep-gray ${FINDING_CHIP[worst.severity]}`}
+          className={`${CHIP} ${FINDING_CHIP[worst.severity]}`}
         >
           ⚠{findings.length > 1 ? ` ${findings.length}` : ''}
         </button>
@@ -532,6 +561,22 @@ function SpanRow({
           +{row.hiddenDescendants}
         </span>
       )}
+      {worstHidden !== undefined && hidden !== undefined && (
+        // hidden findings (C): what the collapse hides, tinted by the worst;
+        // click opens it like a deep link, so the subtree expands and the
+        // view lands on its evidence
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenHidden(worstHidden);
+          }}
+          className={`${CHIP} ${FINDING_CHIP[worstHidden.severity]}`}
+        >
+          ⚠ {hidden.length} inside
+        </button>
+      )}
     </>
   );
 
@@ -540,13 +585,10 @@ function SpanRow({
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${span.kind} ${span.name}${
-        findings === undefined
-          ? ''
-          : `, evidence of ${findings.length} ${
-              findings.length === 1 ? 'finding' : 'findings'
-            }: ${findings.map((f) => f.title).join('; ')}`
-      }`}
+      aria-label={`${span.kind} ${span.name}${describeFindings(
+        'evidence of',
+        findings,
+      )}${describeFindings('hides', hidden)}`}
       style={style}
       onClick={onSelect}
       onKeyDown={(e) => {
@@ -556,7 +598,7 @@ function SpanRow({
         }
       }}
       onMouseMove={(e) =>
-        onHover({ row, findings, x: e.clientX, y: e.clientY })
+        onHover({ row, findings, hidden, x: e.clientX, y: e.clientY })
       }
       onMouseLeave={() => onHover(null)}
       className={`group cursor-pointer border-b border-outline-variant/30 transition-colors duration-150 ease-out ${
@@ -602,6 +644,16 @@ function SpanRow({
           aria-hidden
         />
       )}
+      {/* hollow notch (C): findings hidden inside this collapsed row */}
+      {worst === undefined &&
+        worstHidden !== undefined &&
+        !highlighted &&
+        !selected && (
+          <span
+            className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 border ${HIDDEN_NOTCH[worstHidden.severity]}`}
+            aria-hidden
+          />
+        )}
       {/* evidence rail (active insight) */}
       {highlighted && !selected && (
         <span
@@ -696,6 +748,13 @@ function SpanRow({
   );
 }
 
+/** ", evidence of 2 findings: A; B" for the row's accessible name. */
+function describeFindings(lead: string, list: Insight[] | undefined): string {
+  if (list === undefined) return '';
+  const noun = list.length === 1 ? 'finding' : 'findings';
+  return `, ${lead} ${list.length} ${noun}: ${list.map((f) => f.title).join('; ')}`;
+}
+
 function CostBadge({ span }: { span: Span }) {
   const cost = span.llm?.costUSD;
   if (cost === undefined || span.llm?.costSource === 'unknown') return null;
@@ -711,11 +770,21 @@ function CostBadge({ span }: { span: Span }) {
 
 function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
   const { span } = tooltip.row;
-  const { findings } = tooltip;
+  const { findings, hidden } = tooltip;
+  // keep the whole card on screen, now that it can carry two lists
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(180);
+  useLayoutEffect(() => {
+    if (ref.current !== null) setHeight(ref.current.offsetHeight);
+  });
   const x = Math.min(tooltip.x + 12, window.innerWidth - 300);
-  const y = Math.min(tooltip.y + 14, window.innerHeight - 180);
+  const y = Math.max(
+    8,
+    Math.min(tooltip.y + 14, window.innerHeight - height - 8),
+  );
   return (
     <div
+      ref={ref}
       className="pointer-events-none fixed z-50 w-72 rounded-panel border border-border bg-surface-2 p-3 shadow-popover"
       style={{ left: x, top: y }}
     >
@@ -733,26 +802,17 @@ function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
       {findings !== undefined && (
         // the marker in words (A): which findings this row is evidence of
         <ul className="mt-2 space-y-0.5 border-t border-border pt-2 text-label">
-          {findings.slice(0, 3).map((f) => (
-            <li key={f.id} className="flex items-baseline gap-1.5">
-              <span
-                aria-hidden
-                className={`shrink-0 ${FINDING_TEXT[f.severity]}`}
-              >
-                ⚠
-              </span>
-              <span className="min-w-0 truncate text-text">{f.title}</span>
-              {f.estimatedWasteUSD !== undefined && (
-                <span className="ml-auto shrink-0 font-mono text-heat-2">
-                  {formatUSD(f.estimatedWasteUSD)}
-                </span>
-              )}
-            </li>
-          ))}
-          {findings.length > 3 && (
-            <li className="text-text-faint">+{findings.length - 3} more</li>
-          )}
+          <FindingItems findings={findings} />
         </ul>
+      )}
+      {hidden !== undefined && (
+        // the inside chip in words (C), each with its own estimate
+        <div className="mt-2 border-t border-border pt-2">
+          <p className="micro-label text-text-faint">Hidden inside</p>
+          <ul className="mt-1 space-y-0.5 text-label">
+            <FindingItems findings={hidden} />
+          </ul>
+        </div>
       )}
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-label">
         <dt className="text-text-faint">started</dt>
@@ -797,5 +857,28 @@ function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
         )}
       </dl>
     </div>
+  );
+}
+
+function FindingItems({ findings }: { findings: Insight[] }) {
+  return (
+    <>
+      {findings.slice(0, 3).map((f) => (
+        <li key={f.id} className="flex items-baseline gap-1.5">
+          <span aria-hidden className={`shrink-0 ${FINDING_TEXT[f.severity]}`}>
+            ⚠
+          </span>
+          <span className="min-w-0 truncate text-text">{f.title}</span>
+          {f.estimatedWasteUSD !== undefined && (
+            <span className="ml-auto shrink-0 font-mono text-heat-2">
+              {formatUSD(f.estimatedWasteUSD)}
+            </span>
+          )}
+        </li>
+      ))}
+      {findings.length > 3 && (
+        <li className="text-text-faint">+{findings.length - 3} more</li>
+      )}
+    </>
   );
 }
