@@ -18,3 +18,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - "No branch recorded" leaves the three runs without a branch and keeps its row lit. The filter survives a reload and the move to the sessions list.
   - The run header reads `· billing-dashboard ⑂ feat/invoices-table`, and the dot wraps with the group.
   - At a 1,280 px viewport the sessions table stays 1,247 px wide, as on `develop`.
+
+## 3. Review follow-ups
+
+- [x] 3.1 OTLP branch precedence: a resource that names a branch wins wherever it appears. Failing that, the branch comes from the earliest-starting span whose attributes name one, not the first span in the file; exporters write spans as they end, so a tool span naming the ref it pushed to used to win. Tests: a later resource beats an earlier span attribute; a span exported first but started later loses; spans without a start time keep document order.

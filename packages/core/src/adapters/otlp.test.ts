@@ -557,7 +557,7 @@ describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
 
   /** One resource per entry, each holding one span of session `ses-g`. */
   async function branchOf(
-    resources: { resource?: Attrs; span?: Attrs }[],
+    resources: { resource?: Attrs; span?: Attrs; start?: string }[],
   ): Promise<string | undefined> {
     const file = join(tmp, `doc-${++docs}.json`);
     writeFileSync(
@@ -574,7 +574,7 @@ describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
                   traceId: 'f'.repeat(32),
                   spanId: String(i + 1).repeat(16),
                   name: 'claude_code.interaction',
-                  startTimeUnixNano: `178342568537500000${i}`,
+                  startTimeUnixNano: r.start ?? `178342568537500000${i}`,
                   attributes: kv({ 'session.id': 'ses-g', ...r.span }),
                 },
               ],
@@ -650,14 +650,14 @@ describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
     ).toBe('main');
   });
 
-  it('falls back to span attributes, and takes the first span that names one', async () => {
+  it('takes a resource branch from anywhere before any span attribute', async () => {
     expect(
       await branchOf([
         { resource: { 'service.name': 'agent' } },
-        { span: { 'vcs.ref.head.name': 'second' } },
-        { resource: { 'vcs.ref.head.name': 'third' } },
+        { span: { 'vcs.ref.head.name': 'span' } },
+        { resource: { 'vcs.ref.head.name': 'resource' } },
       ]),
-    ).toBe('second');
+    ).toBe('resource');
     // within one span, the resource wins over the span's own attributes
     expect(
       await branchOf([
@@ -667,6 +667,27 @@ describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
         },
       ]),
     ).toBe('resource');
+  });
+
+  it('falls back to the earliest-starting span that names one, not the first exported', async () => {
+    // exporters write spans as they end: a tool span that names the ref it
+    // pushed to comes first in the file but started after the session
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'release/1.2' }, start: '1783425685375000900' },
+        {
+          span: { 'vcs.ref.head.name': 'feat/x' },
+          start: '1783425685375000100',
+        },
+      ]),
+    ).toBe('feat/x');
+    // spans without a start time keep document order
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'first' }, start: '' },
+        { span: { 'git.branch': 'second' }, start: '' },
+      ]),
+    ).toBe('first');
   });
 
   it('treats an empty value as no branch, and leaves project unset without one', async () => {

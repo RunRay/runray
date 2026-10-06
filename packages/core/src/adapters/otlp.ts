@@ -227,13 +227,40 @@ function branchIn(attrs: Map<string, unknown>): string | undefined {
   return undefined;
 }
 
-/** The run's branch: the first span, in document order, that names one. */
+function startNanos(span: OtlpSpan): bigint | undefined {
+  const v = span.json.startTimeUnixNano;
+  const s =
+    typeof v === 'string' ? v : typeof v === 'number' ? String(v) : undefined;
+  return s !== undefined && /^\d+$/.test(s) ? BigInt(s) : undefined;
+}
+
+/**
+ * The run's branch. A resource describes the whole process, so the first
+ * resource that names one wins. Failing that, span attributes describe one
+ * operation each: take the earliest-starting span that names one, not the
+ * first in the document, since exporters write spans as they end (children
+ * first) and a tool span may name the ref it acted on.
+ */
 function branchOf(spans: readonly OtlpSpan[]): string | undefined {
   for (const span of spans) {
-    const branch = branchIn(span.resource) ?? branchIn(span.attrs);
+    const branch = branchIn(span.resource);
     if (branch !== undefined) return branch;
   }
-  return undefined;
+  let earliest: { branch: string; start: bigint | undefined } | undefined;
+  for (const span of spans) {
+    const branch = branchIn(span.attrs);
+    if (branch === undefined) continue;
+    const start = startNanos(span);
+    // ties and unknown starts keep document order
+    if (
+      earliest === undefined ||
+      (start !== undefined &&
+        (earliest.start === undefined || start < earliest.start))
+    ) {
+      earliest = { branch, start };
+    }
+  }
+  return earliest?.branch;
 }
 
 /** Pinned Claude Code beta names → span kinds; everything else → other. */
