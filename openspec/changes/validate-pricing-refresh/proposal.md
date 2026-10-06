@@ -13,12 +13,15 @@
 ## What Changes
 
 - **Transport** (`refreshPricing`):
-  - a 60-second timeout;
+  - the download stops after 30 seconds with no data, or after 10 minutes in all. A slow link still gets through, and a server that drips bytes just often enough to dodge the idle limit is still cut off;
   - a 32 MiB cap, about ten times today's 3 MB list: a larger `content-length` is refused without reading, and the streamed body is cut off as soon as it passes the cap;
-  - an HTML page (a proxy or captive portal) is refused. Other content types are accepted, because GitHub serves the list as `text/plain`.
-- **Shape:**
-  - the body must parse as JSON and be an object keyed by model (zod);
-  - the converted table must hold at least half as many models as the bundled snapshot, or the reply is refused as truncated.
+  - an HTML page (a proxy or captive portal) is refused. Other content types are accepted, because GitHub serves the list as `text/plain`;
+  - a connection failure names its cause (DNS, refused, TLS, proxy) instead of undici's bare "fetch failed".
+- **Shape** (`priceListFromText`, core, shared with the snapshot build script):
+  - the body must parse as JSON and be an object keyed by model;
+  - the converted table must hold at least `minEntries` models, otherwise it throws `PriceListTooShortError`.
+  - `pricing --refresh` asks for half the bundled snapshot's count. `--allow-short-list` accepts a shorter list, for when LiteLLM really drops models, but never an empty one.
+  - The snapshot script asks for half the current snapshot's count, because a tiny snapshot would also lower the bar for every user refresh.
 - **Rates** (`convertLitellmPricing`, core): for chat models of the known providers, a published rate that is negative, not a finite number, or above $10,000 per million tokens leaves that model out. The model is reported through a new `onInvalid` option. A missing or `null` rate still means "not published" and falls back as before. Models outside the known providers are never checked, so LiteLLM's `sample_spec` entry stays harmless.
   - `pricing --refresh` prints a `warning: left out <model>: <reason>` line for each, at most ten, then a count.
   - The snapshot build script warns the same way.
@@ -29,12 +32,13 @@
 
 - Affected specs: cli (ADDED "Pricing refresh accepts only a sound price list").
 - Affected code:
-  - `packages/core/src/pricing/litellm.ts`
+  - `packages/core/src/pricing/litellm.ts` (also exported from `packages/core/src/index.ts`)
   - `packages/cli/src/{pricing,atomic-write,program}.ts`
   - `scripts/build-pricing-snapshot.ts`
   - their tests
   - `docs/05-ARCHITECTURE.md` §2.3
 - No schema change, no new dependency (zod is already a CLI dependency), goldens and the bundled snapshot unchanged.
+- Follow-up: `onboarding-state.ts` keeps its own temp-and-rename writer until RunRay/runray#44 is merged. Moving it to `writeFileAtomic` now would collide with that PR.
 - Behaviour change:
   - a refresh that used to write an empty or partial table now fails and keeps the previous prices;
   - an override that is empty or has invalid rates is ignored with a warning instead of leaving every call unpriced.
