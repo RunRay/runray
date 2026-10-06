@@ -28,13 +28,13 @@ export function TopBar(props: TopBarProps = {}) {
   const isLive = propLive ?? (data.status === 'ready' && data.live);
 
   return (
-    <header className="bg-surface text-text font-sans shrink-0 sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4 transition-all duration-200">
+    <header className="bg-surface text-text font-sans shrink-0 sticky top-0 w-full z-40 border-b border-border flex justify-between items-center h-16 px-6 py-4">
       <div className="flex items-center gap-6">
         <FilterBar />
       </div>
       <div className="flex items-center gap-4 text-on-surface-variant">
         {isReady && (
-          <p className="text-[12px] text-outline flex items-center gap-1.5 font-data-mono">
+          <p className="text-[12px] text-text-faint flex items-center gap-1.5 font-data-mono">
             {isLive ? (
               <>
                 {/* pulse only when the event stream is actually connected
