@@ -51,7 +51,14 @@ Pipeline czystych funkcji: `RawRun → buildTree → classifyKinds → deriveDep
 ### 2.3 Cost engine
 - Snapshot cennika (generowany z danych LiteLLM w build-time) w assetach paczki: `{modelPattern, inputPerMTok, outputPerMTok, cacheReadPerMTok, cacheWritePerMTok, cacheWrite1hPerMTok?}` + `snapshotDate`. `cacheWritePerMTok` to stawka domyślna (TTL 5 min); opcjonalne `cacheWrite1hPerMTok` (LiteLLM `cache_creation_input_token_cost_above_1hr`, tylko wartości > 0) wycenia udział 1h z `tracepulse.cacheWrite1hTokens`. Brak opublikowanej stawki 1h: dla wzorców `claude-*` silnik stosuje udokumentowaną premię Anthropic 2× input; dla pozostałych providerów (brak produktu z TTL) udział 1h liczy się po zwykłej stawce zapisu — silnik nigdy nie wymyśla premii, której provider nie pobiera.
 - Dopasowanie modelu: exact → prefix → alias-tabela (np. warianty `-latest`), każde porównanie wykonywane również na kluczach ze znormalizowanym separatorem wersji (`looseModelKey`: `.` między cyframi → `-`, bo OpenCode/zen zapisuje `claude-opus-4.5` tam, gdzie LiteLLM ma `claude-opus-4-5`) — exact w dowolnej pisowni bije prefiks, luźny klucz nigdy nie wymyśla wpisu spoza tabeli; brak dopasowania ⇒ `costSource:'unknown'`, koszt pomijany w sumach, badge w UI (nigdy nie zgadujemy po cichu).
-- `pricing --refresh` (opt-in, jedyna dozwolona operacja sieciowa) nadpisuje snapshot w `~/.config/runray/pricing.json`.
+- `pricing --refresh` (opt-in, jedyna dozwolona operacja sieciowa) nadpisuje snapshot w `~/.config/runray/pricing.json`. Odpowiedź jest niezaufana:
+  - limit 60 s i 32 MiB (najpierw `content-length`, potem liczenie przy odczycie strumienia), strona HTML odrzucana (GitHub serwuje listę jako `text/plain`, więc innego typu nie wymagamy);
+  - lista musi być obiektem JSON kluczowanym nazwą modelu;
+  - konwerter pomija model z rażąco złą stawką (ujemną, nieliczbową, powyżej $10 000/MTok) i zgłasza go;
+  - wynik musi mieć co najmniej połowę modeli snapshotu;
+  - zapis atomowy (plik tymczasowy + rename); każda porażka zostawia poprzedni plik bez zmian.
+
+  Odczyt `pricing.json` sprawdza schemat (co najmniej jeden model, stawki ≥ 0); zły plik → ostrzeżenie i snapshot.
 - Tabelaryczne testy: (model, tokens) → USD, w tym cache write/read i reasoning.
 - **Silnik browser-safe** (`pricing/engine.ts`, subpath `@runray/core/pricing`): czysta matematyka (match/compute/reprice) bez snapshotu i node builtins — UI wykonuje TĘ SAMĄ implementację co insighty (test czystości grafu importów + grep bundli w CI).
 - **What-if repricing** (`repriceRun`/`repriceSpans`): te same czwórki tokenów po stawkach targetu (udział 1h z `tracepulse.cacheWrite1hTokens` po stawce 1h TARGETU — dla targetów bez produktu 1h po jego zwykłej stawce zapisu); kanoniczne komórki atrybucji (main session + subagenci, innermost) z flagami ryzyka `errors|tool-fanout|long-context|unpriced` i `safeDeltaUSD` (tylko komórki bez flag). Drabinka `MODEL_TIERS` (per rodzina, wersjonowana w kodzie) + `suggestedDowngrade` rozwiązywany względem tabeli EFEKTYWNEJ z guardem zerowych stawek; skrypt snapshotu ostrzega o znikających targetach.
