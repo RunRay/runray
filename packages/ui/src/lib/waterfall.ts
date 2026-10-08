@@ -166,6 +166,39 @@ export function subagentSpanIds(spans: readonly Span[]): string[] {
   return spans.filter((s) => s.kind === 'subagent').map((s) => s.id);
 }
 
+const NO_RAILS: readonly number[] = [];
+
+/**
+ * Delegation rails: for each span, the depths of the subagent spans it sits
+ * inside (proper ancestors, outermost first). Bars are placed by time across
+ * the full row, so without a rail per enclosing subagent the only sign of
+ * nesting is the caret's indent. One forward pass — normalizer order puts
+ * parents before children — and siblings share their parent's array, so a
+ * run allocates one per subagent, not one per span.
+ */
+export function subagentRails(
+  spans: readonly Span[],
+): Map<string, readonly number[]> {
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  const rails = new Map<string, readonly number[]>();
+  const childRails = new Map<string, readonly number[]>();
+  for (const span of spans) {
+    const parent = span.parentId === null ? undefined : byId.get(span.parentId);
+    if (parent === undefined) {
+      rails.set(span.id, NO_RAILS);
+      continue;
+    }
+    let inside = childRails.get(parent.id);
+    if (inside === undefined) {
+      const above = rails.get(parent.id) ?? NO_RAILS;
+      inside = parent.kind === 'subagent' ? [...above, parent.depth] : above;
+      childRails.set(parent.id, inside);
+    }
+    rails.set(span.id, inside);
+  }
+  return rails;
+}
+
 /**
  * Subtree economics rollup (D3): cost/tokens/llm-call count of every span's
  * subtree, one O(n) reverse pass — normalizer order guarantees parents
@@ -239,9 +272,20 @@ export function collapsedAncestorsOf(
   targets: ReadonlySet<string>,
   collapsed: ReadonlySet<string>,
 ): Set<string> {
+  if (targets.size === 0 || collapsed.size === 0) return new Set();
+  return collapsedAbove(
+    new Map(spans.map((s) => [s.id, s])),
+    targets,
+    collapsed,
+  );
+}
+
+function collapsedAbove(
+  byId: ReadonlyMap<string, Span>,
+  targets: Iterable<string>,
+  collapsed: ReadonlySet<string>,
+): Set<string> {
   const out = new Set<string>();
-  if (targets.size === 0 || collapsed.size === 0) return out;
-  const byId = new Map(spans.map((s) => [s.id, s]));
   for (const id of targets) {
     let cursor = byId.get(id);
     while (cursor !== undefined && cursor.parentId !== null) {
@@ -259,6 +303,15 @@ export const SEVERITY_RANK: Record<Insight['severity'], number> = {
   critical: 2,
 };
 
+/** Worst first: severity, then estimated waste, then id. */
+function worstFirst(a: Insight, b: Insight): number {
+  return (
+    SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
+    (b.estimatedWasteUSD ?? 0) - (a.estimatedWasteUSD ?? 0) ||
+    (a.id < b.id ? -1 : 1)
+  );
+}
+
 /**
  * Findings keyed by evidence span id, each list worst-first (severity, then
  * estimated waste, then id) — the waterfall's per-row finding marker and
@@ -275,13 +328,46 @@ export function insightsBySpan(
       else list.push(insight);
     }
   }
-  for (const list of map.values()) {
-    list.sort(
-      (a, b) =>
-        SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
-        (b.estimatedWasteUSD ?? 0) - (a.estimatedWasteUSD ?? 0) ||
-        (a.id < b.id ? -1 : 1),
-    );
-  }
+  for (const list of map.values()) list.sort(worstFirst);
   return map;
+}
+
+/**
+ * Findings a collapsed row hides, keyed by that row's id, worst first: the
+ * ones whose evidence lies entirely among its hidden descendants. A finding
+ * with any evidence elsewhere — the row itself, or a row outside — still
+ * shows there, so pinning it on this row would blame the subtree for work
+ * that is mostly not its own (a session-wide context bloat with one call
+ * inside a subagent). The row shows a count and the worst severity, never
+ * a dollar total: burned and opportunity estimates do not add up. Every
+ * collapsed ancestor that hides all the evidence gets an entry; only the
+ * outermost is on screen.
+ */
+export function hiddenFindings(
+  spans: readonly Span[],
+  insights: readonly Insight[],
+  collapsed: ReadonlySet<string>,
+): Map<string, Insight[]> {
+  const out = new Map<string, Insight[]>();
+  if (collapsed.size === 0 || insights.length === 0) return out;
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  for (const insight of insights) {
+    const evidence = insight.spanIds.filter((id) => byId.has(id));
+    let holders: Set<string> | undefined;
+    for (const id of evidence) {
+      const above = collapsedAbove(byId, [id], collapsed);
+      holders =
+        holders === undefined
+          ? above
+          : new Set([...holders].filter((h) => above.has(h)));
+      if (holders.size === 0) break;
+    }
+    for (const holder of holders ?? []) {
+      const list = out.get(holder);
+      if (list === undefined) out.set(holder, [insight]);
+      else list.push(insight);
+    }
+  }
+  for (const list of out.values()) list.sort(worstFirst);
+  return out;
 }

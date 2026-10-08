@@ -4,9 +4,11 @@ import {
   collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  hiddenFindings,
   insightsBySpan,
   laneMarks,
   matchingSpanIds,
+  subagentRails,
   subagentSpanIds,
   subtreeRollups,
 } from './waterfall';
@@ -160,6 +162,41 @@ describe('subagentSpanIds', () => {
   });
 });
 
+describe('subagentRails', () => {
+  const spans = [
+    stubSpan({ id: 'session', kind: 'session' }),
+    stubSpan({ id: 'own', parentId: 'session', depth: 1 }),
+    stubSpan({ id: 'outer', parentId: 'session', kind: 'subagent', depth: 1 }),
+    stubSpan({ id: 'turn', parentId: 'outer', kind: 'turn', depth: 2 }),
+    stubSpan({ id: 'read', parentId: 'turn', depth: 3 }),
+    stubSpan({ id: 'inner', parentId: 'turn', kind: 'subagent', depth: 3 }),
+    stubSpan({ id: 'grep', parentId: 'inner', depth: 4 }),
+    stubSpan({ id: 'orphan', parentId: 'gone', depth: 2 }),
+  ];
+  const rails = subagentRails(spans);
+
+  it('lists the depth of every enclosing subagent, outermost first', () => {
+    expect(rails.get('turn')).toEqual([1]);
+    expect(rails.get('read')).toEqual([1]);
+    expect(rails.get('inner')).toEqual([1]);
+    expect(rails.get('grep')).toEqual([1, 3]);
+  });
+
+  it('gives a subagent only the rails of the subagents above it', () => {
+    expect(rails.get('outer')).toEqual([]);
+  });
+
+  it('draws nothing for the orchestrator’s own spans or orphans', () => {
+    expect(rails.get('session')).toEqual([]);
+    expect(rails.get('own')).toEqual([]);
+    expect(rails.get('orphan')).toEqual([]);
+  });
+
+  it('shares one array among siblings', () => {
+    expect(rails.get('read')).toBe(rails.get('inner'));
+  });
+});
+
 describe('subtreeRollups (D3)', () => {
   const llmStub = (
     id: string,
@@ -291,5 +328,69 @@ describe('insightsBySpan', () => {
 
   it('is empty for a run without findings', () => {
     expect(insightsBySpan([]).size).toBe(0);
+  });
+});
+
+describe('hiddenFindings', () => {
+  const finding = (
+    id: string,
+    severity: 'info' | 'warning' | 'critical',
+    spanIds: string[],
+  ) => ({
+    id,
+    ruleId: 'retry-loop',
+    severity,
+    title: id,
+    detail: '',
+    spanIds,
+  });
+  const spans = [
+    stubSpan({ id: 'session', kind: 'session' }),
+    stubSpan({ id: 'agent', parentId: 'session', kind: 'subagent', depth: 1 }),
+    stubSpan({ id: 'a1', parentId: 'agent', depth: 2 }),
+    stubSpan({ id: 'inner', parentId: 'agent', kind: 'subagent', depth: 2 }),
+    stubSpan({ id: 'i1', parentId: 'inner', depth: 3 }),
+    stubSpan({ id: 'own', parentId: 'session', depth: 1 }),
+  ];
+  const retry = finding('retry', 'warning', ['a1', 'i1']);
+  const loop = finding('loop', 'critical', ['i1']);
+  const costly = finding('costly', 'warning', ['agent', 'a1']);
+  const outside = finding('outside', 'info', ['own']);
+  const all = [retry, loop, costly, outside];
+
+  it('rolls findings up onto the collapsed row that hides all their evidence, worst first', () => {
+    const hidden = hiddenFindings(spans, all, new Set(['agent']));
+    expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+    expect(hidden.has('session')).toBe(false);
+  });
+
+  it('counts a finding once, however many of its spans the row hides', () => {
+    const hidden = hiddenFindings(spans, [retry], new Set(['agent']));
+    expect(hidden.get('agent')).toEqual([retry]);
+  });
+
+  it('leaves out a finding that already names the row itself', () => {
+    const hidden = hiddenFindings(spans, [costly], new Set(['agent']));
+    expect(hidden.has('agent')).toBe(false);
+  });
+
+  it('leaves out a finding with evidence outside the subtree', () => {
+    // a session-wide finding with one call inside the subagent is not the
+    // subagent's; its outside evidence keeps its own marker
+    const straddle = finding('straddle', 'critical', ['i1', 'own']);
+    const hidden = hiddenFindings(spans, [straddle], new Set(['agent']));
+    expect(hidden.size).toBe(0);
+  });
+
+  it('gives each collapsed ancestor only the findings it hides entirely', () => {
+    const hidden = hiddenFindings(spans, all, new Set(['agent', 'inner']));
+    // retry also has evidence in agent's own subtree, outside inner
+    expect(hidden.get('inner')?.map((f) => f.id)).toEqual(['loop']);
+    expect(hidden.get('agent')?.map((f) => f.id)).toEqual(['loop', 'retry']);
+  });
+
+  it('is empty when nothing is collapsed or nothing is hidden', () => {
+    expect(hiddenFindings(spans, all, new Set()).size).toBe(0);
+    expect(hiddenFindings(spans, [outside], new Set(['agent'])).size).toBe(0);
   });
 });
