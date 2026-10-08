@@ -9,7 +9,10 @@ import type {
   RunWarning,
   SourceAdapter,
 } from '../adapter.js';
-import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import {
+  isGenAiMetadataKey,
+  isReservedMetadataKey,
+} from '../attribute-keys.js';
 import { stripBom } from '../text.js';
 import { errorPreview } from './error-preview.js';
 
@@ -39,8 +42,9 @@ import { errorPreview } from './error-preview.js';
  * import never fails on shape. Subagent nesting needs no synthesis: the
  * parent links carry it (a subagent's spans nest under the spawning tool's
  * execution span), and dangling parentSpanIds fall to the normalizer's Flat
- * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`; identity
- * attrs (user.*, organization.id) are dropped and `user_prompt` maps to the
+ * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`, and under
+ * redaction only its metadata keys (`isGenAiMetadataKey`); identity attrs
+ * (user.*, organization.id) are dropped and `user_prompt` maps to the
  * redactable `content.promptPreview`. Span events are skipped in v0.1 (they
  * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT).
  */
@@ -229,38 +233,27 @@ function statusOf(span: Json, attrs: Map<string, unknown>): RawSpan['status'] {
   return 'ok';
 }
 
-/** runray.* / tracepulse.* keys that are pure identity/metadata (safe under --redact);
- * `runray.target` / `tracepulse.target` is a display token and counts as content, so it is
- * dropped when redacting, exactly like an adapter's own target display. */
-const REDACT_SAFE_RUNRAY = new Set([
-  'runray.targetKey',
-  'runray.targetKind',
-  'runray.mcpDetection',
-  'tracepulse.targetKey',
-  'tracepulse.targetKind',
-  'tracepulse.mcpDetection',
-  // token count, never content. NOTE: passthrough only — this adapter never
-  // DERIVES the 5m/1h split from plain cache-write counts, so an OTLP
-  // capture whose emitter omits the split prices 1h writes at the 5m rate
-  // and reads lower than the same session parsed from its JSONL transcript.
-  CACHE_WRITE_1H_ATTR,
-]);
-
 /** gen_ai.* passthrough — keys and values unchanged (values decoded from the
  * OTLP AnyValue envelope; that encoding is transport, not data). Under
- * redaction, runray.* / tracepulse.* is filtered to the identity allowlist so an emitter's
- * `runray.target` display text never survives --redact (privacy is enforced
- * in core, not the UI). */
+ * redaction both prefixes are filtered to their metadata keys
+ * (`attribute-keys.ts`): gen_ai.* because the GenAI conventions carry
+ * prompt and tool text there too, runray.* / tracepulse.* so an emitter's
+ * `runray.target` display text, or anything else it stamps with the
+ * prefix, never survives --redact (privacy is enforced in core, not the
+ * UI). The 1-hour cache-write count passes through but is never DERIVED
+ * here, so an OTLP capture whose emitter omits the split prices 1h writes
+ * at the 5m rate and reads lower than the same session parsed from its
+ * JSONL transcript. */
 function genAiAttributes(attrs: Map<string, unknown>, redact: boolean): Json {
   const out: Json = {};
   for (const [key, value] of attrs) {
     if (value === undefined) continue;
     if (key.startsWith('gen_ai.')) {
-      out[key] = value;
+      if (!redact || isGenAiMetadataKey(key)) out[key] = value;
     } else if (key.startsWith('runray.') || key.startsWith('tracepulse.')) {
       // reserved prefix survives passthrough (X2), but redaction keeps only
       // identity keys — never the display token or any other content key
-      if (!redact || REDACT_SAFE_RUNRAY.has(key)) out[key] = value;
+      if (!redact || isReservedMetadataKey(key)) out[key] = value;
     }
   }
   return out;

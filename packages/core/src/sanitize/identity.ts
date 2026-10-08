@@ -1,4 +1,8 @@
 import type { Run, Span } from '@runray/schema';
+import {
+  isGenAiMetadataKey,
+  isReservedMetadataKey,
+} from '../attribute-keys.js';
 
 export interface IdentityTable {
   projects: Map<string, string>;
@@ -7,25 +11,15 @@ export interface IdentityTable {
 }
 
 /**
- * Attribute allowlist (D2, trace-sanitization spec):
- * Retain reserved `runray.*` counters, `gen_ai.*`, and legacy `tracepulse.*`
- * internal metadata keys (excluding deleted display `tracepulse.target`).
- * Drop every other key without inspecting its value.
+ * Attribute allowlist (D2, trace-sanitization spec): retain the reserved
+ * `runray.*` / legacy `tracepulse.*` metadata keys and the metadata keys of
+ * `gen_ai.*`, the same lists the OTLP adapter applies under `--redact`
+ * (`attribute-keys.ts`). Drop every other key, including the `.target`
+ * display tokens and anything an emitter stamps with a reserved prefix,
+ * without inspecting its value.
  */
 export function isAttributeAllowed(key: string): boolean {
-  if (key === 'runray.target' || key === 'tracepulse.target') {
-    return false;
-  }
-  if (key.startsWith('gen_ai.')) {
-    return true;
-  }
-  if (key.startsWith('runray.')) {
-    return true;
-  }
-  if (key.startsWith('tracepulse.')) {
-    return true;
-  }
-  return false;
+  return isGenAiMetadataKey(key) || isReservedMetadataKey(key);
 }
 
 export function scrubAttributes(

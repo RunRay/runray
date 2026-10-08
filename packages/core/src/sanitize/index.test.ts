@@ -281,21 +281,122 @@ describe('1.2 scrubIdentity & deterministic mapping', () => {
 });
 
 describe('1.3 Attribute allowlist', () => {
-  it('allows gen_ai.*, runray.* (except target), and tracepulse.* (except target)', () => {
+  it('allows gen_ai.* metadata and the reserved runray.* / tracepulse.* metadata keys', () => {
     expect(isAttributeAllowed('gen_ai.request.model')).toBe(true);
     expect(isAttributeAllowed('gen_ai.usage.input_tokens')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.usage.cache_read.input_tokens')).toBe(
+      true,
+    );
+    expect(isAttributeAllowed('gen_ai.usage.cost')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.response.finish_reasons')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.tool.call.id')).toBe(true);
     expect(isAttributeAllowed('runray.targetKey')).toBe(true);
     expect(isAttributeAllowed('runray.targetKind')).toBe(true);
-    expect(isAttributeAllowed('runray.cache_write_1h_tokens')).toBe(true);
     expect(isAttributeAllowed('runray.mcpDetection')).toBe(true);
     expect(isAttributeAllowed('tracepulse.targetKey')).toBe(true);
     expect(isAttributeAllowed('tracepulse.mcpDetection')).toBe(true);
+    expect(isAttributeAllowed('tracepulse.cacheWrite1hTokens')).toBe(true);
 
     expect(isAttributeAllowed('runray.target')).toBe(false);
     expect(isAttributeAllowed('tracepulse.target')).toBe(false);
     expect(isAttributeAllowed('custom.vendor_path')).toBe(false);
     expect(isAttributeAllowed('http.url')).toBe(false);
     expect(isAttributeAllowed('file.path')).toBe(false);
+  });
+
+  it('drops any other key an emitter stamps with a reserved prefix', () => {
+    // an OTLP emitter can send runray.* / tracepulse.* keys of its own
+    for (const key of [
+      'runray.notes',
+      'runray.cache_write_1h_tokens', // not a key any adapter writes
+      'tracepulse.prompt',
+      'gen_ai.usage.debug', // emitters put strings and JSON under usage too
+      'gen_ai.usage.prompt_tokens_details',
+    ]) {
+      expect(isAttributeAllowed(key), key).toBe(false);
+    }
+  });
+
+  it('applies the allowlist when only paths are scrubbed (--scrub-paths, text kept)', () => {
+    // profile `full` + scrubIdentity: the run was parsed WITHOUT redaction,
+    // so attribute content reaches scrubIdentity and must stop there
+    const run: Run = {
+      ...createMockRun(),
+      spans: [
+        {
+          ...createMockSpan('s1', 'other'),
+          content: { promptPreview: 'kept: --scrub-paths keeps text' },
+          attributes: {
+            'gen_ai.request.model': 'claude-sonnet-4-5',
+            'gen_ai.tool.call.arguments':
+              '{"path":"C:\\\\Users\\\\alex\\\\k.pem"}',
+            'runray.notes': '/Users/alex/acme/.env',
+          },
+        },
+      ],
+    };
+
+    const scrubbed = scrubIdentity(run);
+    expect(scrubbed.spans[0]?.attributes).toEqual({
+      'gen_ai.request.model': 'claude-sonnet-4-5',
+    });
+    expect(scrubbed.spans[0]?.content).toEqual({
+      promptPreview: 'kept: --scrub-paths keeps text',
+    });
+    expect(findPathShapes(JSON.stringify(scrubbed))).toEqual([]);
+  });
+
+  it('drops the gen_ai.* keys that carry prompt and tool text, and any it does not know', () => {
+    // GenAI semantic conventions, opt-in content attributes
+    for (const key of [
+      'gen_ai.input.messages',
+      'gen_ai.output.messages',
+      'gen_ai.system_instructions',
+      'gen_ai.tool.definitions',
+      'gen_ai.tool.call.arguments',
+      'gen_ai.tool.call.result',
+      // OpenLLMetry-style and older instrumentations
+      'gen_ai.prompt',
+      'gen_ai.completion',
+      'gen_ai.prompt.0.content',
+      'gen_ai.prompt.0.role',
+      'gen_ai.completion.0.content',
+      // text, though it sits among the request parameters
+      'gen_ai.request.stop_sequences',
+      // a key the conventions might add later: dropped until listed
+      'gen_ai.future.thing',
+    ]) {
+      expect(isAttributeAllowed(key), key).toBe(false);
+    }
+  });
+
+  it('drops GenAI message content from a container span that metadata-only keeps', () => {
+    // OTLP spans prune today, but a subagent or session span with content
+    // must not keep it either
+    const run: Run = {
+      ...createMockRun(),
+      spans: [
+        {
+          ...createMockSpan('s1', 'subagent'),
+          attributes: {
+            'gen_ai.operation.name': 'invoke_agent',
+            'gen_ai.agent.name': 'researcher',
+            'gen_ai.input.messages':
+              '[{"role":"user","parts":[{"type":"text","content":"see /Users/alex/acme/.env"}]}]',
+            'gen_ai.system_instructions': 'You are a research assistant.',
+          },
+        },
+      ],
+    };
+
+    const pruned = pruneToMetadata(
+      sanitizeRun(run, 'sanitized', createIdentityTable([run])),
+    );
+    expect(pruned.spans[0]?.attributes).toEqual({
+      'gen_ai.operation.name': 'invoke_agent',
+      'gen_ai.agent.name': 'researcher',
+    });
+    expect(findPathShapes(JSON.stringify(pruned))).toEqual([]);
   });
 
   it('drops vendor attributes with paths from OTLP spans without inspecting values', () => {
