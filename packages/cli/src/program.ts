@@ -44,7 +44,11 @@ import {
   writeNextStepHints,
 } from './onboarding.js';
 import { openBrowser } from './open.js';
-import { effectivePricing, refreshPricing } from './pricing.js';
+import {
+  effectivePricing,
+  type RefreshResult,
+  refreshPricing,
+} from './pricing.js';
 import { createNotifier, DEFAULT_PORT, startServer } from './server.js';
 import { resolveExportTemplate, resolveUiDistDir } from './ui-dist.js';
 import { watchRoots } from './watch.js';
@@ -631,10 +635,31 @@ export function createProgram(): Command {
       '--refresh',
       'fetch current prices from LiteLLM — the ONLY network operation in runray',
     )
+    .option(
+      '--allow-short-list',
+      'with --refresh: accept a price list under half the bundled snapshot',
+    )
     .action(async (opts: Record<string, unknown>) => {
       if (opts.refresh === true) {
         console.log('fetching current prices (explicit opt-in network call)…');
-        const result = await refreshPricing();
+        let result: RefreshResult;
+        try {
+          result = await refreshPricing({
+            allowShortList: opts.allowShortList === true,
+          });
+        } catch (err) {
+          throw new Error(
+            `${(err as Error).message}\nNothing was written; runray keeps its current prices.`,
+          );
+        }
+        for (const { model, problem } of result.skipped.slice(0, 10)) {
+          process.stderr.write(`warning: left out ${model}: ${problem}\n`);
+        }
+        if (result.skipped.length > 10) {
+          process.stderr.write(
+            `warning: left out ${result.skipped.length - 10} more models with unusable prices\n`,
+          );
+        }
         console.log(
           `wrote ${result.path} (${result.entries} models, snapshot ${result.snapshotDate})`,
         );
