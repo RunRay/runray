@@ -1,0 +1,16 @@
+# Tasks: skip-foreign-session-files
+
+Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema drift, goldens in `fixtures/normalized/` byte-identical.
+
+## 1. Refuse candidates that are not sessions
+
+- [x] 1.1 `claude-code` `parse()`: throw when the main transcript has no `user`/`assistant` record or no record `timestamp`; drop the `EPOCH` fallback for the session start. Tests in `packages/core/src/adapters/claude-code.test.ts`: another tool's log, summary-only, user records without timestamp, non-JSON lines, plus an unanswered prompt that is kept.
+- [x] 1.2 `opencode` `parse()`: throw for storage and export candidates whose session lacks `id` or a numeric `time.created`. Tests in `packages/core/src/adapters/opencode.test.ts`: two export lookalikes and one storage lookalike.
+- [x] 1.3 Discovery-level test in `packages/cli/src/discover.test.ts` (a foreign `.jsonl` next to a real session: one run, no 1970 start, one skipped entry with the reason), the skip trailer reworded to cover files that are not sessions (`packages/cli/src/discover.ts`, `docs/12-ONBOARDING-COPY.md` §f), and a `patch` changeset for `runray`.
+
+## 2. Review follow-ups
+
+- [x] 2.1 Discovery skips any normalized run without a usable start (1970 or unparseable) with a reason, so OTLP and future adapters can't emit one either. Test: an OTLP file whose spans carry no start time.
+- [x] 2.2 `NoSessionYet` (core): `claude-code` throws it for its own file with no conversation yet (Claude Code markers present), and discovery skips it without a warning. Tests: a live session before its first prompt, a summary-only file, and the discovery-level quiet skip.
+- [x] 2.3 OpenCode child sessions and `task` calls without timestamps start at the span they hang under (with a run warning for the child) instead of 1970. Test: a storage-era child and task call with no times.
+- [x] 2.4 Export `info` without `id` is "not an opencode export document" (filename fallback removed); the trailer says "entry"/"entries", since a locked `opencode.db` is one entry per session.

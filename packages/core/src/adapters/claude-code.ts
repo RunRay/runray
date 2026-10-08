@@ -11,6 +11,7 @@ import type {
   RunWarning,
   SourceAdapter,
 } from '../adapter.js';
+import { NoSessionYet } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
@@ -185,7 +186,20 @@ interface Transcript {
   customTitle: string | undefined;
   legacy: boolean;
   firstTs: string | undefined;
+  /** Saw at least one `user` or `assistant` record. */
+  conversational: boolean;
+  /** Saw a record only Claude Code writes: one carrying `sessionId`, or one
+   * of CLAUDE_META_TYPES. Tells its own not-yet-a-session file from a
+   * foreign one. */
+  claudeMarkers: boolean;
 }
+
+/** Record types Claude Code writes outside the conversation itself. */
+const CLAUDE_META_TYPES = new Set([
+  'summary',
+  'file-history-snapshot',
+  'queue-operation',
+]);
 
 async function collectTranscript(
   file: string,
@@ -202,6 +216,8 @@ async function collectTranscript(
     customTitle: undefined,
     legacy: false,
     firstTs: undefined,
+    conversational: false,
+    claudeMarkers: false,
   };
   const byKey = new Map<string, LlmGroup>();
   const seenUuids = new Set<string>();
@@ -241,6 +257,12 @@ async function collectTranscript(
     }
     const ts = str(rec.timestamp);
     if (ts !== undefined && t.firstTs === undefined) t.firstTs = ts;
+    if (type === 'user' || type === 'assistant') t.conversational = true;
+    if (
+      str(rec.sessionId) !== undefined ||
+      (type !== undefined && CLAUDE_META_TYPES.has(type))
+    )
+      t.claudeMarkers = true;
     if (rec.isSidechain === true) t.legacy = true;
     if (t.sessionId === undefined) t.sessionId = str(rec.sessionId);
     if (t.cwd === undefined) t.cwd = str(rec.cwd);
@@ -874,6 +896,23 @@ export const claudeCodeAdapter: SourceAdapter = {
     };
 
     const main = await collectTranscript(mainFile, warnings);
+    // detect() picks session files by name alone, so any .jsonl in a scanned
+    // folder lands here. Without a timestamped user or assistant record it
+    // is not a session, and emitting it would mean a run dated 1970 with no
+    // calls. Claude Code's own file in that state (a session whose first
+    // prompt isn't written yet, a summary-only file) is skipped quietly;
+    // anything else (another tool's export, a log dropped into a project)
+    // is skipped with a warning.
+    if (!main.conversational || main.firstTs === undefined) {
+      if (main.claudeMarkers) {
+        throw new NoSessionYet(
+          'Claude Code transcript with no conversation yet',
+        );
+      }
+      throw new Error(
+        'not a Claude Code session: no timestamped user or assistant records',
+      );
+    }
     const sessionId = main.sessionId ?? basename(mainFile, '.jsonl');
     const sessionSpan: RawSpan = {
       id: sessionId,
@@ -881,7 +920,7 @@ export const claudeCodeAdapter: SourceAdapter = {
       kind: 'session',
       name: 'session',
       status: 'ok',
-      startedAt: main.firstTs ?? EPOCH,
+      startedAt: main.firstTs,
       agent: { sessionId },
       attributes: {},
       provenance: { file: mainFile, line: 1 },

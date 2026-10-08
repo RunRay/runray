@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { Candidate, RawRun } from '../adapter.js';
+import { type Candidate, NoSessionYet, type RawRun } from '../adapter.js';
 import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
@@ -1131,5 +1131,81 @@ describe('claude-code adapter — records repeated after a bridge-session', () =
     expect(loops).toHaveLength(1);
     expect(loops[0]?.spanIds).toEqual(['t1', 't2', 't3']);
     expect(loops[0]?.title).toBe('Bash failed 3× in a row');
+  });
+});
+
+describe('claude-code files that are not sessions', () => {
+  // detect() picks files by name, so parse() is where a non-session .jsonl
+  // is refused: a foreign one with an Error (discovery warns), Claude Code's
+  // own with no conversation yet with NoSessionYet (discovery stays quiet).
+  // Either way, no 1970 run.
+  async function parseLines(lines: readonly unknown[]): Promise<RawRun> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-foreign-'));
+    try {
+      writeFileSync(
+        join(dir, 'foreign.jsonl'),
+        lines
+          .map((l) => (typeof l === 'string' ? l : JSON.stringify(l)))
+          .join('\n'),
+      );
+      const [candidate] = await claudeCodeAdapter.detect([dir]);
+      if (candidate === undefined) throw new Error('not detected');
+      return await claudeCodeAdapter.parse(candidate, { redact: false });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it.each<[string, unknown[]]>([
+    [
+      'a log from another tool, timestamps and all',
+      [{ level: 'info', timestamp: '2026-07-02T13:00:00Z', msg: 'started' }],
+    ],
+    [
+      'user records without any timestamp',
+      [{ type: 'user', uuid: 'u1', message: { role: 'user', content: 'hi' } }],
+    ],
+    ['lines that are not JSON', ['not json', '{also not']],
+  ])('refuses %s as foreign', async (_label, lines) => {
+    const err = await parseLines(lines).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err).not.toBeInstanceOf(NoSessionYet);
+    expect((err as Error).message).toBe(
+      'not a Claude Code session: no timestamped user or assistant records',
+    );
+  });
+
+  it.each<[string, unknown[]]>([
+    [
+      'a live session before its first prompt is written',
+      [
+        {
+          type: 'queue-operation',
+          operation: 'enqueue',
+          sessionId: 'sess-new',
+          timestamp: '2026-07-02T13:00:00Z',
+        },
+      ],
+    ],
+    [
+      'a summary-only file',
+      [{ type: 'summary', summary: 's', leafUuid: 'u1' }],
+    ],
+  ])('skips %s quietly (NoSessionYet)', async (_label, lines) => {
+    await expect(parseLines(lines)).rejects.toBeInstanceOf(NoSessionYet);
+  });
+
+  it('keeps a session whose prompt never got a reply', async () => {
+    const raw = await parseLines([
+      {
+        type: 'user',
+        uuid: 'u1',
+        sessionId: 'sess-crashed',
+        timestamp: '2026-07-02T13:00:00Z',
+        message: { role: 'user', content: 'hi' },
+      },
+    ]);
+    expect(raw.spans[0]?.kind).toBe('session');
+    expect(raw.spans[0]?.startedAt).toBe('2026-07-02T13:00:00Z');
   });
 });
