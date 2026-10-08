@@ -1,10 +1,10 @@
-import { fileURLToPath } from 'node:url';
 import { bundledPricing, diffRuns, type RunDiff } from '@runray/core';
 import type { Run } from '@runray/schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { worstRegressions } from './diff.js';
 import { buildTraceFile } from './discover.js';
 import { createProgram } from './program.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 
 /**
  * `runray diff` e2e (run-diff 2.1): two real scrubbed fixture runs
@@ -13,9 +13,7 @@ import { createProgram } from './program.js';
  * verbatim, and exit 3 on an ambiguous/missing ref.
  */
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 
 // One shared parse — each command invocation below re-parses anyway (the
 // test exercises commander wiring), but the baseline against which stdout is
