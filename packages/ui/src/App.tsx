@@ -1,7 +1,7 @@
 /**
  * App shell (task 3.1): hash routing + zustand store + data loader.
  * Layout per 03-design.md §3: top bar 44px / sessions 280px / run view /
- * inspector 360px. View internals land with tasks 3.2–3.7.
+ * inspector 360px, or up to 560px wide. View internals land with tasks 3.2–3.7.
  */
 
 import type { Run } from '@runray/schema';

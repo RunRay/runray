@@ -635,3 +635,51 @@ way the theme does.
 - GIVEN the person collapsed the rail
 - WHEN the page is reloaded
 - THEN the rail opens collapsed
+
+### Requirement: Inspector width and copy controls
+The Inspector SHALL offer a wide mode on the person's request: a toggle
+in its header and a palette command. Wide, it SHALL grow from 360px to
+at most 560px, taking the width from the centre pane but leaving that
+pane at least 400px beside the navigation rail and the sessions pane;
+the sessions pane SHALL keep its width. When the window leaves no room to
+widen, the toggle SHALL say so and how to make room rather than appear to
+do nothing; turning wide mode off SHALL always work. The choice SHALL
+persist across reloads the way the theme does. Each prompt, output and
+delegation-reason preview and the raw span record SHALL carry a copy
+control that puts that text on the clipboard; a control over text that
+ingestion cut short SHALL call it a preview. The control SHALL confirm a
+copy for 1.5 seconds and SHALL state a failure on the control itself
+rather than stay silent. A redacted preview SHALL carry no copy control.
+
+#### Scenario: Wide mode yields to the centre pane
+- GIVEN a 1440px window with the navigation rail expanded
+- WHEN the person turns on wide mode
+- THEN the Inspector is 520px wide, the centre pane 400px, and the
+  sessions pane stays 280px
+
+#### Scenario: No room to widen
+- GIVEN a 1280px window with the navigation rail expanded
+- WHEN the Inspector renders narrow
+- THEN its wide toggle is marked unavailable and says to collapse the
+  navigation or widen the window
+
+#### Scenario: The choice survives a reload
+- GIVEN the person turned on wide mode
+- WHEN the page is reloaded
+- THEN the Inspector opens wide
+
+#### Scenario: A copied preview is confirmed
+- GIVEN a span with a prompt preview
+- WHEN the person activates the prompt's "Copy preview" control
+- THEN the preview text is on the clipboard and the control reads
+  "Copied" for 1.5 seconds
+
+#### Scenario: A denied clipboard is stated
+- GIVEN the browser denies clipboard access
+- WHEN the person activates a copy control
+- THEN the control reads "Copy failed: select the text"
+
+#### Scenario: A redacted preview offers nothing to copy
+- GIVEN a span whose prompt preview is redacted
+- WHEN the Inspector renders it
+- THEN the Prompt section shows "redacted" and no copy control

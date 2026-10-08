@@ -4,7 +4,14 @@ import {
   resolvePlaybookSource,
 } from '@runray/core/insights-meta';
 import type { Insight, Run, Span } from '@runray/schema';
-import { type ReactNode, useMemo, useState } from 'react';
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   formatDateTime,
   formatDuration,
@@ -14,6 +21,7 @@ import {
 import type { SanitizationManifest } from '../lib/load';
 import { KIND_BG } from '../lib/span-kind';
 import { errorPill } from '../lib/triage';
+import { type CopyState, useCopy } from '../lib/use-copy';
 import { insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
@@ -26,7 +34,12 @@ import { TranscriptPane } from './TranscriptPane';
  * Inspector (03-design.md §4.4): span header · timing · delegation reason ·
  * token table · cost + costSource badge · previews (8-line clamp, mono;
  * `null` preview = redacted in core, never filtered here) · provenance
- * footer with a Show raw toggle over the normalized span record.
+ * footer with a Show raw toggle over the normalized span record. Each
+ * preview and the raw record carry a copy control.
+ *
+ * 360px wide, or up to 560px in wide mode. The extra width comes out of
+ * the centre pane, which keeps at least 400px beside the 280px sessions
+ * pane. Like the rail, the width changes without animation.
  */
 export interface InspectorProps {
   run?: Run;
@@ -34,6 +47,19 @@ export interface InspectorProps {
   insightId?: string | null;
   manifest?: SanitizationManifest;
 }
+
+// `100%` is the row the Inspector sits in, which already leaves out the
+// navigation rail; 680px is the sessions pane plus the centre's 400px.
+const WIDTH = {
+  narrow: 'w-[360px]',
+  wide: 'w-[min(560px,max(360px,calc(100%_-_680px)))]',
+} as const;
+
+/** The row width wide mode needs before it adds anything to the 360px. */
+const ROOM_TO_WIDEN_PX = 680 + 360;
+
+/** How long a copy control says "Copied". */
+const COPIED_MS = 1500;
 
 export function Inspector(props: InspectorProps = {}) {
   const {
@@ -47,6 +73,10 @@ export function Inspector(props: InspectorProps = {}) {
   const focus = useAppStore((s) => s.selection.focus);
   const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
+  const wide = useAppStore((s) => s.ui.inspectorWide);
+  const toggleInspectorWide = useAppStore((s) => s.toggleInspectorWide);
+  const asideRef = useRef<HTMLElement>(null);
+  const room = useRoomToWiden(asideRef);
   const showInsight = useAppStore((s) => s.showInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
 
@@ -87,19 +117,43 @@ export function Inspector(props: InspectorProps = {}) {
 
   return (
     <aside
+      ref={asideRef}
       aria-label="Inspector"
-      className="flex w-[360px] shrink-0 h-full flex-col border-l border-border bg-surface min-h-0"
+      className={`flex ${wide ? WIDTH.wide : WIDTH.narrow} shrink-0 h-full flex-col border-l border-border bg-surface min-h-0`}
     >
       <div className="shrink-0 flex items-center justify-between border-b border-border px-3 py-2">
         <p className="micro-label text-text-faint">Inspector</p>
-        <button
-          type="button"
-          onClick={toggleInspector}
-          aria-label="Close inspector"
-          className="flex h-6 w-6 items-center justify-center rounded-control text-text-faint transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text active:bg-bg"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-0.5">
+          {/* Without room the toggle says so instead of seeming to do
+              nothing; turning wide mode off always works. */}
+          <button
+            type="button"
+            onClick={() => {
+              if (wide || room) toggleInspectorWide();
+            }}
+            aria-pressed={wide}
+            aria-disabled={!wide && !room ? true : undefined}
+            aria-label="Wide inspector"
+            title={
+              !room
+                ? 'No room to widen: collapse the navigation ( [ ) or widen the window'
+                : wide
+                  ? 'Narrow the inspector'
+                  : 'Widen the inspector'
+            }
+            className={`${HEADER_BUTTON} aria-disabled:cursor-not-allowed aria-disabled:opacity-40`}
+          >
+            <WidthIcon wide={wide} />
+          </button>
+          <button
+            type="button"
+            onClick={toggleInspector}
+            aria-label="Close inspector"
+            className={HEADER_BUTTON}
+          >
+            ✕
+          </button>
+        </div>
       </div>
       <div className="shrink-0 p-2 pb-0">
         <ContextualHint hintKey="redact" />
@@ -476,6 +530,10 @@ function SpanDetail({ span }: { span: Span }) {
   );
   const run = useAppStore(selectActiveRun);
   const [showRaw, setShowRaw] = useState(false);
+  const raw = useMemo(
+    () => (showRaw ? JSON.stringify(span, null, 2) : ''),
+    [showRaw, span],
+  );
   const isError = span.status === 'error';
 
   return (
@@ -520,7 +578,10 @@ function SpanDetail({ span }: { span: Span }) {
 
       {/* delegation reason (subagents) */}
       {span.content?.delegationReason !== undefined && (
-        <Section title="Delegation reason">
+        <Section
+          title="Delegation reason"
+          action={copyOf(span.content.delegationReason, 'delegation reason')}
+        >
           <PreviewText value={span.content.delegationReason} />
         </Section>
       )}
@@ -597,12 +658,18 @@ function SpanDetail({ span }: { span: Span }) {
 
       {/* previews */}
       {span.content?.promptPreview !== undefined && (
-        <Section title="Prompt">
+        <Section
+          title="Prompt"
+          action={copyOf(span.content.promptPreview, 'prompt', 'preview')}
+        >
           <PreviewText value={span.content.promptPreview} />
         </Section>
       )}
       {span.content?.outputPreview !== undefined && (
-        <Section title="Output">
+        <Section
+          title="Output"
+          action={copyOf(span.content.outputPreview, 'output', 'preview')}
+        >
           <PreviewText value={span.content.outputPreview} />
         </Section>
       )}
@@ -627,18 +694,21 @@ function SpanDetail({ span }: { span: Span }) {
             {span.provenance.file}
             {span.provenance.line !== undefined && `:${span.provenance.line}`}
           </p>
-          <button
-            type="button"
-            onClick={() => setShowRaw((v) => !v)}
-            aria-pressed={showRaw}
-            className="shrink-0 rounded-control border border-border bg-surface px-2 py-0.5 text-label text-text-dim transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text active:bg-bg"
-          >
-            {showRaw ? 'Hide raw' : 'Show raw'}
-          </button>
+          <span className="flex shrink-0 items-center gap-1">
+            {showRaw && <CopyButton text={raw} of="span" what="JSON" />}
+            <button
+              type="button"
+              onClick={() => setShowRaw((v) => !v)}
+              aria-pressed={showRaw}
+              className="shrink-0 rounded-control border border-border bg-surface px-2 py-0.5 text-label text-text-dim transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg"
+            >
+              {showRaw ? 'Hide raw' : 'Show raw'}
+            </button>
+          </span>
         </div>
         {showRaw && (
           <pre className="mt-2 max-h-80 overflow-auto rounded-control border border-border bg-bg p-2 text-label leading-[1.45] text-text-dim">
-            {JSON.stringify(span, null, 2)}
+            {raw}
           </pre>
         )}
       </div>
@@ -646,12 +716,172 @@ function SpanDetail({ span }: { span: Span }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  /** A control at the end of the title row (a copy button). */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="border-b border-border px-3 py-3">
-      <h3 className="micro-label mb-2 text-text-faint">{title}</h3>
+      {action === undefined ? (
+        <h3 className="micro-label mb-2 text-text-faint">{title}</h3>
+      ) : (
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="micro-label text-text-faint">{title}</h3>
+          {action}
+        </div>
+      )}
       {children}
     </section>
+  );
+}
+
+/**
+ * A copy control for a preview; a redacted (`null`) one gets none. `what`
+ * is "preview" where core cut the text (prompt and output stop at 200
+ * characters), so the button doesn't pass a fragment off as the whole.
+ */
+function copyOf(value: string | null, of: string, what?: string): ReactNode {
+  return value === null ? undefined : (
+    <CopyButton text={value} of={of} what={what} />
+  );
+}
+
+/**
+ * Puts `text` on the clipboard. It reads "Copied" for 1.5 s; a failure
+ * stays until the next try and says, on the button itself, to select the
+ * text instead. The visible label is short ("Copy preview"); the rest of
+ * the accessible name says whose text it is ("… of the prompt").
+ */
+function CopyButton({
+  text,
+  of,
+  what,
+}: {
+  text: string;
+  /** Whose text: "prompt", "delegation reason", "span". */
+  of: string;
+  /** What of it, when not the whole thing: "preview", "JSON". */
+  what?: string;
+}) {
+  const { stateOf, copy } = useCopy(COPIED_MS);
+  const state = stateOf(text);
+  const subject = what === undefined ? of : `${of} ${what}`;
+  const [shown, rest] =
+    state === 'copied'
+      ? ['Copied', ` the ${subject}`]
+      : state === 'failed'
+        ? ['Copy failed: select the text', ` of the ${subject}`]
+        : what === undefined
+          ? ['Copy', ` the ${of}`]
+          : [`Copy ${what}`, ` of the ${of}`];
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void copy(text)}
+        title={
+          state === 'failed'
+            ? 'The browser blocked clipboard access. Select the text and copy it with Ctrl+C or ⌘C.'
+            : undefined
+        }
+        className={`-my-0.5 inline-flex shrink-0 items-center gap-1 rounded-control px-1.5 py-0.5 text-label transition-colors duration-150 ease-out hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg ${COPY_TONE[state]}`}
+      >
+        <CopyGlyph state={state} />
+        {shown}
+        <span className="sr-only">{rest}</span>
+      </button>
+      <span role="status" className="sr-only">
+        {state === 'copied'
+          ? `Copied the ${subject}`
+          : state === 'failed'
+            ? `Could not copy the ${subject}. Select the text to copy it.`
+            : ''}
+      </span>
+    </>
+  );
+}
+
+const COPY_TONE: Record<CopyState, string> = {
+  idle: 'text-text-faint hover:text-text',
+  copied: 'text-success-emerald',
+  failed: 'text-heat-2',
+};
+
+function CopyGlyph({ state }: { state: CopyState }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="12"
+      height="12"
+      aria-hidden="true"
+      className="pointer-events-none shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {state === 'copied' ? (
+        <path d="M3 8.5 6.5 12 13 4.5" />
+      ) : (
+        <>
+          <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+          <path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Whether the row holding the Inspector is wide enough for wide mode to
+ * add anything. Without ResizeObserver (tests, old browsers) it assumes
+ * there is room, which is the behaviour before this check existed.
+ */
+function useRoomToWiden(ref: RefObject<HTMLElement | null>): boolean {
+  const [room, setRoom] = useState(true);
+  useEffect(() => {
+    const row = ref.current?.parentElement;
+    if (row == null || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry !== undefined) {
+        setRoom(entry.contentRect.width > ROOM_TO_WIDEN_PX);
+      }
+    });
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [ref]);
+  return room;
+}
+
+const HEADER_BUTTON =
+  'flex h-6 w-6 items-center justify-center rounded-control text-text-faint transition-colors duration-150 ease-out hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg';
+
+/** A double chevron: toward the waterfall to widen, back to narrow. */
+function WidthIcon({ wide }: { wide: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      className={`pointer-events-none ${wide ? 'rotate-180' : ''}`}
+    >
+      <path
+        d="M8 3 3 8l5 5M13 3 8 8l5 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
