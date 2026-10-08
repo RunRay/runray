@@ -343,6 +343,46 @@ describe('1.4 Path-shape net matcher & assertion', () => {
     expect(findPathShapes('D:\\\\Users\\\\runner\\\\work')).toHaveLength(1);
   });
 
+  it('matches a drive path whole, whatever mix of separators it uses', () => {
+    expect(findPathShapes('at C:\\\\Users\\\\runner\\\\work now')).toEqual([
+      'C:\\\\Users\\\\runner\\\\work',
+    ]);
+    expect(findPathShapes('"C:\\/Users//alex\\app"')).toEqual([
+      'C:\\/Users//alex\\app',
+    ]);
+    expect(findPathShapes('D:\\uSeRs\\x')).toEqual(['D:\\uSeRs\\x']);
+  });
+
+  it('ends a drive path where its separators leave nothing after users', () => {
+    // These pin where a match ends, so a change to the separator shows here.
+    expect(findPathShapes('"C:\\Users\\"')).toEqual([]);
+    expect(findPathShapes('C:/Users/')).toEqual([]);
+    expect(findPathShapes('"C:\\Users\\\\"')).toEqual(['C:\\Users\\\\']);
+    expect(findPathShapes('C:/Users//')).toEqual(['C:/Users//']);
+  });
+
+  it('stays linear on long separator runs that never reach users', () => {
+    // Read as single and doubled backslashes, a run of n backslashes splits
+    // Fibonacci-many ways: the old separator took about 2 s at n = 40. The
+    // short run fails within seconds if that comes back; the long ones catch
+    // slower growth. Best of three, so one GC pause on a busy runner can't fail it.
+    const texts = [
+      `C:${'\\'.repeat(40)}Program Files`,
+      `C:${'\\'.repeat(50_000)}x`,
+      `C:${'\\/'.repeat(25_000)}x`,
+      `C:\\Users${'\\'.repeat(50_000)}`,
+    ];
+    for (const text of texts) {
+      let best = Number.POSITIVE_INFINITY;
+      for (let run = 0; run < 3 && best >= 50; run++) {
+        const start = performance.now();
+        findPathShapes(text);
+        best = Math.min(best, performance.now() - start);
+      }
+      expect(best).toBeLessThan(50);
+    }
+  });
+
   it('detects file:// URLs, UNC paths, and \\\\?\\ device paths', () => {
     expect(findPathShapes('file:///Users/alex/code/index.ts')).toHaveLength(1);
     expect(findPathShapes('\\\\server\\share\\path')).toHaveLength(1);
