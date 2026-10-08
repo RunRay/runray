@@ -1,8 +1,11 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
+  branchKey,
   EMPTY_FILTER,
   filterRuns,
+  isFilterActive,
+  NO_BRANCH,
   periodAnchorDay,
   periodStartDay,
   projectKey,
@@ -359,5 +362,59 @@ describe('tool filter dimension (E5)', () => {
       runs,
     );
     expect(cleared.tool).toBeNull();
+  });
+});
+
+describe('branch filter dimension', () => {
+  const onBranch = (id: string, project?: string, branch?: string): Run => {
+    const run = stubRun({ id, startedAt: '2026-07-07T10:00:00Z' });
+    return project === undefined && branch === undefined
+      ? run
+      : {
+          ...run,
+          project: {
+            ...(project === undefined ? {} : { name: project }),
+            ...(branch === undefined ? {} : { gitBranch: branch }),
+          },
+        };
+  };
+  const branched = [
+    onBranch('api-main', 'api', 'main'),
+    onBranch('web-main', 'web', 'main'),
+    onBranch('api-feat', 'api', 'feat/export'),
+    onBranch('api-none', 'api'),
+    onBranch('bare'),
+  ];
+
+  it('branchKey groups runs without a branch under one placeholder', () => {
+    expect(branched.map(branchKey)).toEqual([
+      'main',
+      'main',
+      'feat/export',
+      NO_BRANCH,
+      NO_BRANCH,
+    ]);
+  });
+
+  it('filterRuns matches the branch alone, or with a project', () => {
+    const ids = (patch: Partial<typeof EMPTY_FILTER>) =>
+      filterRuns(branched, { ...EMPTY_FILTER, ...patch }).map((r) => r.id);
+    expect(ids({ branch: 'main' })).toEqual(['api-main', 'web-main']);
+    expect(ids({ project: 'api', branch: 'main' })).toEqual(['api-main']);
+    expect(ids({ branch: NO_BRANCH })).toEqual(['api-none', 'bare']);
+  });
+
+  it('reconcileFilter clears a branch that rolled off the data', () => {
+    const kept = reconcileFilter({ ...EMPTY_FILTER, branch: 'main' }, branched);
+    expect(kept.branch).toBe('main');
+    expect(
+      reconcileFilter({ ...EMPTY_FILTER, branch: 'gone' }, branched).branch,
+    ).toBeNull();
+  });
+
+  it('isFilterActive counts every dimension, the branch included', () => {
+    expect(isFilterActive(EMPTY_FILTER)).toBe(false);
+    expect(isFilterActive({ ...EMPTY_FILTER, branch: 'main' })).toBe(true);
+    expect(isFilterActive({ ...EMPTY_FILTER, periodDays: 7 })).toBe(true);
   });
 });

@@ -725,6 +725,9 @@ function bundleToRawRun(
           // basename() is empty for a filesystem root — `D:\` on win32, `/`
           // anywhere — and an empty name collides with the UI's "all
           // projects" sentinel, so the run drops out of the project filter.
+          // No gitBranch: OpenCode records none, and reading .git/HEAD here
+          // would give today's branch, not the session's, and tie parse
+          // output to the state of a repository outside the trace.
           project: { name: basename(directory) || directory, path: directory },
         }),
     spans: ctx.spans,

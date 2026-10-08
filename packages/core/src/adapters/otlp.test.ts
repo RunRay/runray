@@ -541,3 +541,169 @@ describe('otlp failed tool spans keep their status message', () => {
     expect(failed?.content).toEqual({ outputPreview: null });
   });
 });
+
+describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'runray-otlp-branch-'));
+  afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+  type Attrs = Record<string, string>;
+  const kv = (attrs: Attrs) =>
+    Object.entries(attrs).map(([key, v]) => ({
+      key,
+      value: { stringValue: v },
+    }));
+
+  let docs = 0;
+
+  /** One resource per entry, each holding one span of session `ses-g`. */
+  async function branchOf(
+    resources: { resource?: Attrs; span?: Attrs; start?: string }[],
+  ): Promise<string | undefined> {
+    const file = join(tmp, `doc-${++docs}.json`);
+    writeFileSync(
+      file,
+      JSON.stringify({
+        resourceSpans: resources.map((r, i) => ({
+          ...(r.resource === undefined
+            ? {}
+            : { resource: { attributes: kv(r.resource) } }),
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId: 'f'.repeat(32),
+                  spanId: String(i + 1).repeat(16),
+                  name: 'claude_code.interaction',
+                  startTimeUnixNano: r.start ?? `178342568537500000${i}`,
+                  attributes: kv({ 'session.id': 'ses-g', ...r.span }),
+                },
+              ],
+            },
+          ],
+        })),
+      }),
+    );
+    const raw = await otlpAdapter.parse(
+      {
+        runRef: `${file}::ses-g`,
+        format: 'otlp-json',
+        files: [file],
+        mtimeMs: 0,
+        sizeBytes: 0,
+      },
+      { redact: false },
+    );
+    return raw.project?.gitBranch;
+  }
+
+  it('reads vcs.ref.head.name from the resource', async () => {
+    expect(
+      await branchOf([{ resource: { 'vcs.ref.head.name': 'feat/export' } }]),
+    ).toBe('feat/export');
+  });
+
+  it('prefers vcs.ref.head.name, then the deprecated key, then git.branch', async () => {
+    const all = {
+      'vcs.ref.head.name': 'head',
+      'vcs.repository.ref.name': 'deprecated',
+      'git.branch': 'informal',
+    };
+    expect(await branchOf([{ resource: all }])).toBe('head');
+    const { 'vcs.ref.head.name': _h, ...older } = all;
+    expect(await branchOf([{ resource: older }])).toBe('deprecated');
+    expect(await branchOf([{ resource: { 'git.branch': 'informal' } }])).toBe(
+      'informal',
+    );
+  });
+
+  it('skips a ref typed as a tag', async () => {
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'v1.2.0',
+            'vcs.ref.head.type': 'tag',
+          },
+        },
+      ]),
+    ).toBeUndefined();
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.repository.ref.name': 'v1.2.0',
+            'vcs.repository.ref.type': 'tag',
+            'git.branch': 'main',
+          },
+        },
+      ]),
+    ).toBe('main');
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'main',
+            'vcs.ref.head.type': 'branch',
+          },
+        },
+      ]),
+    ).toBe('main');
+  });
+
+  it('takes a resource branch from anywhere before any span attribute', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'service.name': 'agent' } },
+        { span: { 'vcs.ref.head.name': 'span' } },
+        { resource: { 'vcs.ref.head.name': 'resource' } },
+      ]),
+    ).toBe('resource');
+    // within one span, the resource wins over the span's own attributes
+    expect(
+      await branchOf([
+        {
+          resource: { 'git.branch': 'resource' },
+          span: { 'vcs.ref.head.name': 'span' },
+        },
+      ]),
+    ).toBe('resource');
+  });
+
+  it('falls back to the earliest-starting span that names one, not the first exported', async () => {
+    // exporters write spans as they end: a tool span that names the ref it
+    // pushed to comes first in the file but started after the session
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'release/1.2' }, start: '1783425685375000900' },
+        {
+          span: { 'vcs.ref.head.name': 'feat/x' },
+          start: '1783425685375000100',
+        },
+      ]),
+    ).toBe('feat/x');
+    // spans without a start time keep document order
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'first' }, start: '' },
+        { span: { 'git.branch': 'second' }, start: '' },
+      ]),
+    ).toBe('first');
+  });
+
+  it('treats an empty value as no branch, and leaves project unset without one', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'vcs.ref.head.name': '', 'git.branch': 'main' } },
+      ]),
+    ).toBe('main');
+    expect(await branchOf([{ resource: { 'vcs.ref.head.name': '' } }])).toBe(
+      undefined,
+    );
+    expect(await branchOf([{}])).toBeUndefined();
+  });
+
+  it('pinned Claude Code captures carry no branch, so their runs have no project', async () => {
+    const run = await runOn(SIMPLE_SESSION);
+    expect(run.project).toBeUndefined();
+  });
+});

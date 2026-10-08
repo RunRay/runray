@@ -210,6 +210,12 @@ describe('1.2 scrubIdentity & deterministic mapping', () => {
     expect(scrubbedB.spans[0]?.provenance.file).toBe('transcript-1');
   });
 
+  it('pseudonymizes a branch-only project without inventing a project name', () => {
+    // an OTLP run names a branch but no directory
+    const run: Run = { ...createMockRun(), project: { gitBranch: 'feat/x' } };
+    expect(scrubIdentity(run).project).toEqual({ gitBranch: 'branch-1' });
+  });
+
   it('discovery-order independence: table is identical regardless of run ordering', () => {
     const runA: Run = {
       ...createMockRun(),

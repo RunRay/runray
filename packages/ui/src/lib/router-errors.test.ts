@@ -23,6 +23,7 @@ describe('errors route (error-triage / visualizer "Errors tab")', () => {
           model: null,
           day: null,
           tool: null,
+          branch: null,
         },
       ),
     ).toBe('#/run/r1/errors?project=p&period=7');
