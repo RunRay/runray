@@ -6,8 +6,25 @@
 
 import { ruleClass } from '@runray/core/insights-meta';
 import type { Insight, Run } from '@runray/schema';
-import { toolSpendLeaderboard } from './cost-breakdown';
+import { llmTokens, toolSpendLeaderboard } from './cost-breakdown';
 import { toolDurationStatsAcrossRuns } from './time-breakdown';
+import { type DisplayUnit, inUnit } from './unit';
+
+const tokensByModelCache = new WeakMap<Run, Record<string, number>>();
+
+/** A run's tokens per model, summed from its llm spans (memoized per run). */
+export function runTokensByModel(run: Run): Record<string, number> {
+  const cached = tokensByModelCache.get(run);
+  if (cached !== undefined) return cached;
+  const out: Record<string, number> = {};
+  for (const span of run.spans) {
+    const model = span.llm?.model;
+    if (span.llm === undefined || model === undefined || model === '') continue;
+    out[model] = (out[model] ?? 0) + llmTokens(span.llm.tokens);
+  }
+  tokensByModelCache.set(run, out);
+  return out;
+}
 
 export interface OverviewTotals {
   costUSD: number;
@@ -41,6 +58,8 @@ export interface DaySpend {
   /** Local calendar day, `YYYY-MM-DD`. */
   day: string;
   costUSD: number;
+  /** Tokens of runs started that day — the bar in token mode (E6). */
+  tokens: number;
   /** Waste estimate of runs started that day — the chart's second channel. */
   wastedUSD: number;
   runs: number;
@@ -48,6 +67,10 @@ export interface DaySpend {
   byModel: Record<string, number>;
   /** Cost by source tool on this day (the chart's "By source" breakdown). */
   bySource: Record<string, number>;
+  /** Tokens by model on this day (the "By model" breakdown in token mode). */
+  byModelTokens: Record<string, number>;
+  /** Tokens by source tool on this day. */
+  bySourceTokens: Record<string, number>;
 }
 
 function formatDay(d: Date): string {
@@ -68,12 +91,19 @@ export function localDay(iso: string): string {
  * Cost bucketed per local day of run start, gaps filled with zero days so
  * the rhythm of spending is visible. Capped to the most recent `maxDays`.
  */
-interface DayBucket {
-  costUSD: number;
-  wastedUSD: number;
-  runs: number;
-  byModel: Record<string, number>;
-  bySource: Record<string, number>;
+type DayBucket = Omit<DaySpend, 'day'>;
+
+function emptyBucket(): DayBucket {
+  return {
+    costUSD: 0,
+    tokens: 0,
+    wastedUSD: 0,
+    runs: 0,
+    byModel: {},
+    bySource: {},
+    byModelTokens: {},
+    bySourceTokens: {},
+  };
 }
 
 export function spendByDay(runs: readonly Run[], maxDays = 30): DaySpend[] {
@@ -81,22 +111,22 @@ export function spendByDay(runs: readonly Run[], maxDays = 30): DaySpend[] {
   const byDay = new Map<string, DayBucket>();
   for (const run of runs) {
     const day = localDay(run.startedAt);
-    const entry = byDay.get(day) ?? {
-      costUSD: 0,
-      wastedUSD: 0,
-      runs: 0,
-      byModel: {},
-      bySource: {},
-    };
+    const entry = byDay.get(day) ?? emptyBucket();
     entry.costUSD += run.totals.costUSD.total;
+    entry.tokens += run.totals.tokens.total;
     entry.wastedUSD += run.totals.costUSD.wastedEstimate;
     entry.runs += 1;
     for (const [model, cost] of Object.entries(run.totals.costUSD.byModel)) {
       entry.byModel[model] = (entry.byModel[model] ?? 0) + cost;
     }
+    for (const [model, tokens] of Object.entries(runTokensByModel(run))) {
+      entry.byModelTokens[model] = (entry.byModelTokens[model] ?? 0) + tokens;
+    }
     const source = run.source.tool;
     entry.bySource[source] =
       (entry.bySource[source] ?? 0) + run.totals.costUSD.total;
+    entry.bySourceTokens[source] =
+      (entry.bySourceTokens[source] ?? 0) + run.totals.tokens.total;
     byDay.set(day, entry);
   }
   const days = [...byDay.keys()].sort();
@@ -109,15 +139,7 @@ export function spendByDay(runs: readonly Run[], maxDays = 30): DaySpend[] {
   const end = new Date(`${last}T00:00:00`);
   while (cursor.getTime() <= end.getTime()) {
     const day = formatDay(cursor);
-    const entry = byDay.get(day);
-    out.push({
-      day,
-      costUSD: entry?.costUSD ?? 0,
-      wastedUSD: entry?.wastedUSD ?? 0,
-      runs: entry?.runs ?? 0,
-      byModel: entry?.byModel ?? {},
-      bySource: entry?.bySource ?? {},
-    });
+    out.push({ day, ...(byDay.get(day) ?? emptyBucket()) });
     cursor.setDate(cursor.getDate() + 1);
   }
   return out.slice(-maxDays);
@@ -130,7 +152,11 @@ export interface RankEntry {
 }
 
 /** Cost/Tokens ranked by project name (runs without a project group as "—"). */
-export function topProjects(runs: readonly Run[], limit = 5): RankEntry[] {
+export function topProjects(
+  runs: readonly Run[],
+  limit = 5,
+  by: DisplayUnit = 'usd',
+): RankEntry[] {
   const byName = new Map<string, { costUSD: number; tokens: number }>();
   for (const run of runs) {
     const name = run.project?.name ?? '—';
@@ -139,11 +165,15 @@ export function topProjects(runs: readonly Run[], limit = 5): RankEntry[] {
     entry.tokens += run.totals.tokens.total;
     byName.set(name, entry);
   }
-  return rank(byName, limit);
+  return rank(byName, limit, by);
 }
 
 /** Cost/Tokens ranked by model, straight from the per-run byModel rollups. */
-export function topModels(runs: readonly Run[], limit = 5): RankEntry[] {
+export function topModels(
+  runs: readonly Run[],
+  limit = 5,
+  by: DisplayUnit = 'usd',
+): RankEntry[] {
   const byName = new Map<string, { costUSD: number; tokens: number }>();
   for (const run of runs) {
     for (const [model, cost] of Object.entries(run.totals.costUSD.byModel)) {
@@ -151,21 +181,21 @@ export function topModels(runs: readonly Run[], limit = 5): RankEntry[] {
       entry.costUSD += cost;
       byName.set(model, entry);
     }
-    for (const span of run.spans) {
-      if (span.llm?.model) {
-        const model = span.llm.model;
-        const entry = byName.get(model) ?? { costUSD: 0, tokens: 0 };
-        const tok = span.llm.tokens;
-        entry.tokens += tok.input + tok.output + tok.cacheRead + tok.cacheWrite;
-        byName.set(model, entry);
-      }
+    for (const [model, tokens] of Object.entries(runTokensByModel(run))) {
+      const entry = byName.get(model) ?? { costUSD: 0, tokens: 0 };
+      entry.tokens += tokens;
+      byName.set(model, entry);
     }
   }
-  return rank(byName, limit);
+  return rank(byName, limit, by);
 }
 
 /** Cost/Tokens ranked by source tool (claude-code · opencode · otlp). */
-export function topSources(runs: readonly Run[], limit = 5): RankEntry[] {
+export function topSources(
+  runs: readonly Run[],
+  limit = 5,
+  by: DisplayUnit = 'usd',
+): RankEntry[] {
   const byName = new Map<string, { costUSD: number; tokens: number }>();
   for (const run of runs) {
     const source = run.source.tool;
@@ -174,19 +204,23 @@ export function topSources(runs: readonly Run[], limit = 5): RankEntry[] {
     entry.tokens += run.totals.tokens.total;
     byName.set(source, entry);
   }
-  return rank(byName, limit);
+  return rank(byName, limit, by);
 }
 
+/** Ranked by the display unit, then the other unit, then name — so the
+ * top-N cut is the top N of what the card shows. */
 function rank(
   byName: Map<string, { costUSD: number; tokens: number }>,
   limit: number,
+  by: DisplayUnit,
 ): RankEntry[] {
+  const other: DisplayUnit = by === 'tokens' ? 'usd' : 'tokens';
   return [...byName.entries()]
     .map(([name, { costUSD, tokens }]) => ({ name, costUSD, tokens }))
     .sort(
       (a, b) =>
-        b.costUSD - a.costUSD ||
-        b.tokens - a.tokens ||
+        inUnit(by, b) - inUnit(by, a) ||
+        inUnit(other, b) - inUnit(other, a) ||
         (a.name < b.name ? -1 : 1),
     )
     .slice(0, limit);
@@ -320,6 +354,19 @@ export function mostExpensiveCall(runs: readonly Run[]): number {
   return max;
 }
 
+/** The largest single llm call by tokens (the token-mode KPI note); 0 when
+ * nothing ran. */
+export function largestCallTokens(runs: readonly Run[]): number {
+  let max = 0;
+  for (const run of runs) {
+    for (const span of run.spans) {
+      if (span.llm !== undefined)
+        max = Math.max(max, llmTokens(span.llm.tokens));
+    }
+  }
+  return max;
+}
+
 export interface CacheAggregate {
   /**
    * Token-weighted hit-rate across runs: ΣcacheRead / (ΣcacheRead + Σinput).
@@ -395,10 +442,10 @@ export function sessionCostStats(runs: readonly Run[]): SessionCostStats {
 export interface SavingsSummary {
   /** Σ run.totals.costUSD.wastedEstimate — waste-class, engine-capped. */
   burnedUSD: number;
-  burnedTokens: number;
+  /** burnedUSD over the visible runs' cost (0..1; 0 when nothing is priced). */
+  burnedShare: number;
   /** Σ estimatedWasteUSD over opportunity-class findings. */
   opportunityUSD: number;
-  opportunityTokens: number;
   /** Top rule groups by summed estimate (the "top changes" list). */
   topChanges: RuleGroup[];
   findings: number;
@@ -406,42 +453,28 @@ export interface SavingsSummary {
 
 export function savingsSummary(runs: readonly Run[], topN = 3): SavingsSummary {
   let burnedUSD = 0;
-  let burnedTokens = 0;
+  let costUSD = 0;
   let opportunityUSD = 0;
-  let opportunityTokens = 0;
   let findings = 0;
 
+  // Dollars only (E6): a cache or model-choice estimate is a price
+  // difference with no token count behind it, so no token figure is derived
+  // from these — token mode shows them "at API prices" instead.
   for (const run of runs) {
     burnedUSD += run.totals.costUSD.wastedEstimate;
-    if (run.totals.costUSD.total > 0) {
-      const wasteRatio =
-        run.totals.costUSD.wastedEstimate / run.totals.costUSD.total;
-      burnedTokens += Math.round(wasteRatio * run.totals.tokens.total);
-    } else if (run.totals.costUSD.wastedEstimate > 0) {
-      burnedTokens += Math.round(run.totals.tokens.total * 0.2); // Fallback estimate for zero-cost models
-    }
-
+    costUSD += run.totals.costUSD.total;
     for (const insight of run.insights) {
       findings += 1;
       if (ruleClass(insight.ruleId) === 'opportunity') {
-        const usd = insight.estimatedWasteUSD ?? 0;
-        opportunityUSD += usd;
-        if (run.totals.costUSD.total > 0) {
-          opportunityTokens += Math.round(
-            (usd / run.totals.costUSD.total) * run.totals.tokens.total,
-          );
-        } else {
-          opportunityTokens += Math.round(run.totals.tokens.total * 0.15);
-        }
+        opportunityUSD += insight.estimatedWasteUSD ?? 0;
       }
     }
   }
 
   return {
     burnedUSD,
-    burnedTokens,
+    burnedShare: costUSD > 0 ? burnedUSD / costUSD : 0,
     opportunityUSD,
-    opportunityTokens,
     topChanges: wasteByRule(runs).slice(0, topN),
     findings,
   };
@@ -458,22 +491,50 @@ export interface ToolRankEntry {
   name: string;
   mcpServer?: string;
   costUSD: number;
+  /** Attributed tokens, every class (same split as costUSD). */
+  tokens: number;
   calls: number;
   p95Ms: number;
 }
 
-/** Full attributed-tool leaderboard (all tools, sorted) — the honest
- * denominator for mcpShare; `topTools` is just its head. */
-function allToolEntries(runs: readonly Run[]): ToolRankEntry[] {
+/**
+ * Merged attribution per visible-runs array, unsorted. `topTools` and
+ * `mcpShare` both need it, and flipping the unit only re-sorts: the walk
+ * over every span of every run happens once per runs array.
+ */
+const toolEntriesCache = new WeakMap<readonly Run[], ToolRankEntry[]>();
+
+/** Full attributed-tool leaderboard (all tools, sorted by the display unit)
+ * — the honest denominator for mcpShare; `topTools` is just its head. */
+function allToolEntries(
+  runs: readonly Run[],
+  by: DisplayUnit,
+): ToolRankEntry[] {
+  let entries = toolEntriesCache.get(runs);
+  if (entries === undefined) {
+    entries = mergeToolEntries(runs);
+    toolEntriesCache.set(runs, entries);
+  }
+  return [...entries].sort(
+    (a, b) => inUnit(by, b) - inUnit(by, a) || (a.name < b.name ? -1 : 1),
+  );
+}
+
+function mergeToolEntries(runs: readonly Run[]): ToolRankEntry[] {
   const merged = new Map<
     string,
-    { costUSD: number; calls: number; mcpServer?: string }
+    { costUSD: number; tokens: number; calls: number; mcpServer?: string }
   >();
   for (const run of runs) {
     for (const tool of toolSpendLeaderboard(run.spans)) {
       if (tool.orchestration === true) continue;
-      const entry = merged.get(tool.name) ?? { costUSD: 0, calls: 0 };
+      const entry = merged.get(tool.name) ?? {
+        costUSD: 0,
+        tokens: 0,
+        calls: 0,
+      };
       entry.costUSD += tool.costUSD;
+      entry.tokens += tool.tokens.all;
       entry.calls += tool.calls;
       if (tool.mcpServer !== undefined) entry.mcpServer = tool.mcpServer;
       merged.set(tool.name, entry);
@@ -482,48 +543,59 @@ function allToolEntries(runs: readonly Run[]): ToolRankEntry[] {
   const p95ByName = new Map(
     toolDurationStatsAcrossRuns(runs).map((s) => [s.name, s.p95Ms]),
   );
-  const entries: ToolRankEntry[] = [...merged.entries()].map(([name, e]) => ({
+  return [...merged.entries()].map(([name, e]) => ({
     name,
     ...(e.mcpServer === undefined ? {} : { mcpServer: e.mcpServer }),
     costUSD: e.costUSD,
+    tokens: e.tokens,
     calls: e.calls,
     p95Ms: p95ByName.get(name) ?? 0,
   }));
-  entries.sort((a, b) => b.costUSD - a.costUSD || (a.name < b.name ? -1 : 1));
-  return entries;
 }
 
-export function topTools(runs: readonly Run[], limit = 8): ToolRankEntry[] {
-  return allToolEntries(runs).slice(0, limit);
+export function topTools(
+  runs: readonly Run[],
+  limit = 8,
+  by: DisplayUnit = 'usd',
+): ToolRankEntry[] {
+  return allToolEntries(runs, by).slice(0, limit);
 }
 
 /** The "are my MCP servers eating my limit" callout under the card. */
 export interface McpShare {
   costUSD: number;
-  /** Share of ATTRIBUTED spend (orchestration excluded); 0 when none. */
+  tokens: number;
+  /** Share of ATTRIBUTED spend, or tokens in token mode (orchestration
+   * excluded); 0 when none. */
   share: number;
   topServer: string | null;
 }
 
 /** Computed over the FULL leaderboard, not the displayed top-N — otherwise
  * tools ranked below the cutoff distort the share, dollars, and top server. */
-export function mcpShare(runs: readonly Run[]): McpShare {
-  const entries = allToolEntries(runs);
-  const total = entries.reduce((acc, e) => acc + e.costUSD, 0);
+export function mcpShare(
+  runs: readonly Run[],
+  by: DisplayUnit = 'usd',
+): McpShare {
+  const entries = allToolEntries(runs, by);
+  const total = entries.reduce((acc, e) => acc + inUnit(by, e), 0);
   const byServer = new Map<string, number>();
   let mcpUSD = 0;
+  let mcpTokens = 0;
   for (const e of entries) {
     if (e.mcpServer === undefined) continue;
     mcpUSD += e.costUSD;
-    byServer.set(e.mcpServer, (byServer.get(e.mcpServer) ?? 0) + e.costUSD);
+    mcpTokens += e.tokens;
+    byServer.set(e.mcpServer, (byServer.get(e.mcpServer) ?? 0) + inUnit(by, e));
   }
   const topServer =
     [...byServer.entries()].sort(
       (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
     )[0]?.[0] ?? null;
+  const mcp = { costUSD: mcpUSD, tokens: mcpTokens };
   return {
-    costUSD: mcpUSD,
-    share: total > 0 ? mcpUSD / total : 0,
+    ...mcp,
+    share: total > 0 ? inUnit(by, mcp) / total : 0,
     topServer,
   };
 }

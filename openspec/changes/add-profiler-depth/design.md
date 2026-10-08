@@ -279,6 +279,13 @@ Exactly three % slots (statement line, Wasted KPI suffix, run Cost hero) so
 the framing never doubles every number's weight; every % carries "est.".
 Explicitly out of scope: prediction, OAuth/quota APIs, any network.
 
+*Amended by E6:* the percentages are taken in the display unit: dollars
+against `budgetUSD`, tokens against `budgetTokens` (the settings popover
+now sets both). Without a budget in the active unit, the statement slot
+states the window's own spend or tokens. Before E6, a token budget silently
+won when no dollar budget was set, so a person with both units in mind
+could not tell which one a percentage meant.
+
 ### E2 — Time view is an interval sweep; parallel work can never double-count
 
 Sweep the merged span boundaries; classify each elementary interval:
@@ -318,6 +325,41 @@ cross-run and attaches p95. The By-tool card labels figures "attributed"
 (the split is a heuristic and says so), shows the MCP-share callout, and
 filters via the new `tool` dimension. Placement: rankings band, below the
 savings panel — D1's layout owns final ordering.
+
+### E6 — The display unit is a second axis beside limit mode, not a replacement
+
+A subscriber on a flat seat is never billed the dollars RunRay computes;
+their limit is spent in tokens. So the top bar gets a `USD | tokens`
+switch (store `unit`, persisted like the theme, dollars by default) that
+picks which figure leads: the overview spend statement, burn line, key
+indicators, rankings, tool ranking, run preview, spend-by-day chart and
+trend, the Explorer list, and the run header, cost hero, tool leaderboard
+and subtree map. The dollars stay beside the tokens where there is room
+for two figures (the spend statement, the run header, the cost hero);
+rankings, charts and lists show the token count alone, under a heading or
+with a "tokens" suffix that names the unit. Rankings sort by the lead unit,
+so a top-five cut is the top five of what the card shows.
+
+It does not merge with limit mode. A three-state `$ · tokens · %` switch
+would put a percentage on every figure, the doubling E1 rules out. The two
+compose instead: the unit picks the figures, `%win` frames three of them,
+in that unit.
+
+Waste, savings and what-if stay in dollars. In token mode their headline
+figures read "at API prices"; per-finding amounts stay as they are, and the
+what-if panel already names the rates it repriced at. Five of the twelve rules (cache misses, prefix breaks, idle
+expiry, model mismatch, the expensive-subagent downgrade) estimate a price
+difference; the token count is the same either way, so a wasted-token
+figure derived from dollars would be fiction. The savings panel's old
+tokens-from-cost-share headline, with its 20% and 15% fallbacks for unpriced
+runs, goes for the same reason. Token waste for the rules where it does
+mean something needs a core helper; that is separate work.
+
+Token figures use every class core counts in `run.totals.tokens.total`:
+input, output, cache read, cache write and reasoning. Per-model, per-day and
+per-tool attribution use the same sum, so they add up to the totals beside
+them. The tool ranking's existing input + output column in the Cost view is
+unchanged.
 
 ## Cross-area integration (X)
 

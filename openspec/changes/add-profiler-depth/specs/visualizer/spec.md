@@ -277,7 +277,11 @@ SHALL be off by default, its window SHALL anchor to the newest loaded run
 rather than the current clock so exports render stably, every percentage
 SHALL be labelled as an estimate, and the percentage framing SHALL appear
 only on the overview spend statement, the wasted KPI, and the run cost
-hero — never on every figure.
+hero — never on every figure. Percentages SHALL be taken in the active
+display unit: dollars against the USD budget, tokens against the token
+budget, both of which the in-UI settings SHALL let the person set. Without
+a budget in the active unit the spend statement SHALL state the window's
+own spend or tokens, never as a share of itself.
 
 #### Scenario: Percentage of window spend
 - GIVEN a configured 7-day window with runs inside it and limit mode toggled
@@ -300,6 +304,53 @@ hero — never on every figure.
 - GIVEN an exported file opened on two different days
 - WHEN the overview renders with limit mode on
 - THEN the window bounds and percentages are identical on both opens
+
+#### Scenario: Token budget in token mode
+- GIVEN a configured window with `budgetTokens` set, limit mode on, and the
+  display unit set to tokens
+- WHEN the overview renders
+- THEN the spend statement gives the window's tokens of the token budget
+  with the estimated share, and the run cost hero's suffix is a share of
+  the same token budget
+
+### Requirement: Display unit
+The system SHALL let the person choose the unit the headline figures lead
+with, dollars or tokens, from a control in the top bar beside the limit
+mode toggle and from the command palette; the choice SHALL default to
+dollars and persist across reloads the way the theme does. In token mode
+the overview spend statement, burn line, key indicators, resource
+rankings, cross-run tool ranking, run preview, spend-by-day chart and
+period trend, the Explorer session list, and the run header, cost hero,
+tool leaderboard and subtree map SHALL lead with token counts, and
+rankings SHALL be ordered by tokens. The spend statement, the run header
+and the cost hero SHALL keep the dollar figure beside the token count as
+secondary; rankings, charts and lists SHALL show the token count alone,
+under a heading or with a suffix that names the unit. Estimates that exist
+only in dollars (waste, potential savings, what-if repricing) SHALL stay
+in dollars, and no token count SHALL be derived from a dollar estimate. In
+token mode their headline figures (the wasted indicator, the savings
+panel, the waste-by-rule total, the run header's burned figure, and the
+Waste tab's burned and opportunity figures) SHALL be labelled "at API
+prices"; per-finding amounts and the what-if panel, which already names
+the rates it repriced at, keep their dollar figures unchanged. The
+sessions table SHALL keep both its token and cost columns in either unit.
+
+#### Scenario: Token mode leads with tokens
+- GIVEN runs totalling 381.5M tokens and $484.06
+- WHEN the person switches the unit to tokens
+- THEN the spend statement leads with 381.5M tokens, shows $484.06 "at API
+  prices" beside it, and the resource rankings order by tokens
+
+#### Scenario: Waste stays in dollars
+- GIVEN runs with $163.32 of burned waste and the unit set to tokens
+- WHEN the overview renders
+- THEN the wasted indicator leads with its share of spend, the savings
+  panel shows $163.32 "at API prices", and no wasted-token figure appears
+
+#### Scenario: The choice survives a reload
+- GIVEN the person switched the unit to tokens
+- WHEN the page is reloaded
+- THEN the figures still lead with tokens
 
 ### Requirement: Run time breakdown
 The system SHALL provide a Time view for each run, as a sibling tab of Cost

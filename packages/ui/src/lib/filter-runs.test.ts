@@ -16,6 +16,7 @@ function stubRun(overrides: {
   project?: string;
   source?: SourceTool;
   cost?: number;
+  tokens?: number;
   byModel?: Record<string, number>;
 }): Run {
   return {
@@ -31,7 +32,13 @@ function stubRun(overrides: {
     startedAt: overrides.startedAt,
     spans: [],
     totals: {
-      tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      tokens: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        total: overrides.tokens ?? 0,
+      },
       costUSD: {
         total: overrides.cost ?? 0,
         wastedEstimate: 0,
@@ -229,8 +236,50 @@ describe('spendTrend', () => {
     expect(spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 })).toEqual({
       currentUSD: 50,
       previousUSD: 40,
+      currentTokens: 0,
+      previousTokens: 0,
       deltaFraction: 0.25,
     });
+  });
+
+  it('takes the delta in tokens when asked, from the same two windows', () => {
+    const withTokens = [
+      stubRun({
+        id: 'cur',
+        startedAt: '2026-07-14T09:00:00',
+        cost: 10,
+        tokens: 300,
+      }),
+      stubRun({
+        id: 'prev-1',
+        startedAt: '2026-07-05T09:00:00',
+        cost: 40,
+        tokens: 100,
+      }),
+      stubRun({
+        id: 'prev-2',
+        startedAt: '2026-07-03T09:00:00',
+        cost: 40,
+        tokens: 100,
+      }),
+    ];
+    const filter = { ...EMPTY_FILTER, periodDays: 7 };
+    // dollars fell 87.5% while tokens rose 50%: the unit decides the story
+    expect(spendTrend(withTokens, filter)?.deltaFraction).toBe(-0.875);
+    expect(spendTrend(withTokens, filter, 'tokens')).toEqual({
+      currentUSD: 10,
+      previousUSD: 80,
+      currentTokens: 300,
+      previousTokens: 200,
+      deltaFraction: 0.5,
+    });
+  });
+
+  it('suppresses a token trend whose baseline has no tokens', () => {
+    // priced runs without token counts: a dollar trend exists, a token one can't
+    expect(
+      spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 }, 'tokens'),
+    ).toBeNull();
   });
 
   it('suppresses without a bounded period (no baseline to compare)', () => {
@@ -289,7 +338,7 @@ describe('spendTrend', () => {
     ];
     expect(
       spendTrend(mixed, { ...EMPTY_FILTER, project: 'alpha', periodDays: 7 }),
-    ).toEqual({ currentUSD: 30, previousUSD: 20, deltaFraction: 0.5 });
+    ).toMatchObject({ currentUSD: 30, previousUSD: 20, deltaFraction: 0.5 });
   });
 
   it('suppresses when a single day is pinned (a point cannot trend)', () => {

@@ -425,7 +425,7 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 | `waste-view` | `Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.` |
 | `what-if` | `Re-price this session against another model. Calculations stay on this machine.` |
 | `diff` | `Two runs of the same task? Compare them with: runray diff <runA> <runB>` |
-| `limit-mode` | `Shows token usage and percentage of your weekly limit instead of dollars.` |
+| `limit-mode` | `Shows how much of your reference window this period used, in the unit beside %win. An estimate, not a provider quota.` |
 | `coverage` | `Unpriced models show token counts without dollar figures. Costs are never guessed.` |
 | `redact` | `Exporting? Use --redact to keep structure and counts while dropping prompt text.` |
 

@@ -462,3 +462,16 @@ automatically extends its fixture-parameterized equivalence matrix.
       rail's header, the `[` key, a palette command and a help-sheet entry;
       collapsed the rail keeps icons with names and tooltips and the shell
       follows its width. Asked by the user. Added 2026-09-04.
+
+## 16. Display unit
+
+- [x] 16.1 B [UI → /frontend-design] Display unit (spec: visualizer "Display
+      unit", "Limit-window display mode" amended; design E6, E1 amended):
+      `unit` persisted under `runray.unit`, the `USD | tokens` switch beside
+      %win and a palette command; token mode leads the overview, rankings
+      (ordered by tokens), tool ranking, run preview, spend by day and
+      trend, Explorer list, and the run header, hero, tool leaderboard and
+      subtree map with tokens, keeps waste, savings and what-if in dollars
+      with "at API prices" on their headline figures, and drops the savings
+      panel's tokens-from-cost-share figures; %win takes its percentages in the
+      unit and its popover sets a token budget. Added 2026-10-06.
