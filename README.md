@@ -1,6 +1,6 @@
 # RunRay
 
-RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine with zero network traffic.
+RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
 
 ```bash
 npx runray demo   # a scrubbed sample session, no agent data needed
@@ -93,7 +93,7 @@ How prices work:
 
 ## Privacy
 
-Offline by default. The local server binds to 127.0.0.1 with zero network traffic and no telemetry.
+Offline by default. The local server binds to 127.0.0.1 only and sends zero telemetry; `runray pricing --refresh` is the only command that makes an outbound network request.
 
 | Flag | What it strips |
 |---|---|
@@ -110,9 +110,9 @@ All of it happens in core before serialization, never as a UI-side filter. `runr
 |---|---|
 | `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
 | `runray list [path] --json` | The same discovery as a machine-readable list. |
-| `runray export [path\|sessionId] -o report.html` | One self-contained HTML file. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
+| `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
 | `runray demo` | The dashboard on a bundled, scrubbed sample. |
-| `runray diff <sessionA> <sessionB>` | Two sessions side by side: cost, tokens, errors, alignment. `--json` prints the diff for scripts. |
+| `runray diff <runA> <runB>` | Two runs side by side: cost, tokens, errors, alignment. `--json` prints the diff for scripts. |
 | `runray pricing [--refresh]` | Show the pricing snapshot, or fetch a current one. |
 
 Thresholds for the rules live in `runray.config.json`, read from the current directory and then from `~/.config/runray/`. Set only the keys you want to change:
