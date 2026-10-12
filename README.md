@@ -73,7 +73,7 @@ Each group shows the error text, whether the tool came back, what the reaction c
 
 ![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/timeline.png)
 
-The Timeline Explorer renders agent execution as a hierarchical Delegation Waterfall. Child subagents fork onto their own lanes, parallel tool calls display concurrent timing bars, and errors highlight failure points. A Spend Spine runs along the gutter; clicking any cost peak scrolls directly to that turn.
+The Timeline Explorer renders agent execution as a hierarchical Delegation Waterfall. Child subagents expand as indented subtrees, concurrency brackets group overlapping parallel calls, and errors highlight failure points. A Spend Spine runs along the gutter; clicking any cost peak scrolls the waterfall to that moment.
 
 ## Where the data comes from
 
