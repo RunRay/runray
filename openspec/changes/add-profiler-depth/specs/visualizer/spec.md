@@ -642,8 +642,10 @@ in its header and a palette command. Wide, it SHALL grow from 360px to
 at most 560px, taking the width from the centre pane but leaving that
 pane at least 400px beside the navigation rail and the sessions pane;
 the sessions pane SHALL keep its width. When the window leaves no room to
-widen, the toggle SHALL say so and how to make room rather than appear to
-do nothing; turning wide mode off SHALL always work. The choice SHALL
+widen, the toggle and the palette command SHALL say so and how to make
+room rather than appear to do nothing, and SHALL NOT save a wide choice;
+turning wide mode off SHALL always work, and a wide toggle SHALL offer to
+narrow even without room. The choice SHALL
 persist across reloads the way the theme does. Each prompt, output and
 delegation-reason preview and the raw span record SHALL carry a copy
 control that puts that text on the clipboard; a control over text that
@@ -662,6 +664,13 @@ rather than stay silent. A redacted preview SHALL carry no copy control.
 - WHEN the Inspector renders narrow
 - THEN its wide toggle is marked unavailable and says to collapse the
   navigation or widen the window
+
+#### Scenario: The palette knows there is no room
+- GIVEN a 1280px window with the navigation rail expanded and the
+  Inspector narrow
+- WHEN the person opens the palette
+- THEN the width command says there is no room to widen and how to make
+  it, and choosing it leaves the Inspector narrow and saves nothing
 
 #### Scenario: The choice survives a reload
 - GIVEN the person turned on wide mode

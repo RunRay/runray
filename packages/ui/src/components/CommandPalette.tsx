@@ -13,6 +13,7 @@ import { fuzzyScore } from '../lib/fuzzy';
 import { DASHBOARD_ROUTE, type Route, SESSIONS_ROUTE } from '../lib/router';
 import type { Theme } from '../lib/theme';
 import { useAppStore } from '../store';
+import { NO_ROOM_TO_WIDEN } from './Inspector';
 
 /**
  * Command palette (add-dashboard-extensions 3.1, D7): ⌘K / Ctrl-K — internal,
@@ -65,6 +66,7 @@ function buildCommands(
   theme: Theme,
   toggleTheme: () => void,
   inspectorWide: boolean,
+  inspectorRoom: boolean,
   isLive?: boolean,
   onClose?: () => void,
 ): Command[] {
@@ -255,16 +257,22 @@ function buildCommands(
     keywords: 'sidebar navigation rail menu collapse expand hide show',
     perform: () => useAppStore.getState().toggleNav(),
   });
-  // the width persists, so name what this does now, like the theme command
+  // the width persists, so name what this does now, like the theme command;
+  // without room it says why, like the header toggle, and saves nothing
+  const widenBlocked = !inspectorWide && !inspectorRoom;
   cmds.push({
     id: 'layout:inspector-width',
     group: 'Layout',
-    label: inspectorWide ? 'Narrow the inspector' : 'Widen the inspector',
+    label: inspectorWide
+      ? 'Narrow the inspector'
+      : widenBlocked
+        ? NO_ROOM_TO_WIDEN
+        : 'Widen the inspector',
     keywords: 'inspector panel drawer details width wide narrow expand resize',
-    // a closed inspector opens, so the change shows
+    // a closed inspector opens, so the change (or the reason) shows
     perform: () => {
       const state = useAppStore.getState();
-      state.toggleInspectorWide();
+      if (!widenBlocked) state.toggleInspectorWide();
       if (!state.ui.inspectorOpen) state.toggleInspector();
     },
   });
@@ -281,6 +289,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   const theme = useAppStore((s) => s.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
   const inspectorWide = useAppStore((s) => s.ui.inspectorWide);
+  const inspectorRoom = useAppStore((s) => s.ui.inspectorRoom);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -300,6 +309,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         theme,
         toggleTheme,
         inspectorWide,
+        inspectorRoom,
         data.status === 'ready' && data.live,
         onClose,
       ),
@@ -312,6 +322,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       theme,
       toggleTheme,
       inspectorWide,
+      inspectorRoom,
       data,
       onClose,
     ],

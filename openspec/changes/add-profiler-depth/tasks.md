@@ -475,3 +475,9 @@ automatically extends its fixture-parameterized equivalence matrix.
       an on-button failure on the previews ("Copy preview" where core cut
       the text) and the raw span record, through a `useCopy` hook the
       export dialog now shares. Asked by the user. Added 2026-10-06.
+- [x] 15.2 B [UI → /frontend-design] Bot review follow-ups to 15.1: the
+      room check moves to the store (`ui.inspectorRoom`, written by the
+      Inspector's resize observer), so the palette command says there is
+      no room and saves nothing instead of persisting a wide choice that
+      changes nothing; a wide Inspector's toggle reads "Narrow the
+      inspector" even without room. Tests in `inspector-controls.test.tsx`.

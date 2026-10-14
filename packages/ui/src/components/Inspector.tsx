@@ -58,6 +58,11 @@ const WIDTH = {
 /** The row width wide mode needs before it adds anything to the 360px. */
 const ROOM_TO_WIDEN_PX = 680 + 360;
 
+/** Why wide mode is unavailable, and what makes room; the header toggle's
+ * title and the palette command say the same thing. */
+export const NO_ROOM_TO_WIDEN =
+  'No room to widen the inspector: collapse the navigation ( [ ) or widen the window';
+
 /** How long a copy control says "Copied". */
 const COPIED_MS = 1500;
 
@@ -76,7 +81,8 @@ export function Inspector(props: InspectorProps = {}) {
   const wide = useAppStore((s) => s.ui.inspectorWide);
   const toggleInspectorWide = useAppStore((s) => s.toggleInspectorWide);
   const asideRef = useRef<HTMLElement>(null);
-  const room = useRoomToWiden(asideRef);
+  useRoomToWiden(asideRef);
+  const room = useAppStore((s) => s.ui.inspectorRoom);
   const showInsight = useAppStore((s) => s.showInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
 
@@ -135,11 +141,11 @@ export function Inspector(props: InspectorProps = {}) {
             aria-disabled={!wide && !room ? true : undefined}
             aria-label="Wide inspector"
             title={
-              !room
-                ? 'No room to widen: collapse the navigation ( [ ) or widen the window'
-                : wide
-                  ? 'Narrow the inspector'
-                  : 'Widen the inspector'
+              wide
+                ? 'Narrow the inspector'
+                : room
+                  ? 'Widen the inspector'
+                  : NO_ROOM_TO_WIDEN
             }
             className={`${HEADER_BUTTON} aria-disabled:cursor-not-allowed aria-disabled:opacity-40`}
           >
@@ -840,24 +846,24 @@ function CopyGlyph({ state }: { state: CopyState }) {
 }
 
 /**
- * Whether the row holding the Inspector is wide enough for wide mode to
- * add anything. Without ResizeObserver (tests, old browsers) it assumes
- * there is room, which is the behaviour before this check existed.
+ * Records in the store whether the row holding the Inspector is wide enough
+ * for wide mode to add anything (`ui.inspectorRoom`). Without
+ * ResizeObserver (tests, old browsers) the store keeps its default, room,
+ * which is the behaviour before this check existed.
  */
-function useRoomToWiden(ref: RefObject<HTMLElement | null>): boolean {
-  const [room, setRoom] = useState(true);
+function useRoomToWiden(ref: RefObject<HTMLElement | null>): void {
+  const setInspectorRoom = useAppStore((s) => s.setInspectorRoom);
   useEffect(() => {
     const row = ref.current?.parentElement;
     if (row == null || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(([entry]) => {
       if (entry !== undefined) {
-        setRoom(entry.contentRect.width > ROOM_TO_WIDEN_PX);
+        setInspectorRoom(entry.contentRect.width > ROOM_TO_WIDEN_PX);
       }
     });
     observer.observe(row);
     return () => observer.disconnect();
-  }, [ref]);
-  return room;
+  }, [ref, setInspectorRoom]);
 }
 
 const HEADER_BUTTON =

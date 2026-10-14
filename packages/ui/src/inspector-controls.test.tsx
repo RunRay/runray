@@ -174,9 +174,11 @@ describe('Inspector wide mode', () => {
     await click(toggle);
     expect(useAppStore.getState().ui.inspectorWide).toBe(true);
 
-    // shrinking the window never traps wide mode on
+    // shrinking the window never traps wide mode on, and the toggle names
+    // what it will do rather than the missing room
     resizeRow(1000);
     expect(toggle.getAttribute('aria-disabled')).toBeNull();
+    expect(toggle.title).toBe('Narrow the inspector');
     await click(toggle);
     expect(useAppStore.getState().ui.inspectorWide).toBe(false);
   });
@@ -217,6 +219,45 @@ describe('Inspector wide mode', () => {
     } finally {
       Element.prototype.scrollIntoView = scroll;
     }
+  });
+
+  it('in the palette, says there is no room instead of saving a wide choice', async () => {
+    const scroll = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = () => {};
+    try {
+      act(() => {
+        useAppStore.getState().setInspectorRoom(false);
+        useAppStore.getState().toggleInspector();
+      });
+      mount(<CommandPalette onClose={() => {}} />);
+      expect(() => button(container, /^Widen the inspector$/)).toThrow();
+      await click(button(container, /^No room to widen the inspector/));
+      expect(useAppStore.getState().ui.inspectorWide).toBe(false);
+      expect(localStorage.getItem('runray.inspectorWide')).toBeNull();
+      // the inspector still opens, so the reason in its header shows
+      expect(useAppStore.getState().ui.inspectorOpen).toBe(true);
+    } finally {
+      Element.prototype.scrollIntoView = scroll;
+    }
+  });
+
+  it('shares the room it measures with the palette', async () => {
+    let report: ((entries: unknown[]) => void) | undefined;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: (entries: unknown[]) => void) {
+          report = callback;
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    mount(<Inspector run={run([])} spanId={null} insightId={null} />);
+    act(() => report?.([{ contentRect: { width: 1040 } }]));
+    expect(useAppStore.getState().ui.inspectorRoom).toBe(false);
+    act(() => report?.([{ contentRect: { width: 1200 } }]));
+    expect(useAppStore.getState().ui.inspectorRoom).toBe(true);
   });
 });
 
