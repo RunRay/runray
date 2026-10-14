@@ -94,6 +94,8 @@ export function Waterfall({ run }: { run: Run }) {
   const highlighted = useAppStore((s) => s.ui.highlighted);
   const selectSpan = useAppStore((s) => s.selectSpan);
   const showInsight = useAppStore((s) => s.showInsight);
+  const revealInsight = useAppStore((s) => s.revealInsight);
+  const revealSeq = useAppStore((s) => s.ui.revealSeq);
   const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
   const setCollapsed = useAppStore((s) => s.setCollapsed);
 
@@ -154,8 +156,9 @@ export function Waterfall({ run }: { run: Run }) {
     if (index >= 0) virtualizer.scrollToIndex(index, { align: 'auto' });
   }, [selectedId]);
 
-  // An insight landing here — the dashboard's "Open in timeline" deep link
-  // or a strip pill — must answer "where?" at once: reveal the evidence
+  // An insight landing here — the dashboard's "Open in timeline" deep link,
+  // a strip pill, or a hidden finding reopened after its subtree collapsed
+  // (`revealSeq`) — must answer "where?" at once: reveal the evidence
   // (drop the `/` filter, expand any collapsed ancestor), owe a scroll to
   // its first span, and light the evidence rows for FLASH_MS so the eye
   // finds them before they settle into the resting wash.
@@ -175,7 +178,7 @@ export function Waterfall({ run }: { run: Run }) {
     setFlashing(true);
     const t = window.setTimeout(() => setFlashing(false), FLASH_MS);
     return () => window.clearTimeout(t);
-  }, [insightId]);
+  }, [insightId, revealSeq]);
 
   // The owed scroll runs once the rows actually contain an evidence span:
   // immediately when nothing hid it, on the next render after the reveal
@@ -411,7 +414,7 @@ export function Waterfall({ run }: { run: Run }) {
                   findings={findingsBySpan.get(row.span.id)}
                   onOpenFinding={(insight) => showInsight(insight, row.span.id)}
                   hidden={hiddenBySpan.get(row.span.id)}
-                  onOpenHidden={(insight) => showInsight(insight)}
+                  onOpenHidden={revealInsight}
                   animate={animate}
                   animationDelayMs={Math.min(item.index * 8, 300)}
                   style={{
@@ -774,7 +777,7 @@ function CostBadge({ span }: { span: Span }) {
   );
 }
 
-function SpanTooltip({
+export function SpanTooltip({
   tooltip,
   findings,
   hidden,
@@ -877,10 +880,12 @@ function SpanTooltip({
   );
 }
 
+/** Every finding by name, as the row's accessible name gives them: the
+ * card is the only place a pointer user reads what a chip counts. */
 function FindingItems({ findings }: { findings: Insight[] }) {
   return (
     <>
-      {findings.slice(0, 3).map((f) => (
+      {findings.map((f) => (
         <li key={f.id} className="flex items-baseline gap-1.5">
           <span aria-hidden className={`shrink-0 ${FINDING_TEXT[f.severity]}`}>
             ⚠
@@ -893,9 +898,6 @@ function FindingItems({ findings }: { findings: Insight[] }) {
           )}
         </li>
       ))}
-      {findings.length > 3 && (
-        <li className="text-text-faint">+{findings.length - 3} more</li>
-      )}
     </>
   );
 }

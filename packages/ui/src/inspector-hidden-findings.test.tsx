@@ -13,6 +13,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Inspector } from './components/Inspector';
+import { SpanTooltip, Waterfall } from './components/Waterfall';
 import { useAppStore } from './store';
 
 declare global {
@@ -124,5 +125,99 @@ describe('Inspector on a collapsed row', () => {
     act(() => useAppStore.getState().selectSpan('agent'));
     renderInspector();
     expect(container.textContent).not.toContain('Hidden inside');
+  });
+});
+
+describe('reopening a hidden finding that is already active', () => {
+  // jsdom has no ResizeObserver; the waterfall's virtualizer asks for one
+  const RO = globalThis.ResizeObserver;
+  beforeEach(() => {
+    useAppStore.setState(initialStore, true);
+    globalThis.ResizeObserver ??= class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    globalThis.ResizeObserver = RO;
+  });
+
+  const finding = run.insights[0] as Run['insights'][number];
+
+  it('expands the subtree the user collapsed after opening it', () => {
+    act(() => root.render(<Waterfall run={run} />));
+    act(() => useAppStore.getState().showInsight(finding));
+    // the finding stays active while its subtree is folded away
+    act(() => useAppStore.getState().setCollapsed(new Set(['agent'])));
+    expect([...useAppStore.getState().ui.collapsed]).toEqual(['agent']);
+
+    act(() => useAppStore.getState().revealInsight(finding));
+    expect([...useAppStore.getState().ui.collapsed]).toEqual([]);
+  });
+
+  it('the Inspector list asks for the same reveal', () => {
+    act(() => {
+      useAppStore.getState().showInsight(finding);
+      useAppStore.getState().setCollapsed(new Set(['agent']));
+      useAppStore.getState().selectSpan('agent');
+    });
+    act(() => root.render(<Inspector run={run} />));
+    const before = useAppStore.getState().ui.revealSeq;
+    const pick = [...container.querySelectorAll('button')].find((b) =>
+      b.textContent?.includes('$0.12'),
+    );
+    act(() => pick?.click());
+    expect(useAppStore.getState().ui.revealSeq).toBe(before + 1);
+  });
+});
+
+describe('the row card names every hidden finding', () => {
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it('lists all four titles, with no "+1 more"', () => {
+    const hidden = [1, 2, 3, 4].map((n) => ({
+      ...(run.insights[0] as Run['insights'][number]),
+      id: `f${n}`,
+      title: `finding number ${n}`,
+    }));
+    act(() =>
+      root.render(
+        <SpanTooltip
+          tooltip={{
+            row: {
+              span: run.spans[1] as Span,
+              hasChildren: true,
+              collapsed: true,
+              hiddenDescendants: 2,
+              lane: null,
+            },
+            x: 10,
+            y: 10,
+          }}
+          findings={undefined}
+          hidden={hidden}
+        />,
+      ),
+    );
+    for (const n of [1, 2, 3, 4]) {
+      expect(container.textContent).toContain(`finding number ${n}`);
+    }
+    expect(container.textContent).not.toContain('more');
   });
 });

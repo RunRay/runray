@@ -48,6 +48,7 @@ export function Inspector(props: InspectorProps = {}) {
   const storeRun = useAppStore(selectActiveRun);
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const showInsight = useAppStore((s) => s.showInsight);
+  const revealInsight = useAppStore((s) => s.revealInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
   const collapsed = useAppStore((s) => s.ui.collapsed);
 
@@ -134,7 +135,7 @@ export function Inspector(props: InspectorProps = {}) {
           />
         )}
       {!showingFinding && span !== undefined && spanHidden.length > 0 && (
-        <HiddenFindings findings={spanHidden} onPick={(f) => showInsight(f)} />
+        <HiddenFindings findings={spanHidden} onPick={revealInsight} />
       )}
       {showingFinding && insight !== undefined && run !== undefined ? (
         <InsightDetail insight={insight} run={run} />

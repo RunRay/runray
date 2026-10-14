@@ -44,3 +44,9 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
   - three subagents show `⚠ 1 inside`, each chip inside the frame;
   - the straddling context-bloat finding no longer shows on the Explore subagent;
   - selecting a collapsed row lists its finding under "Hidden inside" in the Inspector.
+
+## 3. Bot review follow-ups
+
+- [x] 3.1 Reopening a hidden finding that is already active (after its subtree was collapsed again) expands what hides its evidence. A store action `revealInsight` bumps `ui.revealSeq`; the row chip and the Inspector list both use it, and the waterfall reveals on a new finding or a new request. Tests: `store.test.ts`, and `inspector-hidden-findings.test.tsx` (jsdom) for the waterfall and the Inspector list.
+- [x] 3.2 The row card names every finding, as the accessible name does, instead of three and "+N more". Test: a collapsed row hiding four findings.
+- [x] 3.3 `subagentRails` resolves each parent chain on its own, so a child sorted ahead of its subagent (a tie on the start, a skewed clock) still gets the subagent's rail. Test: the same rails for the spans in reverse order.
