@@ -11,7 +11,7 @@ import { DashboardTourContainer } from './components/DashboardTourContainer';
 import { DiffView } from './components/DiffView';
 import { ExportDialog } from './components/ExportDialog';
 import { HelpSheet } from './components/HelpSheet';
-import { Inspector } from './components/Inspector';
+import { Inspector, useRoomToWiden } from './components/Inspector';
 import { OnboardingChecklistContainer } from './components/OnboardingChecklistContainer';
 import { Overview } from './components/Overview';
 import { ProvenanceStrip } from './components/ProvenanceStrip';
@@ -62,6 +62,10 @@ export function App() {
   const onboarding = useAppStore((s) => s.onboarding);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const gPressedAt = useRef(0);
+  // the row beside the rail: the Inspector's room to widen is measured here,
+  // open or closed
+  const rowRef = useRef<HTMLDivElement>(null);
+  useRoomToWiden(rowRef);
 
   // Hash → store. The hash is the source of truth for run + view; filter
   // params ride a query suffix (D6). Filter-less hashes (plain <a> links)
@@ -195,7 +199,10 @@ export function App() {
           <ProvenanceStrip traceFile={data.traceFile} />
         )}
         <TopBar />
-        <div className="flex-1 flex min-h-0 relative overflow-hidden">
+        <div
+          ref={rowRef}
+          className="flex-1 flex min-h-0 relative overflow-hidden"
+        >
           {data.status === 'loading' && (
             <main className="flex-1 h-full min-h-0">
               <LoadingScreen />

@@ -481,3 +481,8 @@ automatically extends its fixture-parameterized equivalence matrix.
       no room and saves nothing instead of persisting a wide choice that
       changes nothing; a wide Inspector's toggle reads "Narrow the
       inspector" even without room. Tests in `inspector-controls.test.tsx`.
+- [x] 15.3 B [UI → /frontend-design] The room is measured by the app
+      shell on the row beside the rail, which stays mounted while the
+      Inspector is closed (`useRoomToWiden` moves out of the Inspector), so
+      a resize with the Inspector closed still reaches the palette command.
+      Test in `inspector-controls.test.tsx`.

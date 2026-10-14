@@ -7,11 +7,11 @@
  * export dialog's.
  */
 import type { Run, Span } from '@runray/schema';
-import { act } from 'react';
+import { act, useRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CommandPalette } from './components/CommandPalette';
-import { Inspector } from './components/Inspector';
+import { Inspector, useRoomToWiden } from './components/Inspector';
 import { useAppStore } from './store';
 
 declare global {
@@ -56,6 +56,17 @@ const initialStore = useAppStore.getInitialState();
 
 let container: HTMLDivElement;
 let root: Root;
+
+/** The app shell's row: it measures the room, Inspector open or closed. */
+function Row({ open = true }: { open?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useRoomToWiden(ref);
+  return (
+    <div ref={ref}>
+      {open && <Inspector run={run([])} spanId={null} insightId={null} />}
+    </div>
+  );
+}
 
 function mount(node: React.ReactNode): void {
   act(() => {
@@ -159,7 +170,7 @@ describe('Inspector wide mode', () => {
     );
     const resizeRow = (width: number) =>
       act(() => report?.([{ contentRect: { width } }]));
-    mount(<Inspector run={run([])} spanId={null} insightId={null} />);
+    mount(<Row />);
     const toggle = button(container, /^Wide inspector$/);
 
     // a 1280px window with the rail expanded leaves a 1040px row
@@ -241,7 +252,7 @@ describe('Inspector wide mode', () => {
     }
   });
 
-  it('shares the room it measures with the palette', async () => {
+  it('keeps measuring the room while the Inspector is closed', async () => {
     let report: ((entries: unknown[]) => void) | undefined;
     vi.stubGlobal(
       'ResizeObserver',
@@ -253,7 +264,9 @@ describe('Inspector wide mode', () => {
         disconnect() {}
       },
     );
-    mount(<Inspector run={run([])} spanId={null} insightId={null} />);
+    // a resize with the Inspector closed must still reach the palette
+    mount(<Row open={false} />);
+    expect(container.querySelector('aside')).toBeNull();
     act(() => report?.([{ contentRect: { width: 1040 } }]));
     expect(useAppStore.getState().ui.inspectorRoom).toBe(false);
     act(() => report?.([{ contentRect: { width: 1200 } }]));

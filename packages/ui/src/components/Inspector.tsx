@@ -9,7 +9,6 @@ import {
   type RefObject,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import {
@@ -80,8 +79,6 @@ export function Inspector(props: InspectorProps = {}) {
   const toggleInspector = useAppStore((s) => s.toggleInspector);
   const wide = useAppStore((s) => s.ui.inspectorWide);
   const toggleInspectorWide = useAppStore((s) => s.toggleInspectorWide);
-  const asideRef = useRef<HTMLElement>(null);
-  useRoomToWiden(asideRef);
   const room = useAppStore((s) => s.ui.inspectorRoom);
   const showInsight = useAppStore((s) => s.showInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
@@ -123,7 +120,6 @@ export function Inspector(props: InspectorProps = {}) {
 
   return (
     <aside
-      ref={asideRef}
       aria-label="Inspector"
       className={`flex ${wide ? WIDTH.wide : WIDTH.narrow} shrink-0 h-full flex-col border-l border-border bg-surface min-h-0`}
     >
@@ -846,15 +842,17 @@ function CopyGlyph({ state }: { state: CopyState }) {
 }
 
 /**
- * Records in the store whether the row holding the Inspector is wide enough
- * for wide mode to add anything (`ui.inspectorRoom`). Without
- * ResizeObserver (tests, old browsers) the store keeps its default, room,
- * which is the behaviour before this check existed.
+ * Records in the store whether `rowRef`, the row that holds the Inspector,
+ * is wide enough for wide mode to add anything (`ui.inspectorRoom`). The
+ * app shell calls it on that row, which stays mounted while the Inspector
+ * is closed, so the palette never reads a width from before a resize.
+ * Without ResizeObserver (tests, old browsers) the store keeps its default,
+ * room, which is the behaviour before this check existed.
  */
-function useRoomToWiden(ref: RefObject<HTMLElement | null>): void {
+export function useRoomToWiden(rowRef: RefObject<HTMLElement | null>): void {
   const setInspectorRoom = useAppStore((s) => s.setInspectorRoom);
   useEffect(() => {
-    const row = ref.current?.parentElement;
+    const row = rowRef.current;
     if (row == null || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(([entry]) => {
       if (entry !== undefined) {
@@ -863,7 +861,7 @@ function useRoomToWiden(ref: RefObject<HTMLElement | null>): void {
     });
     observer.observe(row);
     return () => observer.disconnect();
-  }, [ref, setInspectorRoom]);
+  }, [rowRef, setInspectorRoom]);
 }
 
 const HEADER_BUTTON =
