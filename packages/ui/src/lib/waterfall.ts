@@ -172,9 +172,11 @@ const NO_RAILS: readonly number[] = [];
  * Delegation rails: for each span, the depths of the subagent spans it sits
  * inside (proper ancestors, outermost first). Bars are placed by time across
  * the full row, so without a rail per enclosing subagent the only sign of
- * nesting is the caret's indent. One forward pass — normalizer order puts
- * parents before children — and siblings share their parent's array, so a
- * run allocates one per subagent, not one per span.
+ * nesting is the caret's indent. Each parent chain resolves on its own, so
+ * the result doesn't depend on span order: the normalizer sorts by start
+ * time, and a child that starts with its subagent (or before it, on a skewed
+ * clock) can come first. Siblings share their parent's array, so a run
+ * allocates one per subagent, not one per span.
  */
 export function subagentRails(
   spans: readonly Span[],
@@ -182,20 +184,26 @@ export function subagentRails(
   const byId = new Map(spans.map((s) => [s.id, s]));
   const rails = new Map<string, readonly number[]>();
   const childRails = new Map<string, readonly number[]>();
-  for (const span of spans) {
+  // the normalizer has broken every parent cycle, so the walk ends
+  const railsOf = (span: Span): readonly number[] => {
+    const known = rails.get(span.id);
+    if (known !== undefined) return known;
     const parent = span.parentId === null ? undefined : byId.get(span.parentId);
-    if (parent === undefined) {
-      rails.set(span.id, NO_RAILS);
-      continue;
-    }
-    let inside = childRails.get(parent.id);
-    if (inside === undefined) {
-      const above = rails.get(parent.id) ?? NO_RAILS;
-      inside = parent.kind === 'subagent' ? [...above, parent.depth] : above;
-      childRails.set(parent.id, inside);
+    let inside = NO_RAILS;
+    if (parent !== undefined) {
+      const shared = childRails.get(parent.id);
+      if (shared === undefined) {
+        const above = railsOf(parent);
+        inside = parent.kind === 'subagent' ? [...above, parent.depth] : above;
+        childRails.set(parent.id, inside);
+      } else {
+        inside = shared;
+      }
     }
     rails.set(span.id, inside);
-  }
+    return inside;
+  };
+  for (const span of spans) railsOf(span);
   return rails;
 }
 

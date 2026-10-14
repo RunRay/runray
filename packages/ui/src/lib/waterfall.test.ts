@@ -195,6 +195,16 @@ describe('subagentRails', () => {
   it('shares one array among siblings', () => {
     expect(rails.get('read')).toBe(rails.get('inner'));
   });
+
+  it('gives the same rails whatever order the spans come in', () => {
+    // start-time order can put a child ahead of its subagent: a tie on the
+    // start broken by id, or a skewed clock
+    const reversed = subagentRails([...spans].reverse());
+    for (const span of spans) {
+      expect(reversed.get(span.id)).toEqual(rails.get(span.id));
+    }
+    expect(reversed.get('read')).toBe(reversed.get('inner'));
+  });
 });
 
 describe('subtreeRollups (D3)', () => {
