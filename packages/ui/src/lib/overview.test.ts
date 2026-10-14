@@ -262,8 +262,23 @@ describe('rankings', () => {
     expect(ranks).toHaveLength(2);
   });
 
+  it('keeps a branch named like a placeholder apart from runs without one', () => {
+    // "—" is a valid git branch name; it must not join the no-branch row
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', cost: 1 }),
+      stubRun({ id: 'b', project: 'api', branch: '—', cost: 2 }),
+    ]);
+    expect(ranks).toHaveLength(2);
+    expect(ranks.find((r) => r.name === NO_BRANCH)?.costUSD).toBe(1);
+    expect(ranks.find((r) => r.branch === '—')?.costUSD).toBe(2);
+  });
+
   it('gates the branch card on any run recording a branch', () => {
     expect(anyBranch([stubRun({ id: 'a', project: 'api' })])).toBe(false);
+    // an empty name from a foreign trace file records nothing
+    expect(anyBranch([stubRun({ id: 'a', project: 'api', branch: '' })])).toBe(
+      false,
+    );
     expect(
       anyBranch([
         stubRun({ id: 'a', project: 'api' }),

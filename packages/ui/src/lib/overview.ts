@@ -179,7 +179,7 @@ export function topBranches(runs: readonly Run[], limit = 5): BranchEntry[] {
 
 /** Whether any run records a branch (the Top branches card's gate). */
 export function anyBranch(runs: readonly Run[]): boolean {
-  return runs.some((run) => run.project?.gitBranch !== undefined);
+  return runs.some((run) => branchKey(run) !== NO_BRANCH);
 }
 
 /** Cost/Tokens ranked by model, straight from the per-run byModel rollups. */

@@ -396,6 +396,16 @@ describe('branch filter dimension', () => {
     ]);
   });
 
+  it('a branch named like a placeholder is a branch, an empty one is none', () => {
+    expect(branchKey(onBranch('dash', 'api', '—'))).toBe('—');
+    expect(branchKey(onBranch('empty', 'api', ''))).toBe(NO_BRANCH);
+    const runs = [...branched, onBranch('dash', 'api', '—')];
+    const ids = (branch: string) =>
+      filterRuns(runs, { ...EMPTY_FILTER, branch }).map((r) => r.id);
+    expect(ids(NO_BRANCH)).toEqual(['api-none', 'bare']);
+    expect(ids('—')).toEqual(['dash']);
+  });
+
   it('filterRuns matches the branch alone, or with a project', () => {
     const ids = (patch: Partial<typeof EMPTY_FILTER>) =>
       filterRuns(branched, { ...EMPTY_FILTER, ...patch }).map((r) => r.id);
