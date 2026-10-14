@@ -19,6 +19,7 @@ import {
   largestCallTokens,
   mostExpensiveCall,
   type RuleGroup,
+  runTokensByModel,
   sessionCostStats,
   spendByDay,
   topModels,
@@ -75,10 +76,17 @@ export function Overview({
   const chartModels = useMemo(() => topModels(runs, 8, unit), [runs, unit]);
   const sources = useMemo(() => topSources(runs, 5, unit), [runs, unit]);
   // One color assignment over ALL models so a model's rank dot and its stacked
-  // chart segment always match (both index into the same sorted set).
+  // chart segment always match (both index into the same sorted set). The
+  // set includes models with tokens but no price: byModel holds only priced
+  // ones, and token mode ranks and stacks the rest too.
   const allModelNames = useMemo(
     () => [
-      ...new Set(runs.flatMap((r) => Object.keys(r.totals.costUSD.byModel))),
+      ...new Set(
+        runs.flatMap((r) => [
+          ...Object.keys(r.totals.costUSD.byModel),
+          ...Object.keys(runTokensByModel(r)),
+        ]),
+      ),
     ],
     [runs],
   );

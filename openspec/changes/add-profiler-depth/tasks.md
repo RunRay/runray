@@ -475,3 +475,9 @@ automatically extends its fixture-parameterized equivalence matrix.
       with "at API prices" on their headline figures, and drops the savings
       panel's tokens-from-cost-share figures; %win takes its percentages in the
       unit and its popover sets a token budget. Added 2026-10-06.
+- [x] 16.2 B [UI → /frontend-design] Bot review follow-ups to 16.1: the
+      subtree map keeps its cost | tokens toggle above its empty state, so a
+      run with tokens but no priced calls can switch back to tokens; the
+      overview assigns model colours over every model with tokens, not only
+      the priced ones in `byModel`, so an unpriced model never shares
+      another model's colour in token mode. Tests in `unit-mode.test.tsx`.

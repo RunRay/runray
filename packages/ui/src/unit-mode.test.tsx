@@ -431,6 +431,79 @@ describe('every surface the unit drives', () => {
     expect(heightOf('haiku')).toBeGreaterThan(heightOf('opus') * 5);
   });
 
+  it('day chart: a model with tokens but no price gets its own colour', () => {
+    // a local model core couldn't price: tokens, no cost, so no byModel entry
+    const unpriced: Span = {
+      ...llm('lc', 'local', { input: 500, cacheRead: 0 }, 0),
+      llm: {
+        provider: 'local',
+        model: 'local',
+        tokens: { input: 500, output: 0, cacheRead: 0, cacheWrite: 0 },
+        costSource: 'unknown',
+      },
+    };
+    const mixed: Run = {
+      ...SPAN_RUN,
+      spans: [...SPAN_RUN.spans, unpriced],
+    };
+    mount(<Overview runs={[mixed]} allRuns={[mixed]} filter={EMPTY_FILTER} />);
+    setUnit('tokens');
+    const chart = container.querySelector(
+      'section[data-tour="overview-trend"], section[aria-label$="by day"]',
+    );
+    const byModel = [...(chart?.querySelectorAll('button') ?? [])].find(
+      (b) => b.textContent === 'By model',
+    );
+    act(() => {
+      byModel?.click();
+    });
+    const vars = assignModelColorVars(['haiku', 'local', 'opus']);
+    const fills = new Set(
+      [
+        ...(chart?.querySelectorAll('rect[fill^="var(--color-model"]') ?? []),
+      ].map((r) => r.getAttribute('fill')),
+    );
+    // three models, three colours, and local's is its own
+    expect(fills.size).toBe(3);
+    expect(fills.has(vars.get('local') ?? '')).toBe(true);
+  });
+
+  it('subtree map: the toggle stays when the chosen mode has nothing to show', () => {
+    const unpricedRun: Run = {
+      ...SPAN_RUN,
+      spans: SPAN_RUN.spans.map((span) =>
+        span.llm === undefined
+          ? span
+          : {
+              ...span,
+              llm: { ...span.llm, costUSD: undefined, costSource: 'unknown' },
+            },
+      ),
+    };
+    setUnit('tokens');
+    mount(<CostView run={unpricedRun} />);
+    const toggle = (mode: string) =>
+      [
+        ...container.querySelectorAll<HTMLButtonElement>(
+          'fieldset[aria-label="Subtree map value mode"] button',
+        ),
+      ].find((b) => b.textContent === mode);
+    // the map's own box (the Cost view states unpriced calls elsewhere too)
+    const map = () =>
+      container.querySelector('fieldset[aria-label="Subtree map value mode"]')
+        ?.parentElement?.textContent ?? '';
+    act(() => {
+      toggle('cost')?.click();
+    });
+    expect(map()).toContain('No priced llm calls in this run.');
+    // the way back to tokens is still there
+    expect(toggle('tokens')).toBeDefined();
+    act(() => {
+      toggle('tokens')?.click();
+    });
+    expect(map()).not.toContain('No priced llm calls in this run.');
+  });
+
   it('Wasted card: nothing priced reads as unknown, not 0.0%', () => {
     const unpriced = run('u', 0, 5000);
     mount(
