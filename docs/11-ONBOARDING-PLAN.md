@@ -402,6 +402,13 @@ value shapes (drop the rest silently); never echo a filesystem path; `cache-cont
 no-store` like every other endpoint. A write failure returns 200 with the in-memory state —
 onboarding must degrade, never block.
 
+Cross-site writes are refused (change `harden-onboarding-writes`). `POST` must carry
+`Content-Type: application/json`, or it gets 415: a cross-site page can only send that after a
+CORS preflight the server never approves. Ahead of every route, a request with a method other
+than GET/HEAD gets 403 when `Sec-Fetch-Site` isn't `same-origin` or `Origin` isn't
+`http://<Host>`. Refusals close the connection without reading the body. To post by hand, send
+the header: `curl -H 'Content-Type: application/json' -d '{"hints":[]}' …/api/onboarding`.
+
 ### 8.3 Two deviations from issue #14's mechanism, and why
 
 **(a) A fetched endpoint, not injected HTML.** Issue #14 proposes injecting
