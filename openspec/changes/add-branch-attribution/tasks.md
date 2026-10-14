@@ -35,3 +35,4 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 ## 4. Bot review follow-ups
 
 - [x] 4.1 `NO_BRANCH` is `~none`, which git refuses in a branch name, instead of `—`, which a branch can be named; such a branch no longer merges into the shared row or the filter it sets. An empty branch name from a foreign trace file counts as none, in `branchKey` and in the card's gate. Tests: a branch named `—` ranks and filters on its own (`overview.test.ts`, `filter-runs.test.ts`), and `?branch=~none` round-trips (`router.test.ts`).
+- [x] 4.2 The OTLP span fallback states its rule for spans without a start time: only a known start can be the earliest, so such a span counts only when no branch-naming span has one, in document order. Behaviour unchanged; the comment, the trace-ingestion spec and a test in `otlp.test.ts` now say so.

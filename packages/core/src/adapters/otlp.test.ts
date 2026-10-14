@@ -688,6 +688,14 @@ describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
         { span: { 'git.branch': 'second' }, start: '' },
       ]),
     ).toBe('first');
+    // only a known start can be the earliest: a span without one, even
+    // first in the file, gives way to a span that has one
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'no-start' }, start: '' },
+        { span: { 'git.branch': 'timed' }, start: '1783425685375000100' },
+      ]),
+    ).toBe('timed');
   });
 
   it('treats an empty value as no branch, and leaves project unset without one', async () => {

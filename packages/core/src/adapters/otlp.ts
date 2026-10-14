@@ -251,7 +251,8 @@ function branchOf(spans: readonly OtlpSpan[]): string | undefined {
     const branch = branchIn(span.attrs);
     if (branch === undefined) continue;
     const start = startNanos(span);
-    // ties and unknown starts keep document order
+    // a span with a start beats one without (only a known start can be
+    // the earliest); ties, and spans that all lack one, keep document order
     if (
       earliest === undefined ||
       (start !== undefined &&
