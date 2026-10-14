@@ -357,11 +357,15 @@ export function collapseDuplicateRunIds(runs: readonly Run[]): Run[] {
   return [...byId.values()];
 }
 
-/** True when the run starts after 1970-01-01T00:00:00Z, the default every
- * adapter falls back to when a source carries no time. */
+/** First instant after 1970-01-01 (UTC). */
+const START_OF_1970_01_02 = Date.UTC(1970, 0, 2);
+
+/** True when the run starts after 1970-01-01 (UTC). Epoch 0 is the default
+ * every adapter falls back to when a source carries no time, and a time in
+ * the wrong unit (seconds read as nanoseconds) lands later the same day. */
 function hasUsableStart(run: Run): boolean {
   const ms = Date.parse(run.startedAt);
-  return Number.isFinite(ms) && ms > 0;
+  return Number.isFinite(ms) && ms >= START_OF_1970_01_02;
 }
 
 /** Print collected per-candidate errors to stderr (never stdout — `--json`

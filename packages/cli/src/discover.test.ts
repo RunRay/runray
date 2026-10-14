@@ -641,53 +641,63 @@ describe('a foreign file next to real sessions (no 1970 runs)', () => {
     }
   });
 
-  it('refuses a run with no usable start from any adapter (OTLP without times)', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'runray-otlp-notime-'));
-    try {
-      // valid OTLP/JSON, but no span carries startTimeUnixNano
-      const file = join(dir, 'traces.json');
-      writeFileSync(
-        file,
-        JSON.stringify({
-          resourceSpans: [
-            {
-              resource: { attributes: [] },
-              scopeSpans: [
-                {
-                  scope: { name: 'x' },
-                  spans: [
-                    {
-                      traceId: '0af7651916cd43dd8448eb211c80319c',
-                      spanId: 'b7ad6b7169203331',
-                      name: 'claude_code.interaction',
-                      attributes: [
-                        { key: 'session.id', value: { stringValue: 's1' } },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        }),
-      );
+  it.each<[string, Record<string, string>]>([
+    ['no span carries a start time', {}],
+    // seconds read as nanoseconds: 1970-01-01T00:00:01.7Z, not epoch 0
+    [
+      'the start lands later on 1970-01-01',
+      { startTimeUnixNano: '1700000000', endTimeUnixNano: '1800000000' },
+    ],
+  ])(
+    'refuses a run with no usable start from any adapter (OTLP: %s)',
+    async (_label, times) => {
+      const dir = mkdtempSync(join(tmpdir(), 'runray-otlp-notime-'));
+      try {
+        const file = join(dir, 'traces.json');
+        writeFileSync(
+          file,
+          JSON.stringify({
+            resourceSpans: [
+              {
+                resource: { attributes: [] },
+                scopeSpans: [
+                  {
+                    scope: { name: 'x' },
+                    spans: [
+                      {
+                        traceId: '0af7651916cd43dd8448eb211c80319c',
+                        spanId: 'b7ad6b7169203331',
+                        name: 'claude_code.interaction',
+                        ...times,
+                        attributes: [
+                          { key: 'session.id', value: { stringValue: 's1' } },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        );
 
-      const result = await buildTraceFile({
-        paths: [dir],
-        source: 'otlp',
-        redact: false,
-        generatorVersion: '0.1.0-test',
-      });
+        const result = await buildTraceFile({
+          paths: [dir],
+          source: 'otlp',
+          redact: false,
+          generatorVersion: '0.1.0-test',
+        });
 
-      expect(result.traceFile.runs).toEqual([]);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]?.message).toBe(
-        'no usable start time: the run would show as starting on 1970-01-01',
-      );
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
+        expect(result.traceFile.runs).toEqual([]);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]?.message).toBe(
+          'no usable start time: the run would show as starting on 1970-01-01',
+        );
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+  );
 });
 
 describe('reportDiscoveryErrors trailer', () => {

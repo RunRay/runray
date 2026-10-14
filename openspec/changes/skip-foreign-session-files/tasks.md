@@ -14,3 +14,8 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 - [x] 2.2 `NoSessionYet` (core): `claude-code` throws it for its own file with no conversation yet (Claude Code markers present), and discovery skips it without a warning. Tests: a live session before its first prompt, a summary-only file, and the discovery-level quiet skip.
 - [x] 2.3 OpenCode child sessions and `task` calls without timestamps start at the span they hang under (with a run warning for the child) instead of 1970. Test: a storage-era child and task call with no times.
 - [x] 2.4 Export `info` without `id` is "not an opencode export document" (filename fallback removed); the trailer says "entry"/"entries", since a locked `opencode.db` is one entry per session.
+
+## 3. Bot review follow-ups
+
+- [x] 3.1 `claude-code`: only a `user` or `assistant` record with a `timestamp` makes a file a session; a timestamped `queue-operation` or foreign log line next to untimestamped prompts no longer does. Tests: one foreign case, one Claude Code case skipped quietly.
+- [x] 3.2 Discovery refuses any start on 1970-01-01 UTC, not only epoch 0, so a time in the wrong unit (seconds read as nanoseconds) can't slip through. Test: an OTLP span starting at 1970-01-01T00:00:01.7Z.

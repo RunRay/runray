@@ -3,9 +3,9 @@
 ## ADDED Requirements
 
 ### Requirement: Files that are not sessions are skipped
-The system SHALL NOT emit a run for a candidate whose content is not a session, and SHALL NOT emit a run that has no usable start time (one that would start on 1970-01-01, such as an empty run), whichever adapter produced it. Each such candidate SHALL be skipped while discovery continues with the other candidates. Unless stated otherwise below, the skip SHALL be reported on stderr with its reason.
+The system SHALL NOT emit a run for a candidate whose content is not a session, and SHALL NOT emit a run that has no usable start time (one that would start on 1970-01-01 UTC at any hour, such as an empty run or a time in the wrong unit), whichever adapter produced it. Each such candidate SHALL be skipped while discovery continues with the other candidates. Unless stated otherwise below, the skip SHALL be reported on stderr with its reason.
 
-- **Claude Code.** A `.jsonl` without any `user` or `assistant` record, or without any record `timestamp`, is not a session. If it carries Claude Code's own markers (a `sessionId`, or `summary`, `file-history-snapshot` or `queue-operation` records), it SHALL be skipped without a warning: it is a session that hasn't started yet, or a summary-only file. Any other such file SHALL be skipped with a warning. A session with a timestamped prompt and no reply SHALL still be ingested.
+- **Claude Code.** A `.jsonl` without a `user` or `assistant` record that carries a `timestamp` is not a session; a timestamp on another record type doesn't count. If it carries Claude Code's own markers (a `sessionId`, or `summary`, `file-history-snapshot` or `queue-operation` records), it SHALL be skipped without a warning: it is a session that hasn't started yet, or a summary-only file. Any other such file SHALL be skipped with a warning. A session with a timestamped prompt and no reply SHALL still be ingested.
 - **OpenCode.** A storage-era session file or export document whose session lacks an `id` or a numeric `time.created` SHALL be skipped with a warning. A child session without `time.created` SHALL start at the span it hangs under, and the run SHALL carry a warning naming the child.
 
 #### Scenario: Another tool's JSONL in a Claude Code scan root
@@ -19,7 +19,7 @@ The system SHALL NOT emit a run for a candidate whose content is not a session, 
 - THEN only the first session becomes a run and nothing is reported as skipped
 
 #### Scenario: No usable start, any adapter
-- GIVEN an OTLP/JSON file whose spans carry no start time
+- GIVEN an OTLP/JSON file whose spans carry no start time, or a start later on 1970-01-01
 - WHEN discovery runs
 - THEN no run is emitted for it and it is reported as skipped because the run would start on 1970-01-01
 
