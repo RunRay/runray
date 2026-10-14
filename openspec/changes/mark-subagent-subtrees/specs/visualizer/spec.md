@@ -8,7 +8,7 @@ The timeline waterfall SHALL make delegated work distinguishable from the orches
 - **Colour.** In both themes, the subagent bar colour SHALL be at least 12 OKLab ΔE (×100) from every other bar colour and from the warning colour of finding markers. This SHALL hold for normal vision and for simulated protanopia and deuteranopia. The colour SHALL reach 4.5:1 against the row ground.
 - **Rails.** Every row inside a subagent's subtree SHALL carry a rail in the subagent colour for each enclosing subagent, aligned under that subagent's caret.
 - **Hidden findings.** A collapsed row SHALL show the findings whose evidence lies entirely among its hidden descendants. It SHALL show their count, tinted by the worst severity, ahead of the subtree economics badge. It SHALL name them in the row's accessible name and tooltip. Activating the count SHALL open the worst of them, expanding what hides its evidence.
-- **Keyboard path.** When a collapsed row is selected, the Inspector SHALL list its hidden findings as keyboard-operable controls that open them the same way.
+- **Keyboard path.** When a collapsed row is selected, the Inspector SHALL list its hidden findings as keyboard-operable controls, each named by the finding's title, that open them the same way.
 
 #### Scenario: Subagent bar unlike an llm bar
 - GIVEN the ink theme and a run with a subagent

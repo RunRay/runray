@@ -121,6 +121,30 @@ describe('Inspector on a collapsed row', () => {
     expect([...ui.highlighted]).toEqual(['a1', 'a2']);
   });
 
+  it('names each hidden finding, so two of one rule read apart', () => {
+    const twin = {
+      ...(run.insights[0] as Run['insights'][number]),
+      id: 'dup2',
+      title: 'Same file re-read 3× without changes',
+    };
+    act(() => {
+      useAppStore.getState().setCollapsed(new Set(['agent']));
+      useAppStore.getState().selectSpan('agent');
+    });
+    act(() => {
+      root.render(
+        <Inspector run={{ ...run, insights: [...run.insights, twin] }} />,
+      );
+    });
+    const names = [...container.querySelectorAll('li button')].map(
+      (b) => b.textContent,
+    );
+    expect(names).toHaveLength(2);
+    expect(new Set(names).size).toBe(2);
+    expect(names.some((n) => n?.includes('re-read 2×'))).toBe(true);
+    expect(names.some((n) => n?.includes('re-read 3×'))).toBe(true);
+  });
+
   it('lists nothing while the row is expanded', () => {
     act(() => useAppStore.getState().selectSpan('agent'));
     renderInspector();

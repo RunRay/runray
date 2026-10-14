@@ -270,7 +270,9 @@ function FindingChipLabel({ finding }: { finding: Insight }) {
 }
 
 /**
- * Findings hidden inside the selected collapsed row, worst first (C).
+ * Findings hidden inside the selected collapsed row, worst first (C), one
+ * row each, named by title like the waterfall card's "Hidden inside" list:
+ * two findings of one rule with the same estimate must still read apart.
  * Picking one opens it the way a deep link does: the waterfall expands the
  * subtree onto its evidence.
  */
@@ -284,18 +286,31 @@ function HiddenFindings({
   return (
     <div className="px-3 pt-2">
       <p className="micro-label text-text-faint">Hidden inside</p>
-      <div className="mt-1 flex flex-wrap gap-1">
+      <ul className="mt-1 space-y-1">
         {findings.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => onPick(f)}
-            className={`${FINDING_CHIP_BASE} ${FINDING_CHIP_IDLE}`}
-          >
-            <FindingChipLabel finding={f} />
-          </button>
+          <li key={f.id}>
+            <button
+              type="button"
+              onClick={() => onPick(f)}
+              title={f.title}
+              className={`flex w-full items-baseline gap-1.5 text-left ${FINDING_CHIP_BASE} ${FINDING_CHIP_IDLE}`}
+            >
+              <span
+                aria-hidden
+                className={`shrink-0 ${SEVERITY_TEXT[f.severity]}`}
+              >
+                ⚠
+              </span>
+              <span className="min-w-0 truncate">{f.title}</span>
+              {f.estimatedWasteUSD !== undefined && (
+                <span className="ml-auto shrink-0 font-mono text-text-faint">
+                  {formatUSD(f.estimatedWasteUSD)}
+                </span>
+              )}
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
