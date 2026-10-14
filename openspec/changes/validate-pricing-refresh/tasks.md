@@ -28,3 +28,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 
   Tests in `litellm.test.ts` and `pricing.test.ts` include real fetch against a local server: one that stalls after the headers, one that drips under the idle limit, and a host that can't be reached. `atomic-write.test.ts` adds a write that fails part-way.
 - [x] 2.2 Proposal, spec, `docs/05-ARCHITECTURE.md` §2.3 and the changeset describe the follow-ups. A real refresh into a scratch path still gives 236 models, none left out.
+
+## 3. Bot review follow-ups
+
+- [x] 3.1 `writeFileAtomic` retries the rename on Windows for about 0.3 s while the target is locked (`EPERM`, `EACCES`, `EBUSY` from an antivirus scanner or an editor), and never unlinks the target first. Elsewhere those codes fail at once. Tests in `atomic-write.test.ts`: a lock that lifts, one that doesn't (old file kept, no temp file), and no retry off Windows.
