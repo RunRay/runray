@@ -1166,6 +1166,13 @@ describe('claude-code files that are not sessions', () => {
       [{ type: 'user', uuid: 'u1', message: { role: 'user', content: 'hi' } }],
     ],
     ['lines that are not JSON', ['not json', '{also not']],
+    [
+      'a timestamped log line next to an untimestamped user record',
+      [
+        { level: 'info', timestamp: '2026-07-02T13:00:00Z', msg: 'started' },
+        { type: 'user', uuid: 'u1', message: { role: 'user', content: 'hi' } },
+      ],
+    ],
   ])('refuses %s as foreign', async (_label, lines) => {
     const err = await parseLines(lines).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(Error);
@@ -1190,6 +1197,23 @@ describe('claude-code files that are not sessions', () => {
     [
       'a summary-only file',
       [{ type: 'summary', summary: 's', leafUuid: 'u1' }],
+    ],
+    [
+      'a timestamped queue-operation ahead of an untimestamped prompt',
+      [
+        {
+          type: 'queue-operation',
+          operation: 'enqueue',
+          sessionId: 'sess-new',
+          timestamp: '2026-07-02T13:00:00Z',
+        },
+        {
+          type: 'user',
+          uuid: 'u1',
+          sessionId: 'sess-new',
+          message: { role: 'user', content: 'hi' },
+        },
+      ],
     ],
   ])('skips %s quietly (NoSessionYet)', async (_label, lines) => {
     await expect(parseLines(lines)).rejects.toBeInstanceOf(NoSessionYet);

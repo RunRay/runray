@@ -186,7 +186,7 @@ interface Transcript {
   customTitle: string | undefined;
   legacy: boolean;
   firstTs: string | undefined;
-  /** Saw at least one `user` or `assistant` record. */
+  /** Saw at least one `user` or `assistant` record carrying a timestamp. */
   conversational: boolean;
   /** Saw a record only Claude Code writes: one carrying `sessionId`, or one
    * of CLAUDE_META_TYPES. Tells its own not-yet-a-session file from a
@@ -257,7 +257,11 @@ async function collectTranscript(
     }
     const ts = str(rec.timestamp);
     if (ts !== undefined && t.firstTs === undefined) t.firstTs = ts;
-    if (type === 'user' || type === 'assistant') t.conversational = true;
+    // a timestamped metadata record next to untimestamped prompts still
+    // isn't a conversation anyone can place in time
+    if ((type === 'user' || type === 'assistant') && ts !== undefined) {
+      t.conversational = true;
+    }
     if (
       str(rec.sessionId) !== undefined ||
       (type !== undefined && CLAUDE_META_TYPES.has(type))
