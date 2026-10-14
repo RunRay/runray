@@ -2,7 +2,7 @@
 "runray": patch
 ---
 
-Redacted, anonymized and path-scrubbed views and exports of OTLP imports no longer carry GenAI message content.
+Redacted, anonymized and path-scrubbed views and exports of OTLP imports no longer keep the `gen_ai.*` attributes that hold message content.
 
 OpenTelemetry GenAI instrumentations can put prompt and output messages, system instructions, tool definitions, and tool arguments and results in `gen_ai.*` span attributes (opt-in), and older ones write `gen_ai.prompt.N.content`. Until now `--redact`, `--anonymize`, `--metadata-only` and `--scrub-paths` kept every `gen_ai.*` attribute, so an export of such an import could include that text and the local paths in it.
 
