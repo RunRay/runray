@@ -13,7 +13,7 @@ import { adapters } from '../adapters/index.js';
 import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
-import { createIdentityTable } from './identity.js';
+import { createIdentityTable, isAttributeAllowed } from './identity.js';
 import { assertNoPathShapes, findPathShapes } from './path-net.js';
 import type { SanitizeProfile } from './profile.js';
 import { pruneToMetadata } from './prune.js';
@@ -220,6 +220,39 @@ describe('2. Invariants, fixtures, goldens', () => {
           ).not.toThrow();
         }
       }
+    }, 60_000);
+
+    it('keeps no attribute outside the allowlist under --redact or a sanitizing profile across every fixture', async () => {
+      const targets = await allFixtureTargets();
+      const keysOf = (spans: readonly { attributes?: object }[]) =>
+        spans.flatMap((s) => Object.keys(s.attributes ?? {}));
+      // the GenAI-semconv fixture carries content keys, so this can fail
+      let droppableKeysInFull = 0;
+
+      for (const { adapter, variant, candidateIndex, candidate } of targets) {
+        const label = `${adapter.id}/${variant}#${candidateIndex}`;
+        const rawUnredacted = await adapter.parse(candidate, { redact: false });
+        droppableKeysInFull += keysOf(rawUnredacted.spans).filter(
+          (k) => !isAttributeAllowed(k),
+        ).length;
+
+        const rawRedacted = await adapter.parse(candidate, { redact: true });
+        for (const key of keysOf(rawRedacted.spans)) {
+          expect(isAttributeAllowed(key), `${label} --redact kept ${key}`).toBe(
+            true,
+          );
+        }
+        for (const profile of sanitizingProfiles) {
+          const run = buildPipelineRun(rawUnredacted, profile);
+          for (const key of keysOf(run.spans)) {
+            expect(
+              isAttributeAllowed(key),
+              `${label} ${profile} kept ${key}`,
+            ).toBe(true);
+          }
+        }
+      }
+      expect(droppableKeysInFull).toBeGreaterThan(0);
     }, 60_000);
 
     it('fails the test when a path shape or known project basename survives', () => {

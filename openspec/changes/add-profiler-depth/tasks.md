@@ -463,6 +463,30 @@ automatically extends its fixture-parameterized equivalence matrix.
       collapsed the rail keeps icons with names and tooltips and the shell
       follows its width. Asked by the user. Added 2026-09-04.
 
+## 15. Inspector
+
+- [x] 15.1 B [UI → /frontend-design] Inspector width and copy controls
+      (spec: visualizer "Inspector width and copy controls"):
+      `ui.inspectorWide` persisted under `runray.inspectorWide`,
+      `toggleInspectorWide`, a toggle in the Inspector header and a palette
+      command named for what it will do; wide the Inspector grows to at
+      most 560px and leaves the centre pane at least 400px, and without
+      room the toggle says so. Copy controls with a 1.5 s confirmation and
+      an on-button failure on the previews ("Copy preview" where core cut
+      the text) and the raw span record, through a `useCopy` hook the
+      export dialog now shares. Asked by the user. Added 2026-10-06.
+- [x] 15.2 B [UI → /frontend-design] Bot review follow-ups to 15.1: the
+      room check moves to the store (`ui.inspectorRoom`, written by the
+      Inspector's resize observer), so the palette command says there is
+      no room and saves nothing instead of persisting a wide choice that
+      changes nothing; a wide Inspector's toggle reads "Narrow the
+      inspector" even without room. Tests in `inspector-controls.test.tsx`.
+- [x] 15.3 B [UI → /frontend-design] The room is measured by the app
+      shell on the row beside the rail, which stays mounted while the
+      Inspector is closed (`useRoomToWiden` moves out of the Inspector), so
+      a resize with the Inspector closed still reaches the palette command.
+      Test in `inspector-controls.test.tsx`.
+
 ## 16. Display unit
 
 - [x] 16.1 B [UI → /frontend-design] Display unit (spec: visualizer "Display
