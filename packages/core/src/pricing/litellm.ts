@@ -1,3 +1,4 @@
+import { stripBom } from '../text.js';
 import type { PricingEntry, PricingTable } from './engine.js';
 
 /**
@@ -19,18 +20,39 @@ export const DEFAULT_PRICING_PROVIDERS: readonly string[] = [
   'mistral',
 ];
 
-interface LitellmEntry {
-  litellm_provider?: string;
-  mode?: string;
-  input_cost_per_token?: number;
-  output_cost_per_token?: number;
-  cache_read_input_token_cost?: number;
-  cache_creation_input_token_cost?: number;
-  cache_creation_input_token_cost_above_1hr?: number;
-}
+const RATE_FIELDS = [
+  'input_cost_per_token',
+  'output_cost_per_token',
+  'cache_read_input_token_cost',
+  'cache_creation_input_token_cost',
+  'cache_creation_input_token_cost_above_1hr',
+] as const;
+
+/** Rates stay `unknown` until checked: the list is remote, untrusted JSON. */
+type LitellmEntry = { litellm_provider?: unknown; mode?: unknown } & {
+  [K in (typeof RATE_FIELDS)[number]]?: unknown;
+};
 
 function isEntry(v: unknown): v is LitellmEntry {
   return typeof v === 'object' && v !== null;
+}
+
+/**
+ * Highest per-token rate taken as a real price: $10,000 per million tokens,
+ * far above anything published (2026: o1-pro output at $600). A higher,
+ * negative or non-numeric rate means a corrupted entry, not a price.
+ */
+const MAX_RATE_PER_TOKEN = 0.01;
+
+/** Why a rate can't be used; undefined when it can. Absent and null mean
+ * "not published" and fall back like before. */
+function rateProblem(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'number' || !Number.isFinite(value))
+    return 'is not a number';
+  if (value < 0) return 'is negative';
+  if (value > MAX_RATE_PER_TOKEN) return 'is above $10,000 per million tokens';
+  return undefined;
 }
 
 function canonicalKey(key: string): string {
@@ -40,7 +62,7 @@ function canonicalKey(key: string): string {
     .replace(/-latest$/, '');
 }
 
-function perMTok(perToken: number | undefined, fallback: number): number {
+function perMTok(perToken: unknown, fallback: number): number {
   if (typeof perToken !== 'number' || !Number.isFinite(perToken))
     return fallback;
   return Math.round(perToken * 1e6 * 1e6) / 1e6; // per-MTok, 6 decimals
@@ -49,6 +71,9 @@ function perMTok(perToken: number | undefined, fallback: number): number {
 export interface ConvertOptions {
   snapshotDate: string;
   providers?: readonly string[];
+  /** Called for each chat model of a known provider that is left out
+   * because a published rate is unusable (negative, absurd, not a number). */
+  onInvalid?: (key: string, problem: string) => void;
 }
 
 export function convertLitellmPricing(
@@ -64,11 +89,24 @@ export function convertLitellmPricing(
     if (!isEntry(value)) continue;
     if (value.mode !== 'chat') continue;
     if (
-      value.litellm_provider === undefined ||
+      typeof value.litellm_provider !== 'string' ||
       !providers.has(value.litellm_provider)
     )
       continue;
-    if (typeof value.input_cost_per_token !== 'number') continue;
+    // no input price published: never priced, so nothing to report
+    if (
+      value.input_cost_per_token === undefined ||
+      value.input_cost_per_token === null
+    )
+      continue;
+    const problem = RATE_FIELDS.map((field) => {
+      const reason = rateProblem(value[field]);
+      return reason === undefined ? undefined : `${field} ${reason}`;
+    }).find((reason) => reason !== undefined);
+    if (problem !== undefined) {
+      options.onInvalid?.(key, problem);
+      continue;
+    }
 
     const pattern = canonicalKey(key);
     const hadPrefix = key.includes('/');
@@ -108,4 +146,52 @@ export function convertLitellmPricing(
     aliases: {},
     entries,
   };
+}
+
+/** A price list that converts to fewer models than the caller expects. */
+export class PriceListTooShortError extends Error {
+  override readonly name = 'PriceListTooShortError';
+  constructor(
+    readonly models: number,
+    readonly expected: number,
+  ) {
+    super(
+      `the price list has only ${models} usable models, fewer than the ${expected} expected; it looks truncated`,
+    );
+  }
+}
+
+export interface PriceListOptions extends ConvertOptions {
+  /** Fewer usable models than this refuses the list (at least 1). */
+  minEntries: number;
+}
+
+/**
+ * Turns the downloaded price list, untrusted text, into a PricingTable. It
+ * must be JSON, an object keyed by model, and convert to at least
+ * `minEntries` models. Shared by `pricing --refresh` and the snapshot build
+ * script, which keep their own transport.
+ */
+export function priceListFromText(
+  text: string,
+  options: PriceListOptions,
+): PricingTable {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stripBom(text));
+  } catch (err) {
+    throw new Error(
+      `the price list is not valid JSON (${(err as Error).message})`,
+    );
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
+    throw new Error('the price list is not a JSON object keyed by model');
+  const table = convertLitellmPricing(
+    parsed as Record<string, unknown>,
+    options,
+  );
+  const expected = Math.max(1, options.minEntries);
+  if (table.entries.length < expected)
+    throw new PriceListTooShortError(table.entries.length, expected);
+  return table;
 }

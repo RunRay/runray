@@ -1,16 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { bundledPricing } from '@runray/core';
 import { describe, expect, it } from 'vitest';
 import { buildTraceFile } from './discover.js';
 import { injectGlobal, injectTraceData } from './export.js';
 import { resolveTranscript } from './program.js';
 import { startServer } from './server.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 import { resolveExportTemplate } from './ui-dist.js';
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 
 describe('server endpoints (profiler depth)', () => {
   it('GET /api/pricing returns the live pricing payload with provenance', async () => {
