@@ -99,6 +99,14 @@ function storedNavCollapsed(): boolean {
   return localStorage.getItem(NAV_COLLAPSED_KEY) === 'on';
 }
 
+/** The Inspector's wide mode persists the same way. */
+const INSPECTOR_WIDE_KEY = 'runray.inspectorWide';
+
+function storedInspectorWide(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem(INSPECTOR_WIDE_KEY) === 'on';
+}
+
 export interface OnboardingState {
   enabled: boolean;
   loaded: boolean;
@@ -153,6 +161,12 @@ export interface AppState {
   };
   ui: {
     inspectorOpen: boolean;
+    /** The Inspector opens wide (up to 560px) instead of 360px; persisted. */
+    inspectorWide: boolean;
+    /** The Inspector's row is wide enough for wide mode to add anything, as
+     * the open Inspector last measured it; not persisted. The header toggle
+     * and the palette command read the same answer. */
+    inspectorRoom: boolean;
     /** The navigation rail shows icons only; persisted. */
     navCollapsed: boolean;
     /** Keyboard-shortcut help sheet — the ? key and the TopBar button
@@ -236,6 +250,10 @@ export interface AppState {
   /** Stage an insight to activate once the target run's route lands. */
   stageInsight(insight: Insight): void;
   toggleInspector(): void;
+  /** Widen the Inspector, or narrow it back to 360px. */
+  toggleInspectorWide(): void;
+  /** Record whether wide mode has room (the Inspector's resize observer). */
+  setInspectorRoom(room: boolean): void;
   /** Collapse the navigation rail to icons, or expand it back. */
   toggleNav(): void;
   /** Toggle the help sheet; pass a boolean to force a state. */
@@ -294,6 +312,8 @@ export const useAppStore = create<AppState>()((set) => ({
   selection: { spanId: null, insightId: null, focus: 'span' },
   ui: {
     inspectorOpen: true,
+    inspectorWide: storedInspectorWide(),
+    inspectorRoom: true,
     navCollapsed: storedNavCollapsed(),
     helpOpen: false,
     exportOpen: false,
@@ -531,6 +551,18 @@ export const useAppStore = create<AppState>()((set) => ({
     })),
   toggleInspector: () =>
     set((s) => ({ ui: { ...s.ui, inspectorOpen: !s.ui.inspectorOpen } })),
+  toggleInspectorWide: () =>
+    set((s) => {
+      const inspectorWide = !s.ui.inspectorWide;
+      persistLimit(INSPECTOR_WIDE_KEY, inspectorWide ? 'on' : 'off');
+      return { ui: { ...s.ui, inspectorWide } };
+    }),
+  setInspectorRoom: (room) =>
+    set((s) =>
+      s.ui.inspectorRoom === room
+        ? s
+        : { ui: { ...s.ui, inspectorRoom: room } },
+    ),
   toggleNav: () =>
     set((s) => {
       const navCollapsed = !s.ui.navCollapsed;

@@ -1,5 +1,6 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -372,5 +373,118 @@ describe('opencode MCP classification (E4)', () => {
       read?.attributes['runray.targetKey'],
     );
     expect('runray.target' in (readR?.attributes ?? {})).toBe(false);
+  });
+});
+
+describe('opencode files that are not sessions', () => {
+  // Storage and export candidates are matched by path and a text sniff; a
+  // foreign JSON that gets that far must be refused by parse(), so
+  // discovery skips it with a warning instead of emitting a 1970 run.
+  async function parseOnly(dir: string): Promise<unknown> {
+    const candidates = await detectIn(dir);
+    expect(candidates).toHaveLength(1);
+    const candidate = candidates[0];
+    if (candidate === undefined) throw new Error('unreachable');
+    return opencodeAdapter.parse(candidate, { redact: false });
+  }
+
+  it.each<[string, unknown, string]>([
+    ['no id', { title: 'ses_ lookalike' }, 'not an opencode export document'],
+    [
+      'an id but no time.created',
+      { id: 'ses_lookalike', time: {} },
+      'not an opencode session: no id or time.created',
+    ],
+  ])(
+    'refuses an export document whose info has %s',
+    async (_label, info, reason) => {
+      const dir = mkdtempSync(join(tmpdir(), 'runray-oc-foreign-export-'));
+      try {
+        // passes the bounded sniff: "info", "ses_ and "messages" up front
+        writeFileSync(
+          join(dir, 'export.json'),
+          JSON.stringify({ info, messages: [] }),
+        );
+        await expect(parseOnly(dir)).rejects.toThrow(reason);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it('refuses a storage session file without id or time.created', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-oc-foreign-storage-'));
+    try {
+      const projectDir = join(dir, 'storage', 'session', 'proj');
+      mkdirSync(projectDir, { recursive: true });
+      writeFileSync(
+        join(projectDir, 'ses_foreign.json'),
+        JSON.stringify({ title: 'valid JSON, not a session' }),
+      );
+      await expect(parseOnly(dir)).rejects.toThrow(
+        'not an opencode session: no id or time.created',
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('opencode child sessions without a start time', () => {
+  it('start at the call that spawned them, never in 1970', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-oc-child-'));
+    try {
+      const T0 = Date.parse('2026-07-02T13:00:00Z');
+      const storage = join(dir, 'storage');
+      const write = (path: string[], json: unknown): void => {
+        mkdirSync(join(storage, ...path.slice(0, -1)), { recursive: true });
+        writeFileSync(join(storage, ...path), JSON.stringify(json));
+      };
+      write(['session', 'proj', 'ses_parent.json'], {
+        id: 'ses_parent',
+        time: { created: T0, updated: T0 + 60_000 },
+      });
+      // the child names its parent but carries no time at all
+      write(['session', 'proj', 'ses_child.json'], {
+        id: 'ses_child',
+        parentID: 'ses_parent',
+      });
+      write(['message', 'ses_parent', 'msg_a.json'], {
+        id: 'msg_a',
+        role: 'assistant',
+        time: { created: T0 + 1_000, completed: T0 + 2_000 },
+      });
+      // the task call has no state.time either
+      write(['part', 'msg_a', 'prt_a.json'], {
+        id: 'prt_a',
+        type: 'tool',
+        tool: 'task',
+        state: {
+          status: 'completed',
+          input: { subagent_type: 'general', description: 'look around' },
+          metadata: { sessionId: 'ses_child' },
+        },
+      });
+      write(['message', 'ses_child', 'msg_c.json'], {
+        id: 'msg_c',
+        role: 'assistant',
+      });
+
+      const run = await runOn(dir);
+
+      expect(run.startedAt).toBe('2026-07-02T13:00:00.000Z');
+      for (const span of run.spans) {
+        expect(span.startedAt.startsWith('1970'), span.id).toBe(false);
+      }
+      const subagent = run.spans.find((s) => s.id === 'ses_child');
+      expect(subagent?.startedAt).toBe('2026-07-02T13:00:01.000Z');
+      expect(
+        run.warnings?.some((w) =>
+          w.message.startsWith('child session ses_child has no time.created'),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

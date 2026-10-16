@@ -32,6 +32,17 @@ export interface ParseOptions {
 export type RunWarning = NonNullable<Run['warnings']>[number];
 
 /**
+ * Thrown by `parse()` for a candidate that is the adapter's own kind of file
+ * but holds no session yet: a Claude Code transcript before its first prompt
+ * is written, or one that only ever got summary records. Discovery skips it
+ * without a warning, since nothing is wrong and there is nothing to show yet.
+ * Any other error from `parse()` is reported as a skipped candidate.
+ */
+export class NoSessionYet extends Error {
+  override readonly name = 'NoSessionYet';
+}
+
+/**
  * A span as the adapter emits it: source facts only. Derived fields are the
  * normalizer's job — `depth` is absent, ordering is not guaranteed, and
  * `parentId` may dangle (the normalizer applies the Flat Trace Fallback).
