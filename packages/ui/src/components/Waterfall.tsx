@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   type CSSProperties,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,11 +21,14 @@ import {
   collapsedAncestorsOf,
   computeTimeRange,
   flattenVisible,
+  hiddenFindings,
   insightsBySpan,
   matchingSpanIds,
+  SEVERITY_RANK,
   type SubtreeRollup,
   spanEndMs,
   spanStartMs,
+  subagentRails,
   subagentSpanIds,
   subtreeRollups,
   type WaterfallRow,
@@ -40,6 +44,8 @@ import { SpendSpine } from './SpendSpine';
 
 const ROW_PX = 32;
 const INDENT_PX = 16;
+/** A delegation rail's x within its depth step: under that depth's caret. */
+const RAIL_X = 13;
 /** Label flips to the left of the bar when it starts past this point. */
 const LABEL_FLIP_PCT = 55;
 /** How long the evidence rows stay lit after an insight lands the view. */
@@ -54,6 +60,14 @@ const FINDING_NOTCH: Record<Insight['severity'], string> = {
   warning: 'bg-heat-2',
   critical: 'bg-heat-3',
 };
+/** The hollow notch: findings hidden inside a collapsed row (C). */
+const HIDDEN_NOTCH: Record<Insight['severity'], string> = {
+  info: 'border-outline',
+  warning: 'border-heat-2',
+  critical: 'border-heat-3',
+};
+const CHIP =
+  'ml-1.5 inline-block rounded-control px-1 py-px align-middle font-mono text-[10px] leading-[14px] transition-colors duration-150 ease-out active:bg-bg-deep-gray';
 const FINDING_CHIP: Record<Insight['severity'], string> = {
   info: 'bg-surface-2 text-text-dim hover:bg-surface-variant hover:text-text',
   warning: 'bg-heat-2/15 text-heat-2 hover:bg-heat-2/30',
@@ -65,10 +79,10 @@ const FINDING_TEXT: Record<Insight['severity'], string> = {
   critical: 'text-heat-3',
 };
 
+/** Where the pointer is; the row's findings are read fresh at render, so a
+ *  caret click under the cursor never leaves the card stale. */
 interface TooltipState {
   row: WaterfallRow;
-  /** Findings the row is evidence of, worst first (undefined = none). */
-  findings: Insight[] | undefined;
   x: number;
   y: number;
 }
@@ -80,6 +94,8 @@ export function Waterfall({ run }: { run: Run }) {
   const highlighted = useAppStore((s) => s.ui.highlighted);
   const selectSpan = useAppStore((s) => s.selectSpan);
   const showInsight = useAppStore((s) => s.showInsight);
+  const revealInsight = useAppStore((s) => s.revealInsight);
+  const revealSeq = useAppStore((s) => s.ui.revealSeq);
   const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
   const setCollapsed = useAppStore((s) => s.setCollapsed);
 
@@ -95,6 +111,8 @@ export function Waterfall({ run }: { run: Run }) {
   );
   const range = useMemo(() => computeTimeRange(run.spans), [run.spans]);
   const subagents = useMemo(() => subagentSpanIds(run.spans), [run.spans]);
+  // delegation rails (D): which subagent depths each row sits inside
+  const rails = useMemo(() => subagentRails(run.spans), [run.spans]);
   // subtree economics badges for container rows (D3) — a collapsed
   // subagent is no longer economically opaque
   const rollups = useMemo(() => subtreeRollups(run.spans), [run.spans]);
@@ -103,6 +121,12 @@ export function Waterfall({ run }: { run: Run }) {
   const findingsBySpan = useMemo(
     () => insightsBySpan(run.insights),
     [run.insights],
+  );
+  // Findings a collapsed row hides (C), rolled up onto it so collapsing the
+  // subagents never makes a finding vanish from the timeline.
+  const hiddenBySpan = useMemo(
+    () => hiddenFindings(run.spans, run.insights, collapsed),
+    [run.spans, run.insights, collapsed],
   );
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -132,8 +156,9 @@ export function Waterfall({ run }: { run: Run }) {
     if (index >= 0) virtualizer.scrollToIndex(index, { align: 'auto' });
   }, [selectedId]);
 
-  // An insight landing here — the dashboard's "Open in timeline" deep link
-  // or a strip pill — must answer "where?" at once: reveal the evidence
+  // An insight landing here — the dashboard's "Open in timeline" deep link,
+  // a strip pill, or a hidden finding reopened after its subtree collapsed
+  // (`revealSeq`) — must answer "where?" at once: reveal the evidence
   // (drop the `/` filter, expand any collapsed ancestor), owe a scroll to
   // its first span, and light the evidence rows for FLASH_MS so the eye
   // finds them before they settle into the resting wash.
@@ -153,7 +178,7 @@ export function Waterfall({ run }: { run: Run }) {
     setFlashing(true);
     const t = window.setTimeout(() => setFlashing(false), FLASH_MS);
     return () => window.clearTimeout(t);
-  }, [insightId]);
+  }, [insightId, revealSeq]);
 
   // The owed scroll runs once the rows actually contain an evidence span:
   // immediately when nothing hid it, on the next render after the reveal
@@ -321,7 +346,7 @@ export function Waterfall({ run }: { run: Run }) {
           }}
           placeholder="filter spans · /"
           aria-label="Filter spans by name"
-          className="h-6 w-44 min-w-0 rounded border border-border-slate bg-surface px-2 text-label text-on-surface placeholder:text-outline transition-colors duration-150 ease-out hover:bg-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="h-6 w-44 min-w-0 rounded border border-border-slate bg-surface px-2 text-label text-on-surface placeholder:text-text-faint transition-colors duration-150 ease-out hover:bg-surface-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
         <div className="flex shrink-0 gap-1.5">
           {subagents.length > 0 && (
@@ -364,10 +389,19 @@ export function Waterfall({ run }: { run: Run }) {
             {virtualizer.getVirtualItems().map((item) => {
               const row = rows[item.index];
               if (row === undefined) return null;
+              const next = rows[item.index + 1];
               return (
                 <SpanRow
                   key={row.span.id}
                   row={row}
+                  rails={rails.get(row.span.id) ?? []}
+                  // depth-first order: the next row sits inside this
+                  // subagent exactly when it carries this depth's rail
+                  opensRail={
+                    row.span.kind === 'subagent' &&
+                    next !== undefined &&
+                    (rails.get(next.span.id) ?? []).includes(row.span.depth)
+                  }
                   rollup={
                     row.span.kind === 'subagent' || row.span.kind === 'session'
                       ? rollups.get(row.span.id)
@@ -379,6 +413,8 @@ export function Waterfall({ run }: { run: Run }) {
                   flash={flashing && highlighted.has(row.span.id)}
                   findings={findingsBySpan.get(row.span.id)}
                   onOpenFinding={(insight) => showInsight(insight, row.span.id)}
+                  hidden={hiddenBySpan.get(row.span.id)}
+                  onOpenHidden={revealInsight}
                   animate={animate}
                   animationDelayMs={Math.min(item.index * 8, 300)}
                   style={{
@@ -399,7 +435,13 @@ export function Waterfall({ run }: { run: Run }) {
         </div>
       </div>
 
-      {tooltip !== null && <SpanTooltip tooltip={tooltip} />}
+      {tooltip !== null && (
+        <SpanTooltip
+          tooltip={tooltip}
+          findings={findingsBySpan.get(tooltip.row.span.id)}
+          hidden={hiddenBySpan.get(tooltip.row.span.id)}
+        />
+      )}
     </div>
   );
 }
@@ -422,8 +464,10 @@ function ToolbarButton({
   );
 }
 
-function SpanRow({
+export function SpanRow({
   row,
+  rails,
+  opensRail,
   rollup,
   range,
   selected,
@@ -431,6 +475,8 @@ function SpanRow({
   flash,
   findings,
   onOpenFinding,
+  hidden,
+  onOpenHidden,
   animate,
   animationDelayMs,
   style,
@@ -439,6 +485,10 @@ function SpanRow({
   onHover,
 }: {
   row: WaterfallRow;
+  /** Depths of the subagents this row sits inside, outermost first. */
+  rails: readonly number[];
+  /** An expanded subagent whose subtree follows: its rail starts here. */
+  opensRail: boolean;
   /** Subtree economics for container rows (subagent, session). */
   rollup?: SubtreeRollup;
   range: { start: number; end: number };
@@ -451,6 +501,10 @@ function SpanRow({
   findings: Insight[] | undefined;
   /** The marker chip: open a finding with this row as the anchor. */
   onOpenFinding: (insight: Insight) => void;
+  /** Findings hidden inside this collapsed row, worst first. */
+  hidden: Insight[] | undefined;
+  /** The inside chip: open a hidden finding the way a deep link does. */
+  onOpenHidden: (insight: Insight) => void;
   animate: boolean;
   animationDelayMs: number;
   style: CSSProperties;
@@ -460,6 +514,18 @@ function SpanRow({
 }) {
   const { span } = row;
   const worst = findings?.[0];
+  const worstHidden = hidden?.[0];
+  // one notch at the left edge, for the worse of the row's own findings and
+  // the ones it hides (ties go to its own): solid for its own, hollow for
+  // hidden ones
+  const notch =
+    worst !== undefined &&
+    (worstHidden === undefined ||
+      SEVERITY_RANK[worst.severity] >= SEVERITY_RANK[worstHidden.severity])
+      ? FINDING_NOTCH[worst.severity]
+      : worstHidden !== undefined
+        ? `border ${HIDDEN_NOTCH[worstHidden.severity]}`
+        : undefined;
   const indent = span.depth * INDENT_PX;
   const total = range.end - range.start;
   const leftPct = ((spanStartMs(span) - range.start) / total) * 100;
@@ -491,9 +557,27 @@ function SpanRow({
             e.stopPropagation();
             onOpenFinding(worst);
           }}
-          className={`ml-1.5 inline-block rounded-control px-1 py-px align-middle font-mono text-[10px] leading-[14px] transition-colors duration-150 ease-out active:bg-bg-deep-gray ${FINDING_CHIP[worst.severity]}`}
+          className={`${CHIP} ${FINDING_CHIP[worst.severity]}`}
         >
           ⚠{findings.length > 1 ? ` ${findings.length}` : ''}
+        </button>
+      )}
+      {worstHidden !== undefined && hidden !== undefined && (
+        // hidden findings (C), right after the row's own chip so a narrow
+        // waterfall never clips them off the end of the label; tinted by
+        // the worst. Click opens it like a deep link: the subtree expands
+        // onto its evidence. Keyboard users get the same list in the
+        // Inspector when the collapsed row is selected.
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenHidden(worstHidden);
+          }}
+          className={`${CHIP} ${FINDING_CHIP[worstHidden.severity]}`}
+        >
+          ⚠ {hidden.length} inside
         </button>
       )}
       {rollup !== undefined && rollup.llmCalls > 0 && (
@@ -520,13 +604,10 @@ function SpanRow({
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${span.kind} ${span.name}${
-        findings === undefined
-          ? ''
-          : `, evidence of ${findings.length} ${
-              findings.length === 1 ? 'finding' : 'findings'
-            }: ${findings.map((f) => f.title).join('; ')}`
-      }`}
+      aria-label={`${span.kind} ${span.name}${describeFindings(
+        'evidence of',
+        findings,
+      )}${describeFindings('hides', hidden)}`}
       style={style}
       onClick={onSelect}
       onKeyDown={(e) => {
@@ -535,9 +616,7 @@ function SpanRow({
           onSelect();
         }
       }}
-      onMouseMove={(e) =>
-        onHover({ row, findings, x: e.clientX, y: e.clientY })
-      }
+      onMouseMove={(e) => onHover({ row, x: e.clientX, y: e.clientY })}
       onMouseLeave={() => onHover(null)}
       className={`group cursor-pointer border-b border-outline-variant/30 transition-colors duration-150 ease-out ${
         selected
@@ -556,11 +635,31 @@ function SpanRow({
           aria-hidden
         />
       )}
-      {/* finding notch (A): this row is evidence of a finding; the full
-          rails (active evidence, selection) take over when present */}
-      {worst !== undefined && !highlighted && !selected && (
+      {/* delegation rails (D): one per enclosing subagent, under its
+          caret, behind the bars and kept faint because bars sit by time and
+          a rail can cross a label; an expanded subagent starts its own just
+          below its caret */}
+      {rails.map((depth) => (
         <span
-          className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 ${FINDING_NOTCH[worst.severity]}`}
+          key={depth}
+          aria-hidden
+          className="absolute inset-y-0 w-0.5 bg-span-subagent/35"
+          style={{ left: depth * INDENT_PX + RAIL_X }}
+        />
+      ))}
+      {opensRail && (
+        <span
+          aria-hidden
+          className="absolute bottom-0 w-0.5 bg-span-subagent/35"
+          style={{ left: indent + RAIL_X, top: 'calc(50% + 6px)' }}
+        />
+      )}
+      {/* finding notch (A, C): this row is evidence of a finding, or hides
+          one; the full rails (active evidence, selection) take over when
+          present */}
+      {notch !== undefined && !highlighted && !selected && (
+        <span
+          className={`absolute left-0 top-1/2 h-2.5 w-1 -translate-y-1/2 ${notch}`}
           aria-hidden
         />
       )}
@@ -658,6 +757,13 @@ function SpanRow({
   );
 }
 
+/** ", evidence of 2 findings: A; B" for the row's accessible name. */
+function describeFindings(lead: string, list: Insight[] | undefined): string {
+  if (list === undefined) return '';
+  const noun = list.length === 1 ? 'finding' : 'findings';
+  return `, ${lead} ${list.length} ${noun}: ${list.map((f) => f.title).join('; ')}`;
+}
+
 function CostBadge({ span }: { span: Span }) {
   const cost = span.llm?.costUSD;
   if (cost === undefined || span.llm?.costSource === 'unknown') return null;
@@ -671,13 +777,34 @@ function CostBadge({ span }: { span: Span }) {
   );
 }
 
-function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
+export function SpanTooltip({
+  tooltip,
+  findings,
+  hidden,
+}: {
+  tooltip: TooltipState;
+  /** Findings the row is evidence of, worst first (undefined = none). */
+  findings: Insight[] | undefined;
+  /** Findings hidden inside the collapsed row, worst first. */
+  hidden: Insight[] | undefined;
+}) {
   const { span } = tooltip.row;
-  const { findings } = tooltip;
+  // keep the whole card on screen, now that it can carry two lists; the
+  // height changes with the content, not with every pointer move
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(180);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the card's content changes, not on every pointer move
+  useLayoutEffect(() => {
+    if (ref.current !== null) setHeight(ref.current.offsetHeight);
+  }, [span.id, findings, hidden]);
   const x = Math.min(tooltip.x + 12, window.innerWidth - 300);
-  const y = Math.min(tooltip.y + 14, window.innerHeight - 180);
+  const y = Math.max(
+    8,
+    Math.min(tooltip.y + 14, window.innerHeight - height - 8),
+  );
   return (
     <div
+      ref={ref}
       className="pointer-events-none fixed z-50 w-72 rounded-panel border border-border bg-surface-2 p-3 shadow-popover"
       style={{ left: x, top: y }}
     >
@@ -695,26 +822,17 @@ function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
       {findings !== undefined && (
         // the marker in words (A): which findings this row is evidence of
         <ul className="mt-2 space-y-0.5 border-t border-border pt-2 text-label">
-          {findings.slice(0, 3).map((f) => (
-            <li key={f.id} className="flex items-baseline gap-1.5">
-              <span
-                aria-hidden
-                className={`shrink-0 ${FINDING_TEXT[f.severity]}`}
-              >
-                ⚠
-              </span>
-              <span className="min-w-0 truncate text-text">{f.title}</span>
-              {f.estimatedWasteUSD !== undefined && (
-                <span className="ml-auto shrink-0 font-mono text-heat-2">
-                  {formatUSD(f.estimatedWasteUSD)}
-                </span>
-              )}
-            </li>
-          ))}
-          {findings.length > 3 && (
-            <li className="text-text-faint">+{findings.length - 3} more</li>
-          )}
+          <FindingItems findings={findings} />
         </ul>
+      )}
+      {hidden !== undefined && (
+        // the inside chip in words (C), each with its own estimate
+        <div className="mt-2 border-t border-border pt-2">
+          <p className="micro-label text-text-faint">Hidden inside</p>
+          <ul className="mt-1 space-y-0.5 text-label">
+            <FindingItems findings={hidden} />
+          </ul>
+        </div>
       )}
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-label">
         <dt className="text-text-faint">started</dt>
@@ -759,5 +877,27 @@ function SpanTooltip({ tooltip }: { tooltip: TooltipState }) {
         )}
       </dl>
     </div>
+  );
+}
+
+/** Every finding by name, as the row's accessible name gives them: the
+ * card is the only place a pointer user reads what a chip counts. */
+function FindingItems({ findings }: { findings: Insight[] }) {
+  return (
+    <>
+      {findings.map((f) => (
+        <li key={f.id} className="flex items-baseline gap-1.5">
+          <span aria-hidden className={`shrink-0 ${FINDING_TEXT[f.severity]}`}>
+            ⚠
+          </span>
+          <span className="min-w-0 truncate text-text">{f.title}</span>
+          {f.estimatedWasteUSD !== undefined && (
+            <span className="ml-auto shrink-0 font-mono text-heat-2">
+              {formatUSD(f.estimatedWasteUSD)}
+            </span>
+          )}
+        </li>
+      ))}
+    </>
   );
 }

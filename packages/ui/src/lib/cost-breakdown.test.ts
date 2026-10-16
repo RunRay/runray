@@ -190,6 +190,45 @@ describe('heatForShare', () => {
 });
 
 describe('toolSpendLeaderboard', () => {
+  it('attributes every token class too, the way run totals count them', () => {
+    // two tools share one call: input + output + cache + reasoning, halved
+    const spans = [
+      stubSpan({ id: 'session', kind: 'session' }),
+      {
+        ...stubSpan({
+          id: 'llm1',
+          parentId: 'session',
+          model: 'opus',
+          costUSD: 0.2,
+        }),
+        llm: {
+          provider: 'anthropic',
+          model: 'opus',
+          tokens: {
+            input: 100,
+            output: 20,
+            cacheRead: 5000,
+            cacheWrite: 800,
+            reasoning: 80,
+          },
+          costUSD: 0.2,
+          costSource: 'computed' as const,
+        },
+      },
+      {
+        ...stubSpan({ id: 'tool1', parentId: 'llm1', kind: 'tool_call' }),
+        tool: { name: 'grep', isError: false },
+      },
+      {
+        ...stubSpan({ id: 'tool2', parentId: 'llm1', kind: 'tool_call' }),
+        tool: { name: 'read', isError: false },
+      },
+    ];
+    const grep = toolSpendLeaderboard(spans).find((t) => t.name === 'grep');
+    expect(grep?.tokens.total).toBe(60); // input + output only, as before
+    expect(grep?.tokens.all).toBe(3000); // (100+20+5000+800+80) / 2
+  });
+
   it('correctly attributes direct child tool calls and counts calls', () => {
     const spans = [
       stubSpan({ id: 'session', kind: 'session' }),

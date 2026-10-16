@@ -3,9 +3,9 @@ import type { Run, TraceFile } from '@runray/schema';
 
 /**
  * `runray list` output (cli spec "Scripting output"): a machine-readable
- * per-run summary — id, source, timing, tokens, cost — plus a human table.
- * The shape is additive-only; `unpricedLlmCalls`/`unpricedTokens` surface
- * cost-coverage honesty for scripting (C7).
+ * per-run summary — id, source, project and branch, timing, tokens, cost —
+ * plus a human table. The shape is additive-only; `unpricedLlmCalls`/
+ * `unpricedTokens` surface cost-coverage honesty for scripting (C7).
  */
 
 export interface RunSummary {
@@ -13,6 +13,8 @@ export interface RunSummary {
   source: string;
   title?: string;
   project?: string;
+  /** The branch the run started on, when its source records one. */
+  gitBranch?: string;
   startedAt: string;
   endedAt?: string;
   durationMs?: number;
@@ -33,6 +35,9 @@ export function summarizeRuns(traceFile: TraceFile): RunSummary[] {
       source: run.source.tool,
       ...(run.title === undefined ? {} : { title: run.title }),
       ...(run.project?.name === undefined ? {} : { project: run.project.name }),
+      ...(run.project?.gitBranch === undefined
+        ? {}
+        : { gitBranch: run.project.gitBranch }),
       startedAt: run.startedAt,
       ...(run.endedAt === undefined ? {} : { endedAt: run.endedAt }),
       ...(run.durationMs === undefined ? {} : { durationMs: run.durationMs }),

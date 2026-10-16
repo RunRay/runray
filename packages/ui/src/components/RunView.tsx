@@ -8,14 +8,45 @@ import {
 import { type Route, type RunViewName, toHash } from '../lib/router';
 import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
+import { AT_API_PRICES } from '../lib/unit';
 import { runWaste, wasteBadge } from '../lib/waste';
 import { useAppStore } from '../store';
+import { BranchName } from './BranchMark';
 import { CostView } from './CostView';
 import { ErrorsView } from './ErrorsView';
 import { InsightsStrip } from './InsightsStrip';
 import { TimeView } from './TimeView';
 import { WasteView } from './WasteView';
 import { Waterfall } from './Waterfall';
+
+/**
+ * Where the run happened: its project (left out when it is already the
+ * heading, i.e. the run has no title) and the branch it started on.
+ */
+function RunPlace({ run }: { run: Run }) {
+  const project = run.title === undefined ? undefined : run.project?.name;
+  const branch = run.project?.gitBranch;
+  if (project === undefined && branch === undefined) return null;
+  // the separator travels with the group, so a wrapped line doesn't end
+  // on a stray dot
+  return (
+    <span className="flex min-w-0 items-center gap-4">
+      <span aria-hidden="true">·</span>
+      <span className="flex min-w-0 items-center gap-2">
+        {project !== undefined && (
+          <span className="truncate text-on-surface">{project}</span>
+        )}
+        {branch !== undefined && (
+          <BranchName
+            name={branch}
+            className="text-text-dim"
+            markClassName="text-text-faint"
+          />
+        )}
+      </span>
+    </span>
+  );
+}
 
 /**
  * Center pane: run header + Overview | Timeline Explorer | Time | Waste |
@@ -29,6 +60,8 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
   // are upper bounds that never add to it
   const wasted = run.totals.costUSD.wastedEstimate;
   const opportunity = runWaste(run).opportunityUSD;
+  // token mode (E6): tokens already lead the bar; the dollars say what they are
+  const tokensLead = useAppStore((s) => s.unit) === 'tokens';
 
   return (
     <div className="flex h-full min-w-0 flex-col min-h-0">
@@ -55,6 +88,7 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
           <span className="rounded bg-surface-2 px-1.5 py-0.5 text-text-dim font-mono">
             {run.source.tool}
           </span>
+          <RunPlace run={run} />
         </div>
 
         {/* Session KPI Summary Bar */}
@@ -66,7 +100,9 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
             </p>
           </div>
           <div>
-            <p className="micro-label text-text-faint">Cost (USD)</p>
+            <p className="micro-label text-text-faint">
+              {tokensLead ? `Cost ${AT_API_PRICES}` : 'Cost (USD)'}
+            </p>
             <p className="font-mono text-body font-semibold text-on-surface">
               {run.totals.costUSD.total > 0
                 ? formatUSD(run.totals.costUSD.total)
@@ -82,6 +118,7 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
           <div>
             <p className="micro-label text-text-faint">
               Burned / Opportunities
+              {tokensLead && ` · ${AT_API_PRICES}`}
             </p>
             <p
               className={`font-mono text-body font-semibold ${wasted > 0 ? 'text-heat-2' : 'text-text-dim'}`}

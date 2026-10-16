@@ -23,7 +23,7 @@
     "url": "https://github.com/RunRay/runray/issues"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "bin": {
     "runray": "bundle/bin.js"
@@ -50,7 +50,7 @@
     "zod": "^4.6.5"
   },
   "optionalDependencies": {
-    "better-sqlite3": "^12.11.1"
+    "better-sqlite3": "^13.0.3"
   },
   "devDependencies": {
     "@runray/core": "workspace:*",

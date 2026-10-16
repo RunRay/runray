@@ -82,6 +82,29 @@ describe('summarizeRuns', () => {
       summarizeRuns(traceFile),
     );
   });
+
+  it('carries the branch when the run records one, and omits the key otherwise', () => {
+    const onBranch = {
+      ...run,
+      project: { name: 'shop', gitBranch: 'feat/export' },
+    };
+    const branchOnly = {
+      ...run,
+      id: 'run_otlp',
+      project: { gitBranch: 'main' },
+    };
+    const [withBranch, withoutProject] = summarizeRuns({
+      ...traceFile,
+      runs: [onBranch, branchOnly],
+    });
+    expect(withBranch).toMatchObject({
+      project: 'shop',
+      gitBranch: 'feat/export',
+    });
+    expect(withoutProject).not.toHaveProperty('project');
+    expect(withoutProject?.gitBranch).toBe('main');
+    expect(summarizeRuns(traceFile)[0]).not.toHaveProperty('gitBranch');
+  });
 });
 
 describe('human formatting', () => {

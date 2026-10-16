@@ -8,7 +8,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findPathShapes } from '@runray/core';
+import { findPathShapes, isAttributeAllowed } from '@runray/core';
 import type { TraceFile } from '@runray/schema';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { buildTraceFile } from './discover.js';
@@ -20,6 +20,7 @@ import {
   selectRun,
 } from './export.js';
 import { createProgram } from './program.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 import { resolveExportTemplate } from './ui-dist.js';
 
 const TEMPLATE =
@@ -277,9 +278,7 @@ describe('selectRun', () => {
   });
 });
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 // runs the real export command over the full claude-code fixture tree —
 // headroom over vitest's 5s default to avoid full-suite-load flakes
 vi.setConfig({ testTimeout: 30_000 });
@@ -596,7 +595,61 @@ describe.skipIf(resolveExportTemplate() === undefined)(
         findPathShapes(html).filter((shape) => !templateShapes.has(shape));
       expect(introduced(htmlSanitized)).toEqual([]);
       expect(introduced(htmlMeta)).toEqual([]);
-    });
+      // three full exports (~4.6 MB of HTML each) in one test: on a loaded
+      // Windows machine this crossed the 30 s default now and then
+    }, 90_000);
+
+    it('drops GenAI message content from OTLP imports under every redacting or scrubbing flag', async () => {
+      // the GenAI-semconv fixture carries prompt, output and tool text in
+      // gen_ai.* attributes; each flag goes through the real command, so the
+      // flag -> parse-redact -> scrub mapping in discover is covered too
+      const genAiDir = fileURLToPath(
+        new URL('../../../fixtures/otlp/genai-semconv', import.meta.url),
+      );
+      const exportKeys = async (flags: string[]) => {
+        const dir = scratch();
+        const jsonOut = join(dir, 'trace.json');
+        await createProgram().parseAsync([
+          'node',
+          'runray',
+          'export',
+          genAiDir,
+          '-o',
+          join(dir, 'report.html'),
+          '--json',
+          jsonOut,
+          ...flags,
+        ]);
+        expect(process.exitCode, flags.join(' ')).toBeUndefined();
+        const data = JSON.parse(readFileSync(jsonOut, 'utf8')) as TraceFile;
+        return new Set(
+          data.runs.flatMap((run) =>
+            run.spans.flatMap((span) => Object.keys(span.attributes)),
+          ),
+        );
+      };
+
+      // unredacted, the content is there, so the checks below can fail
+      const full = await exportKeys(['--yes']);
+      expect(full).toContain('gen_ai.input.messages');
+      expect(full).toContain('gen_ai.tool.call.arguments');
+
+      for (const flags of [
+        ['--redact'],
+        ['--redact-prompts'],
+        ['--anonymize'],
+        ['--metadata-only'],
+        // full profile, text kept, paths scrubbed: parsed WITHOUT redaction
+        ['--scrub-paths', '--yes'],
+      ]) {
+        for (const key of await exportKeys(flags)) {
+          expect(
+            isAttributeAllowed(key),
+            `${flags.join(' ')} kept ${key}`,
+          ).toBe(true);
+        }
+      }
+    }, 60_000);
   },
 );
 

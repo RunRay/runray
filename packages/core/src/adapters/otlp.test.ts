@@ -5,8 +5,10 @@ import { fileURLToPath } from 'node:url';
 import type { Run } from '@runray/schema';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { Candidate } from '../adapter.js';
+import { isGenAiMetadataKey } from '../attribute-keys.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
+import { scrubAttributes } from '../sanitize/identity.js';
 import { stripBom } from '../text.js';
 import { otlpAdapter } from './otlp.js';
 
@@ -65,7 +67,9 @@ describe('otlp detect', () => {
   });
 
   it('emits one candidate per session id found in the documents', async () => {
-    const candidates = await otlpAdapter.detect([fixtures]);
+    const candidates = await otlpAdapter.detect([
+      join(fixtures, 'claude-traces-beta'),
+    ]);
     expect(candidates).toHaveLength(2);
     for (const c of candidates) expect(c.format).toBe('otlp-json');
     expect(candidates.some((c) => c.runRef.endsWith(SIMPLE_SESSION))).toBe(
@@ -139,6 +143,60 @@ describe('otlp parse (Claude Code beta import — spec scenario)', () => {
     const run = await runOn(SIMPLE_SESSION, true);
     const turn = run.spans.find((s) => s.kind === 'turn');
     expect(turn?.content).toEqual({ promptPreview: null });
+  });
+});
+
+describe('otlp GenAI content attributes (fixtures/otlp/genai-semconv)', () => {
+  // a GenAI-semconv emitter with the opt-in content attributes turned on:
+  // agent, chat and tool spans carrying messages, instructions, tool
+  // definitions, arguments and results, plus OpenLLMetry-style prompt keys
+  const GENAI_SESSION = 'ses-genai-semconv-1';
+  const CONTENT_KEYS = [
+    'gen_ai.input.messages',
+    'gen_ai.output.messages',
+    'gen_ai.system_instructions',
+    'gen_ai.tool.definitions',
+    'gen_ai.tool.call.arguments',
+    'gen_ai.tool.call.result',
+    'gen_ai.prompt',
+    'gen_ai.completion',
+    'gen_ai.prompt.0.content',
+    'gen_ai.completion.0.content',
+  ];
+  const keysOf = (run: Run) =>
+    new Set(run.spans.flatMap((s) => Object.keys(s.attributes)));
+
+  it('passes every gen_ai.* key through without redaction', async () => {
+    const keys = keysOf(await runOn(GENAI_SESSION));
+    for (const key of CONTENT_KEYS) expect(keys, key).toContain(key);
+  });
+
+  it('keeps only gen_ai.* metadata under --redact', async () => {
+    const run = await runOn(GENAI_SESSION, true);
+    const keys = keysOf(run);
+    for (const key of CONTENT_KEYS) expect(keys, key).not.toContain(key);
+    for (const key of keys) expect(isGenAiMetadataKey(key), key).toBe(true);
+
+    // what describes the calls survives
+    const chat = run.spans.find(
+      (s) => s.attributes['gen_ai.response.finish_reasons'] !== undefined,
+    );
+    expect(chat?.attributes).toMatchObject({
+      'gen_ai.operation.name': 'chat',
+      'gen_ai.request.model': 'claude-sonnet-4-5',
+      'gen_ai.request.max_tokens': 1024,
+      'gen_ai.usage.input_tokens': 1840,
+      'gen_ai.response.finish_reasons': ['tool_use'],
+    });
+    const tool = run.spans.find(
+      (s) => s.attributes['gen_ai.operation.name'] === 'execute_tool',
+    );
+    expect(Object.keys(tool?.attributes ?? {}).sort()).toEqual([
+      'gen_ai.operation.name',
+      'gen_ai.tool.call.id',
+      'gen_ai.tool.name',
+      'gen_ai.tool.type',
+    ]);
   });
 });
 
@@ -262,6 +320,11 @@ describe('otlp unknown shapes (spec scenario)', () => {
                         key: 'runray.target',
                         value: { stringValue: 'secret-project-plan.md' },
                       },
+                      {
+                        // a reserved-prefix key of the emitter's own
+                        key: 'runray.notes',
+                        value: { stringValue: '/Users/alex/acme/.env' },
+                      },
                     ],
                   },
                 ],
@@ -285,10 +348,15 @@ describe('otlp unknown shapes (spec scenario)', () => {
 
     const redacted = await otlpAdapter.parse(candidate, { redact: true });
     const redTool = redacted.spans.find((s) => s.name === 'claude_code.tool');
-    // identity survives, the display token does not
+    // identity survives, the display token and the emitter's own key do not
     expect(redTool?.attributes['runray.targetKey']).toBe('deadbeefdeadbeef');
     expect(redTool?.attributes['runray.targetKind']).toBe('file-read');
     expect('runray.target' in (redTool?.attributes ?? {})).toBe(false);
+    expect('runray.notes' in (redTool?.attributes ?? {})).toBe(false);
+
+    // and sanitizing the unredacted parse lands on the same attributes (D4)
+    const sanitizedOpen = scrubAttributes(openTool?.attributes);
+    expect(sanitizedOpen).toEqual(redTool?.attributes);
   });
 
   it('detects and parses .jsonl files with multiple OTLP objects separated by newlines', async () => {
@@ -539,5 +607,179 @@ describe('otlp failed tool spans keep their status message', () => {
     });
     const failed = raw.spans.find((s) => s.tool?.name === 'Bash');
     expect(failed?.content).toEqual({ outputPreview: null });
+  });
+});
+
+describe('otlp git branch (trace-ingestion "Git branch capture")', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'runray-otlp-branch-'));
+  afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+  type Attrs = Record<string, string>;
+  const kv = (attrs: Attrs) =>
+    Object.entries(attrs).map(([key, v]) => ({
+      key,
+      value: { stringValue: v },
+    }));
+
+  let docs = 0;
+
+  /** One resource per entry, each holding one span of session `ses-g`. */
+  async function branchOf(
+    resources: { resource?: Attrs; span?: Attrs; start?: string }[],
+  ): Promise<string | undefined> {
+    const file = join(tmp, `doc-${++docs}.json`);
+    writeFileSync(
+      file,
+      JSON.stringify({
+        resourceSpans: resources.map((r, i) => ({
+          ...(r.resource === undefined
+            ? {}
+            : { resource: { attributes: kv(r.resource) } }),
+          scopeSpans: [
+            {
+              spans: [
+                {
+                  traceId: 'f'.repeat(32),
+                  spanId: String(i + 1).repeat(16),
+                  name: 'claude_code.interaction',
+                  startTimeUnixNano: r.start ?? `178342568537500000${i}`,
+                  attributes: kv({ 'session.id': 'ses-g', ...r.span }),
+                },
+              ],
+            },
+          ],
+        })),
+      }),
+    );
+    const raw = await otlpAdapter.parse(
+      {
+        runRef: `${file}::ses-g`,
+        format: 'otlp-json',
+        files: [file],
+        mtimeMs: 0,
+        sizeBytes: 0,
+      },
+      { redact: false },
+    );
+    return raw.project?.gitBranch;
+  }
+
+  it('reads vcs.ref.head.name from the resource', async () => {
+    expect(
+      await branchOf([{ resource: { 'vcs.ref.head.name': 'feat/export' } }]),
+    ).toBe('feat/export');
+  });
+
+  it('prefers vcs.ref.head.name, then the deprecated key, then git.branch', async () => {
+    const all = {
+      'vcs.ref.head.name': 'head',
+      'vcs.repository.ref.name': 'deprecated',
+      'git.branch': 'informal',
+    };
+    expect(await branchOf([{ resource: all }])).toBe('head');
+    const { 'vcs.ref.head.name': _h, ...older } = all;
+    expect(await branchOf([{ resource: older }])).toBe('deprecated');
+    expect(await branchOf([{ resource: { 'git.branch': 'informal' } }])).toBe(
+      'informal',
+    );
+  });
+
+  it('skips a ref typed as a tag', async () => {
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'v1.2.0',
+            'vcs.ref.head.type': 'tag',
+          },
+        },
+      ]),
+    ).toBeUndefined();
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.repository.ref.name': 'v1.2.0',
+            'vcs.repository.ref.type': 'tag',
+            'git.branch': 'main',
+          },
+        },
+      ]),
+    ).toBe('main');
+    expect(
+      await branchOf([
+        {
+          resource: {
+            'vcs.ref.head.name': 'main',
+            'vcs.ref.head.type': 'branch',
+          },
+        },
+      ]),
+    ).toBe('main');
+  });
+
+  it('takes a resource branch from anywhere before any span attribute', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'service.name': 'agent' } },
+        { span: { 'vcs.ref.head.name': 'span' } },
+        { resource: { 'vcs.ref.head.name': 'resource' } },
+      ]),
+    ).toBe('resource');
+    // within one span, the resource wins over the span's own attributes
+    expect(
+      await branchOf([
+        {
+          resource: { 'git.branch': 'resource' },
+          span: { 'vcs.ref.head.name': 'span' },
+        },
+      ]),
+    ).toBe('resource');
+  });
+
+  it('falls back to the earliest-starting span that names one, not the first exported', async () => {
+    // exporters write spans as they end: a tool span that names the ref it
+    // pushed to comes first in the file but started after the session
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'release/1.2' }, start: '1783425685375000900' },
+        {
+          span: { 'vcs.ref.head.name': 'feat/x' },
+          start: '1783425685375000100',
+        },
+      ]),
+    ).toBe('feat/x');
+    // spans without a start time keep document order
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'first' }, start: '' },
+        { span: { 'git.branch': 'second' }, start: '' },
+      ]),
+    ).toBe('first');
+    // only a known start can be the earliest: a span without one, even
+    // first in the file, gives way to a span that has one
+    expect(
+      await branchOf([
+        { span: { 'git.branch': 'no-start' }, start: '' },
+        { span: { 'git.branch': 'timed' }, start: '1783425685375000100' },
+      ]),
+    ).toBe('timed');
+  });
+
+  it('treats an empty value as no branch, and leaves project unset without one', async () => {
+    expect(
+      await branchOf([
+        { resource: { 'vcs.ref.head.name': '', 'git.branch': 'main' } },
+      ]),
+    ).toBe('main');
+    expect(await branchOf([{ resource: { 'vcs.ref.head.name': '' } }])).toBe(
+      undefined,
+    );
+    expect(await branchOf([{}])).toBeUndefined();
+  });
+
+  it('pinned Claude Code captures carry no branch, so their runs have no project', async () => {
+    const run = await runOn(SIMPLE_SESSION);
+    expect(run.project).toBeUndefined();
   });
 });

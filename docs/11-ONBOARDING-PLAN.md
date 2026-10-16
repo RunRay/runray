@@ -330,7 +330,7 @@ One-shot, dismissible, at most one visible at a time, keyed in
 | `waste-view` | first `#/run/:id/waste` | burned spend vs potential savings under new settings |
 | `what-if` | first `CostView` with `WhatIfPanel` visible | re-price the run against another model |
 | `diff` | second run opened in a session | compare two runs of the same task |
-| `limit-mode` | `limitWindow` configured and first dashboard | tokens / % of limit instead of USD (persona B) |
+| `limit-mode` | `limitWindow` configured and first dashboard | % of the reference window, in the unit beside %win (persona B) |
 | `coverage` | first `CoverageNotices` render | unpriced models are surfaced, never silently priced |
 | `redact` | first `export` opened from the UI, if any | `--redact` before sharing |
 
@@ -401,6 +401,13 @@ reject any method but GET/POST (405); cap the body at 4 KB; accept only the know
 value shapes (drop the rest silently); never echo a filesystem path; `cache-control:
 no-store` like every other endpoint. A write failure returns 200 with the in-memory state —
 onboarding must degrade, never block.
+
+Cross-site writes are refused (change `harden-onboarding-writes`). `POST` must carry
+`Content-Type: application/json`, or it gets 415: a cross-site page can only send that after a
+CORS preflight the server never approves. Ahead of every route, a request with a method other
+than GET/HEAD gets 403 when `Sec-Fetch-Site` isn't `same-origin` or `Origin` isn't
+`http://<Host>`. Refusals close the connection without reading the body. To post by hand, send
+the header: `curl -H 'Content-Type: application/json' -d '{"hints":[]}' …/api/onboarding`.
 
 ### 8.3 Two deviations from issue #14's mechanism, and why
 

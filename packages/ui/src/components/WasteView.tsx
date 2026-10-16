@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
 import { toHash } from '../lib/router';
 import { formatOffset } from '../lib/triage';
+import { AT_API_PRICES } from '../lib/unit';
 import { leadSentence, runWaste, tok } from '../lib/waste';
 import { useAppStore } from '../store';
 import { ContextBloatHow } from './ContextBloatHow';
@@ -133,6 +134,14 @@ export function WasteView({ run }: { run: Run }) {
 
 function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
   const lead = leadSentence(waste, run.source.tool);
+  // token mode (E6): the two headline figures are dollar estimates and say so
+  const tokensLead = useAppStore((s) => s.unit) === 'tokens';
+  const priced = tokensLead && (
+    <span className="font-sans text-label font-normal text-text-dim">
+      {' '}
+      {AT_API_PRICES}
+    </span>
+  );
   const share = (waste.burnedShare * 100).toFixed(
     waste.burnedShare < 0.1 ? 1 : 0,
   );
@@ -145,6 +154,7 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
             className={`mt-0.5 font-display text-[30px] font-semibold leading-[1.05] ${waste.burnedUSD > 0 ? 'text-heat-2' : 'text-text-dim'}`}
           >
             {waste.burnedUSD > 0 ? formatUSD(waste.burnedUSD) : '$0.00'}
+            {priced}
           </p>
           <p className="mt-1 text-label text-text-dim">
             {waste.burnedUSD > 0 ? (
@@ -170,6 +180,7 @@ function Summary({ run, waste }: { run: Run; waste: RunWaste }) {
             {waste.opportunityUSD > 0
               ? `up to ${formatUSD(waste.opportunityUSD)}`
               : '$0.00'}
+            {priced}
           </p>
           <p className="mt-1 text-label text-text-dim">
             if you change the setup · upper bounds, not additive

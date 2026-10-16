@@ -40,18 +40,54 @@ function descendants(node: AgentTreeNode): number {
 }
 
 export function NestedTreemap({ run }: { run: Run }) {
-  const [mode, setMode] = useState<SubtreeMapMode>('cost');
+  // follows the display unit (E6): a unit flip resets the map to it, and
+  // the map's own toggle still flips it until the next one
+  const unit = useAppStore((s) => s.unit);
+  const unitMode: SubtreeMapMode = unit === 'tokens' ? 'tokens' : 'cost';
+  const [mode, setMode] = useState<SubtreeMapMode>(unitMode);
+  const [seenUnit, setSeenUnit] = useState(unit);
+  if (seenUnit !== unit) {
+    setSeenUnit(unit);
+    setMode(unitMode);
+  }
   const tree = useMemo(
     () => agentSubtreeTree(run.spans, mode),
     [run.spans, mode],
   );
   const format = mode === 'cost' ? formatUSD : formatTokens;
 
+  // the toggle stays above the empty state: a run with tokens but no priced
+  // calls must still let the person switch back to tokens
+  const toggle = (
+    <fieldset className="mb-2 flex gap-1" aria-label="Subtree map value mode">
+      {(['cost', 'tokens'] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          aria-pressed={mode === m}
+          onClick={() => setMode(m)}
+          className={`rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass ${
+            mode === m
+              ? 'border-border-slate bg-surface-variant text-text'
+              : 'border-border-slate bg-surface text-text-dim hover:bg-surface-variant/40 hover:text-text active:bg-bg-deep-gray'
+          }`}
+        >
+          {m}
+        </button>
+      ))}
+    </fieldset>
+  );
+
   if (tree.total <= 0) {
     return (
-      <p className="py-6 text-center text-label text-text-faint">
-        No {mode === 'cost' ? 'priced' : ''} llm calls in this run.
-      </p>
+      <div>
+        {toggle}
+        <p className="py-6 text-center text-label text-text-faint">
+          {mode === 'cost'
+            ? 'No priced llm calls in this run.'
+            : 'No llm calls in this run.'}
+        </p>
+      </div>
     );
   }
 
@@ -66,23 +102,7 @@ export function NestedTreemap({ run }: { run: Run }) {
 
   return (
     <div>
-      <fieldset className="mb-2 flex gap-1" aria-label="Subtree map value mode">
-        {(['cost', 'tokens'] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-pressed={mode === m}
-            onClick={() => setMode(m)}
-            className={`rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass ${
-              mode === m
-                ? 'border-border-slate bg-surface-variant text-text'
-                : 'border-border-slate bg-surface text-text-dim hover:bg-surface-variant/40 hover:text-text active:bg-bg-deep-gray'
-            }`}
-          >
-            {m}
-          </button>
-        ))}
-      </fieldset>
+      {toggle}
       <div className="relative h-56 w-full overflow-hidden">
         <CellLayer
           items={topItems}
@@ -241,8 +261,10 @@ function CellLayer({
                 <p className="truncate text-label text-text">{item.name}</p>
                 <p className={`font-mono text-label ${HEAT_TEXT[heat]}`}>
                   {format(item.value)}
+                  {/* cells are raised grounds, so faint renders at dim here;
+                      the sans face keeps the note apart from the figure */}
                   {hiddenNested > 0 && (
-                    <span className="ml-1 text-text-faint">
+                    <span className="ml-1 font-sans text-text-faint">
                       +{hiddenNested} nested
                     </span>
                   )}

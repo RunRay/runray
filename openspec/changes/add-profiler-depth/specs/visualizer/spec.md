@@ -277,7 +277,11 @@ SHALL be off by default, its window SHALL anchor to the newest loaded run
 rather than the current clock so exports render stably, every percentage
 SHALL be labelled as an estimate, and the percentage framing SHALL appear
 only on the overview spend statement, the wasted KPI, and the run cost
-hero — never on every figure.
+hero — never on every figure. Percentages SHALL be taken in the active
+display unit: dollars against the USD budget, tokens against the token
+budget, both of which the in-UI settings SHALL let the person set. Without
+a budget in the active unit the spend statement SHALL state the window's
+own spend or tokens, never as a share of itself.
 
 #### Scenario: Percentage of window spend
 - GIVEN a configured 7-day window with runs inside it and limit mode toggled
@@ -300,6 +304,53 @@ hero — never on every figure.
 - GIVEN an exported file opened on two different days
 - WHEN the overview renders with limit mode on
 - THEN the window bounds and percentages are identical on both opens
+
+#### Scenario: Token budget in token mode
+- GIVEN a configured window with `budgetTokens` set, limit mode on, and the
+  display unit set to tokens
+- WHEN the overview renders
+- THEN the spend statement gives the window's tokens of the token budget
+  with the estimated share, and the run cost hero's suffix is a share of
+  the same token budget
+
+### Requirement: Display unit
+The system SHALL let the person choose the unit the headline figures lead
+with, dollars or tokens, from a control in the top bar beside the limit
+mode toggle and from the command palette; the choice SHALL default to
+dollars and persist across reloads the way the theme does. In token mode
+the overview spend statement, burn line, key indicators, resource
+rankings, cross-run tool ranking, run preview, spend-by-day chart and
+period trend, the Explorer session list, and the run header, cost hero,
+tool leaderboard and subtree map SHALL lead with token counts, and
+rankings SHALL be ordered by tokens. The spend statement, the run header
+and the cost hero SHALL keep the dollar figure beside the token count as
+secondary; rankings, charts and lists SHALL show the token count alone,
+under a heading or with a suffix that names the unit. Estimates that exist
+only in dollars (waste, potential savings, what-if repricing) SHALL stay
+in dollars, and no token count SHALL be derived from a dollar estimate. In
+token mode their headline figures (the wasted indicator, the savings
+panel, the waste-by-rule total, the run header's burned figure, and the
+Waste tab's burned and opportunity figures) SHALL be labelled "at API
+prices"; per-finding amounts and the what-if panel, which already names
+the rates it repriced at, keep their dollar figures unchanged. The
+sessions table SHALL keep both its token and cost columns in either unit.
+
+#### Scenario: Token mode leads with tokens
+- GIVEN runs totalling 381.5M tokens and $484.06
+- WHEN the person switches the unit to tokens
+- THEN the spend statement leads with 381.5M tokens, shows $484.06 "at API
+  prices" beside it, and the resource rankings order by tokens
+
+#### Scenario: Waste stays in dollars
+- GIVEN runs with $163.32 of burned waste and the unit set to tokens
+- WHEN the overview renders
+- THEN the wasted indicator leads with its share of spend, the savings
+  panel shows $163.32 "at API prices", and no wasted-token figure appears
+
+#### Scenario: The choice survives a reload
+- GIVEN the person switched the unit to tokens
+- WHEN the page is reloaded
+- THEN the figures still lead with tokens
 
 ### Requirement: Run time breakdown
 The system SHALL provide a Time view for each run, as a sibling tab of Cost
@@ -635,3 +686,60 @@ way the theme does.
 - GIVEN the person collapsed the rail
 - WHEN the page is reloaded
 - THEN the rail opens collapsed
+
+### Requirement: Inspector width and copy controls
+The Inspector SHALL offer a wide mode on the person's request: a toggle
+in its header and a palette command. Wide, it SHALL grow from 360px to
+at most 560px, taking the width from the centre pane but leaving that
+pane at least 400px beside the navigation rail and the sessions pane;
+the sessions pane SHALL keep its width. When the window leaves no room to
+widen, the toggle and the palette command SHALL say so and how to make
+room rather than appear to do nothing, and SHALL NOT save a wide choice;
+turning wide mode off SHALL always work, and a wide toggle SHALL offer to
+narrow even without room. The choice SHALL
+persist across reloads the way the theme does. Each prompt, output and
+delegation-reason preview and the raw span record SHALL carry a copy
+control that puts that text on the clipboard; a control over text that
+ingestion cut short SHALL call it a preview. The control SHALL confirm a
+copy for 1.5 seconds and SHALL state a failure on the control itself
+rather than stay silent. A redacted preview SHALL carry no copy control.
+
+#### Scenario: Wide mode yields to the centre pane
+- GIVEN a 1440px window with the navigation rail expanded
+- WHEN the person turns on wide mode
+- THEN the Inspector is 520px wide, the centre pane 400px, and the
+  sessions pane stays 280px
+
+#### Scenario: No room to widen
+- GIVEN a 1280px window with the navigation rail expanded
+- WHEN the Inspector renders narrow
+- THEN its wide toggle is marked unavailable and says to collapse the
+  navigation or widen the window
+
+#### Scenario: The palette knows there is no room
+- GIVEN a 1280px window with the navigation rail expanded and the
+  Inspector narrow
+- WHEN the person opens the palette
+- THEN the width command says there is no room to widen and how to make
+  it, and choosing it leaves the Inspector narrow and saves nothing
+
+#### Scenario: The choice survives a reload
+- GIVEN the person turned on wide mode
+- WHEN the page is reloaded
+- THEN the Inspector opens wide
+
+#### Scenario: A copied preview is confirmed
+- GIVEN a span with a prompt preview
+- WHEN the person activates the prompt's "Copy preview" control
+- THEN the preview text is on the clipboard and the control reads
+  "Copied" for 1.5 seconds
+
+#### Scenario: A denied clipboard is stated
+- GIVEN the browser denies clipboard access
+- WHEN the person activates a copy control
+- THEN the control reads "Copy failed: select the text"
+
+#### Scenario: A redacted preview offers nothing to copy
+- GIVEN a span whose prompt preview is redacted
+- WHEN the Inspector renders it
+- THEN the Prompt section shows "redacted" and no copy control

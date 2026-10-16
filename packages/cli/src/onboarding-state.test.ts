@@ -1,14 +1,17 @@
+import { randomUUID } from 'node:crypto';
 import {
   chmodSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   filterOnboardingPatch,
   getOnboardingState,
@@ -18,6 +21,20 @@ import {
   updateOnboardingState,
   writeState,
 } from './onboarding-state.js';
+
+// pass-through by default; the temp-file tests pin one name to plant a file
+vi.mock('node:crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:crypto')>();
+  return { ...actual, randomUUID: vi.fn(actual.randomUUID) };
+});
+
+// pass-through by default; one test makes a write fail half-way
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, writeFileSync: vi.fn(actual.writeFileSync) };
+});
+
+const FIXED_UUID = '00000000-0000-4000-8000-000000000000';
 
 describe('onboarding-state', () => {
   beforeEach(() => {
@@ -232,6 +249,90 @@ describe('onboarding-state', () => {
       expect(() => JSON.parse(content)).not.toThrow();
       const parsed = JSON.parse(content) as Record<string, unknown>;
       expect(parsed.onboarding).toBeDefined();
+    });
+  });
+
+  describe('temp file', () => {
+    const freshDir = (label: string): string => {
+      const dir = join(
+        tmpdir(),
+        `tp-test-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      );
+      mkdirSync(dir, { recursive: true });
+      return dir;
+    };
+    const tmpLeftovers = (dir: string): string[] =>
+      readdirSync(dir).filter((name) => name.startsWith('.state.json.tmp.'));
+
+    it('leaves no temp file behind after a successful write', () => {
+      const dir = freshDir('tmp-clean');
+      writeState({ version: 1 }, join(dir, 'state.json'));
+      expect(existsSync(join(dir, 'state.json'))).toBe(true);
+      expect(tmpLeftovers(dir)).toEqual([]);
+    });
+
+    it('does not write through a file already at the temp name', () => {
+      const dir = freshDir('tmp-planted');
+      const planted = join(dir, `.state.json.tmp.${FIXED_UUID}`);
+      writeFileSync(planted, 'planted');
+      vi.mocked(randomUUID).mockReturnValueOnce(FIXED_UUID);
+      const filePath = join(dir, 'state.json');
+
+      expect(() =>
+        updateOnboardingState({ hints: ['time-view'] }, filePath),
+      ).not.toThrow();
+
+      // neither overwritten nor cleaned up: this call didn't create it
+      expect(readFileSync(planted, 'utf-8')).toBe('planted');
+      expect(existsSync(filePath)).toBe(false);
+      // the patch still applies in memory, like any write failure
+      expect(getOnboardingState(filePath)).toEqual({ hints: ['time-view'] });
+    });
+
+    it('does not follow a symlink planted at the temp name', () => {
+      if (process.platform === 'win32') return; // symlinks need privileges
+      const dir = freshDir('tmp-symlink');
+      const target = join(dir, 'victim.txt');
+      writeFileSync(target, 'untouched');
+      symlinkSync(target, join(dir, `.state.json.tmp.${FIXED_UUID}`));
+      vi.mocked(randomUUID).mockReturnValueOnce(FIXED_UUID);
+
+      updateOnboardingState({ hints: ['time-view'] }, join(dir, 'state.json'));
+
+      expect(readFileSync(target, 'utf-8')).toBe('untouched');
+    });
+
+    it('removes its own temp file when the write fails half-way', async () => {
+      const actualFs =
+        await vi.importActual<typeof import('node:fs')>('node:fs');
+      const dir = freshDir('tmp-write-fails');
+      // disk full mid-write: some bytes land in the temp file, then ENOSPC
+      vi.mocked(writeFileSync).mockImplementationOnce((target, _data) => {
+        actualFs.writeFileSync(target, '{"partial"');
+        throw Object.assign(new Error('no space left on device'), {
+          code: 'ENOSPC',
+        });
+      });
+      const filePath = join(dir, 'state.json');
+
+      expect(() =>
+        updateOnboardingState({ hints: ['time-view'] }, filePath),
+      ).not.toThrow();
+
+      expect(tmpLeftovers(dir)).toEqual([]);
+      expect(existsSync(filePath)).toBe(false);
+      expect(getOnboardingState(filePath)).toEqual({ hints: ['time-view'] });
+    });
+
+    it('removes its own temp file when the rename fails', () => {
+      const dir = freshDir('tmp-rename-fails');
+      // A non-empty directory where state.json belongs: the read degrades to
+      // empty state, the temp file is written, the rename over it fails.
+      const filePath = join(dir, 'state.json');
+      mkdirSync(join(filePath, 'occupied'), { recursive: true });
+
+      expect(() => writeState({ version: 1 }, filePath)).not.toThrow();
+      expect(tmpLeftovers(dir)).toEqual([]);
     });
   });
 });

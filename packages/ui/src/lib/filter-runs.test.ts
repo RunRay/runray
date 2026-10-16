@@ -1,8 +1,11 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
+  branchKey,
   EMPTY_FILTER,
   filterRuns,
+  isFilterActive,
+  NO_BRANCH,
   periodAnchorDay,
   periodStartDay,
   projectKey,
@@ -16,6 +19,7 @@ function stubRun(overrides: {
   project?: string;
   source?: SourceTool;
   cost?: number;
+  tokens?: number;
   byModel?: Record<string, number>;
 }): Run {
   return {
@@ -31,7 +35,13 @@ function stubRun(overrides: {
     startedAt: overrides.startedAt,
     spans: [],
     totals: {
-      tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      tokens: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        total: overrides.tokens ?? 0,
+      },
       costUSD: {
         total: overrides.cost ?? 0,
         wastedEstimate: 0,
@@ -229,8 +239,50 @@ describe('spendTrend', () => {
     expect(spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 })).toEqual({
       currentUSD: 50,
       previousUSD: 40,
+      currentTokens: 0,
+      previousTokens: 0,
       deltaFraction: 0.25,
     });
+  });
+
+  it('takes the delta in tokens when asked, from the same two windows', () => {
+    const withTokens = [
+      stubRun({
+        id: 'cur',
+        startedAt: '2026-07-14T09:00:00',
+        cost: 10,
+        tokens: 300,
+      }),
+      stubRun({
+        id: 'prev-1',
+        startedAt: '2026-07-05T09:00:00',
+        cost: 40,
+        tokens: 100,
+      }),
+      stubRun({
+        id: 'prev-2',
+        startedAt: '2026-07-03T09:00:00',
+        cost: 40,
+        tokens: 100,
+      }),
+    ];
+    const filter = { ...EMPTY_FILTER, periodDays: 7 };
+    // dollars fell 87.5% while tokens rose 50%: the unit decides the story
+    expect(spendTrend(withTokens, filter)?.deltaFraction).toBe(-0.875);
+    expect(spendTrend(withTokens, filter, 'tokens')).toEqual({
+      currentUSD: 10,
+      previousUSD: 80,
+      currentTokens: 300,
+      previousTokens: 200,
+      deltaFraction: 0.5,
+    });
+  });
+
+  it('suppresses a token trend whose baseline has no tokens', () => {
+    // priced runs without token counts: a dollar trend exists, a token one can't
+    expect(
+      spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 }, 'tokens'),
+    ).toBeNull();
   });
 
   it('suppresses without a bounded period (no baseline to compare)', () => {
@@ -289,7 +341,7 @@ describe('spendTrend', () => {
     ];
     expect(
       spendTrend(mixed, { ...EMPTY_FILTER, project: 'alpha', periodDays: 7 }),
-    ).toEqual({ currentUSD: 30, previousUSD: 20, deltaFraction: 0.5 });
+    ).toMatchObject({ currentUSD: 30, previousUSD: 20, deltaFraction: 0.5 });
   });
 
   it('suppresses when a single day is pinned (a point cannot trend)', () => {
@@ -359,5 +411,69 @@ describe('tool filter dimension (E5)', () => {
       runs,
     );
     expect(cleared.tool).toBeNull();
+  });
+});
+
+describe('branch filter dimension', () => {
+  const onBranch = (id: string, project?: string, branch?: string): Run => {
+    const run = stubRun({ id, startedAt: '2026-07-07T10:00:00Z' });
+    return project === undefined && branch === undefined
+      ? run
+      : {
+          ...run,
+          project: {
+            ...(project === undefined ? {} : { name: project }),
+            ...(branch === undefined ? {} : { gitBranch: branch }),
+          },
+        };
+  };
+  const branched = [
+    onBranch('api-main', 'api', 'main'),
+    onBranch('web-main', 'web', 'main'),
+    onBranch('api-feat', 'api', 'feat/export'),
+    onBranch('api-none', 'api'),
+    onBranch('bare'),
+  ];
+
+  it('branchKey groups runs without a branch under one placeholder', () => {
+    expect(branched.map(branchKey)).toEqual([
+      'main',
+      'main',
+      'feat/export',
+      NO_BRANCH,
+      NO_BRANCH,
+    ]);
+  });
+
+  it('a branch named like a placeholder is a branch, an empty one is none', () => {
+    expect(branchKey(onBranch('dash', 'api', '—'))).toBe('—');
+    expect(branchKey(onBranch('empty', 'api', ''))).toBe(NO_BRANCH);
+    const runs = [...branched, onBranch('dash', 'api', '—')];
+    const ids = (branch: string) =>
+      filterRuns(runs, { ...EMPTY_FILTER, branch }).map((r) => r.id);
+    expect(ids(NO_BRANCH)).toEqual(['api-none', 'bare']);
+    expect(ids('—')).toEqual(['dash']);
+  });
+
+  it('filterRuns matches the branch alone, or with a project', () => {
+    const ids = (patch: Partial<typeof EMPTY_FILTER>) =>
+      filterRuns(branched, { ...EMPTY_FILTER, ...patch }).map((r) => r.id);
+    expect(ids({ branch: 'main' })).toEqual(['api-main', 'web-main']);
+    expect(ids({ project: 'api', branch: 'main' })).toEqual(['api-main']);
+    expect(ids({ branch: NO_BRANCH })).toEqual(['api-none', 'bare']);
+  });
+
+  it('reconcileFilter clears a branch that rolled off the data', () => {
+    const kept = reconcileFilter({ ...EMPTY_FILTER, branch: 'main' }, branched);
+    expect(kept.branch).toBe('main');
+    expect(
+      reconcileFilter({ ...EMPTY_FILTER, branch: 'gone' }, branched).branch,
+    ).toBeNull();
+  });
+
+  it('isFilterActive counts every dimension, the branch included', () => {
+    expect(isFilterActive(EMPTY_FILTER)).toBe(false);
+    expect(isFilterActive({ ...EMPTY_FILTER, branch: 'main' })).toBe(true);
+    expect(isFilterActive({ ...EMPTY_FILTER, periodDays: 7 })).toBe(true);
   });
 });

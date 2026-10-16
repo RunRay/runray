@@ -7,8 +7,8 @@
  * run default) · `#/run/:id/timeline` · `#/run/:id/time` ·
  * `#/run/:id/errors` · `#/run/:id/waste` · `#/diff/:a/:b`
  * (add-run-diff). Filter state rides a query-style suffix in the
- * canonical order `project, source, period, model, day, tool` (D6 —
- * supersedes add-dashboard-extensions D2), so a copied link restores the
+ * canonical order `project, source, period, model, day, tool, branch` (D6
+ * — supersedes add-dashboard-extensions D2), so a copied link restores the
  * same filtered view; hashes without params parse exactly as before.
  */
 
@@ -38,6 +38,7 @@ const FILTER_PARAMS = [
   'model',
   'day',
   'tool',
+  'branch',
 ] as const;
 
 /** Unknown or empty hashes fall back to the dashboard — never a 404. */
@@ -85,6 +86,7 @@ export function parseFilterParams(hash: string): RunFilter {
     model: params.get('model'),
     day: params.get('day'),
     tool: params.get('tool'),
+    branch: params.get('branch'),
   };
 }
 

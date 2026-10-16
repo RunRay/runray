@@ -2,13 +2,17 @@ import type { Insight, Run, SourceTool, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
   aggregateTotals,
+  anyBranch,
   cacheAggregate,
   errorRate,
+  largestCallTokens,
   mcpShare,
   mostExpensiveCall,
+  runTokensByModel,
   savingsSummary,
   sessionCostStats,
   spendByDay,
+  topBranches,
   topModels,
   topProjects,
   topSources,
@@ -16,6 +20,7 @@ import {
   wasteByRule,
   worstToolError,
 } from './overview';
+import { NO_BRANCH } from './run-keys';
 
 function toolSpan(name: string, isError: boolean): Span {
   return {
@@ -65,6 +70,7 @@ function stubRun(overrides: {
   toolErrors?: number;
   source?: SourceTool;
   project?: string;
+  branch?: string;
   byModel?: Record<string, number>;
   codeChanges?: { linesAdded: number; linesRemoved: number };
   insights?: Insight[];
@@ -77,8 +83,11 @@ function stubRun(overrides: {
       format: 'claude-jsonl',
       files: [],
     },
-    ...(overrides.project !== undefined && {
-      project: { name: overrides.project },
+    ...((overrides.project !== undefined || overrides.branch !== undefined) && {
+      project: {
+        ...(overrides.project !== undefined && { name: overrides.project }),
+        ...(overrides.branch !== undefined && { gitBranch: overrides.branch }),
+      },
     }),
     startedAt: overrides.startedAt ?? '2026-07-07T10:00:00',
     spans: overrides.spans ?? [],
@@ -218,6 +227,66 @@ describe('rankings', () => {
       { name: '—', costUSD: 5, tokens: 0 },
       { name: 'alpha', costUSD: 3, tokens: 0 },
     ]);
+  });
+
+  it('ranks project and branch pairs, so one branch name ranks per project', () => {
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', branch: 'main', cost: 1, tokens: 10 }),
+      stubRun({ id: 'b', project: 'web', branch: 'main', cost: 4, tokens: 40 }),
+      stubRun({ id: 'c', project: 'api', branch: 'main', cost: 2, tokens: 20 }),
+      // an OTLP run can name a branch but no project
+      stubRun({ id: 'd', branch: 'feat/x', cost: 0.5, tokens: 5 }),
+    ]);
+    expect(
+      ranks.map(({ project, branch, costUSD, tokens }) => ({
+        project,
+        branch,
+        costUSD,
+        tokens,
+      })),
+    ).toEqual([
+      { project: 'web', branch: 'main', costUSD: 4, tokens: 40 },
+      { project: 'api', branch: 'main', costUSD: 3, tokens: 30 },
+      { project: '—', branch: 'feat/x', costUSD: 0.5, tokens: 5 },
+    ]);
+    expect(new Set(ranks.map((r) => r.name)).size).toBe(3);
+  });
+
+  it('runs without a branch share one row, whatever their project', () => {
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', cost: 1 }),
+      stubRun({ id: 'b', project: 'web', cost: 2 }),
+      stubRun({ id: 'c', cost: 0.25 }),
+      stubRun({ id: 'd', project: 'api', branch: 'main', cost: 1 }),
+    ]);
+    // keyed like the filter, so the row and the filter it sets agree
+    expect(ranks[0]).toEqual({ name: NO_BRANCH, costUSD: 3.25, tokens: 0 });
+    expect(ranks).toHaveLength(2);
+  });
+
+  it('keeps a branch named like a placeholder apart from runs without one', () => {
+    // "—" is a valid git branch name; it must not join the no-branch row
+    const ranks = topBranches([
+      stubRun({ id: 'a', project: 'api', cost: 1 }),
+      stubRun({ id: 'b', project: 'api', branch: '—', cost: 2 }),
+    ]);
+    expect(ranks).toHaveLength(2);
+    expect(ranks.find((r) => r.name === NO_BRANCH)?.costUSD).toBe(1);
+    expect(ranks.find((r) => r.branch === '—')?.costUSD).toBe(2);
+  });
+
+  it('gates the branch card on any run recording a branch', () => {
+    expect(anyBranch([stubRun({ id: 'a', project: 'api' })])).toBe(false);
+    // an empty name from a foreign trace file records nothing
+    expect(anyBranch([stubRun({ id: 'a', project: 'api', branch: '' })])).toBe(
+      false,
+    );
+    expect(
+      anyBranch([
+        stubRun({ id: 'a', project: 'api' }),
+        stubRun({ id: 'b', project: 'api', branch: 'main' }),
+      ]),
+    ).toBe(true);
   });
 
   it('ranks models from byModel rollups across runs', () => {
@@ -536,5 +605,236 @@ describe('topTools + mcpShare (E5)', () => {
     expect(share.costUSD).toBeCloseTo(1, 6);
     expect(share.share).toBeCloseTo(0.1, 6);
     expect(share.topServer).toBe('srv');
+  });
+});
+
+describe('display unit (E6)', () => {
+  const callSpan = (
+    id: string,
+    model: string,
+    tokens: {
+      input: number;
+      output: number;
+      cacheRead: number;
+      cacheWrite: number;
+      reasoning?: number;
+    },
+    costUSD: number,
+  ): Span => ({
+    id,
+    parentId: null,
+    kind: 'llm_call',
+    name: id,
+    status: 'ok',
+    startedAt: '2026-07-07T10:00:00',
+    depth: 1,
+    llm: {
+      provider: 'anthropic',
+      model,
+      tokens,
+      costUSD,
+      costSource: 'computed',
+    },
+    attributes: {},
+    provenance: { file: 'x' },
+  });
+
+  it('counts every token class per model, reasoning included', () => {
+    const run = stubRun({
+      id: 'r1',
+      spans: [
+        callSpan(
+          'a',
+          'opus',
+          { input: 1, output: 2, cacheRead: 30, cacheWrite: 4, reasoning: 5 },
+          1,
+        ),
+        callSpan(
+          'b',
+          'haiku',
+          { input: 10, output: 0, cacheRead: 0, cacheWrite: 0 },
+          0.1,
+        ),
+        callSpan(
+          'c',
+          'opus',
+          { input: 0, output: 8, cacheRead: 0, cacheWrite: 0 },
+          1,
+        ),
+      ],
+    });
+    expect(runTokensByModel(run)).toEqual({ opus: 50, haiku: 10 });
+    expect(largestCallTokens([run])).toBe(42);
+    expect(largestCallTokens([])).toBe(0);
+  });
+
+  it('ranks by the display unit, so the top-N cut is the top N of what shows', () => {
+    // cheap-but-heavy: alpha costs least and carries the most tokens
+    const runs = [
+      stubRun({ id: 'a', project: 'alpha', cost: 1, tokens: 900 }),
+      stubRun({ id: 'b', project: 'beta', cost: 5, tokens: 100 }),
+      stubRun({ id: 'c', project: 'gamma', cost: 3, tokens: 50 }),
+    ];
+    expect(topProjects(runs, 2).map((p) => p.name)).toEqual(['beta', 'gamma']);
+    expect(topProjects(runs, 2, 'tokens').map((p) => p.name)).toEqual([
+      'alpha',
+      'beta',
+    ]);
+    expect(topSources(runs, 5, 'tokens')[0]?.tokens).toBe(1050);
+    // branches follow the same unit as the other rankings
+    const branchRuns = [
+      stubRun({
+        id: 'x',
+        project: 'api',
+        branch: 'main',
+        cost: 1,
+        tokens: 900,
+      }),
+      stubRun({
+        id: 'y',
+        project: 'api',
+        branch: 'feat',
+        cost: 5,
+        tokens: 100,
+      }),
+    ];
+    expect(topBranches(branchRuns).map((b) => b.branch)).toEqual([
+      'feat',
+      'main',
+    ]);
+    expect(topBranches(branchRuns, 5, 'tokens').map((b) => b.branch)).toEqual([
+      'main',
+      'feat',
+    ]);
+
+    const modelRuns = [
+      stubRun({
+        id: 'm',
+        byModel: { opus: 5, haiku: 1 },
+        spans: [
+          callSpan(
+            'o',
+            'opus',
+            { input: 10, output: 0, cacheRead: 0, cacheWrite: 0 },
+            5,
+          ),
+          callSpan(
+            'h',
+            'haiku',
+            { input: 0, output: 0, cacheRead: 900, cacheWrite: 0 },
+            1,
+          ),
+        ],
+      }),
+    ];
+    expect(topModels(modelRuns).map((m) => m.name)).toEqual(['opus', 'haiku']);
+    expect(topModels(modelRuns, 5, 'tokens').map((m) => m.name)).toEqual([
+      'haiku',
+      'opus',
+    ]);
+  });
+
+  it('carries tokens per day, per model and per source beside the dollars', () => {
+    const days = spendByDay([
+      stubRun({
+        id: 'd1',
+        startedAt: '2026-07-07T10:00:00',
+        cost: 2,
+        tokens: 60,
+        source: 'opencode',
+        byModel: { opus: 2 },
+        spans: [
+          callSpan(
+            'x',
+            'opus',
+            { input: 50, output: 10, cacheRead: 0, cacheWrite: 0 },
+            2,
+          ),
+        ],
+      }),
+      stubRun({
+        id: 'd2',
+        startedAt: '2026-07-09T10:00:00',
+        cost: 1,
+        tokens: 7,
+      }),
+    ]);
+    expect(days.map((d) => d.tokens)).toEqual([60, 0, 7]);
+    expect(days[0]?.byModelTokens).toEqual({ opus: 60 });
+    expect(days[0]?.bySourceTokens).toEqual({ opencode: 60 });
+    // the gap day has empty breakdowns of its own, not a shared object
+    expect(days[1]?.byModelTokens).toEqual({});
+    expect(days[1]?.byModelTokens).not.toBe(days[0]?.byModelTokens);
+  });
+
+  it('keeps savings in dollars and states the burned share instead of a token count', () => {
+    const s = savingsSummary([
+      stubRun({ id: 'r1', cost: 8, wasted: 2, tokens: 1000 }),
+      stubRun({ id: 'r2', cost: 0, wasted: 0, tokens: 500 }),
+    ]);
+    expect(s.burnedUSD).toBe(2);
+    expect(s.burnedShare).toBeCloseTo(0.25, 6);
+    expect(s).not.toHaveProperty('burnedTokens');
+    expect(s).not.toHaveProperty('opportunityTokens');
+    expect(savingsSummary([stubRun({ id: 'z', tokens: 9 })]).burnedShare).toBe(
+      0,
+    );
+  });
+
+  it('ranks tools and takes the MCP share in attributed tokens', () => {
+    const tool = (id: string, name: string, mcpServer?: string): Span => ({
+      id,
+      parentId: id.startsWith('a') ? 'la' : 'lb',
+      kind: mcpServer === undefined ? 'tool_call' : 'mcp_call',
+      name,
+      status: 'ok',
+      startedAt: '2026-07-07T10:00:01Z',
+      depth: 1,
+      attributes: {},
+      provenance: { file: 'x' },
+      tool: {
+        name,
+        isError: false,
+        ...(mcpServer === undefined ? {} : { mcpServer }),
+      },
+    });
+    // bash sits under a pricey, light call; the MCP tool under a cheap one
+    // that read a large cached context
+    const run = stubRun({
+      id: 'r1',
+      spans: [
+        callSpan(
+          'la',
+          'opus',
+          { input: 100, output: 0, cacheRead: 0, cacheWrite: 0 },
+          9,
+        ),
+        tool('a1', 'bash'),
+        callSpan(
+          'lb',
+          'haiku',
+          { input: 0, output: 0, cacheRead: 900, cacheWrite: 0 },
+          1,
+        ),
+        tool('b1', 'ctx7_query', 'ctx7'),
+      ],
+    });
+    expect(topTools([run]).map((t) => t.name)).toEqual(['bash', 'ctx7_query']);
+    const byTokens = topTools([run], 8, 'tokens');
+    expect(byTokens.map((t) => t.name)).toEqual(['ctx7_query', 'bash']);
+    expect(byTokens[0]?.tokens).toBe(900);
+
+    // one runs array, both units: the merge is cached, the order is not
+    const runs = [run];
+    expect(topTools(runs, 8, 'tokens')[0]?.name).toBe('ctx7_query');
+    expect(topTools(runs)[0]?.name).toBe('bash');
+    expect(mcpShare(runs, 'tokens').share).toBeCloseTo(0.9, 6);
+    expect(topTools(runs, 8, 'tokens')[0]?.name).toBe('ctx7_query');
+
+    expect(mcpShare([run]).share).toBeCloseTo(0.1, 6);
+    const tokenShare = mcpShare([run], 'tokens');
+    expect(tokenShare.share).toBeCloseTo(0.9, 6);
+    expect(tokenShare.tokens).toBe(900);
+    expect(tokenShare.costUSD).toBeCloseTo(1, 6);
   });
 });

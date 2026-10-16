@@ -247,6 +247,19 @@ describe('inspector focus (Activity | Finding)', () => {
     expect(useAppStore.getState().selection.spanId).toBeNull();
   });
 
+  it('revealInsight opens a finding and asks for a reveal even when it is active', () => {
+    useAppStore.getState().showInsight(i1, 's2');
+    const before = useAppStore.getState().ui.revealSeq;
+    useAppStore.getState().revealInsight(i1);
+    const state = useAppStore.getState();
+    expect(state.selection.insightId).toBe('i1');
+    expect(state.selection.focus).toBe('insight');
+    expect(state.ui.revealSeq).toBe(before + 1);
+    // showInsight alone never asks for one
+    useAppStore.getState().showInsight(i1);
+    expect(useAppStore.getState().ui.revealSeq).toBe(before + 1);
+  });
+
   it('focusInspector flips the detail; selecting a span returns to the activity', () => {
     useAppStore.getState().showInsight(i1, 's1');
     useAppStore.getState().focusInspector('span');

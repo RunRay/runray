@@ -3,13 +3,13 @@ import net from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import tls from 'node:tls';
-import { fileURLToPath } from 'node:url';
 import { bundledPricing } from '@runray/core';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { loadDemoTraceFile, resolveDemoDataDir } from './demo.js';
 import { buildTraceFile } from './discover.js';
 import { createProgram } from './program.js';
 import { startServer } from './server.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 import { resolveExportTemplate } from './ui-dist.js';
 
 /**
@@ -59,9 +59,7 @@ function guarded(name: string, fn: AnyFn): AnyFn {
   };
 }
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 // parses the full claude-code fixture tree under a network guard — headroom
 // over vitest's 5s default to avoid full-suite-load flakes (see run-diff 2.1)
 vi.setConfig({ testTimeout: 30_000 });

@@ -47,12 +47,17 @@ The system SHALL ingest OpenCode sessions from legacy file storage, from the SQL
 - THEN the system reports a clear, actionable error and does not modify or lock the database
 
 ### Requirement: OTLP JSON import (best-effort)
-The system SHALL import OTLP/JSON trace files (OTel Collector file-exporter output), mapping `resourceSpans` into normalized spans, carrying `gen_ai.*` attributes unchanged into span `attributes`, and grouping spans into runs by session id. Claude Code beta span names are pinned in fixtures; unrecognized span shapes SHALL degrade to `kind: other` rather than fail the import.
+The system SHALL import OTLP/JSON trace files (OTel Collector file-exporter output), mapping `resourceSpans` into normalized spans, carrying `gen_ai.*` attributes unchanged into span `attributes`, and grouping spans into runs by session id. Under `--redact` the system SHALL carry only the metadata keys of `gen_ai.*` (trace-sanitization, "Attribute allowlist"), because the GenAI conventions also put prompt and tool text under that prefix. Claude Code beta span names are pinned in fixtures; unrecognized span shapes SHALL degrade to `kind: other` rather than fail the import.
 
 #### Scenario: Claude Code beta trace import
 - GIVEN an OTLP/JSON file exported from Claude Code native traces (beta)
 - WHEN the file is imported
 - THEN spans sharing a session id form one run, `gen_ai.*` attributes pass through to span `attributes`, and subagent nesting follows the span parent links
+
+#### Scenario: GenAI content under --redact
+- GIVEN an OTLP/JSON file whose spans carry `gen_ai.input.messages` and `gen_ai.tool.call.arguments` next to `gen_ai.request.model`
+- WHEN the file is imported with `--redact`
+- THEN span `attributes` keep `gen_ai.request.model` and carry neither content attribute
 
 #### Scenario: Unknown span shapes
 - GIVEN an OTLP/JSON file containing spans with unrecognized names or attributes
