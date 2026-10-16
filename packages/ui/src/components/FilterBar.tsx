@@ -1,7 +1,8 @@
 import type { SourceTool } from '@runray/schema';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { projectKey } from '../lib/filter-runs';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { isFilterActive, NO_BRANCH, projectKey } from '../lib/filter-runs';
 import { useAppStore } from '../store';
+import { BranchName } from './BranchMark';
 
 /**
  * Global filter dropdowns (add-dashboard-extensions 1.2, 03-design.md §3):
@@ -35,13 +36,7 @@ export function FilterBar() {
   );
 
   if (data.status !== 'ready' || runs.length === 0) return null;
-  const anyActive =
-    filter.project !== null ||
-    filter.source !== null ||
-    filter.periodDays !== null ||
-    filter.model !== null ||
-    filter.day !== null ||
-    filter.tool !== null;
+  const anyActive = isFilterActive(filter);
 
   return (
     <fieldset
@@ -104,6 +99,23 @@ export function FilterBar() {
           onClear={() => setFilter({ tool: null })}
         />
       )}
+      {filter.branch !== null && (
+        <FilterChip
+          label="Branch"
+          value={
+            filter.branch === NO_BRANCH ? (
+              'none recorded'
+            ) : (
+              <BranchName
+                name={filter.branch}
+                announce={false}
+                className="max-w-52"
+              />
+            )
+          }
+          onClear={() => setFilter({ branch: null })}
+        />
+      )}
       {anyActive && (
         <button
           type="button"
@@ -118,9 +130,10 @@ export function FilterBar() {
 }
 
 /**
- * A standalone active-filter chip for a drill-down dimension (model, day)
- * that has no dropdown. Brass active state + a dedicated ✕, matching the
- * active-dropdown chip look so all active filters read as one family.
+ * A standalone active-filter chip for a drill-down dimension (model, day,
+ * tool, branch) that has no dropdown. Brass active state + a dedicated ✕,
+ * matching the active-dropdown chip look so all active filters read as one
+ * family.
  */
 function FilterChip({
   label,
@@ -128,7 +141,7 @@ function FilterChip({
   onClear,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   onClear: () => void;
 }) {
   return (

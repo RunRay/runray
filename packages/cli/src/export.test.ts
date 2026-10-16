@@ -20,6 +20,7 @@ import {
   selectRun,
 } from './export.js';
 import { createProgram } from './program.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 import { resolveExportTemplate } from './ui-dist.js';
 
 const TEMPLATE =
@@ -277,9 +278,7 @@ describe('selectRun', () => {
   });
 });
 
-const fixturesDir = fileURLToPath(
-  new URL('../../../fixtures/claude-code', import.meta.url),
-);
+const fixturesDir = claudeCodeFixtures();
 // runs the real export command over the full claude-code fixture tree —
 // headroom over vitest's 5s default to avoid full-suite-load flakes
 vi.setConfig({ testTimeout: 30_000 });

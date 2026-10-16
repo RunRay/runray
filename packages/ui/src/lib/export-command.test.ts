@@ -164,5 +164,20 @@ describe('exportCommand (Task 4.1, visualizer "The rendered command is exact and
       expect(res.scopeSentence).toContain('active in-browser filters');
       expect(res.runCount).toBe(3);
     });
+
+    it('treats a branch filter as store-only and names it', () => {
+      const res = exportCommand(
+        {
+          route: DASHBOARD_ROUTE,
+          filter: { ...EMPTY_FILTER, branch: 'feat/export' },
+          allRuns,
+          visibleRuns,
+        },
+        'sanitized',
+      );
+      expect(res.command).toBe('runray export -o report.html --anonymize');
+      expect(res.hasStoreOnlyFilter).toBe(true);
+      expect(res.scopeSentence).toContain('tool, branch)');
+    });
   });
 });
