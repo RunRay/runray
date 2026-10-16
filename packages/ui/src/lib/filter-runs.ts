@@ -1,6 +1,9 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { localDay } from './overview';
+import { branchKey, projectKey } from './run-keys';
 import type { DisplayUnit } from './unit';
+
+export { branchKey, NO_BRANCH, projectKey } from './run-keys';
 
 /**
  * Global run filters (add-dashboard-extensions, D1/D2): pure, client-side
@@ -20,6 +23,8 @@ export interface RunFilter {
   day: string | null;
   /** A tool/MCP name; drill-down from the dashboard By-tool card (E5). */
   tool: string | null;
+  /** A branch key (see `branchKey`); drill-down from the Top branches card. */
+  branch: string | null;
 }
 
 export const EMPTY_FILTER: RunFilter = {
@@ -29,7 +34,21 @@ export const EMPTY_FILTER: RunFilter = {
   model: null,
   day: null,
   tool: null,
+  branch: null,
 };
+
+/** Whether any dimension narrows the runs (the "Reset" and "Clear" gate). */
+export function isFilterActive(filter: RunFilter): boolean {
+  return (
+    filter.project !== null ||
+    filter.source !== null ||
+    filter.periodDays !== null ||
+    filter.model !== null ||
+    filter.day !== null ||
+    filter.tool !== null ||
+    filter.branch !== null
+  );
+}
 
 /** A run "uses" a tool when any tool/mcp span carries that name. */
 export function runUsesTool(run: Run, tool: string): boolean {
@@ -43,15 +62,6 @@ export function runUsesTool(run: Run, tool: string): boolean {
 /** A run "uses" a model when it spent on it (a key in the byModel rollup). */
 export function runUsesModel(run: Run, model: string): boolean {
   return Object.hasOwn(run.totals.costUSD.byModel, model);
-}
-
-/**
- * The one project grouping key: runs without a project name group under the
- * same `—` placeholder the overview ranking renders — clicking that row must
- * filter to exactly the runs it counted.
- */
-export function projectKey(run: Run): string {
-  return run.project?.name ?? '—';
 }
 
 /**
@@ -192,16 +202,21 @@ export function reconcileFilter(
     runs.some((r) => runUsesTool(r, filter.tool as string))
       ? filter.tool
       : null;
+  const branch =
+    filter.branch === null || runs.some((r) => branchKey(r) === filter.branch)
+      ? filter.branch
+      : null;
   if (
     project === filter.project &&
     source === filter.source &&
     model === filter.model &&
     day === filter.day &&
-    tool === filter.tool
+    tool === filter.tool &&
+    branch === filter.branch
   ) {
     return filter;
   }
-  return { ...filter, project, source, model, day, tool };
+  return { ...filter, project, source, model, day, tool, branch };
 }
 
 export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
@@ -225,6 +240,9 @@ export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
       return false;
     }
     if (filter.tool !== null && !runUsesTool(run, filter.tool)) {
+      return false;
+    }
+    if (filter.branch !== null && branchKey(run) !== filter.branch) {
       return false;
     }
     // Day strings are YYYY-MM-DD — lexicographic order IS date order.

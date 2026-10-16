@@ -481,3 +481,8 @@ automatically extends its fixture-parameterized equivalence matrix.
       overview assigns model colours over every model with tokens, not only
       the priced ones in `byModel`, so an unpriced model never shares
       another model's colour in token mode. Tests in `unit-mode.test.tsx`.
+- [x] 16.3 B [UI → /frontend-design] Merge with the branch ranking
+      (add-branch-attribution): Top branches ranks in the display unit like
+      the other rankings, since 16.1 removed the Resource Breakdown's own
+      Tokens | Spend switch it read; its spec line says so. Test in
+      `overview.test.ts`.

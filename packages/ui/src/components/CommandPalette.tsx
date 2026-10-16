@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { projectKey, type RunFilter } from '../lib/filter-runs';
+import { isFilterActive, projectKey, type RunFilter } from '../lib/filter-runs';
 import { fuzzyScore } from '../lib/fuzzy';
 import { DASHBOARD_ROUTE, type Route, SESSIONS_ROUTE } from '../lib/router';
 import type { Theme } from '../lib/theme';
@@ -198,14 +198,7 @@ function buildCommands(
   }
 
   if (runs.length > 0) {
-    const anyActive =
-      filter.project !== null ||
-      filter.source !== null ||
-      filter.periodDays !== null ||
-      filter.model !== null ||
-      filter.day !== null ||
-      filter.tool !== null;
-    if (anyActive) {
+    if (isFilterActive(filter)) {
       cmds.push({
         id: 'filter:clear',
         group: 'Filter',
