@@ -574,12 +574,7 @@ describe('a foreign file next to real sessions (no 1970 runs)', () => {
   it('skips it with a reason and keeps the real session', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'runray-foreign-'));
     try {
-      const simple = fileURLToPath(
-        new URL(
-          '../../../fixtures/claude-code/simple/simple.jsonl',
-          import.meta.url,
-        ),
-      );
+      const simple = join(claudeCodeFixtures(), 'simple', 'simple.jsonl');
       writeFileSync(join(dir, 'session.jsonl'), readFileSync(simple));
       // what an OTel Collector debug log or any other tool's JSONL looks like
       const foreign = join(dir, 'app-log.jsonl');
@@ -613,12 +608,7 @@ describe('a foreign file next to real sessions (no 1970 runs)', () => {
   it('skips a Claude Code session that has no prompt yet without a warning', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'runray-live-'));
     try {
-      const simple = fileURLToPath(
-        new URL(
-          '../../../fixtures/claude-code/simple/simple.jsonl',
-          import.meta.url,
-        ),
-      );
+      const simple = join(claudeCodeFixtures(), 'simple', 'simple.jsonl');
       writeFileSync(join(dir, 'session.jsonl'), readFileSync(simple));
       // a session Claude Code has just opened: metadata only, so far
       writeFileSync(
