@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_FILTER } from './filter-runs';
+import { EMPTY_FILTER, NO_BRANCH } from './filter-runs';
 import {
   DASHBOARD_ROUTE,
   formatHash,
@@ -108,13 +108,27 @@ describe('time route + filter params (D6/E2)', () => {
       model: 'claude-opus-4-8',
       day: '2026-07-07',
       tool: 'webfetch',
+      branch: 'feat/export',
     };
     const hash = formatHash(DASHBOARD_ROUTE, filter);
     expect(hash).toBe(
-      '#/dashboard?project=shop%20web&source=claude-code&period=7&model=claude-opus-4-8&day=2026-07-07&tool=webfetch',
+      '#/dashboard?project=shop%20web&source=claude-code&period=7&model=claude-opus-4-8&day=2026-07-07&tool=webfetch&branch=feat%2Fexport',
     );
     expect(parseHash(hash)).toEqual(DASHBOARD_ROUTE);
     expect(parseFilterParams(hash)).toEqual(filter);
+  });
+
+  it('the no-branch filter reads as ~none and round-trips', () => {
+    const filter = { ...EMPTY_FILTER, branch: NO_BRANCH };
+    const hash = formatHash(DASHBOARD_ROUTE, filter);
+    expect(hash).toBe('#/dashboard?branch=~none');
+    expect(parseFilterParams(hash)).toEqual(filter);
+  });
+
+  it('links made before the branch filter parse with no branch', () => {
+    expect(
+      parseFilterParams('#/dashboard?project=shop&tool=Bash').branch,
+    ).toBeNull();
   });
 
   it('partial filters emit only their params; empty filter emits none', () => {

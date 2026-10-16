@@ -178,6 +178,9 @@ export interface AppState {
     collapsed: ReadonlySet<string>;
     /** Evidence span ids of the active insight (empty when none). */
     highlighted: ReadonlySet<string>;
+    /** Bumped by `revealInsight`: the waterfall reveals the active
+     * finding's evidence again even when the finding didn't change. */
+    revealSeq: number;
   };
   dataLoaded(traceFile: TraceFile, live: boolean): void;
   dataFailed(message: string): void;
@@ -236,6 +239,12 @@ export interface AppState {
    * same step; an unrelated span is dropped.
    */
   showInsight(insight: Insight, spanId?: string): void;
+  /**
+   * Open a finding the way a deep link does, expanding what hides its
+   * evidence even when it is already the active one (a hidden-finding chip
+   * or list entry, after the user collapsed its subtree).
+   */
+  revealInsight(insight: Insight): void;
   /** Flip the Inspector between the selected activity and the active finding. */
   focusInspector(focus: 'span' | 'insight'): void;
   /** Stage an insight to activate once the target run's route lands. */
@@ -310,6 +319,7 @@ export const useAppStore = create<AppState>()((set) => ({
     exportOpen: false,
     collapsed: new Set(),
     highlighted: new Set(),
+    revealSeq: 0,
   },
   pendingInsight: null,
   diffAnchor: null,
@@ -529,6 +539,11 @@ export const useAppStore = create<AppState>()((set) => ({
       };
     }),
   showInsight: (insight, spanId) => set((s) => openInsight(s, insight, spanId)),
+  revealInsight: (insight) =>
+    set((s) => {
+      const next = openInsight(s, insight);
+      return { ...next, ui: { ...next.ui, revealSeq: s.ui.revealSeq + 1 } };
+    }),
   focusInspector: (focus) =>
     set((s) => ({
       selection: { ...s.selection, focus },

@@ -21,7 +21,7 @@ import type { SanitizationManifest } from '../lib/load';
 import { KIND_BG } from '../lib/span-kind';
 import { errorPill } from '../lib/triage';
 import { type CopyState, useCopy } from '../lib/use-copy';
-import { insightsBySpan } from '../lib/waterfall';
+import { hiddenFindings, insightsBySpan } from '../lib/waterfall';
 import { selectActiveRun, useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
 import { ErrorTriageSections } from './ErrorTriageSections';
@@ -81,7 +81,9 @@ export function Inspector(props: InspectorProps = {}) {
   const toggleInspectorWide = useAppStore((s) => s.toggleInspectorWide);
   const room = useAppStore((s) => s.ui.inspectorRoom);
   const showInsight = useAppStore((s) => s.showInsight);
+  const revealInsight = useAppStore((s) => s.revealInsight);
   const focusInspector = useAppStore((s) => s.focusInspector);
+  const collapsed = useAppStore((s) => s.ui.collapsed);
 
   const spanId = propSpanId !== undefined ? propSpanId : storeSpanId;
   const insightId =
@@ -104,6 +106,16 @@ export function Inspector(props: InspectorProps = {}) {
         ? []
         : (insightsBySpan(run.insights).get(span.id) ?? []),
     [run, span],
+  );
+  // Findings the selected row hides while collapsed (C): the keyboard path
+  // to what the waterfall's "inside" chip opens.
+  const spanHidden = useMemo(
+    () =>
+      span === undefined || run === undefined || !collapsed.has(span.id)
+        ? []
+        : (hiddenFindings(run.spans, run.insights, collapsed).get(span.id) ??
+          []),
+    [run, span, collapsed],
   );
   // The switch flips `focus`; with no span selected the finding shows on
   // its own, with no finding active the activity does.
@@ -178,6 +190,9 @@ export function Inspector(props: InspectorProps = {}) {
             onPick={(f) => showInsight(f, span.id)}
           />
         )}
+      {!showingFinding && span !== undefined && spanHidden.length > 0 && (
+        <HiddenFindings findings={spanHidden} onPick={revealInsight} />
+      )}
       {showingFinding && insight !== undefined && run !== undefined ? (
         <InsightDetail insight={insight} run={run} />
       ) : span !== undefined ? (
@@ -288,6 +303,74 @@ function Playbook({ ruleId, source }: { ruleId: string; source: string }) {
   );
 }
 
+const FINDING_CHIP_BASE =
+  'rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg';
+const FINDING_CHIP_IDLE =
+  'border-border bg-surface text-text-dim hover:bg-surface-2 hover:text-text';
+
+/** A finding chip's face: severity glyph, rule, its own estimate. */
+function FindingChipLabel({ finding }: { finding: Insight }) {
+  return (
+    <>
+      <span aria-hidden className={SEVERITY_TEXT[finding.severity]}>
+        ⚠{' '}
+      </span>
+      {ruleLabel(finding.ruleId).label}
+      {finding.estimatedWasteUSD !== undefined && (
+        <span className="ml-1 font-mono text-text-faint">
+          {formatUSD(finding.estimatedWasteUSD)}
+        </span>
+      )}
+    </>
+  );
+}
+
+/**
+ * Findings hidden inside the selected collapsed row, worst first (C), one
+ * row each, named by title like the waterfall card's "Hidden inside" list:
+ * two findings of one rule with the same estimate must still read apart.
+ * Picking one opens it the way a deep link does: the waterfall expands the
+ * subtree onto its evidence.
+ */
+function HiddenFindings({
+  findings,
+  onPick,
+}: {
+  findings: Insight[];
+  onPick: (insight: Insight) => void;
+}) {
+  return (
+    <div className="px-3 pt-2">
+      <p className="micro-label text-text-faint">Hidden inside</p>
+      <ul className="mt-1 space-y-1">
+        {findings.map((f) => (
+          <li key={f.id}>
+            <button
+              type="button"
+              onClick={() => onPick(f)}
+              title={f.title}
+              className={`flex w-full items-baseline gap-1.5 text-left ${FINDING_CHIP_BASE} ${FINDING_CHIP_IDLE}`}
+            >
+              <span
+                aria-hidden
+                className={`shrink-0 ${SEVERITY_TEXT[f.severity]}`}
+              >
+                ⚠
+              </span>
+              <span className="min-w-0 truncate">{f.title}</span>
+              {f.estimatedWasteUSD !== undefined && (
+                <span className="ml-auto shrink-0 font-mono text-text-faint">
+                  {formatUSD(f.estimatedWasteUSD)}
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** One chip per finding the selected span is evidence of, worst first. */
 function FindingChips({
   findings,
@@ -308,21 +391,13 @@ function FindingChips({
             type="button"
             aria-pressed={active}
             onClick={() => onPick(f)}
-            className={`rounded-control border px-2 py-0.5 text-label transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:bg-bg ${
+            className={`${FINDING_CHIP_BASE} ${
               active
                 ? 'border-border-slate bg-surface-2 text-text'
-                : 'border-border bg-surface text-text-dim hover:bg-surface-2 hover:text-text'
+                : FINDING_CHIP_IDLE
             }`}
           >
-            <span aria-hidden className={SEVERITY_TEXT[f.severity]}>
-              ⚠{' '}
-            </span>
-            {ruleLabel(f.ruleId).label}
-            {f.estimatedWasteUSD !== undefined && (
-              <span className="ml-1 font-mono text-text-faint">
-                {formatUSD(f.estimatedWasteUSD)}
-              </span>
-            )}
+            <FindingChipLabel finding={f} />
           </button>
         );
       })}

@@ -1,6 +1,7 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { type ReactNode, useMemo, useState } from 'react';
 import {
+  NO_BRANCH,
   type RunFilter,
   type SpendTrend,
   spendTrend,
@@ -13,6 +14,8 @@ import {
 } from '../lib/model-colors';
 import {
   aggregateTotals,
+  anyBranch,
+  type BranchEntry,
   cacheAggregate,
   type DaySpend,
   errorRate,
@@ -20,6 +23,7 @@ import {
   type RuleGroup,
   sessionCostStats,
   spendByDay,
+  topBranches,
   topModels,
   topProjects,
   topSources,
@@ -28,6 +32,7 @@ import {
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
 import { useAppStore } from '../store';
+import { BranchMark } from './BranchMark';
 import { CacheDial } from './CacheDial';
 import { CoverageCaveat } from './CoverageNotices';
 import { LimitStatementLine } from './LimitMode';
@@ -65,6 +70,14 @@ export function Overview({
   const totals = useMemo(() => aggregateTotals(runs), [runs]);
   const days = useMemo(() => spendByDay(runs), [runs]);
   const projects = useMemo(() => topProjects(runs), [runs]);
+  // the card appears when a visible run records a branch (a lone "no
+  // branch" row would rank nothing), and stays while a branch filter is on
+  // so the row it came from keeps its active state
+  const branchFiltered = filter.branch !== null;
+  const branches = useMemo(
+    () => (branchFiltered || anyBranch(runs) ? topBranches(runs) : []),
+    [runs, branchFiltered],
+  );
   const models = useMemo(() => topModels(runs), [runs]);
   const chartModels = useMemo(() => topModels(runs, 8), [runs]);
   const sources = useMemo(() => topSources(runs), [runs]);
@@ -257,7 +270,8 @@ export function Overview({
               Resource Breakdown
             </h2>
             <p className="micro-label text-text-faint">
-              Click a project, model, or source to filter the sessions below
+              Click a project, {branches.length > 0 ? 'branch, ' : ''}model, or
+              source to filter the sessions below
             </p>
           </div>
           <fieldset
@@ -291,7 +305,13 @@ export function Overview({
           </fieldset>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* With branches, a 2×2 grid keeps them beside the projects they
+            refine, and gives a branch name room next to its project. */}
+        <div
+          className={`grid grid-cols-1 gap-4 ${
+            branches.length > 0 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+          }`}
+        >
           <RankCard
             title="Top projects"
             hint="Click a project to filter the sessions below."
@@ -312,6 +332,29 @@ export function Overview({
               filterNoun="project"
             />
           </RankCard>
+          {branches.length > 0 && (
+            <RankCard
+              title="Top branches"
+              hint="A session counts toward the branch it started on."
+              delayMs={65}
+            >
+              <BranchRankList
+                branches={branches}
+                filter={filter}
+                metricMode={metricMode}
+                onSelect={(entry) =>
+                  setFilter(
+                    entry.branch === undefined
+                      ? { branch: NO_BRANCH }
+                      : {
+                          project: entry.project ?? null,
+                          branch: entry.branch,
+                        },
+                  )
+                }
+              />
+            </RankCard>
+          )}
           <RankCard
             title="Top models"
             hint="Share of total consumption by model."
@@ -917,6 +960,67 @@ function ChartLegend({
   );
 }
 
+/**
+ * Top branches rows: the branch in mono after the branch mark, its project
+ * faint beside it (dropped while a project filter makes it the same on every
+ * row), and one muted row for runs that record no branch. A branch filter
+ * without a project lights every row of that branch.
+ */
+function BranchRankList({
+  branches,
+  filter,
+  metricMode,
+  onSelect,
+}: {
+  branches: BranchEntry[];
+  filter: RunFilter;
+  metricMode: 'tokens' | 'costUSD';
+  onSelect: (entry: BranchEntry) => void;
+}) {
+  const byKey = new Map(branches.map((b) => [b.name, b]));
+  const isActive = (b: BranchEntry) =>
+    filter.branch === (b.branch ?? NO_BRANCH) &&
+    (b.project === undefined ||
+      filter.project === null ||
+      filter.project === b.project);
+  return (
+    <RankList
+      metricMode={metricMode}
+      entries={branches.map((b) =>
+        b.branch === undefined
+          ? {
+              key: b.name,
+              label: 'No branch recorded',
+              muted: true,
+              active: isActive(b),
+              costUSD: b.costUSD,
+              tokens: b.tokens,
+              ariaLabel: 'Filter to sessions without a recorded branch',
+            }
+          : {
+              key: b.name,
+              label: b.branch,
+              prefix: <BranchMark />,
+              mono: true,
+              active: isActive(b),
+              ...(filter.project === null && b.project !== undefined
+                ? { detail: b.project }
+                : {}),
+              costUSD: b.costUSD,
+              tokens: b.tokens,
+              ariaLabel: `Filter to branch ${b.branch} in ${b.project ?? '—'}`,
+            },
+      )}
+      maxCost={branches[0]?.costUSD ?? 0}
+      maxTokens={Math.max(...branches.map((b) => b.tokens), 0)}
+      onSelect={(key) => {
+        const entry = byKey.get(key);
+        if (entry !== undefined) onSelect(entry);
+      }}
+    />
+  );
+}
+
 function RankList({
   entries,
   maxCost,
@@ -932,6 +1036,19 @@ function RankList({
     costUSD: number;
     tokens: number;
     dotClass?: string;
+    /** A glyph before the label (the branch mark). */
+    prefix?: ReactNode;
+    /** Set the label as an identifier (branch names). */
+    mono?: boolean;
+    /** Dim the label: a placeholder row such as "No branch recorded". */
+    muted?: boolean;
+    /** Faint context after the label (a branch's project). It only takes
+     *  the room the label leaves, so the label truncates last. */
+    detail?: string;
+    /** Overrides the "Filter to <noun> <label>" accessible name. */
+    ariaLabel?: string;
+    /** Overrides the `activeKey` match for this row. */
+    active?: boolean;
   }[];
   maxCost: number;
   maxTokens?: number;
@@ -954,23 +1071,39 @@ function RankList({
   return (
     <ul className="space-y-2">
       {entries.map((entry) => {
-        const active = activeKey === entry.key;
+        const active = entry.active ?? activeKey === entry.key;
         const value = isTokens ? entry.tokens : entry.costUSD;
         const body = (
           <>
             <div className="flex items-baseline justify-between gap-2 text-label">
-              <span className="flex min-w-0 items-center gap-1.5">
+              <span className="flex min-w-0 flex-1 items-center gap-1.5">
                 {entry.dotClass !== undefined && (
                   <i
                     aria-hidden
                     className={`inline-block h-2 w-2 shrink-0 rounded-full ${entry.dotClass}`}
                   />
                 )}
+                {entry.prefix !== undefined && (
+                  <span className={active ? 'text-brand' : 'text-text-faint'}>
+                    {entry.prefix}
+                  </span>
+                )}
                 <span
-                  className={`truncate ${active ? 'text-brand' : 'text-text'}`}
+                  className={`truncate ${entry.mono === true ? 'font-mono' : ''} ${
+                    active
+                      ? 'text-brand'
+                      : entry.muted === true
+                        ? 'text-text-dim'
+                        : 'text-text'
+                  }`}
                 >
                   {entry.label}
                 </span>
+                {entry.detail !== undefined && (
+                  <span className="min-w-0 flex-1 truncate text-text-faint">
+                    {entry.detail}
+                  </span>
+                )}
               </span>
               <span className="shrink-0 font-mono text-text-dim">
                 {isTokens
@@ -998,7 +1131,10 @@ function RankList({
                 type="button"
                 onClick={() => onSelect(entry.key)}
                 aria-pressed={active}
-                aria-label={`Filter to ${filterNoun ?? ''} ${entry.label}`}
+                aria-label={
+                  entry.ariaLabel ??
+                  `Filter to ${filterNoun ?? ''} ${entry.label}`
+                }
                 className={`-mx-1.5 block w-full rounded-control px-1.5 py-1 text-left transition-colors duration-150 ease-out hover:bg-surface-2 active:bg-bg ${
                   active ? 'bg-brand/10' : ''
                 }`}

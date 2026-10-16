@@ -81,11 +81,16 @@ export {
   suggestedDowngrade,
   unpricedCoverage,
 } from './pricing/index.js';
-export type { ConvertOptions } from './pricing/litellm.js';
+export type {
+  ConvertOptions,
+  PriceListOptions,
+} from './pricing/litellm.js';
 export {
   convertLitellmPricing,
   DEFAULT_PRICING_PROVIDERS,
   LITELLM_PRICING_URL,
+  PriceListTooShortError,
+  priceListFromText,
 } from './pricing/litellm.js';
 export type {
   IdentityTable,

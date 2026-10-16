@@ -58,6 +58,8 @@ export default defineConfig({
   },
   test: {
     include: ['packages/*/src/**/*.test.{ts,tsx}'],
+    // hermetic copy of the committed claude-code fixtures (no local perf file)
+    globalSetup: ['./vitest.global-setup.ts'],
     environment: 'node',
     pool: 'forks',
     // Vitest 4 removed `poolOptions.forks.maxForks` and ignored it silently
