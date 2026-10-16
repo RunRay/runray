@@ -37,6 +37,10 @@
      brand token so every bg-/border-/outline-brass utility renders (and stays
      theme-aware via the brand override) instead of resolving to nothing. */
   --color-brass: var(--color-brand);
+  /* Logo (brand/logo/GUIDELINES.md): the mark stays violet in every theme;
+     its last span takes the tool-span teal on dark only (teal fails on light). */
+  --color-logo: #7c5cff;
+  --color-logo-accent: #00d4aa;
 
   /* Span-kind palette. Subagent (chartreuse here, umber in paper) keeps
      at least 12 OKLab ΔE from every other bar and finding colour, also
@@ -286,6 +290,7 @@
 
     --color-brand: #4f46e5;
     --color-brand-bright: #6366f1;
+    --color-logo-accent: #7c5cff;
 
     --color-span-llm: #4f46e5;
     --color-span-tool: #4b5563;
