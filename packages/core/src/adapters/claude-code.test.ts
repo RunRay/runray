@@ -354,6 +354,54 @@ describe('claude-code adapter — real scrubbed fixture', () => {
   }, 30_000);
 });
 
+describe('claude-code adapter — git branch', () => {
+  const record = (n: number, branch: unknown) => ({
+    type: 'assistant',
+    uuid: `u-${n}`,
+    parentUuid: n === 1 ? null : `u-${n - 1}`,
+    sessionId: 'sess-branch',
+    timestamp: `2026-07-02T14:00:0${n}Z`,
+    cwd: '/home/user/project/x',
+    ...(branch === undefined ? {} : { gitBranch: branch }),
+    message: {
+      id: `m${n}`,
+      role: 'assistant',
+      model: 'claude-sonnet-4-6',
+      stop_reason: 'end_turn',
+      usage: { input_tokens: 1, output_tokens: 1 },
+      content: [{ type: 'text', text: 'ok' }],
+    },
+  });
+
+  async function branchOf(branches: unknown[]): Promise<string | undefined> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-branch-'));
+    try {
+      const proj = join(dir, 'proj');
+      mkdirSync(proj, { recursive: true });
+      writeFileSync(
+        join(proj, 'sess-branch.jsonl'),
+        `${branches.map((b, i) => JSON.stringify(record(i + 1, b))).join('\n')}\n`,
+      );
+      const candidates = await claudeCodeAdapter.detect([dir]);
+      const run = await claudeCodeAdapter.parse(candidates[0] as Candidate, {
+        redact: false,
+      });
+      return run.project?.gitBranch;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('keeps the branch the session started on', async () => {
+    expect(await branchOf(['feat/a', 'feat/b'])).toBe('feat/a');
+  });
+
+  it('skips empty and missing values to the first real branch', async () => {
+    expect(await branchOf(['', undefined, 'main'])).toBe('main');
+    expect(await branchOf(['', ''])).toBeUndefined();
+  });
+});
+
 describe('claude-code adapter — cache-write TTL split', () => {
   const record = (
     messageId: string,

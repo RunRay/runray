@@ -9,10 +9,12 @@ import {
   formatUSD,
 } from '../lib/format';
 import { assignModelColors } from '../lib/model-colors';
+import { anyBranch } from '../lib/overview';
 import { DEFAULT_SORT, type SortKey, sortRuns } from '../lib/sort-runs';
 import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
 import { useAppStore } from '../store';
+import { BranchName } from './BranchMark';
 
 /**
  * Sessions list table (03-design.md §4.1, redesign mockup): When · Project ·
@@ -53,6 +55,7 @@ export function SessionsTable({
   limit?: number;
 }) {
   const diffAnchor = useAppStore((s) => s.diffAnchor);
+  const branchColumn = useMemo(() => anyBranch(runs), [runs]);
   const anchorRun = useMemo(
     () => runs.find((r) => r.id === diffAnchor),
     [runs, diffAnchor],
@@ -205,6 +208,7 @@ export function SessionsTable({
               <SessionRow
                 key={run.id}
                 run={run}
+                branchColumn={branchColumn}
                 modelColor={modelColor}
                 generatedAt={generatedAt}
                 diffAnchor={diffAnchor}
@@ -292,11 +296,14 @@ export function SessionsTable({
 
 function SessionRow({
   run,
+  branchColumn,
   modelColor,
   generatedAt,
   diffAnchor,
 }: {
   run: Run;
+  /** Some listed run records a branch, so the project cell makes room. */
+  branchColumn: boolean;
   modelColor: Map<string, string>;
   generatedAt: string;
   diffAnchor: string | null;
@@ -338,10 +345,30 @@ function SessionRow({
       >
         {formatRelativeTime(run.startedAt, generatedAt)}
       </td>
-      <td className="max-w-32 truncate px-3 text-text-dim">
-        {run.project?.name ?? '—'}
+      <td
+        className={`${branchColumn ? 'max-w-44' : 'max-w-32'} px-3 text-text-dim`}
+        title={
+          run.project?.gitBranch === undefined
+            ? undefined
+            : `${run.project?.name ?? '—'} · ${run.project.gitBranch}`
+        }
+      >
+        {/* the branch takes only the room the project leaves; with a branch
+            column the title gives up the 48px the project gains, so the
+            table is no wider */}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate">{run.project?.name ?? '—'}</span>
+          {run.project?.gitBranch !== undefined && (
+            <BranchName
+              name={run.project.gitBranch}
+              className="flex-1 text-label text-text-faint"
+            />
+          )}
+        </span>
       </td>
-      <td className="max-w-72 truncate px-3 text-text">
+      <td
+        className={`${branchColumn ? 'max-w-60' : 'max-w-72'} truncate px-3 text-text`}
+      >
         {run.title ?? `${run.source.tool} session`}
       </td>
       <td className="whitespace-nowrap px-3">

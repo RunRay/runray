@@ -244,7 +244,9 @@ async function collectTranscript(
     if (rec.isSidechain === true) t.legacy = true;
     if (t.sessionId === undefined) t.sessionId = str(rec.sessionId);
     if (t.cwd === undefined) t.cwd = str(rec.cwd);
-    if (t.gitBranch === undefined) t.gitBranch = str(rec.gitBranch);
+    // the branch the session started on; an empty value names none
+    if (t.gitBranch === undefined && rec.gitBranch !== '')
+      t.gitBranch = str(rec.gitBranch);
 
     if (type === 'assistant') {
       const msg = isObj(rec.message) ? rec.message : undefined;
