@@ -1,0 +1,176 @@
+{
+  "id": "run_c7cdbb29f887e61d",
+  "source": {
+    "tool": "otlp",
+    "format": "otlp-json",
+    "files": [
+      "fixtures/otlp/genai-semconv/content.json"
+    ]
+  },
+  "startedAt": "2026-10-06T15:20:00.000Z",
+  "endedAt": "2026-10-06T15:20:09.500Z",
+  "durationMs": 9500,
+  "spans": [
+    {
+      "id": "a1b2c3d4e5f60718",
+      "parentId": "ses-genai-semconv-1",
+      "kind": "other",
+      "name": "invoke_agent researcher",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:00.000Z",
+      "endedAt": "2026-10-06T15:20:09.500Z",
+      "durationMs": 9500,
+      "depth": 1,
+      "attributes": {
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.provider.name": "anthropic",
+        "gen_ai.request.model": "claude-sonnet-4-5",
+        "gen_ai.agent.name": "aliquip lo",
+        "gen_ai.agent.id": "dolor minim ",
+        "gen_ai.conversation.id": "minim minim",
+        "gen_ai.system_instructions": "minim aliqua incididunt sit ipsum adipiscing ipsum magna minim elit ipsum minim adipiscing consectetur dolor lorem ipsu",
+        "gen_ai.input.messages": "sed elit tempor tempor dolor quis ipsum elit enim consectetur nostrud dolor ipsum adipiscing ipsum nostrud enim aliqua tempor aliqua "
+      },
+      "provenance": {
+        "file": "fixtures/otlp/genai-semconv/content.json",
+        "recordId": "a1b2c3d4e5f60718"
+      }
+    },
+    {
+      "id": "ses-genai-semconv-1",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:00.000Z",
+      "endedAt": "2026-10-06T15:20:09.500Z",
+      "durationMs": 9500,
+      "depth": 0,
+      "agent": {
+        "sessionId": "ses-genai-semconv-1"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/otlp/genai-semconv/content.json",
+        "recordId": "ses-genai-semconv-1"
+      }
+    },
+    {
+      "id": "b2c3d4e5f6071829",
+      "parentId": "a1b2c3d4e5f60718",
+      "kind": "other",
+      "name": "chat claude-sonnet-4-5",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:00.200Z",
+      "endedAt": "2026-10-06T15:20:03.100Z",
+      "durationMs": 2900,
+      "depth": 2,
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.provider.name": "anthropic",
+        "gen_ai.request.model": "claude-sonnet-4-5",
+        "gen_ai.request.max_tokens": 1024,
+        "gen_ai.request.temperature": 0.2,
+        "gen_ai.response.id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+        "gen_ai.response.model": "claude-sonnet-4-5-20250929",
+        "gen_ai.response.finish_reasons": [
+          "tool_use"
+        ],
+        "gen_ai.usage.input_tokens": 1840,
+        "gen_ai.usage.output_tokens": 96,
+        "gen_ai.input.messages": "sed elit tempor tempor dolor quis ipsum elit enim consectetur nostrud dolor ipsum adipiscing ipsum nostrud enim aliqua tempor aliqua ",
+        "gen_ai.output.messages": "dolor veniam quis tempor incididunt magna labore ipsum amet aliqua labore ipsum aliqua nostrud elit amet labore quis adipiscing ipsum lorem sit consectetur tempor aliquip elit aliquip sit veniam ali",
+        "gen_ai.tool.definitions": "aliqua nostrud magna nostrud quis nostrud tempor minim minim quis consectetur lorem labore tempor nostrud aliqua amet sed ipsum incididunt amet magna enim tempor s",
+        "gen_ai.prompt.0.role": "elit",
+        "gen_ai.prompt.0.content": "aliquip sit ipsum enim tempor magna nostrud nostrud consectetur nostrud dolor",
+        "gen_ai.completion.0.role": "amet lore",
+        "gen_ai.completion.0.content": "aliquip quis adipiscing dolor incidi"
+      },
+      "provenance": {
+        "file": "fixtures/otlp/genai-semconv/content.json",
+        "recordId": "b2c3d4e5f6071829"
+      }
+    },
+    {
+      "id": "c3d4e5f607182930",
+      "parentId": "a1b2c3d4e5f60718",
+      "kind": "other",
+      "name": "execute_tool read_file",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:03.200Z",
+      "endedAt": "2026-10-06T15:20:03.450Z",
+      "durationMs": 250,
+      "depth": 2,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "read_file",
+        "gen_ai.tool.call.id": "toolu_01A09q90qw90lq917835lq9",
+        "gen_ai.tool.type": "nostrud ",
+        "gen_ai.tool.call.arguments": "amet enim enim nostrud incididunt amet elit enim ",
+        "gen_ai.tool.call.result": "sit adipiscing aliqua sit ipsum enim consectetur dolor enim nostrud tempo"
+      },
+      "provenance": {
+        "file": "fixtures/otlp/genai-semconv/content.json",
+        "recordId": "c3d4e5f607182930"
+      }
+    },
+    {
+      "id": "d4e5f60718293041",
+      "parentId": "a1b2c3d4e5f60718",
+      "kind": "other",
+      "name": "chat claude-sonnet-4-5",
+      "status": "ok",
+      "startedAt": "2026-10-06T15:20:03.500Z",
+      "endedAt": "2026-10-06T15:20:09.400Z",
+      "durationMs": 5900,
+      "depth": 2,
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.provider.name": "anthropic",
+        "gen_ai.request.model": "claude-sonnet-4-5",
+        "gen_ai.request.max_tokens": 1024,
+        "gen_ai.request.temperature": 0.2,
+        "gen_ai.response.id": "msg_01Bq9w4kP7QX2sTn5wB8cR3d",
+        "gen_ai.response.model": "claude-sonnet-4-5-20250929",
+        "gen_ai.response.finish_reasons": [
+          "end_turn"
+        ],
+        "gen_ai.usage.input_tokens": 2010,
+        "gen_ai.usage.output_tokens": 54,
+        "gen_ai.output.messages": "sit incididunt sed ipsum nostrud quis minim aliqua enim amet nostrud enim sit incididunt amet enim sit incididunt veniam incididunt labore tempor sit",
+        "gen_ai.prompt": "quis incididunt adipiscing sit tempo",
+        "gen_ai.completion": "dolor minim dolor adipiscing magna amet nostrud aliqua aliqui"
+      },
+      "provenance": {
+        "file": "fixtures/otlp/genai-semconv/content.json",
+        "recordId": "d4e5f60718293041"
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "reasoning": 0,
+      "total": 0
+    },
+    "costUSD": {
+      "total": 0,
+      "wastedEstimate": 0,
+      "byModel": {}
+    },
+    "counts": {
+      "llmCalls": 0,
+      "toolCalls": 0,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0
+    }
+  },
+  "insights": []
+}

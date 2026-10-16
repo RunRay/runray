@@ -5,7 +5,8 @@
 `--redact` is a **parse-time** flag: adapters null `content.*` as they emit
 (`packages/core/src/adapters/claude-code.ts:386`), `readTranscriptSlice` refuses
 before touching the file (`packages/core/src/transcript.ts:290`), and the OTLP
-adapter admits only `gen_ai.*` attributes. Text is handled. Identity is not:
+adapter admits only `gen_ai.*` attributes (under `--redact`, only their
+metadata keys; see D2). Text is handled. Identity is not:
 `run.project.path`/`name`/`gitBranch`, `run.source.files[]`,
 `run.warnings[].file`, `span.provenance.file` (a *required* field) and the
 `runray.target` attribute all carry real local paths in every profile.
@@ -91,10 +92,37 @@ Path-bearing fields and their treatment:
 | `run.warnings[].message` | verbatim | passed through the path-shape net (D3) |
 | `runray.target` | basename | deleted (`targetKey`/`targetKind` survive — a hash and an enum) |
 | `run.title` | verbatim | dropped (already dropped under `--redact`) |
-| `span.attributes.*` | verbatim | allowlist: reserved `runray.*` counters, `gen_ai.*`, and legacy `tracepulse.*` metadata (excluding deleted `tracepulse.target`); everything else dropped |
+| `span.attributes.*` | verbatim | allowlist: reserved `runray.*` counters, the metadata keys of `gen_ai.*`, and legacy `tracepulse.*` metadata (excluding deleted `tracepulse.target`); everything else dropped |
 
 `span.attributes` is `{"type":"object"}` — an open map. For an open map the only
 safe rule is an allowlist, because an OTLP importer can put anything in it.
+
+The same holds inside each prefix. The first version of this table retained
+whole prefixes on the assumption that they were metadata, and both assumptions
+failed:
+- **`gen_ai.*`:** the OpenTelemetry GenAI conventions carry message text,
+  system instructions, tool definitions and tool arguments and results as
+  opt-in `gen_ai.*` attributes, and OpenLLMetry and older instrumentations
+  write `gen_ai.prompt.N.content`.
+- **`runray.*` and `tracepulse.*`:** an OTLP emitter can stamp keys of its own
+  with them. The adapter already kept only the reserved ones under `--redact`,
+  but the sanitizer kept the whole prefix. A run parsed without redaction and
+  then scrubbed (`--scrub-paths` alone) kept them, and D4 parity broke on such
+  input.
+
+So every prefix gets a list, in one module (`packages/core/src/attribute-keys.ts`)
+that both the OTLP adapter under `--redact` and the sanitizer read:
+- **`gen_ai.*`:** provider, operation, model and numeric request parameters,
+  response id, model and finish reasons, tool name, call id and type,
+  conversation and agent ids, and named `gen_ai.usage.*` token and cost
+  counters. Emitters also put strings and JSON under `gen_ai.usage.`, so the
+  prefix alone is not enough.
+- **Reserved keys:** `targetKey`, `targetKind`, `mcpDetection` and
+  `tracepulse.cacheWrite1hTokens`.
+
+Every other key is dropped, and a key the conventions add later is dropped
+until someone lists it. The text never enters a redacted run, and D4's parity
+invariant covers the rule.
 
 ### D3: A path-shape net as the backstop, and the test that proves totality
 

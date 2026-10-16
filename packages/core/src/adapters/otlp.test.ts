@@ -5,8 +5,10 @@ import { fileURLToPath } from 'node:url';
 import type { Run } from '@runray/schema';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { Candidate } from '../adapter.js';
+import { isGenAiMetadataKey } from '../attribute-keys.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
+import { scrubAttributes } from '../sanitize/identity.js';
 import { stripBom } from '../text.js';
 import { otlpAdapter } from './otlp.js';
 
@@ -65,7 +67,9 @@ describe('otlp detect', () => {
   });
 
   it('emits one candidate per session id found in the documents', async () => {
-    const candidates = await otlpAdapter.detect([fixtures]);
+    const candidates = await otlpAdapter.detect([
+      join(fixtures, 'claude-traces-beta'),
+    ]);
     expect(candidates).toHaveLength(2);
     for (const c of candidates) expect(c.format).toBe('otlp-json');
     expect(candidates.some((c) => c.runRef.endsWith(SIMPLE_SESSION))).toBe(
@@ -139,6 +143,60 @@ describe('otlp parse (Claude Code beta import — spec scenario)', () => {
     const run = await runOn(SIMPLE_SESSION, true);
     const turn = run.spans.find((s) => s.kind === 'turn');
     expect(turn?.content).toEqual({ promptPreview: null });
+  });
+});
+
+describe('otlp GenAI content attributes (fixtures/otlp/genai-semconv)', () => {
+  // a GenAI-semconv emitter with the opt-in content attributes turned on:
+  // agent, chat and tool spans carrying messages, instructions, tool
+  // definitions, arguments and results, plus OpenLLMetry-style prompt keys
+  const GENAI_SESSION = 'ses-genai-semconv-1';
+  const CONTENT_KEYS = [
+    'gen_ai.input.messages',
+    'gen_ai.output.messages',
+    'gen_ai.system_instructions',
+    'gen_ai.tool.definitions',
+    'gen_ai.tool.call.arguments',
+    'gen_ai.tool.call.result',
+    'gen_ai.prompt',
+    'gen_ai.completion',
+    'gen_ai.prompt.0.content',
+    'gen_ai.completion.0.content',
+  ];
+  const keysOf = (run: Run) =>
+    new Set(run.spans.flatMap((s) => Object.keys(s.attributes)));
+
+  it('passes every gen_ai.* key through without redaction', async () => {
+    const keys = keysOf(await runOn(GENAI_SESSION));
+    for (const key of CONTENT_KEYS) expect(keys, key).toContain(key);
+  });
+
+  it('keeps only gen_ai.* metadata under --redact', async () => {
+    const run = await runOn(GENAI_SESSION, true);
+    const keys = keysOf(run);
+    for (const key of CONTENT_KEYS) expect(keys, key).not.toContain(key);
+    for (const key of keys) expect(isGenAiMetadataKey(key), key).toBe(true);
+
+    // what describes the calls survives
+    const chat = run.spans.find(
+      (s) => s.attributes['gen_ai.response.finish_reasons'] !== undefined,
+    );
+    expect(chat?.attributes).toMatchObject({
+      'gen_ai.operation.name': 'chat',
+      'gen_ai.request.model': 'claude-sonnet-4-5',
+      'gen_ai.request.max_tokens': 1024,
+      'gen_ai.usage.input_tokens': 1840,
+      'gen_ai.response.finish_reasons': ['tool_use'],
+    });
+    const tool = run.spans.find(
+      (s) => s.attributes['gen_ai.operation.name'] === 'execute_tool',
+    );
+    expect(Object.keys(tool?.attributes ?? {}).sort()).toEqual([
+      'gen_ai.operation.name',
+      'gen_ai.tool.call.id',
+      'gen_ai.tool.name',
+      'gen_ai.tool.type',
+    ]);
   });
 });
 
@@ -262,6 +320,11 @@ describe('otlp unknown shapes (spec scenario)', () => {
                         key: 'runray.target',
                         value: { stringValue: 'secret-project-plan.md' },
                       },
+                      {
+                        // a reserved-prefix key of the emitter's own
+                        key: 'runray.notes',
+                        value: { stringValue: '/Users/alex/acme/.env' },
+                      },
                     ],
                   },
                 ],
@@ -285,10 +348,15 @@ describe('otlp unknown shapes (spec scenario)', () => {
 
     const redacted = await otlpAdapter.parse(candidate, { redact: true });
     const redTool = redacted.spans.find((s) => s.name === 'claude_code.tool');
-    // identity survives, the display token does not
+    // identity survives, the display token and the emitter's own key do not
     expect(redTool?.attributes['runray.targetKey']).toBe('deadbeefdeadbeef');
     expect(redTool?.attributes['runray.targetKind']).toBe('file-read');
     expect('runray.target' in (redTool?.attributes ?? {})).toBe(false);
+    expect('runray.notes' in (redTool?.attributes ?? {})).toBe(false);
+
+    // and sanitizing the unredacted parse lands on the same attributes (D4)
+    const sanitizedOpen = scrubAttributes(openTool?.attributes);
+    expect(sanitizedOpen).toEqual(redTool?.attributes);
   });
 
   it('detects and parses .jsonl files with multiple OTLP objects separated by newlines', async () => {
