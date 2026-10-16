@@ -7,6 +7,7 @@ export type {
   RunWarning,
   SourceAdapter,
 } from './adapter.js';
+export { NoSessionYet } from './adapter.js';
 export type { AdapterRegistry } from './adapters/index.js';
 export { adapters, createAdapterRegistry } from './adapters/index.js';
 export type {

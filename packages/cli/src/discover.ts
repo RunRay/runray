@@ -10,6 +10,7 @@ import {
   adapters,
   applyInsights,
   createIdentityTable,
+  NoSessionYet,
   normalize,
   type PricingTable,
   priceRun,
@@ -269,8 +270,19 @@ export async function buildTraceFile(
       // kill zero-config discovery — collect its error, keep the other runs
       try {
         const raw = await adapter.parse(candidate, { redact: parseRedact });
-        parsedRuns.push(normalize(priceRun(raw, options.pricing)));
+        const run = normalize(priceRun(raw, options.pricing));
+        // Any adapter, any fallback: a run with no usable start (an empty
+        // run, a 1970 default) would list as a session from 1970-01-01.
+        // Checked here once so no adapter can reintroduce phantom runs.
+        if (!hasUsableStart(run)) {
+          throw new Error(
+            'no usable start time: the run would show as starting on 1970-01-01',
+          );
+        }
+        parsedRuns.push(run);
       } catch (err) {
+        // the adapter's own file with no session in it yet: nothing to show
+        if (err instanceof NoSessionYet) continue;
         errors.push({
           runRef: candidate.runRef,
           message: err instanceof Error ? err.message : String(err),
@@ -345,6 +357,17 @@ export function collapseDuplicateRunIds(runs: readonly Run[]): Run[] {
   return [...byId.values()];
 }
 
+/** First instant after 1970-01-01 (UTC). */
+const START_OF_1970_01_02 = Date.UTC(1970, 0, 2);
+
+/** True when the run starts after 1970-01-01 (UTC). Epoch 0 is the default
+ * every adapter falls back to when a source carries no time, and a time in
+ * the wrong unit (seconds read as nanoseconds) lands later the same day. */
+function hasUsableStart(run: Run): boolean {
+  const ms = Date.parse(run.startedAt);
+  return Number.isFinite(ms) && ms >= START_OF_1970_01_02;
+}
+
 /** Print collected per-candidate errors to stderr (never stdout — `--json`
  * output must stay clean). */
 export function reportDiscoveryErrors(
@@ -355,9 +378,12 @@ export function reportDiscoveryErrors(
     process.stderr.write(`warning: skipped ${e.runRef}: ${e.message}\n`);
   }
   if (errors.length > 0 && loadedCount !== undefined) {
-    const noun = errors.length === 1 ? 'The session' : 'The sessions';
+    // 'entry', not 'file': a locked opencode.db is one file but one entry
+    // per session in it
+    const noun =
+      errors.length === 1 ? 'The entry above was' : 'The entries above were';
     process.stderr.write(
-      `${noun} above could not be read; the other ${loadedCount} loaded normally. A locked\ndatabase or a partly written file is skipped, never guessed at.\n`,
+      `${noun} skipped; the other ${loadedCount} loaded normally.\nA locked database, a partly written file or a file that isn't a session\nis skipped, never guessed at.\n`,
     );
   }
 }

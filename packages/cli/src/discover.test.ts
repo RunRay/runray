@@ -1,4 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Run, Span, TraceFile } from '@runray/schema';
@@ -10,6 +16,7 @@ import {
   collapseDuplicateRunIds,
   formatNoDataHints,
   parseSince,
+  reportDiscoveryErrors,
   reportUnpricedCoverage,
   resolveScanRoots,
   type ScannedRoot,
@@ -559,6 +566,148 @@ describe('buildTraceFile sanitization pipeline (1.7)', () => {
     if (!run) return;
     for (const span of run.spans) {
       expect(['session', 'subagent']).toContain(span.kind);
+    }
+  });
+});
+
+describe('a foreign file next to real sessions (no 1970 runs)', () => {
+  it('skips it with a reason and keeps the real session', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-foreign-'));
+    try {
+      const simple = join(claudeCodeFixtures(), 'simple', 'simple.jsonl');
+      writeFileSync(join(dir, 'session.jsonl'), readFileSync(simple));
+      // what an OTel Collector debug log or any other tool's JSONL looks like
+      const foreign = join(dir, 'app-log.jsonl');
+      writeFileSync(
+        foreign,
+        `${JSON.stringify({ level: 'info', timestamp: '2026-07-02T13:00:00Z', msg: 'ok' })}\n`,
+      );
+
+      const result = await buildTraceFile({
+        paths: [dir],
+        redact: false,
+        generatorVersion: '0.1.0-test',
+      });
+
+      expect(result.traceFile.runs).toHaveLength(1);
+      for (const run of result.traceFile.runs) {
+        expect(run.startedAt.startsWith('1970')).toBe(false);
+      }
+      expect(result.errors).toEqual([
+        {
+          runRef: foreign,
+          message:
+            'not a Claude Code session: no timestamped user or assistant records',
+        },
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('skips a Claude Code session that has no prompt yet without a warning', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-live-'));
+    try {
+      const simple = join(claudeCodeFixtures(), 'simple', 'simple.jsonl');
+      writeFileSync(join(dir, 'session.jsonl'), readFileSync(simple));
+      // a session Claude Code has just opened: metadata only, so far
+      writeFileSync(
+        join(dir, 'just-started.jsonl'),
+        `${JSON.stringify({ type: 'queue-operation', operation: 'enqueue', sessionId: 'sess-new', timestamp: '2026-07-02T13:00:00Z' })}\n`,
+      );
+
+      const result = await buildTraceFile({
+        paths: [dir],
+        redact: false,
+        generatorVersion: '0.1.0-test',
+      });
+
+      expect(result.traceFile.runs).toHaveLength(1);
+      expect(result.errors).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it.each<[string, Record<string, string>]>([
+    ['no span carries a start time', {}],
+    // seconds read as nanoseconds: 1970-01-01T00:00:01.7Z, not epoch 0
+    [
+      'the start lands later on 1970-01-01',
+      { startTimeUnixNano: '1700000000', endTimeUnixNano: '1800000000' },
+    ],
+  ])(
+    'refuses a run with no usable start from any adapter (OTLP: %s)',
+    async (_label, times) => {
+      const dir = mkdtempSync(join(tmpdir(), 'runray-otlp-notime-'));
+      try {
+        const file = join(dir, 'traces.json');
+        writeFileSync(
+          file,
+          JSON.stringify({
+            resourceSpans: [
+              {
+                resource: { attributes: [] },
+                scopeSpans: [
+                  {
+                    scope: { name: 'x' },
+                    spans: [
+                      {
+                        traceId: '0af7651916cd43dd8448eb211c80319c',
+                        spanId: 'b7ad6b7169203331',
+                        name: 'claude_code.interaction',
+                        ...times,
+                        attributes: [
+                          { key: 'session.id', value: { stringValue: 's1' } },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        );
+
+        const result = await buildTraceFile({
+          paths: [dir],
+          source: 'otlp',
+          redact: false,
+          generatorVersion: '0.1.0-test',
+        });
+
+        expect(result.traceFile.runs).toEqual([]);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]?.message).toBe(
+          'no usable start time: the run would show as starting on 1970-01-01',
+        );
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    },
+  );
+});
+
+describe('reportDiscoveryErrors trailer', () => {
+  it('names skipped files, not unreadable sessions, and fits 80 columns', () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+    try {
+      reportDiscoveryErrors(
+        [{ runRef: '/x/app-log.jsonl', message: 'not a Claude Code session' }],
+        115,
+      );
+      const out = write.mock.calls.map((c) => String(c[0])).join('');
+      expect(out).toBe(
+        'warning: skipped /x/app-log.jsonl: not a Claude Code session\n' +
+          'The entry above was skipped; the other 115 loaded normally.\n' +
+          "A locked database, a partly written file or a file that isn't a session\n" +
+          'is skipped, never guessed at.\n',
+      );
+      for (const line of out.split('\n').slice(1)) {
+        expect(line.length).toBeLessThanOrEqual(80);
+      }
+    } finally {
+      write.mockRestore();
     }
   });
 });
