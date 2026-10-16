@@ -7,7 +7,6 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { Run, Span, TraceFile } from '@runray/schema';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
@@ -22,6 +21,7 @@ import {
   resolveScanRoots,
   type ScannedRoot,
 } from './discover.js';
+import { claudeCodeFixtures } from './test-fixtures.js';
 
 describe('parseSince', () => {
   it.each([
@@ -523,9 +523,7 @@ describe('formatNoDataHints', () => {
 });
 
 describe('buildTraceFile sanitization pipeline (1.7)', () => {
-  const fixturePath = fileURLToPath(
-    new URL('../../../fixtures/claude-code', import.meta.url),
-  );
+  const fixturePath = claudeCodeFixtures();
 
   it('applies sanitized profile: scrubs paths and redacts prompt text', async () => {
     const result = await buildTraceFile({
