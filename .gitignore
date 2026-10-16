@@ -42,3 +42,5 @@ pricing.local.json
 .vscode/*
 !.vscode/extensions.json
 otel/*
+# Brand working files (logo concepts, boards, exports) — kept local
+brand/
