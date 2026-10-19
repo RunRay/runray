@@ -47,7 +47,7 @@
     "@clack/prompts": "^1.8.1",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "optionalDependencies": {
     "better-sqlite3": "^13.0.3"
