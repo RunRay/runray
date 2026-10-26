@@ -9,7 +9,10 @@ import type {
   RunWarning,
   SourceAdapter,
 } from '../adapter.js';
-import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import {
+  isGenAiMetadataKey,
+  isReservedMetadataKey,
+} from '../attribute-keys.js';
 import { stripBom } from '../text.js';
 import { errorPreview } from './error-preview.js';
 
@@ -39,10 +42,13 @@ import { errorPreview } from './error-preview.js';
  * import never fails on shape. Subagent nesting needs no synthesis: the
  * parent links carry it (a subagent's spans nest under the spawning tool's
  * execution span), and dangling parentSpanIds fall to the normalizer's Flat
- * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`; identity
- * attrs (user.*, organization.id) are dropped and `user_prompt` maps to the
+ * Trace Fallback. Privacy: only `gen_ai.*` enters `attributes`, and under
+ * redaction only its metadata keys (`isGenAiMetadataKey`); identity attrs
+ * (user.*, organization.id) are dropped and `user_prompt` maps to the
  * redactable `content.promptPreview`. Span events are skipped in v0.1 (they
- * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT).
+ * can carry full tool I/O under OTEL_LOG_TOOL_CONTENT). A branch named in
+ * resource or span attributes becomes `project.gitBranch` (see BRANCH_ATTRS),
+ * the same identity field the transcript adapters fill.
  */
 
 const PREVIEW_CHARS = 200;
@@ -133,6 +139,8 @@ function durationBetween(
 interface OtlpSpan {
   json: Json;
   attrs: Map<string, unknown>;
+  /** The enclosing resource's attributes, shared by its spans. */
+  resource: Map<string, unknown>;
   groupKey: string;
 }
 
@@ -147,6 +155,9 @@ function collectSpans(
   if (!Array.isArray(resourceSpans)) return out;
   for (const rs of resourceSpans) {
     if (!isObj(rs)) continue;
+    const resource = attrsToMap(
+      isObj(rs.resource) ? rs.resource.attributes : undefined,
+    );
     const scopeSpans = rs.scopeSpans ?? rs.instrumentationLibrarySpans;
     if (!Array.isArray(scopeSpans)) continue;
     for (const ss of scopeSpans) {
@@ -159,7 +170,7 @@ function collectSpans(
         const attrs = attrsToMap(span.attributes);
         const sessionId = attrStr(attrs, 'session.id');
         const groupKey = sessionId ?? `trace:${str(span.traceId) ?? 'unknown'}`;
-        out.push({ json: span, attrs, groupKey });
+        out.push({ json: span, attrs, resource, groupKey });
       }
     }
   }
@@ -199,6 +210,64 @@ function collectMetricSessions(doc: Json): string[] {
   return [...sessions];
 }
 
+/**
+ * Branch attributes in precedence order: OTel's `vcs.ref.head.name`, the
+ * `vcs.repository.ref.name` it replaced, then the informal `git.branch`. A
+ * vcs value whose type attribute says `tag` names no branch.
+ */
+const BRANCH_ATTRS: readonly (readonly [name: string, type?: string])[] = [
+  ['vcs.ref.head.name', 'vcs.ref.head.type'],
+  ['vcs.repository.ref.name', 'vcs.repository.ref.type'],
+  ['git.branch'],
+];
+
+function branchIn(attrs: Map<string, unknown>): string | undefined {
+  for (const [name, type] of BRANCH_ATTRS) {
+    const value = attrStr(attrs, name);
+    if (value === undefined || value === '') continue;
+    if (type !== undefined && attrStr(attrs, type) === 'tag') continue;
+    return value;
+  }
+  return undefined;
+}
+
+function startNanos(span: OtlpSpan): bigint | undefined {
+  const v = span.json.startTimeUnixNano;
+  const s =
+    typeof v === 'string' ? v : typeof v === 'number' ? String(v) : undefined;
+  return s !== undefined && /^\d+$/.test(s) ? BigInt(s) : undefined;
+}
+
+/**
+ * The run's branch. A resource describes the whole process, so the first
+ * resource that names one wins. Failing that, span attributes describe one
+ * operation each: take the earliest-starting span that names one, not the
+ * first in the document, since exporters write spans as they end (children
+ * first) and a tool span may name the ref it acted on.
+ */
+function branchOf(spans: readonly OtlpSpan[]): string | undefined {
+  for (const span of spans) {
+    const branch = branchIn(span.resource);
+    if (branch !== undefined) return branch;
+  }
+  let earliest: { branch: string; start: bigint | undefined } | undefined;
+  for (const span of spans) {
+    const branch = branchIn(span.attrs);
+    if (branch === undefined) continue;
+    const start = startNanos(span);
+    // a span with a start beats one without (only a known start can be
+    // the earliest); ties, and spans that all lack one, keep document order
+    if (
+      earliest === undefined ||
+      (start !== undefined &&
+        (earliest.start === undefined || start < earliest.start))
+    ) {
+      earliest = { branch, start };
+    }
+  }
+  return earliest?.branch;
+}
+
 /** Pinned Claude Code beta names → span kinds; everything else → other. */
 function kindOf(name: string, toolName: string | undefined): RawSpan['kind'] {
   switch (name) {
@@ -229,38 +298,27 @@ function statusOf(span: Json, attrs: Map<string, unknown>): RawSpan['status'] {
   return 'ok';
 }
 
-/** runray.* / tracepulse.* keys that are pure identity/metadata (safe under --redact);
- * `runray.target` / `tracepulse.target` is a display token and counts as content, so it is
- * dropped when redacting, exactly like an adapter's own target display. */
-const REDACT_SAFE_RUNRAY = new Set([
-  'runray.targetKey',
-  'runray.targetKind',
-  'runray.mcpDetection',
-  'tracepulse.targetKey',
-  'tracepulse.targetKind',
-  'tracepulse.mcpDetection',
-  // token count, never content. NOTE: passthrough only — this adapter never
-  // DERIVES the 5m/1h split from plain cache-write counts, so an OTLP
-  // capture whose emitter omits the split prices 1h writes at the 5m rate
-  // and reads lower than the same session parsed from its JSONL transcript.
-  CACHE_WRITE_1H_ATTR,
-]);
-
 /** gen_ai.* passthrough — keys and values unchanged (values decoded from the
  * OTLP AnyValue envelope; that encoding is transport, not data). Under
- * redaction, runray.* / tracepulse.* is filtered to the identity allowlist so an emitter's
- * `runray.target` display text never survives --redact (privacy is enforced
- * in core, not the UI). */
+ * redaction both prefixes are filtered to their metadata keys
+ * (`attribute-keys.ts`): gen_ai.* because the GenAI conventions carry
+ * prompt and tool text there too, runray.* / tracepulse.* so an emitter's
+ * `runray.target` display text, or anything else it stamps with the
+ * prefix, never survives --redact (privacy is enforced in core, not the
+ * UI). The 1-hour cache-write count passes through but is never DERIVED
+ * here, so an OTLP capture whose emitter omits the split prices 1h writes
+ * at the 5m rate and reads lower than the same session parsed from its
+ * JSONL transcript. */
 function genAiAttributes(attrs: Map<string, unknown>, redact: boolean): Json {
   const out: Json = {};
   for (const [key, value] of attrs) {
     if (value === undefined) continue;
     if (key.startsWith('gen_ai.')) {
-      out[key] = value;
+      if (!redact || isGenAiMetadataKey(key)) out[key] = value;
     } else if (key.startsWith('runray.') || key.startsWith('tracepulse.')) {
       // reserved prefix survives passthrough (X2), but redaction keeps only
       // identity keys — never the display token or any other content key
-      if (!redact || REDACT_SAFE_RUNRAY.has(key)) out[key] = value;
+      if (!redact || isReservedMetadataKey(key)) out[key] = value;
     }
   }
   return out;
@@ -704,8 +762,10 @@ export const otlpAdapter: SourceAdapter = {
       }
     }
 
+    const gitBranch = branchOf(spans);
     return {
       source: { tool: 'otlp', format: 'otlp-json', files: candidate.files },
+      ...(gitBranch === undefined ? {} : { project: { gitBranch } }),
       spans: [sessionSpan, ...rawSpans],
       warnings,
     };

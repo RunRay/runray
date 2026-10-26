@@ -462,3 +462,51 @@ automatically extends its fixture-parameterized equivalence matrix.
       rail's header, the `[` key, a palette command and a help-sheet entry;
       collapsed the rail keeps icons with names and tooltips and the shell
       follows its width. Asked by the user. Added 2026-09-04.
+
+## 15. Inspector
+
+- [x] 15.1 B [UI → /frontend-design] Inspector width and copy controls
+      (spec: visualizer "Inspector width and copy controls"):
+      `ui.inspectorWide` persisted under `runray.inspectorWide`,
+      `toggleInspectorWide`, a toggle in the Inspector header and a palette
+      command named for what it will do; wide the Inspector grows to at
+      most 560px and leaves the centre pane at least 400px, and without
+      room the toggle says so. Copy controls with a 1.5 s confirmation and
+      an on-button failure on the previews ("Copy preview" where core cut
+      the text) and the raw span record, through a `useCopy` hook the
+      export dialog now shares. Asked by the user. Added 2026-10-06.
+- [x] 15.2 B [UI → /frontend-design] Bot review follow-ups to 15.1: the
+      room check moves to the store (`ui.inspectorRoom`, written by the
+      Inspector's resize observer), so the palette command says there is
+      no room and saves nothing instead of persisting a wide choice that
+      changes nothing; a wide Inspector's toggle reads "Narrow the
+      inspector" even without room. Tests in `inspector-controls.test.tsx`.
+- [x] 15.3 B [UI → /frontend-design] The room is measured by the app
+      shell on the row beside the rail, which stays mounted while the
+      Inspector is closed (`useRoomToWiden` moves out of the Inspector), so
+      a resize with the Inspector closed still reaches the palette command.
+      Test in `inspector-controls.test.tsx`.
+
+## 16. Display unit
+
+- [x] 16.1 B [UI → /frontend-design] Display unit (spec: visualizer "Display
+      unit", "Limit-window display mode" amended; design E6, E1 amended):
+      `unit` persisted under `runray.unit`, the `USD | tokens` switch beside
+      %win and a palette command; token mode leads the overview, rankings
+      (ordered by tokens), tool ranking, run preview, spend by day and
+      trend, Explorer list, and the run header, hero, tool leaderboard and
+      subtree map with tokens, keeps waste, savings and what-if in dollars
+      with "at API prices" on their headline figures, and drops the savings
+      panel's tokens-from-cost-share figures; %win takes its percentages in the
+      unit and its popover sets a token budget. Added 2026-10-06.
+- [x] 16.2 B [UI → /frontend-design] Bot review follow-ups to 16.1: the
+      subtree map keeps its cost | tokens toggle above its empty state, so a
+      run with tokens but no priced calls can switch back to tokens; the
+      overview assigns model colours over every model with tokens, not only
+      the priced ones in `byModel`, so an unpriced model never shares
+      another model's colour in token mode. Tests in `unit-mode.test.tsx`.
+- [x] 16.3 B [UI → /frontend-design] Merge with the branch ranking
+      (add-branch-attribution): Top branches ranks in the display unit like
+      the other rankings, since 16.1 removed the Resource Breakdown's own
+      Tokens | Spend switch it read; its spec line says so. Test in
+      `overview.test.ts`.

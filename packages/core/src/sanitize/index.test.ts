@@ -210,6 +210,12 @@ describe('1.2 scrubIdentity & deterministic mapping', () => {
     expect(scrubbedB.spans[0]?.provenance.file).toBe('transcript-1');
   });
 
+  it('pseudonymizes a branch-only project without inventing a project name', () => {
+    // an OTLP run names a branch but no directory
+    const run: Run = { ...createMockRun(), project: { gitBranch: 'feat/x' } };
+    expect(scrubIdentity(run).project).toEqual({ gitBranch: 'branch-1' });
+  });
+
   it('discovery-order independence: table is identical regardless of run ordering', () => {
     const runA: Run = {
       ...createMockRun(),
@@ -281,21 +287,122 @@ describe('1.2 scrubIdentity & deterministic mapping', () => {
 });
 
 describe('1.3 Attribute allowlist', () => {
-  it('allows gen_ai.*, runray.* (except target), and tracepulse.* (except target)', () => {
+  it('allows gen_ai.* metadata and the reserved runray.* / tracepulse.* metadata keys', () => {
     expect(isAttributeAllowed('gen_ai.request.model')).toBe(true);
     expect(isAttributeAllowed('gen_ai.usage.input_tokens')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.usage.cache_read.input_tokens')).toBe(
+      true,
+    );
+    expect(isAttributeAllowed('gen_ai.usage.cost')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.response.finish_reasons')).toBe(true);
+    expect(isAttributeAllowed('gen_ai.tool.call.id')).toBe(true);
     expect(isAttributeAllowed('runray.targetKey')).toBe(true);
     expect(isAttributeAllowed('runray.targetKind')).toBe(true);
-    expect(isAttributeAllowed('runray.cache_write_1h_tokens')).toBe(true);
     expect(isAttributeAllowed('runray.mcpDetection')).toBe(true);
     expect(isAttributeAllowed('tracepulse.targetKey')).toBe(true);
     expect(isAttributeAllowed('tracepulse.mcpDetection')).toBe(true);
+    expect(isAttributeAllowed('tracepulse.cacheWrite1hTokens')).toBe(true);
 
     expect(isAttributeAllowed('runray.target')).toBe(false);
     expect(isAttributeAllowed('tracepulse.target')).toBe(false);
     expect(isAttributeAllowed('custom.vendor_path')).toBe(false);
     expect(isAttributeAllowed('http.url')).toBe(false);
     expect(isAttributeAllowed('file.path')).toBe(false);
+  });
+
+  it('drops any other key an emitter stamps with a reserved prefix', () => {
+    // an OTLP emitter can send runray.* / tracepulse.* keys of its own
+    for (const key of [
+      'runray.notes',
+      'runray.cache_write_1h_tokens', // not a key any adapter writes
+      'tracepulse.prompt',
+      'gen_ai.usage.debug', // emitters put strings and JSON under usage too
+      'gen_ai.usage.prompt_tokens_details',
+    ]) {
+      expect(isAttributeAllowed(key), key).toBe(false);
+    }
+  });
+
+  it('applies the allowlist when only paths are scrubbed (--scrub-paths, text kept)', () => {
+    // profile `full` + scrubIdentity: the run was parsed WITHOUT redaction,
+    // so attribute content reaches scrubIdentity and must stop there
+    const run: Run = {
+      ...createMockRun(),
+      spans: [
+        {
+          ...createMockSpan('s1', 'other'),
+          content: { promptPreview: 'kept: --scrub-paths keeps text' },
+          attributes: {
+            'gen_ai.request.model': 'claude-sonnet-4-5',
+            'gen_ai.tool.call.arguments':
+              '{"path":"C:\\\\Users\\\\alex\\\\k.pem"}',
+            'runray.notes': '/Users/alex/acme/.env',
+          },
+        },
+      ],
+    };
+
+    const scrubbed = scrubIdentity(run);
+    expect(scrubbed.spans[0]?.attributes).toEqual({
+      'gen_ai.request.model': 'claude-sonnet-4-5',
+    });
+    expect(scrubbed.spans[0]?.content).toEqual({
+      promptPreview: 'kept: --scrub-paths keeps text',
+    });
+    expect(findPathShapes(JSON.stringify(scrubbed))).toEqual([]);
+  });
+
+  it('drops the gen_ai.* keys that carry prompt and tool text, and any it does not know', () => {
+    // GenAI semantic conventions, opt-in content attributes
+    for (const key of [
+      'gen_ai.input.messages',
+      'gen_ai.output.messages',
+      'gen_ai.system_instructions',
+      'gen_ai.tool.definitions',
+      'gen_ai.tool.call.arguments',
+      'gen_ai.tool.call.result',
+      // OpenLLMetry-style and older instrumentations
+      'gen_ai.prompt',
+      'gen_ai.completion',
+      'gen_ai.prompt.0.content',
+      'gen_ai.prompt.0.role',
+      'gen_ai.completion.0.content',
+      // text, though it sits among the request parameters
+      'gen_ai.request.stop_sequences',
+      // a key the conventions might add later: dropped until listed
+      'gen_ai.future.thing',
+    ]) {
+      expect(isAttributeAllowed(key), key).toBe(false);
+    }
+  });
+
+  it('drops GenAI message content from a container span that metadata-only keeps', () => {
+    // OTLP spans prune today, but a subagent or session span with content
+    // must not keep it either
+    const run: Run = {
+      ...createMockRun(),
+      spans: [
+        {
+          ...createMockSpan('s1', 'subagent'),
+          attributes: {
+            'gen_ai.operation.name': 'invoke_agent',
+            'gen_ai.agent.name': 'researcher',
+            'gen_ai.input.messages':
+              '[{"role":"user","parts":[{"type":"text","content":"see /Users/alex/acme/.env"}]}]',
+            'gen_ai.system_instructions': 'You are a research assistant.',
+          },
+        },
+      ],
+    };
+
+    const pruned = pruneToMetadata(
+      sanitizeRun(run, 'sanitized', createIdentityTable([run])),
+    );
+    expect(pruned.spans[0]?.attributes).toEqual({
+      'gen_ai.operation.name': 'invoke_agent',
+      'gen_ai.agent.name': 'researcher',
+    });
+    expect(findPathShapes(JSON.stringify(pruned))).toEqual([]);
   });
 
   it('drops vendor attributes with paths from OTLP spans without inspecting values', () => {
@@ -335,6 +442,46 @@ describe('1.4 Path-shape net matcher & assertion', () => {
     expect(findPathShapes('C:\\Users\\Alex\\Documents')).toHaveLength(1);
     expect(findPathShapes('c:/users/alex/documents')).toHaveLength(1);
     expect(findPathShapes('D:\\\\Users\\\\runner\\\\work')).toHaveLength(1);
+  });
+
+  it('matches a drive path whole, whatever mix of separators it uses', () => {
+    expect(findPathShapes('at C:\\\\Users\\\\runner\\\\work now')).toEqual([
+      'C:\\\\Users\\\\runner\\\\work',
+    ]);
+    expect(findPathShapes('"C:\\/Users//alex\\app"')).toEqual([
+      'C:\\/Users//alex\\app',
+    ]);
+    expect(findPathShapes('D:\\uSeRs\\x')).toEqual(['D:\\uSeRs\\x']);
+  });
+
+  it('ends a drive path where its separators leave nothing after users', () => {
+    // These pin where a match ends, so a change to the separator shows here.
+    expect(findPathShapes('"C:\\Users\\"')).toEqual([]);
+    expect(findPathShapes('C:/Users/')).toEqual([]);
+    expect(findPathShapes('"C:\\Users\\\\"')).toEqual(['C:\\Users\\\\']);
+    expect(findPathShapes('C:/Users//')).toEqual(['C:/Users//']);
+  });
+
+  it('stays linear on long separator runs that never reach users', () => {
+    // Read as single and doubled backslashes, a run of n backslashes splits
+    // Fibonacci-many ways: the old separator took about 2 s at n = 40. The
+    // short run fails within seconds if that comes back; the long ones catch
+    // slower growth. Best of three, so one GC pause on a busy runner can't fail it.
+    const texts = [
+      `C:${'\\'.repeat(40)}Program Files`,
+      `C:${'\\'.repeat(50_000)}x`,
+      `C:${'\\/'.repeat(25_000)}x`,
+      `C:\\Users${'\\'.repeat(50_000)}`,
+    ];
+    for (const text of texts) {
+      let best = Number.POSITIVE_INFINITY;
+      for (let run = 0; run < 3 && best >= 50; run++) {
+        const start = performance.now();
+        findPathShapes(text);
+        best = Math.min(best, performance.now() - start);
+      }
+      expect(best).toBeLessThan(50);
+    }
   });
 
   it('detects file:// URLs, UNC paths, and \\\\?\\ device paths', () => {

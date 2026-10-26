@@ -52,6 +52,8 @@ export const SESSIONS_CSV_COLUMNS = [
   'toolErrors',
   'subagents',
   'insightCount',
+  // appended, not beside project: existing columns keep their positions
+  'gitBranch',
 ] as const;
 
 export function sessionsCsv(runs: readonly Run[]): string {
@@ -80,6 +82,7 @@ export function sessionsCsv(runs: readonly Run[]): string {
         t.counts.toolErrors,
         t.counts.subagents,
         run.insights.length,
+        run.project?.gitBranch ?? '',
       ].map(field),
     );
   }

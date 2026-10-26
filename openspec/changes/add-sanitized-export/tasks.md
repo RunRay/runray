@@ -124,3 +124,20 @@ run under the `/frontend-design` skill per CLAUDE.md.
       section states that the dashboard generates nothing
 - [x] 6.4 A `pnpm changeset` — user-visible: new export flags and a sanitized
       sharing path
+
+## 7. Follow-ups
+
+- [x] 7.1 A Attribute allowlists by key, not prefix (spec: trace-sanitization
+      "Attribute allowlist", trace-ingestion "OTLP JSON import"; D2). The GenAI
+      conventions carry prompt and tool text under `gen_ai.*`, and an OTLP
+      emitter can stamp its own `runray.*` keys, so `attribute-keys.ts` lists
+      the `gen_ai.*` metadata keys (provider, operation, model and numeric
+      request parameters, response id, model and finish reasons, tool name,
+      call id and type, conversation and agent ids, named usage counters) and
+      the reserved `runray.*` / `tracepulse.*` keys, and drops every other
+      key. The OTLP adapter applies the lists under `--redact` and
+      `isAttributeAllowed` wherever identity is scrubbed, `--scrub-paths`
+      included. New synthetic fixture `fixtures/otlp/genai-semconv/` with its
+      goldens; the invariants suite asserts that no other key survives
+      redaction or a sanitizing profile across every fixture, and an export
+      e2e test checks each flag through the real command. Added 2026-10-06.

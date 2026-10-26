@@ -23,6 +23,7 @@ import {
 } from './lib/load';
 import { DASHBOARD_ROUTE, formatHash, type Route, toHash } from './lib/router';
 import { setTheme as commitTheme, currentTheme, type Theme } from './lib/theme';
+import { type DisplayUnit, persistUnit, storedUnit } from './lib/unit';
 
 export type DataState =
   | { status: 'loading' }
@@ -99,6 +100,14 @@ function storedNavCollapsed(): boolean {
   return localStorage.getItem(NAV_COLLAPSED_KEY) === 'on';
 }
 
+/** The Inspector's wide mode persists the same way. */
+const INSPECTOR_WIDE_KEY = 'runray.inspectorWide';
+
+function storedInspectorWide(): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem(INSPECTOR_WIDE_KEY) === 'on';
+}
+
 export interface OnboardingState {
   enabled: boolean;
   loaded: boolean;
@@ -139,6 +148,11 @@ export interface AppState {
    * `setTheme`/`toggleTheme`, which also persist to localStorage.
    */
   theme: Theme;
+  /**
+   * The unit headline figures lead with (E6): dollars at API prices, or
+   * tokens. Persisted like the theme; dollars until the person switches.
+   */
+  unit: DisplayUnit;
   selection: {
     spanId: string | null;
     /** Insight activated from the strip; drives evidence highlighting. */
@@ -153,6 +167,12 @@ export interface AppState {
   };
   ui: {
     inspectorOpen: boolean;
+    /** The Inspector opens wide (up to 560px) instead of 360px; persisted. */
+    inspectorWide: boolean;
+    /** The Inspector's row is wide enough for wide mode to add anything, as
+     * the open Inspector last measured it; not persisted. The header toggle
+     * and the palette command read the same answer. */
+    inspectorRoom: boolean;
     /** The navigation rail shows icons only; persisted. */
     navCollapsed: boolean;
     /** Keyboard-shortcut help sheet — the ? key and the TopBar button
@@ -164,6 +184,9 @@ export interface AppState {
     collapsed: ReadonlySet<string>;
     /** Evidence span ids of the active insight (empty when none). */
     highlighted: ReadonlySet<string>;
+    /** Bumped by `revealInsight`: the waterfall reveals the active
+     * finding's evidence again even when the finding didn't change. */
+    revealSeq: number;
   };
   dataLoaded(traceFile: TraceFile, live: boolean): void;
   dataFailed(message: string): void;
@@ -203,6 +226,8 @@ export interface AppState {
   setTheme(theme: Theme): void;
   /** Flip ink ↔ paper (applies + persists). */
   toggleTheme(): void;
+  /** Set the display unit (persists). */
+  setUnit(unit: DisplayUnit): void;
   /** Insight staged for activation after a cross-run navigation. */
   pendingInsight: Insight | null;
   /**
@@ -222,11 +247,21 @@ export interface AppState {
    * same step; an unrelated span is dropped.
    */
   showInsight(insight: Insight, spanId?: string): void;
+  /**
+   * Open a finding the way a deep link does, expanding what hides its
+   * evidence even when it is already the active one (a hidden-finding chip
+   * or list entry, after the user collapsed its subtree).
+   */
+  revealInsight(insight: Insight): void;
   /** Flip the Inspector between the selected activity and the active finding. */
   focusInspector(focus: 'span' | 'insight'): void;
   /** Stage an insight to activate once the target run's route lands. */
   stageInsight(insight: Insight): void;
   toggleInspector(): void;
+  /** Widen the Inspector, or narrow it back to 360px. */
+  toggleInspectorWide(): void;
+  /** Record whether wide mode has room (the Inspector's resize observer). */
+  setInspectorRoom(room: boolean): void;
   /** Collapse the navigation rail to icons, or expand it back. */
   toggleNav(): void;
   /** Toggle the help sheet; pass a boolean to force a state. */
@@ -282,14 +317,18 @@ export const useAppStore = create<AppState>()((set) => ({
   // The boot script already stamped the persisted choice on the root; mirror
   // it so React components (TopBar toggle, palette) render the right state.
   theme: currentTheme(),
+  unit: storedUnit(),
   selection: { spanId: null, insightId: null, focus: 'span' },
   ui: {
     inspectorOpen: true,
+    inspectorWide: storedInspectorWide(),
+    inspectorRoom: true,
     navCollapsed: storedNavCollapsed(),
     helpOpen: false,
     exportOpen: false,
     collapsed: new Set(),
     highlighted: new Set(),
+    revealSeq: 0,
   },
   pendingInsight: null,
   diffAnchor: null,
@@ -451,6 +490,10 @@ export const useAppStore = create<AppState>()((set) => ({
       commitTheme(next);
       return { theme: next };
     }),
+  setUnit: (unit) => {
+    persistUnit(unit);
+    set({ unit });
+  },
   // Selection is per-run: switching runs drops it (and the highlight),
   // switching views within the same run keeps it (evidence links select,
   // then navigate).
@@ -509,6 +552,11 @@ export const useAppStore = create<AppState>()((set) => ({
       };
     }),
   showInsight: (insight, spanId) => set((s) => openInsight(s, insight, spanId)),
+  revealInsight: (insight) =>
+    set((s) => {
+      const next = openInsight(s, insight);
+      return { ...next, ui: { ...next.ui, revealSeq: s.ui.revealSeq + 1 } };
+    }),
   focusInspector: (focus) =>
     set((s) => ({
       selection: { ...s.selection, focus },
@@ -516,6 +564,18 @@ export const useAppStore = create<AppState>()((set) => ({
     })),
   toggleInspector: () =>
     set((s) => ({ ui: { ...s.ui, inspectorOpen: !s.ui.inspectorOpen } })),
+  toggleInspectorWide: () =>
+    set((s) => {
+      const inspectorWide = !s.ui.inspectorWide;
+      persistLimit(INSPECTOR_WIDE_KEY, inspectorWide ? 'on' : 'off');
+      return { ui: { ...s.ui, inspectorWide } };
+    }),
+  setInspectorRoom: (room) =>
+    set((s) =>
+      s.ui.inspectorRoom === room
+        ? s
+        : { ui: { ...s.ui, inspectorRoom: room } },
+    ),
   toggleNav: () =>
     set((s) => {
       const navCollapsed = !s.ui.navCollapsed;

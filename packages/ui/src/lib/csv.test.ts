@@ -58,6 +58,21 @@ describe('sessionsCsv (D5)', () => {
     expect(csv).toContain('"fix ""auth"", part 2"');
   });
 
+  it('appends the branch as the last column, empty without one', () => {
+    const onBranch: Run = {
+      ...stubRun({ id: 'run_a', startedAt: '2026-07-06T10:00:00Z' }),
+      project: { name: 'shop', gitBranch: 'feat/export' },
+    };
+    const [header, first, second] = sessionsCsv([
+      onBranch,
+      stubRun({ id: 'run_b' }),
+    ]).split('\r\n');
+    expect(header?.split(',').slice(-2)).toEqual(['insightCount', 'gitBranch']);
+    expect(header?.split(',')[3]).toBe('project');
+    expect(first?.endsWith(',feat/export')).toBe(true);
+    expect(second?.endsWith(',')).toBe(true);
+  });
+
   it('numbers are locale-free String(n); CRLF + BOM framing', () => {
     const csv = sessionsCsv([stubRun({ id: 'r', cost: 0.3959 })]);
     expect(csv.charCodeAt(0)).toBe(0xfeff);

@@ -4,6 +4,8 @@ packages:
 allowBuilds:
   # esbuild's postinstall links its platform binary; required by vite.
   esbuild: true
-  # better-sqlite3's install script links the prebuilt native binding
-  # (read-only opencode.db access, task 2.3); no network at runtime.
-  better-sqlite3: true
+  # better-sqlite3 (read-only opencode.db access, task 2.3) ships prebuilt
+  # N-API bindings for every platform in its package since v13 and has no
+  # install script. Allowing a build would make pnpm run `node-gyp rebuild`
+  # on its binding.gyp, which fails without Python and a C++ toolchain.
+  better-sqlite3: false

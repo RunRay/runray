@@ -1,21 +1,23 @@
 # RunRay
 
-RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs on your machine and talks to nothing.
+RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
 
 ```bash
 npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
+Needs Node.js 22 or newer.
+
 ![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
-**Status: alpha.** `runray@0.1.0-alpha.4` is on npm and everything on this page works. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log. That is what the alpha is for.
+**Status: alpha.** Everything on this page works in `runray@0.1.0-alpha.5`. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log.
 
 ## Why
 
 Usage trackers tell you how many tokens you spent this week. That number is easy to get and hard to act on.
 
-RunRay works one session at a time and answers a different question: where did the money go inside this run, and which part of it was avoidable?
+RunRay works one session at a time and answers a different question: where did the money go inside this session, and which part of it was avoidable?
 
 > "Bash failed three times in a row and the retries cost $0.09" is something you can fix.
 > "138k tokens" is not.
@@ -47,7 +49,7 @@ Twelve rules look at each session. Every finding points at its evidence spans, c
 | dead-end runs | oversized tool outputs |
 | scattered tool failures | low cache hit-rate |
 
-Two things matter about the amounts. Burned and opportunity are never added into one number: burned is money that is gone, opportunity is an upper bound on what a different setup would have saved. And severity depends on the session, not the rule. Each finding is graded by its share of that run's cost, so a $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. Groups are graded the same way, so eighteen small cache breaks read as the 12% they add up to.
+Burned spend and opportunity savings are never combined into a single total: burned spend represents irrecoverable cost, while opportunity estimates the upper bound achievable through configuration changes. Severity depends on the session, not the rule. Each finding is graded by its share of that session's cost, so a $0.60 retry loop is a warning in a $0.65 session and a footnote in a $600 one. Groups are graded the same way, so eighteen small cache breaks read as the 12% they add up to.
 
 One caveat. The largest opportunity, growing context, assumes the whole session could have run at its opening context size. The tab says so, and shows what keeping the context under 100k, 200k or 400k tokens would have saved instead. Rule formulas, examples and the threshold keys are in [docs/08-FINDINGS.md](https://github.com/RunRay/runray/blob/main/docs/08-FINDINGS.md).
 
@@ -55,7 +57,7 @@ One caveat. The largest opportunity, growing context, assumes the whole session 
 
 ![The Errors tab: failures grouped by who can act, with the reaction cost and whether the tool came back](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/errors.png)
 
-A failed tool call is not one thing. On real sessions about a third of them are the agent's own check-and-fix loop, a third are slips the model corrected on the next call, and fewer than one in ten are something you can act on. The Errors tab reads a class from each failure's text and groups them by owner:
+A failed tool call is not one thing. Across agent sessions, failures typically fall into three buckets: agent self-correction loops, transient model slips, and actionable tool or environment errors. The Errors tab reads a class from each failure's text and groups them by owner:
 
 | Owner | Example |
 |---|---|
@@ -70,6 +72,8 @@ Each group shows the error text, whether the tool came back, what the reaction c
 ### Timeline Explorer
 
 ![The Timeline Explorer: the execution tree as a waterfall with subagents, tool calls and the spend spine](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/timeline.png)
+
+The Timeline Explorer renders agent execution as a hierarchical Delegation Waterfall. Child subagents expand as indented subtrees, concurrency brackets group overlapping parallel calls, and errors highlight failure points. A Spend Spine runs along the gutter; clicking any cost peak scrolls the waterfall to that moment.
 
 ## Where the data comes from
 
@@ -89,7 +93,7 @@ How prices work:
 
 ## Privacy
 
-Everything stays on your machine. The local server binds to 127.0.0.1 only. There is no telemetry, no update check, no account.
+Offline by default. The local server binds to 127.0.0.1 only and sends zero telemetry; `runray pricing --refresh` is the only command that makes an outbound network request.
 
 | Flag | What it strips |
 |---|---|
@@ -126,13 +130,13 @@ Thresholds for the rules live in `runray.config.json`, read from the current dir
 
 ## Compared with usage trackers
 
-ccusage and similar tools answer "how much did I use?" across days and projects. RunRay answers "what happened inside this run, and what should I change?" with evidence you can click through to. Use both.
+ccusage and similar tools answer "how much did I use?" across days and projects. RunRay answers "what happened inside this session, and what should I change?" with evidence you can click through to.
 
 ## What is next
 
 `runray ci`: a budget and cost-regression gate with a GitHub Action, so a pull request can fail on a spend regression the way it fails on a broken test. Agents that keep no session logs on disk arrive through the OTLP path.
 
-Deliberately absent, and staying that way: databases, collectors, SDKs, cloud accounts, alerting.
+Architecture boundary: RunRay operates entirely without databases, background daemons, or cloud accounts.
 
 ## Development
 

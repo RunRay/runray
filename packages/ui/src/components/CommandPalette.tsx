@@ -7,12 +7,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { projectKey, type RunFilter } from '../lib/filter-runs';
-import { formatUSD } from '../lib/format';
+import { isFilterActive, projectKey, type RunFilter } from '../lib/filter-runs';
 import { fuzzyScore } from '../lib/fuzzy';
 import { DASHBOARD_ROUTE, type Route, SESSIONS_ROUTE } from '../lib/router';
 import type { Theme } from '../lib/theme';
+import { type DisplayUnit, formatFigure } from '../lib/unit';
 import { useAppStore } from '../store';
+import { NO_ROOM_TO_WIDEN } from './Inspector';
 
 /**
  * Command palette (add-dashboard-extensions 3.1, D7): ⌘K / Ctrl-K — internal,
@@ -32,6 +33,7 @@ type Group =
   | 'Compare'
   | 'Filter'
   | 'Theme'
+  | 'Units'
   | 'Layout';
 
 interface Command {
@@ -64,10 +66,19 @@ function buildCommands(
   clearFilter: () => void,
   theme: Theme,
   toggleTheme: () => void,
+  inspectorWide: boolean,
+  inspectorRoom: boolean,
   isLive?: boolean,
   onClose?: () => void,
+  unit: DisplayUnit = 'usd',
 ): Command[] {
   const cmds: Command[] = [];
+  const figureOf = (run: Run) =>
+    formatFigure(
+      unit,
+      { costUSD: run.totals.costUSD.total, tokens: run.totals.tokens.total },
+      { named: true },
+    );
   const nav = (route: Route) => () => {
     useAppStore.getState().navigateTo(route);
   };
@@ -146,7 +157,7 @@ function buildCommands(
     const hint = [
       project === '—' ? null : project,
       run.source.tool,
-      formatUSD(run.totals.costUSD.total),
+      figureOf(run),
     ]
       .filter(Boolean)
       .join(' · ');
@@ -170,7 +181,7 @@ function buildCommands(
         id: `compare:${run.id}`,
         group: 'Compare',
         label: `Compare active run with: ${label}`,
-        hint: formatUSD(run.totals.costUSD.total),
+        hint: figureOf(run),
         keywords: `diff compare versus vs ${run.id}`,
         perform: nav({ view: 'diff', runA: activeRunId, runB: run.id }),
       });
@@ -179,7 +190,7 @@ function buildCommands(
         id: `compare:${run.id}`,
         group: 'Compare',
         label: `Compare from: ${label}`,
-        hint: formatUSD(run.totals.costUSD.total),
+        hint: figureOf(run),
         keywords: `diff compare versus vs ${run.id}`,
         perform: () => {
           useAppStore.getState().setDiffAnchor(run.id);
@@ -190,14 +201,7 @@ function buildCommands(
   }
 
   if (runs.length > 0) {
-    const anyActive =
-      filter.project !== null ||
-      filter.source !== null ||
-      filter.periodDays !== null ||
-      filter.model !== null ||
-      filter.day !== null ||
-      filter.tool !== null;
-    if (anyActive) {
+    if (isFilterActive(filter)) {
       cmds.push({
         id: 'filter:clear',
         group: 'Filter',
@@ -247,12 +251,40 @@ function buildCommands(
     perform: toggleTheme,
   });
   cmds.push({
+    id: 'units:toggle',
+    group: 'Units',
+    label: unit === 'tokens' ? 'Lead with dollars' : 'Lead with tokens',
+    keywords:
+      'unit units usd dollars cost tokens quota subscription limit display',
+    perform: () =>
+      useAppStore.getState().setUnit(unit === 'tokens' ? 'usd' : 'tokens'),
+  });
+  cmds.push({
     id: 'layout:nav',
     group: 'Layout',
     label: 'Collapse or expand the navigation rail',
     hint: '[',
     keywords: 'sidebar navigation rail menu collapse expand hide show',
     perform: () => useAppStore.getState().toggleNav(),
+  });
+  // the width persists, so name what this does now, like the theme command;
+  // without room it says why, like the header toggle, and saves nothing
+  const widenBlocked = !inspectorWide && !inspectorRoom;
+  cmds.push({
+    id: 'layout:inspector-width',
+    group: 'Layout',
+    label: inspectorWide
+      ? 'Narrow the inspector'
+      : widenBlocked
+        ? NO_ROOM_TO_WIDEN
+        : 'Widen the inspector',
+    keywords: 'inspector panel drawer details width wide narrow expand resize',
+    // a closed inspector opens, so the change (or the reason) shows
+    perform: () => {
+      const state = useAppStore.getState();
+      if (!widenBlocked) state.toggleInspectorWide();
+      if (!state.ui.inspectorOpen) state.toggleInspector();
+    },
   });
 
   return cmds;
@@ -266,6 +298,9 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   const clearFilter = useAppStore((s) => s.clearFilter);
   const theme = useAppStore((s) => s.theme);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
+  const inspectorWide = useAppStore((s) => s.ui.inspectorWide);
+  const inspectorRoom = useAppStore((s) => s.ui.inspectorRoom);
+  const unit = useAppStore((s) => s.unit);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -284,8 +319,11 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         clearFilter,
         theme,
         toggleTheme,
+        inspectorWide,
+        inspectorRoom,
         data.status === 'ready' && data.live,
         onClose,
+        unit,
       ),
     [
       runs,
@@ -295,8 +333,11 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       clearFilter,
       theme,
       toggleTheme,
+      inspectorWide,
+      inspectorRoom,
       data,
       onClose,
+      unit,
     ],
   );
 

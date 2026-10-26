@@ -1,5 +1,47 @@
 # runray
 
+## 0.1.0-alpha.5
+
+### Minor Changes
+
+- 1375bac: runray now needs Node.js 22 or newer; Node 20 reached end of life in April 2026. The optional SQLite reader behind OpenCode sessions moves to better-sqlite3 13, which ships its native binary for every platform inside the package, so installing runray no longer downloads that binary from GitHub. The trade-off is a larger install: about 27 MB unpacked for better-sqlite3, up from about 10 MB.
+
+### Patch Changes
+
+- 6c6d16c: See what each git branch cost. The dashboard ranks spend by branch in a new Top branches card, and clicking a branch filters every view to it. Each session shows the branch it started on, in its header and in the sessions table. `runray list --json` and the sessions CSV carry the branch too. Claude Code sessions record their branch already. OTLP imports now read it from OpenTelemetry's `vcs.ref.head.name` resource attribute (or `vcs.repository.ref.name`, or `git.branch`). OpenCode records no branch, so its sessions show none.
+- 40d727f: In the paper (light) theme, cards and popovers no longer show a dark rim along their bottom and right edges. They now use the soft paper shadow they were designed with. Faint labels are easier to read in both themes, including on selected rows, active tabs and table heads: sort headers, captions, timestamps and the top bar's status line now meet WCAG AA contrast (4.5:1).
+- 86fcd6d: Redacted, anonymized and path-scrubbed views and exports of OTLP imports no longer keep the `gen_ai.*` attributes that hold message content.
+  
+  OpenTelemetry GenAI instrumentations can put prompt and output messages, system instructions, tool definitions, and tool arguments and results in `gen_ai.*` span attributes (opt-in), and older ones write `gen_ai.prompt.N.content`. Until now `--redact`, `--anonymize`, `--metadata-only` and `--scrub-paths` kept every `gen_ai.*` attribute, so an export of such an import could include that text and the local paths in it.
+  
+  Now only metadata keys survive: provider, operation, model and numeric request parameters, response id, model and finish reasons, tool name, call id and type, conversation and agent ids, and token and cost counters. `--scrub-paths` alone still keeps prompt and output previews, but now drops these attributes. Keys under the reserved `runray.` and `tracepulse.` prefixes follow the same rule: only the metadata keys on the list survive (target key and kind, MCP detection, the 1-hour cache-write count), whoever wrote them, and anything else under those prefixes, such as a display label, is dropped.
+  
+  If you shared a redacted, anonymized or path-scrubbed export of an OTLP import with content attributes enabled, export it again with this version. Claude Code and OpenCode transcripts were not affected.
+- 13d309f: The local viewer behind `runray view` and `runray demo` now refuses cross-site requests that change state. `POST /api/onboarding` only accepts a same-origin `application/json` request, so a web page open in your browser can no longer change which tours, hints and checklist steps you've seen. If you post to it by hand, send `Content-Type: application/json`. The state file is also written through a temporary file with a random name that is created exclusively.
+- b60fde7: The Inspector has a wide mode: the toggle in its header, or the palette,
+  widens it from 360px to up to 560px, and the choice persists. When the
+  window has no room for it, the toggle says so. The prompt and output
+  previews, the delegation reason and the raw span record each get a copy
+  button that confirms the copy, or says on the button when the browser
+  blocked it.
+- a241c75: In the timeline, a subagent's work no longer blends into the main agent's.
+  
+  - Subagent bars have their own colour: chartreuse in the dark theme and umber in the light one. Before, they nearly matched the model-call bars in dark and the tool bars in light. The new colours stay distinct for colour-blind viewers too.
+  - Every row inside a subagent carries a thin rail under that subagent's arrow, so nested subagents read as stacked rails.
+  - A collapsed row shows the findings that sit wholly inside it: `⚠ 2 inside`, coloured by the worst one. Hover lists them, and so does the Inspector when the row is selected, for keyboard users. Clicking one opens it and expands the subtree onto it. Collapsing subagents no longer makes their findings disappear.
+- 6276fcd: A file in a scanned folder that isn't a session no longer shows up as a session dated 1 January 1970 with no calls and $0. That covers another tool's `.jsonl` next to your Claude Code projects, an OpenCode-looking JSON file without a session id or start time, and any run with no usable start time. RunRay skips such a file, prints `warning: skipped <file>: <reason>`, and loads every other session as before. A Claude Code session that has just started and has no prompt yet is skipped without a warning. An OpenCode subagent session without timestamps now starts with the call that spawned it instead of pulling the whole run back to 1970.
+- bdd755b: A `USD | tokens` switch beside %win picks the unit the headline figures lead with, and the choice persists. In token mode the dashboard, its rankings (ordered by tokens), the tool ranking, the run preview, tokens by day, the Explorer list, and a run's header, Cost view, tool leaderboard and subtree map lead with token counts. Waste, savings and what-if stay in dollars, and their headline figures read "at API prices", because most of those estimates are price differences with no token count behind them. %win now takes its percentages in the chosen unit, and its settings take a token budget.
+  
+  In dollar mode, the dashboard's headline and Avg Session card now lead with dollars, and the Resource Breakdown follows the switch instead of its own Tokens / Spend toggle. The savings panel no longer shows token figures estimated from cost shares, and the Wasted card says "no priced calls" instead of 0.0% when nothing is priced.
+- d93d168: `runray pricing --refresh` now checks the downloaded price list before it replaces your prices.
+  
+  - It gives up after 30 seconds without data, 10 minutes in all, or 32 MiB, and says why a connection failed (DNS, refused, TLS) instead of just "fetch failed".
+  - It refuses an HTML page, an empty list, or one with under half the usual models. If LiteLLM really dropped models, `--allow-short-list` accepts a shorter list.
+  - It leaves out any model with a negative or absurd rate and prints `warning: left out <model>: <reason>`.
+  - The new prices are written in one step. If anything fails, your previous prices stay exactly as they were and the command says nothing was written.
+  
+  A `pricing.json` that is empty or has invalid rates is now ignored with a warning, instead of leaving every call unpriced.
+
 ## 0.1.0-alpha.4
 
 ### Patch Changes
