@@ -58,19 +58,20 @@ export function NavRail({
           title={collapsed ? 'RunRay' : undefined}
           className="flex items-center gap-2 rounded-control text-sm font-bold tracking-tight text-text hover:text-brand transition-colors duration-150 select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary active:opacity-80"
         >
-          {/* Waterfall Ray, small-size cut (brand/logo/app-theme). */}
+          {/* Waterfall Ray master (brand/logo/final/runray-symbol-dark.svg),
+              viewBox cropped to the mark so it fills the 24px slot. */}
           <svg
-            viewBox="0 0 256 256"
-            className="w-6 h-6 shrink-0"
+            viewBox="24 48 208 156"
+            className="w-6 h-[18px] shrink-0"
             aria-hidden="true"
           >
             <path
               className="fill-logo"
-              d="M4 30H228A24 24 0 0 1 228 78H52ZM72 98H168A24 24 0 0 1 168 146H120Z"
+              d="M24 48H212A20 20 0 0 1 212 88H64ZM82 106H156A20 20 0 0 1 156 146H122Z"
             />
             <path
               className="fill-logo-accent"
-              d="M140 166H228A24 24 0 0 1 228 214H188Z"
+              d="M140 164H212A20 20 0 0 1 212 204H180Z"
             />
           </svg>
           {!collapsed && <span>RunRay</span>}
