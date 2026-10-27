@@ -1,5 +1,5 @@
 /**
- * Waterfall Ray favicon (brand/logo/app-theme/runray-symbol-violet.svg),
+ * Waterfall Ray favicon (brand/logo/final/runray-symbol-color.svg),
  * attached at runtime rather than as a <link> in index.html: the export
  * template must carry no <link href> at all (export e2e offline guard),
  * and a data URI keeps it network-free in both the served app and file://.
