@@ -147,3 +147,38 @@ describe('waterfall row in a delegation tree', () => {
     expect(html).not.toMatch(/-translate-y-1\/2 bg-outline/);
   });
 });
+
+describe('waterfall row label', () => {
+  const failed: Span = {
+    ...agent,
+    id: 'bash',
+    kind: 'tool_call',
+    name: 'Bash',
+    status: 'error',
+    durationMs: 50,
+  };
+  const leaf = {
+    span: failed,
+    hasChildren: false,
+    collapsed: false,
+    hiddenDescendants: 0,
+    lane: 'start' as const,
+  };
+
+  it('never starts inside the tree gutter, where rails and brackets run', () => {
+    // a tiny bar at the run's start would put the label at ~6 px, across
+    // the depth-3 bracket (50 px) and the enclosing rails
+    const html = render({ row: leaf, rails: [1] });
+    // depth × 16 px indent + 26 px clears the caret column
+    expect(html).toMatch(/left:max\(calc\([\d.e-]+% \+ 6px\), 74px\)/);
+  });
+
+  it('keeps the error mark in the label, not hanging off a thin bar', () => {
+    const html = render({ row: leaf });
+    const bar = html.match(
+      /<span aria-hidden="true" class="absolute top-1\/2 h-3\.5[^>]*>(.*?)<\/span>/,
+    );
+    expect(bar?.[1]).toBe('');
+    expect(html).toMatch(/✕<\/span><span class="text-span-error">Bash/);
+  });
+});
