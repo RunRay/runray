@@ -510,3 +510,22 @@ automatically extends its fixture-parameterized equivalence matrix.
       the other rankings, since 16.1 removed the Resource Breakdown's own
       Tokens | Spend switch it read; its spec line says so. Test in
       `overview.test.ts`.
+
+## 17. Since-reset period
+
+- [x] 17.1 A+B Spec first (spec: visualizer "Since-reset period and budget
+      meter" replaces "Limit-window display mode"; "Global run filters" and
+      "Display unit" amended; cli "Limit window configuration" amended;
+      add-onboarding-experience "Contextual first-time hints" amended;
+      design E7, E1 superseded, E6 amended). Added 2026-10-29.
+- [ ] 17.2 B The since-reset period: `RunFilter.period` is a day count or
+      `'reset'`, `period=reset` in the hash, bounds from `windowBounds`
+      anchored to the newest run's start, the trend against the previous
+      window of the same length; the period filter, the palette, the
+      overview and savings labels, and the export command learn it.
+- [ ] 17.3 B [UI → /frontend-design] Limit mode goes: the `%win` toggle,
+      popover and Cost hero suffix, the `runray.limitMode` and
+      `runray.limitWindow` keys (deleted on load); the budget meter on the
+      overview spend statement and the `since-reset` hint replace them.
+- [ ] 17.4 A+B Docs (05-ARCHITECTURE component tree, 11/12 onboarding hint
+      tables, `limitWindow` in the README) and a changeset.

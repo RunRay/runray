@@ -108,8 +108,9 @@ The CLI SHALL accept an optional `limitWindow` block in
 optional `budgetUSD`/`budgetTokens`), serve it to the UI via
 `GET /api/viewconfig` on the 127.0.0.1-only server, and embed it in
 single-file exports alongside the trace data; the trace file payload and
-schema SHALL be unchanged, and absence of the block SHALL leave all behavior
-identical to today.
+schema SHALL be unchanged. The UI reads the block for its since-reset period
+and budget meter; absence of the block SHALL leave that period on its
+default window, 7 days from Monday 00:00, with no meter.
 
 #### Scenario: Config served
 - GIVEN a config file with a `limitWindow` block
@@ -122,8 +123,8 @@ identical to today.
 - THEN the file contains the view config beside the embedded trace data and
   works offline
 
-#### Scenario: No config, no change
+#### Scenario: No config, default window
 - GIVEN no `limitWindow` block
 - WHEN the UI loads
-- THEN `/api/viewconfig` returns an empty object and no limit-mode toggle
-  appears
+- THEN `/api/viewconfig` returns an empty object, the period filter offers
+  "Since Mon 00:00", and no budget meter appears

@@ -286,6 +286,10 @@ states the window's own spend or tokens. Before E6, a token budget silently
 won when no dollar budget was set, so a person with both units in mind
 could not tell which one a percentage meant.
 
+*Superseded by E7:* the mode, its toggle, its settings popover and its
+percentage slots are gone. The config block, the newest-run anchor, "est."
+on every percentage and the out-of-scope list stay.
+
 ### E2 — Time view is an interval sweep; parallel work can never double-count
 
 Sweep the merged span boundaries; classify each elementary interval:
@@ -345,6 +349,9 @@ would put a percentage on every figure, the doubling E1 rules out. The two
 compose instead: the unit picks the figures, `%win` frames three of them,
 in that unit.
 
+*Amended by E7:* limit mode is gone. The since-reset period's budget meter,
+the only budget percentage left, takes the active unit.
+
 Waste, savings and what-if stay in dollars. In token mode their headline
 figures read "at API prices"; per-finding amounts stay as they are, and the
 what-if panel already names the rates it repriced at. Five of the twelve rules (cache misses, prefix breaks, idle
@@ -360,6 +367,52 @@ input, output, cache read, cache write and reasoning. Per-model, per-day and
 per-tool attribution use the same sum, so they add up to the totals beside
 them. The tool ranking's existing input + output column in the Cost view is
 unchanged.
+
+### E7 — The limit window is a period, not a mode
+
+Limit mode (E1) didn't work for the people it was built for. Feedback on
+2026-10-06 was that nobody knew what `%win` was for, and the code explains
+why:
+- the name says nothing;
+- the popover's checkbox was disabled until some field below it was edited;
+- turned on, the mode changed a line of small text under the headline and
+  a suffix in the run Cost hero. The Wasted KPI slot was never built;
+- without a budget the percentage was a share of the window's own spend,
+  and a budget is a guess, because Anthropic publishes no subscription
+  limit in tokens or dollars and RunRay can't ask;
+- a single run's share of the week said little about the limit.
+
+The one useful idea, a window that starts at the weekly reset, becomes an
+ordinary period in the period filter, labelled with its real start
+("Since Mon 00:00"). The window comes from `limitWindow` (7 days from Monday
+00:00 by default) and is encoded as `period=reset` in the hash. Because it is a
+filter, everything follows it with no wiring of its own: the headline,
+key indicators, rankings, the day chart, the trend and the display unit.
+The trend compares it with the window of the same length just before it.
+It anchors to the newest run's *start*, like the rolling periods, so the
+newest run always sits inside its own window and exports stay
+deterministic.
+
+A percentage now appears only as a meter against an explicit budget in the
+active unit. The meter shows only while the since-reset period is active
+and no single day is pinned. In that state the headline is the window's own
+figure, so the meter reads "382M of 500M tokens · ≈77% used (est.)" next to
+the number it measures. It measures the visible runs, so a project filter
+shows that project's share. With no budget there is no percentage: the
+spend-to-date denominator and the three slots are gone.
+
+The window and the budgets are set in `runray.config.json` only. An in-UI
+override (the old popover, in localStorage) raised the question of which
+setting wins, and it made a shared export depend on the viewer's browser.
+The live viewer names the config key instead. The old `runray.limitMode`
+and `runray.limitWindow` keys (and their `tracepulse.*` predecessors) are
+deleted on load, not migrated, because a stale override would otherwise
+quietly shape a period the person never chose. The `limit-mode` hint
+becomes `since-reset` and points at the config key.
+
+The CLI side stays as it is: the `limitWindow` block, its sanitizer,
+`/api/viewconfig` and the export embedding are unchanged, so existing
+configs keep working.
 
 ## Cross-area integration (X)
 
