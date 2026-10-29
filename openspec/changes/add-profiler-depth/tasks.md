@@ -533,5 +533,5 @@ automatically extends its fixture-parameterized equivalence matrix.
       viewer names the config key when the unit has no budget) and the
       `since-reset` hint, whose dismiss control gains focus and active
       states.
-- [ ] 17.4 A+B Docs (05-ARCHITECTURE component tree, 11/12 onboarding hint
-      tables, `limitWindow` in the README) and a changeset.
+- [x] 17.4 A+B Docs (05-ARCHITECTURE component tree and store, 11/12
+      onboarding hint tables, `limitWindow` in the README) and a changeset.
