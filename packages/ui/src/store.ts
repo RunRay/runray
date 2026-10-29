@@ -13,8 +13,9 @@ import {
   filterRuns,
   type RunFilter,
   reconcileFilter,
+  resetWindow,
 } from './lib/filter-runs';
-import type { LimitWindowConfig } from './lib/limit-window';
+import { type LimitWindowConfig, windowStartLabel } from './lib/limit-window';
 import {
   type OnboardingBlock,
   type PricingPayload,
@@ -48,45 +49,28 @@ function writeFilterToHash(route: Route, filter: RunFilter): void {
 }
 
 /**
- * Limit display mode (E1): doubly opt-in — a window config (from the CLI's
- * viewconfig or a local in-UI override) makes the toggle AVAILABLE; the
- * toggle itself defaults off and persists like the theme. localStorage
- * overrides the CLI config, mirroring the theme precedent.
+ * Limit mode (E1) kept an on/off flag and an in-UI window override in
+ * localStorage. Both went with the mode (E7): the window and the budgets live
+ * in runray.config.json only. The stale keys are deleted, not migrated, so an
+ * old override can't quietly shape the since-reset period.
  */
-export interface LimitState {
-  /** Effective window config (override ?? viewconfig); undefined = no mode. */
-  config: LimitWindowConfig | undefined;
-  enabled: boolean;
-}
+export const RETIRED_LIMIT_KEYS = [
+  'runray.limitMode',
+  'runray.limitWindow',
+  'tracepulse.limitMode',
+  'tracepulse.limitWindow',
+] as const;
 
-const LIMIT_MODE_KEY = 'runray.limitMode';
-const LIMIT_OVERRIDE_KEY = 'runray.limitWindow';
-
-function storedLimitEnabled(): boolean {
-  if (typeof localStorage === 'undefined') return false;
-  return (
-    localStorage.getItem(LIMIT_MODE_KEY) === 'on' ||
-    localStorage.getItem('tracepulse.limitMode') === 'on'
-  );
-}
-
-function storedLimitOverride(): LimitWindowConfig | undefined {
-  if (typeof localStorage === 'undefined') return undefined;
-  const raw =
-    localStorage.getItem(LIMIT_OVERRIDE_KEY) ??
-    localStorage.getItem('tracepulse.limitWindow');
-  if (raw === null) return undefined;
+export function dropRetiredLimitKeys(): void {
+  if (typeof localStorage === 'undefined') return;
   try {
-    const parsed: unknown = JSON.parse(raw);
-    return typeof parsed === 'object' && parsed !== null
-      ? (parsed as LimitWindowConfig)
-      : undefined;
+    for (const key of RETIRED_LIMIT_KEYS) localStorage.removeItem(key);
   } catch {
-    return undefined;
+    // storage blocked: there is nothing stored to clean up either
   }
 }
 
-function persistLimit(key: string, value: string | null): void {
+function persistFlag(key: string, value: string | null): void {
   if (typeof localStorage === 'undefined') return;
   if (value === null) localStorage.removeItem(key);
   else localStorage.setItem(key, value);
@@ -135,7 +119,6 @@ export interface AppState {
    */
   pricing: PricingPayload | undefined;
   viewConfig: ViewConfigPayload | undefined;
-  limit: LimitState;
   onboarding: OnboardingState;
   /**
    * Global run filters (add-dashboard-extensions D2): store-only — the hash
@@ -203,9 +186,6 @@ export interface AppState {
   dismissOnboardingHint(hintKey: string): void;
   setChecklistStep(stepKey: string, completed?: boolean): void;
   dismissChecklist(): void;
-  setLimitEnabled(enabled: boolean): void;
-  /** In-UI settings popover: a local override, persisted; null clears it. */
-  setLimitOverride(config: LimitWindowConfig | null): void;
   routeChanged(route: Route): void;
   /** Merge a partial filter change (dropdowns, drill-down, palette). */
   setFilter(patch: Partial<RunFilter>): void;
@@ -297,13 +277,14 @@ function openInsight(
   };
 }
 
+dropRetiredLimitKeys();
+
 export const useAppStore = create<AppState>()((set) => ({
   data: { status: 'loading' },
   route: DASHBOARD_ROUTE,
   streamConnected: false,
   pricing: undefined,
   viewConfig: undefined,
-  limit: { config: storedLimitOverride(), enabled: storedLimitEnabled() },
   onboarding: {
     enabled: false,
     loaded: false,
@@ -344,15 +325,7 @@ export const useAppStore = create<AppState>()((set) => ({
   dataFailed: (message) => set({ data: { status: 'error', message } }),
   setStreamConnected: (connected) => set({ streamConnected: connected }),
   pricingLoaded: (payload) => set({ pricing: payload }),
-  viewConfigLoaded: (payload) =>
-    set((s) => ({
-      viewConfig: payload,
-      limit: {
-        ...s.limit,
-        // a local override wins over the CLI-delivered block
-        config: storedLimitOverride() ?? payload.limitWindow,
-      },
-    })),
+  viewConfigLoaded: (payload) => set({ viewConfig: payload }),
   onboardingLoaded: (payload) =>
     set({
       onboarding:
@@ -440,17 +413,6 @@ export const useAppStore = create<AppState>()((set) => ({
         },
       };
     });
-  },
-  setLimitEnabled: (enabled) => {
-    persistLimit(LIMIT_MODE_KEY, enabled ? 'on' : null);
-    set((s) => ({ limit: { ...s.limit, enabled } }));
-  },
-  setLimitOverride: (config) => {
-    persistLimit(
-      LIMIT_OVERRIDE_KEY,
-      config === null ? null : JSON.stringify(config),
-    );
-    set((s) => ({ limit: { ...s.limit, config: config ?? undefined } }));
   },
   setFilter: (patch) =>
     set((s) => {
@@ -567,7 +529,7 @@ export const useAppStore = create<AppState>()((set) => ({
   toggleInspectorWide: () =>
     set((s) => {
       const inspectorWide = !s.ui.inspectorWide;
-      persistLimit(INSPECTOR_WIDE_KEY, inspectorWide ? 'on' : 'off');
+      persistFlag(INSPECTOR_WIDE_KEY, inspectorWide ? 'on' : 'off');
       return { ui: { ...s.ui, inspectorWide } };
     }),
   setInspectorRoom: (room) =>
@@ -579,7 +541,7 @@ export const useAppStore = create<AppState>()((set) => ({
   toggleNav: () =>
     set((s) => {
       const navCollapsed = !s.ui.navCollapsed;
-      persistLimit(NAV_COLLAPSED_KEY, navCollapsed ? 'on' : 'off');
+      persistFlag(NAV_COLLAPSED_KEY, navCollapsed ? 'on' : 'off');
       return { ui: { ...s.ui, navCollapsed } };
     }),
   toggleHelp: (open) =>
@@ -603,22 +565,52 @@ export const useAppStore = create<AppState>()((set) => ({
  */
 export function selectVisibleRuns(state: AppState): Run[] {
   if (state.data.status !== 'ready') return [];
-  return filterRuns(state.data.traceFile.runs, state.filter);
+  return filterRuns(
+    state.data.traceFile.runs,
+    state.filter,
+    state.viewConfig?.limitWindow,
+  );
 }
 
 /**
- * Memoized React view of `selectVisibleRuns`: subscribes to `data` and
- * `filter` only, so unrelated store churn (span selection, collapse state)
- * neither re-filters nor re-renders the consumers.
+ * Memoized React view of `selectVisibleRuns`: subscribes to `data`,
+ * `filter` and the limit window only, so unrelated store churn (span
+ * selection, collapse state) neither re-filters nor re-renders the consumers.
  */
 export function useVisibleRuns(): Run[] {
   const data = useAppStore((s) => s.data);
   const filter = useAppStore((s) => s.filter);
+  const limitWindow = useLimitWindow();
   return useMemo(
     () =>
-      data.status === 'ready' ? filterRuns(data.traceFile.runs, filter) : [],
-    [data, filter],
+      data.status === 'ready'
+        ? filterRuns(data.traceFile.runs, filter, limitWindow)
+        : [],
+    [data, filter, limitWindow],
   );
+}
+
+/**
+ * The `limitWindow` block from the view config (E7): the since-reset
+ * period's window and the budgets. Undefined until the config loads or
+ * when none is configured; the period then uses its default window.
+ */
+export function useLimitWindow(): LimitWindowConfig | undefined {
+  return useAppStore((s) => s.viewConfig?.limitWindow);
+}
+
+/**
+ * Where the since-reset period starts over the loaded runs ("Mon 00:00"),
+ * the label every period control and heading shares; undefined without runs.
+ */
+export function useResetLabel(): string | undefined {
+  const data = useAppStore((s) => s.data);
+  const limitWindow = useLimitWindow();
+  return useMemo(() => {
+    if (data.status !== 'ready') return undefined;
+    const bounds = resetWindow(data.traceFile.runs, limitWindow);
+    return bounds === undefined ? undefined : windowStartLabel(bounds);
+  }, [data, limitWindow]);
 }
 
 /** The run the current route points at, if it exists in the loaded file. */

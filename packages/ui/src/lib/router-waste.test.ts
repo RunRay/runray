@@ -19,7 +19,7 @@ describe('waste route (waste-grouping / visualizer "Waste tab")', () => {
         {
           project: 'p',
           source: null,
-          periodDays: 7,
+          period: 7,
           model: null,
           day: null,
           tool: null,

@@ -1,4 +1,10 @@
 import type { Run, SourceTool } from '@runray/schema';
+import {
+  type LimitWindowConfig,
+  previousWindow,
+  type WindowBounds,
+  windowBounds,
+} from './limit-window';
 import { localDay } from './overview';
 import { branchKey, projectKey } from './run-keys';
 import type { DisplayUnit } from './unit';
@@ -11,12 +17,19 @@ export { branchKey, NO_BRANCH, projectKey } from './run-keys';
  * behavior in `view`, `demo`, and exported single files.
  */
 
+/**
+ * A period: a rolling number of days, or `'reset'`, the window since the
+ * last usage-limit reset (E7), whose bounds come from the `limitWindow`
+ * view config.
+ */
+export type Period = number | 'reset';
+
 export interface RunFilter {
   /** Project display key (see `projectKey`); null = no filter. */
   project: string | null;
   source: SourceTool | null;
-  /** Bounded window in days; null = all time. */
-  periodDays: number | null;
+  /** Rolling days or the since-reset window; null = all time. */
+  period: Period | null;
   /** A model name (a key of any run's byModel); drill-down from a rank row. */
   model: string | null;
   /** A specific local day `YYYY-MM-DD`; drill-down from a spend-by-day bar. */
@@ -30,7 +43,7 @@ export interface RunFilter {
 export const EMPTY_FILTER: RunFilter = {
   project: null,
   source: null,
-  periodDays: null,
+  period: null,
   model: null,
   day: null,
   tool: null,
@@ -42,7 +55,7 @@ export function isFilterActive(filter: RunFilter): boolean {
   return (
     filter.project !== null ||
     filter.source !== null ||
-    filter.periodDays !== null ||
+    filter.period !== null ||
     filter.model !== null ||
     filter.day !== null ||
     filter.tool !== null ||
@@ -71,11 +84,55 @@ export function runUsesModel(run: Run, model: string): boolean {
  * must never shift the window.
  */
 export function periodAnchorDay(runs: readonly Run[]): string | undefined {
+  const anchor = newestStart(runs);
+  return anchor === undefined ? undefined : localDay(anchor);
+}
+
+/** The newest run's startedAt: the anchor every period shares. */
+function newestStart(runs: readonly Run[]): string | undefined {
   let anchor: string | undefined;
   for (const run of runs) {
     if (anchor === undefined || run.startedAt > anchor) anchor = run.startedAt;
   }
-  return anchor === undefined ? undefined : localDay(anchor);
+  return anchor;
+}
+
+/**
+ * The since-reset window (E7): the configured window holding the newest
+ * run's start (7 days from Monday 00:00 without a config). Anchored on ALL
+ * loaded runs like the rolling periods, and on the newest START, so the
+ * newest run always sits inside its own window.
+ */
+export function resetWindow(
+  runs: readonly Run[],
+  cfg: LimitWindowConfig = {},
+): WindowBounds | undefined {
+  const anchor = newestStart(runs);
+  return anchor === undefined ? undefined : windowBounds(anchor, cfg);
+}
+
+/** The active period in words: "last 7 days", "since Mon 00:00", "all time". */
+export function periodLabel(
+  period: Period | null,
+  resetLabel: string | undefined,
+): string {
+  if (period === null) return 'all time';
+  if (period === 'reset') return `since ${resetLabel ?? 'the last reset'}`;
+  return `last ${period} days`;
+}
+
+/** The period's length in days, for "vs prev N days" (null = all time). */
+export function periodLengthDays(
+  period: Period | null,
+  cfg: LimitWindowConfig = {},
+): number | null {
+  if (period === 'reset') return cfg.days ?? 7;
+  return period;
+}
+
+function inWindow(run: Run, bounds: WindowBounds): boolean {
+  const t = Date.parse(run.startedAt);
+  return t >= bounds.start && t < bounds.end;
 }
 
 /** First local day inside a window of `periodDays` days ending at `anchorDay`. */
@@ -110,42 +167,59 @@ export interface SpendTrend {
 /**
  * Spend in the visible period vs the equal-length period immediately before it
  * (add-dashboard-extensions D3). Meaningful only with a bounded period filter
- * AND a real baseline — returns null (suppressed) when periodDays is null, a
- * single-day drill-down is pinned (a point can't trend against a window), the
- * previous window holds fewer than 2 runs, or the previous window spent nothing
- * (no percentage to take). Project/source/model filters apply to both windows;
- * the period anchor is the newest of ALL runs (matching filterRuns), so
- * combining filters never shifts the comparison. `by` picks the unit the
- * delta is taken in (E6); the baseline must be non-zero in that unit.
+ * AND a real baseline — returns null (suppressed) when the period is all
+ * time, a single-day drill-down is pinned (a point can't trend against a
+ * window), the previous window holds fewer than 2 runs, or the previous window
+ * spent nothing (no percentage to take). Project/source/model filters apply to
+ * both windows; the period anchor is the newest of ALL runs (matching
+ * filterRuns), so combining filters never shifts the comparison. The
+ * since-reset period compares with the window of the same length before it
+ * (E7), using `limitWindow`. `by` picks the unit the delta is taken in (E6);
+ * the baseline must be non-zero in that unit.
  */
 export function spendTrend(
   allRuns: readonly Run[],
   filter: RunFilter,
   by: DisplayUnit = 'usd',
+  limitWindow: LimitWindowConfig = {},
 ): SpendTrend | null {
-  const { periodDays } = filter;
-  if (periodDays === null || filter.day !== null) return null;
-  const anchorDay = periodAnchorDay(allRuns);
-  if (anchorDay === undefined) return null;
+  const { period } = filter;
+  if (period === null || filter.day !== null) return null;
 
-  const curStart = periodStartDay(anchorDay, periodDays);
-  const prevEnd = dayBefore(curStart);
-  const prevStart = periodStartDay(prevEnd, periodDays);
+  let inCurrent: (run: Run) => boolean;
+  let inPrevious: (run: Run) => boolean;
+  if (period === 'reset') {
+    const current = resetWindow(allRuns, limitWindow);
+    if (current === undefined) return null;
+    const previous = previousWindow(current, limitWindow);
+    inCurrent = (run) => inWindow(run, current);
+    inPrevious = (run) => inWindow(run, previous);
+  } else {
+    const anchorDay = periodAnchorDay(allRuns);
+    if (anchorDay === undefined) return null;
+    const curStart = periodStartDay(anchorDay, period);
+    const prevEnd = dayBefore(curStart);
+    const prevStart = periodStartDay(prevEnd, period);
+    inCurrent = (run) => localDay(run.startedAt) >= curStart;
+    inPrevious = (run) => {
+      const day = localDay(run.startedAt);
+      return day >= prevStart && day <= prevEnd;
+    };
+  }
 
   // Non-period dimensions (project/source/model) scope both windows; strip
-  // the period so the two windows partition this set by day.
-  const scoped = filterRuns(allRuns, { ...filter, periodDays: null });
+  // the period so the two windows partition this set.
+  const scoped = filterRuns(allRuns, { ...filter, period: null });
   let currentUSD = 0;
   let previousUSD = 0;
   let currentTokens = 0;
   let previousTokens = 0;
   let previousRuns = 0;
   for (const run of scoped) {
-    const day = localDay(run.startedAt);
-    if (day >= curStart) {
+    if (inCurrent(run)) {
       currentUSD += run.totals.costUSD.total;
       currentTokens += run.totals.tokens.total;
-    } else if (day >= prevStart && day <= prevEnd) {
+    } else if (inPrevious(run)) {
       previousUSD += run.totals.costUSD.total;
       previousTokens += run.totals.tokens.total;
       previousRuns += 1;
@@ -219,13 +293,23 @@ export function reconcileFilter(
   return { ...filter, project, source, model, day, tool, branch };
 }
 
-export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
+/**
+ * The runs `filter` leaves visible. `limitWindow` (the view config's block)
+ * shapes the since-reset period; the rolling periods ignore it.
+ */
+export function filterRuns(
+  runs: readonly Run[],
+  filter: RunFilter,
+  limitWindow: LimitWindowConfig = {},
+): Run[] {
+  const { period } = filter;
   const anchorDay =
-    filter.periodDays === null ? undefined : periodAnchorDay(runs);
+    typeof period === 'number' ? periodAnchorDay(runs) : undefined;
   const startDay =
-    anchorDay === undefined || filter.periodDays === null
+    anchorDay === undefined || typeof period !== 'number'
       ? undefined
-      : periodStartDay(anchorDay, filter.periodDays);
+      : periodStartDay(anchorDay, period);
+  const reset = period === 'reset' ? resetWindow(runs, limitWindow) : undefined;
   return runs.filter((run) => {
     if (filter.project !== null && projectKey(run) !== filter.project) {
       return false;
@@ -249,6 +333,7 @@ export function filterRuns(runs: readonly Run[], filter: RunFilter): Run[] {
     if (startDay !== undefined && localDay(run.startedAt) < startDay) {
       return false;
     }
+    if (reset !== undefined && !inWindow(run, reset)) return false;
     return true;
   });
 }

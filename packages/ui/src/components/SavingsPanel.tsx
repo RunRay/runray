@@ -1,7 +1,7 @@
 import { RULE_META } from '@runray/core/insights-meta';
 import type { Run, Span } from '@runray/schema';
 import { useMemo, useState } from 'react';
-import type { RunFilter } from '../lib/filter-runs';
+import { periodLabel, type RunFilter } from '../lib/filter-runs';
 import { formatUSD } from '../lib/format';
 import {
   type RuleGroup,
@@ -11,7 +11,7 @@ import {
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
 import { AT_API_PRICES } from '../lib/unit';
-import { useAppStore } from '../store';
+import { useAppStore, useResetLabel } from '../store';
 import { CoverageBanner, CoverageCaveat } from './CoverageNotices';
 import { PricingProvenance } from './PricingProvenance';
 import { SeverityPill } from './SeverityPill';
@@ -36,8 +36,7 @@ export function SavingsPanel({
 }) {
   const summary: SavingsSummary = useMemo(() => savingsSummary(runs), [runs]);
   const tokensLead = useAppStore((s) => s.unit) === 'tokens';
-  const period =
-    filter.periodDays === null ? 'all time' : `last ${filter.periodDays} days`;
+  const period = periodLabel(filter.period, useResetLabel());
   const ruleCount = Object.keys(RULE_META).length;
 
   return (

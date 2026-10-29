@@ -1,6 +1,5 @@
 import { tourAttr } from '../lib/tour-attr';
 import { useAppStore, useVisibleRuns } from '../store';
-import { LimitModeToggle } from './LimitMode';
 import { UnitSwitch } from './UnitSwitch';
 
 /** Local wall-clock stamp of the served snapshot (A8). */
@@ -73,12 +72,7 @@ export function TopBar(props: TopBarProps = {}) {
             </span>
           </p>
         )}
-        {/* the unit and the limit window read together: %win sets its
-            percentages in whichever unit is chosen */}
-        <div className="flex items-center gap-1.5">
-          <UnitSwitch />
-          <LimitModeToggle />
-        </div>
+        <UnitSwitch />
         {isReady && isLive && (
           <button
             type="button"

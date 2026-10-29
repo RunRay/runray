@@ -3,8 +3,8 @@
  *
  * Display unit (visualizer "Display unit"): the TopBar switch flips which
  * unit the headline figures lead with, the choice persists, dollar figures
- * in token mode say "at API prices", and limit mode sets its percentages in
- * the active unit. jsdom + createRoot + act, because a static render reads
+ * in token mode say "at API prices", and the since-reset budget meter (E7)
+ * measures against the budget in the active unit. jsdom + createRoot + act, because a static render reads
  * the store's initial snapshot and never a switched one.
  */
 import type { Insight, Run, Span, TraceFile } from '@runray/schema';
@@ -13,7 +13,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CommandPalette } from './components/CommandPalette';
 import { CostView } from './components/CostView';
-import { LimitStatementLine, LimitSuffix } from './components/LimitMode';
 import { Overview } from './components/Overview';
 import { RunTeaser } from './components/RunTeaser';
 import { RunView } from './components/RunView';
@@ -161,20 +160,6 @@ function setUnit(unit: 'usd' | 'tokens'): void {
   });
 }
 
-function loadRuns(): void {
-  useAppStore.setState({
-    data: {
-      status: 'ready',
-      traceFile: {
-        schemaVersion: '0.1.0',
-        generatedAt: '2026-08-10T12:00:00.000Z',
-        runs: RUNS,
-      } as TraceFile,
-      live: false,
-    },
-  });
-}
-
 beforeEach(() => {
   localStorage.clear();
   useAppStore.setState(initialStore, true);
@@ -259,42 +244,6 @@ describe('Overview in each unit', () => {
       'Filter to project alpha',
     ]);
     expect(container.textContent).toContain('Tokens by day');
-  });
-});
-
-describe('limit mode follows the unit', () => {
-  const enable = (budget: { budgetUSD?: number; budgetTokens?: number }) =>
-    useAppStore.setState({
-      limit: { enabled: true, config: { days: 7, ...budget } },
-    });
-
-  it('states the window against the token budget in token mode', () => {
-    loadRuns();
-    enable({ budgetUSD: 28, budgetTokens: 764_200_000 });
-    mount(<LimitStatementLine />);
-    expect(container.textContent).toContain('$14.00 of $28.00');
-    expect(container.textContent).toContain('(≈50% used, est.)');
-    setUnit('tokens');
-    expect(container.textContent).toContain('382.1M of 764.2M tokens');
-    expect(container.textContent).toContain('(≈50% used, est.)');
-  });
-
-  it('never frames the window against itself without a budget in the unit', () => {
-    loadRuns();
-    enable({ budgetTokens: 1_000_000_000 });
-    mount(<LimitStatementLine />);
-    // dollars, no dollar budget: the window's own spend, no percentage
-    expect(container.textContent).toContain('$14.00 spent this window');
-    expect(container.textContent).not.toContain('%');
-  });
-
-  it('sets the figure suffix in the active unit', () => {
-    loadRuns();
-    enable({ budgetUSD: 100, budgetTokens: 1_000_000_000 });
-    mount(<LimitSuffix valueUSD={25} tokens={500_000_000} />);
-    expect(container.textContent).toBe('≈25% of window, est.');
-    setUnit('tokens');
-    expect(container.textContent).toBe('≈50% of window, est.');
   });
 });
 

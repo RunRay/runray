@@ -7,9 +7,12 @@ import {
   isFilterActive,
   NO_BRANCH,
   periodAnchorDay,
+  periodLabel,
+  periodLengthDays,
   periodStartDay,
   projectKey,
   reconcileFilter,
+  resetWindow,
   spendTrend,
 } from './filter-runs';
 
@@ -122,7 +125,7 @@ describe('filterRuns', () => {
   it('period anchors to the newest run, not wall-clock now (export determinism)', () => {
     // 7-day window ending at the newest run's local day (2026-07-07):
     // covers 07-01..07-07 inclusive — wherever "today" is when this runs.
-    const week = filterRuns(runs, { ...EMPTY_FILTER, periodDays: 7 });
+    const week = filterRuns(runs, { ...EMPTY_FILTER, period: 7 });
     expect(week.map((r) => r.id)).toEqual([
       'edge-of-window',
       'no-project',
@@ -136,7 +139,7 @@ describe('filterRuns', () => {
     const result = filterRuns(runs, {
       ...EMPTY_FILTER,
       source: 'opencode',
-      periodDays: 7,
+      period: 7,
     });
     expect(result).toEqual([]);
   });
@@ -146,7 +149,7 @@ describe('filterRuns', () => {
       ...EMPTY_FILTER,
       project: 'alpha',
       source: 'claude-code',
-      periodDays: 30,
+      period: 30,
     });
     expect(result.map((r) => r.id)).toEqual(['newest']);
   });
@@ -165,7 +168,7 @@ describe('filterRuns', () => {
   });
 
   it('handles empty input', () => {
-    expect(filterRuns([], { ...EMPTY_FILTER, periodDays: 7 })).toEqual([]);
+    expect(filterRuns([], { ...EMPTY_FILTER, period: 7 })).toEqual([]);
   });
 });
 
@@ -175,7 +178,7 @@ describe('reconcileFilter', () => {
       ...EMPTY_FILTER,
       project: 'alpha',
       source: 'opencode' as const,
-      periodDays: 7,
+      period: 7,
     };
     // same reference back when nothing rolled off (no needless store churn)
     expect(reconcileFilter(filter, runs)).toBe(filter);
@@ -186,14 +189,14 @@ describe('reconcileFilter', () => {
       ...EMPTY_FILTER,
       project: 'beta',
       source: 'opencode' as const,
-      periodDays: 7,
+      period: 7,
     };
     // a refresh where project 'beta' is gone but opencode remains
     const refreshed = runs.filter((r) => projectKey(r) !== 'beta');
     expect(reconcileFilter(filter, refreshed)).toEqual({
       ...EMPTY_FILTER,
       source: 'opencode',
-      periodDays: 7,
+      period: 7,
     });
   });
 
@@ -236,7 +239,7 @@ describe('spendTrend', () => {
   it('compares the visible period to the equal-length one before it', () => {
     // current 50 (30+20) vs previous 40 (10+30) → +25%; the June run is
     // outside both windows and must not leak in
-    expect(spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 })).toEqual({
+    expect(spendTrend(trendRuns, { ...EMPTY_FILTER, period: 7 })).toEqual({
       currentUSD: 50,
       previousUSD: 40,
       currentTokens: 0,
@@ -266,7 +269,7 @@ describe('spendTrend', () => {
         tokens: 100,
       }),
     ];
-    const filter = { ...EMPTY_FILTER, periodDays: 7 };
+    const filter = { ...EMPTY_FILTER, period: 7 };
     // dollars fell 87.5% while tokens rose 50%: the unit decides the story
     expect(spendTrend(withTokens, filter)?.deltaFraction).toBe(-0.875);
     expect(spendTrend(withTokens, filter, 'tokens')).toEqual({
@@ -281,7 +284,7 @@ describe('spendTrend', () => {
   it('suppresses a token trend whose baseline has no tokens', () => {
     // priced runs without token counts: a dollar trend exists, a token one can't
     expect(
-      spendTrend(trendRuns, { ...EMPTY_FILTER, periodDays: 7 }, 'tokens'),
+      spendTrend(trendRuns, { ...EMPTY_FILTER, period: 7 }, 'tokens'),
     ).toBeNull();
   });
 
@@ -295,9 +298,7 @@ describe('spendTrend', () => {
       stubRun({ id: 'cur-2', startedAt: '2026-07-10T09:00:00', cost: 20 }),
       stubRun({ id: 'prev-only', startedAt: '2026-07-05T09:00:00', cost: 10 }),
     ];
-    expect(
-      spendTrend(oneBaseline, { ...EMPTY_FILTER, periodDays: 7 }),
-    ).toBeNull();
+    expect(spendTrend(oneBaseline, { ...EMPTY_FILTER, period: 7 })).toBeNull();
   });
 
   it('suppresses when the previous window spent nothing (no percentage)', () => {
@@ -306,9 +307,7 @@ describe('spendTrend', () => {
       stubRun({ id: 'prev-1', startedAt: '2026-07-05T09:00:00', cost: 0 }),
       stubRun({ id: 'prev-2', startedAt: '2026-07-03T09:00:00', cost: 0 }),
     ];
-    expect(
-      spendTrend(zeroBaseline, { ...EMPTY_FILTER, periodDays: 7 }),
-    ).toBeNull();
+    expect(spendTrend(zeroBaseline, { ...EMPTY_FILTER, period: 7 })).toBeNull();
   });
 
   it('scopes both windows by project/source without shifting the anchor', () => {
@@ -340,7 +339,7 @@ describe('spendTrend', () => {
       }),
     ];
     expect(
-      spendTrend(mixed, { ...EMPTY_FILTER, project: 'alpha', periodDays: 7 }),
+      spendTrend(mixed, { ...EMPTY_FILTER, project: 'alpha', period: 7 }),
     ).toMatchObject({ currentUSD: 30, previousUSD: 20, deltaFraction: 0.5 });
   });
 
@@ -348,14 +347,14 @@ describe('spendTrend', () => {
     expect(
       spendTrend(trendRuns, {
         ...EMPTY_FILTER,
-        periodDays: 7,
+        period: 7,
         day: '2026-07-14',
       }),
     ).toBeNull();
   });
 
   it('handles empty input', () => {
-    expect(spendTrend([], { ...EMPTY_FILTER, periodDays: 7 })).toBeNull();
+    expect(spendTrend([], { ...EMPTY_FILTER, period: 7 })).toBeNull();
   });
 });
 
@@ -474,6 +473,122 @@ describe('branch filter dimension', () => {
   it('isFilterActive counts every dimension, the branch included', () => {
     expect(isFilterActive(EMPTY_FILTER)).toBe(false);
     expect(isFilterActive({ ...EMPTY_FILTER, branch: 'main' })).toBe(true);
-    expect(isFilterActive({ ...EMPTY_FILTER, periodDays: 7 })).toBe(true);
+    expect(isFilterActive({ ...EMPTY_FILTER, period: 7 })).toBe(true);
+  });
+});
+
+describe('since-reset period (E7)', () => {
+  // local wall-clock strings: the window is a local fact, so these stay
+  // true in any time zone. 2026-07-16 is a Thursday, 07-18 a Saturday.
+  const thu14 = { days: 7, resetDay: 'thu' as const, resetHour: 14 };
+  const runs = [
+    stubRun({
+      id: 'sat',
+      startedAt: '2026-07-18T09:30:00',
+      cost: 4,
+      tokens: 40,
+    }),
+    stubRun({
+      id: 'thu-after',
+      startedAt: '2026-07-16T15:00:00',
+      cost: 2,
+      tokens: 20,
+      project: 'alpha',
+    }),
+    stubRun({
+      id: 'thu-before',
+      startedAt: '2026-07-16T13:00:00',
+      cost: 1,
+      tokens: 10,
+    }),
+    stubRun({
+      id: 'mon',
+      startedAt: '2026-07-13T01:00:00',
+      cost: 1,
+      tokens: 10,
+    }),
+    stubRun({
+      id: 'sun',
+      startedAt: '2026-07-12T23:00:00',
+      cost: 1,
+      tokens: 10,
+    }),
+  ];
+  const reset = { ...EMPTY_FILTER, period: 'reset' as const };
+  const ids = (list: Run[]) => list.map((r) => r.id);
+
+  it('keeps the runs since the configured reset, anchored to the newest run', () => {
+    expect(ids(filterRuns(runs, reset, thu14))).toEqual(['sat', 'thu-after']);
+  });
+
+  it('defaults to 7 days from Monday 00:00 without a config', () => {
+    expect(ids(filterRuns(runs, reset))).toEqual([
+      'sat',
+      'thu-after',
+      'thu-before',
+      'mon',
+    ]);
+  });
+
+  it('other filters never shift the window', () => {
+    // the newest run is not alpha's, yet alpha's window is the same one
+    expect(
+      ids(filterRuns(runs, { ...reset, project: 'alpha' }, thu14)),
+    ).toEqual(['thu-after']);
+    expect(resetWindow(runs, thu14)).toEqual(
+      resetWindow(runs.slice(0, 1), thu14),
+    );
+  });
+
+  it('trends against the window of the same length before it', () => {
+    const history = [
+      ...runs,
+      stubRun({
+        id: 'prev-1',
+        startedAt: '2026-07-10T10:00:00',
+        cost: 2,
+        tokens: 30,
+      }),
+      stubRun({
+        id: 'prev-2',
+        startedAt: '2026-07-14T10:00:00',
+        cost: 1,
+        tokens: 30,
+      }),
+      // before the previous window: never counted
+      stubRun({
+        id: 'old',
+        startedAt: '2026-07-09T13:00:00',
+        cost: 50,
+        tokens: 500,
+      }),
+    ];
+    // current Thu 16 14:00 → : sat + thu-after = $6 / 60 tokens; previous
+    // Thu 9 14:00 → Thu 16 14:00: prev-1, sun, mon, prev-2, thu-before = $6
+    const trend = spendTrend(history, reset, 'usd', thu14);
+    expect(trend?.currentUSD).toBe(6);
+    expect(trend?.previousUSD).toBe(6);
+    expect(trend?.deltaFraction).toBe(0);
+    const tokens = spendTrend(history, reset, 'tokens', thu14);
+    expect(tokens?.currentTokens).toBe(60);
+    expect(tokens?.previousTokens).toBe(90);
+    expect(tokens?.deltaFraction).toBeCloseTo(-1 / 3, 6);
+  });
+
+  it('suppresses the trend on a pinned day, as the rolling periods do', () => {
+    expect(
+      spendTrend(runs, { ...reset, day: '2026-07-18' }, 'usd', thu14),
+    ).toBeNull();
+  });
+
+  it('counts as an active filter and names its start', () => {
+    expect(isFilterActive(reset)).toBe(true);
+    expect(periodLabel('reset', 'Thu 14:00')).toBe('since Thu 14:00');
+    expect(periodLabel(7, undefined)).toBe('last 7 days');
+    expect(periodLabel(null, 'Thu 14:00')).toBe('all time');
+    expect(periodLengthDays('reset', thu14)).toBe(7);
+    expect(periodLengthDays('reset', { days: 3 })).toBe(3);
+    expect(periodLengthDays(30)).toBe(30);
+    expect(periodLengthDays(null)).toBeNull();
   });
 });
