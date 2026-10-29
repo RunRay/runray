@@ -527,7 +527,11 @@ automatically extends its fixture-parameterized equivalence matrix.
       labels, and the export command learn it. The `%win` toggle, popover
       and Cost hero suffix go, and the `runray.limitMode` and
       `runray.limitWindow` keys are deleted on load.
-- [ ] 17.3 B [UI → /frontend-design] The budget meter on the overview
-      spend statement and the `since-reset` hint.
+- [x] 17.3 B [UI → /frontend-design] The budget meter on the overview
+      spend statement (its track spans the larger of the budget and the use,
+      so an overrun runs past a budget tick in the overspend colour; the live
+      viewer names the config key when the unit has no budget) and the
+      `since-reset` hint, whose dismiss control gains focus and active
+      states.
 - [ ] 17.4 A+B Docs (05-ARCHITECTURE component tree, 11/12 onboarding hint
       tables, `limitWindow` in the README) and a changeset.

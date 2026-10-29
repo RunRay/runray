@@ -38,7 +38,9 @@ import { tourAttr } from '../lib/tour-attr';
 import { AT_API_PRICES, type DisplayUnit, inUnit } from '../lib/unit';
 import { useAppStore, useLimitWindow, useResetLabel } from '../store';
 import { BranchMark } from './BranchMark';
+import { BudgetMeter } from './BudgetMeter';
 import { CacheDial } from './CacheDial';
+import { ContextualHint } from './ContextualHint';
 import { CoverageCaveat } from './CoverageNotices';
 import { EvidenceInline, ruleLabel, SavingsPanel } from './SavingsPanel';
 import { SeverityPill } from './SeverityPill';
@@ -228,6 +230,19 @@ export function Overview({
                 </span>
               )}
             </div>
+            {/* the since-reset window's figure is the headline above, so
+                its budget meter sits right under it (E7); a pinned day is
+                not the window, so the meter steps aside like the trend */}
+            {filter.period === 'reset' && filter.day === null && (
+              <div className="mt-3 flex flex-col gap-2">
+                <ContextualHint hintKey="since-reset" />
+                <BudgetMeter
+                  unit={unit}
+                  costUSD={totals.costUSD}
+                  tokens={totals.tokens}
+                />
+              </div>
+            )}
           </div>
 
           <BurnLine days={days} unit={unit} />

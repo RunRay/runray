@@ -3,7 +3,8 @@
  *
  * Since-reset period (visualizer "Since-reset period and budget meter", E7):
  * the period filter and the palette offer the window from `limitWindow`,
- * labelled by its real start. jsdom + createRoot + act, because a static
+ * labelled by its real start, and the overview measures that window against
+ * a budget in the display unit, or names the key that sets one. jsdom + createRoot + act, because a static
  * render reads the store's initial snapshot and never a changed one.
  */
 import type { Run, TraceFile } from '@runray/schema';
@@ -12,6 +13,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CommandPalette } from './components/CommandPalette';
 import { FilterBar } from './components/FilterBar';
+import { Overview } from './components/Overview';
+import { EMPTY_FILTER, filterRuns, type RunFilter } from './lib/filter-runs';
 import type { LimitWindowConfig } from './lib/limit-window';
 import { useAppStore } from './store';
 
@@ -150,5 +153,88 @@ describe('the palette', () => {
     } finally {
       Element.prototype.scrollIntoView = scroll;
     }
+  });
+});
+
+describe('the budget meter', () => {
+  const thu14 = { resetDay: 'thu' as const, resetHour: 14 };
+  const reset: RunFilter = { ...EMPTY_FILTER, period: 'reset' };
+  // since Thu 14:00: sat + thu = 382M tokens, $300
+  const overview = (filter: RunFilter, cfg: LimitWindowConfig) => {
+    act(() => {
+      useAppStore.getState().setFilter(filter);
+    });
+    mount(
+      <Overview
+        runs={filterRuns(RUNS, filter, cfg)}
+        allRuns={RUNS}
+        filter={filter}
+      />,
+    );
+  };
+  const setUnit = (unit: 'usd' | 'tokens') => {
+    act(() => {
+      useAppStore.getState().setUnit(unit);
+    });
+  };
+
+  it('measures the window against the budget in the display unit', () => {
+    const cfg = { ...thu14, budgetTokens: 500_000_000 };
+    load(cfg);
+    setUnit('tokens');
+    overview(reset, cfg);
+    expect(text()).toContain('382.0M of 500.0M tokens');
+    expect(text()).toContain('≈76% used (est.)');
+    // dollars have no budget: no percentage, the key that would set one
+    setUnit('usd');
+    expect(text()).not.toContain('% used');
+    expect(text()).toContain('limitWindow.budgetUSD');
+  });
+
+  it('reads as over budget past 100%', () => {
+    const cfg = { ...thu14, budgetUSD: 250 };
+    load(cfg);
+    overview(reset, cfg);
+    expect(text()).toContain('$300.00 of $250.00');
+    expect(text()).toContain('≈120% used (est.), over budget');
+  });
+
+  it('stays out of the rolling periods and a pinned day', () => {
+    const cfg = { ...thu14, budgetUSD: 250 };
+    load(cfg);
+    overview({ ...EMPTY_FILTER, period: 7 }, cfg);
+    expect(text()).not.toContain('% used');
+    expect(text()).not.toContain('limitWindow.');
+    overview({ ...reset, day: '2026-07-18' }, cfg);
+    expect(text()).not.toContain('% used');
+  });
+
+  it('an export without a budget names no config key', () => {
+    load(thu14, false);
+    overview(reset, thu14);
+    expect(text()).not.toContain('limitWindow.');
+    expect(text()).not.toContain('% used');
+  });
+
+  it('the since-reset hint names its setting and no amount', () => {
+    load(thu14);
+    useAppStore.setState({
+      onboarding: {
+        enabled: true,
+        loaded: true,
+        welcomeDismissedAt: null,
+        tours: {},
+        hints: [],
+        checklist: {},
+        checklistDismissed: false,
+      },
+    });
+    overview(reset, thu14);
+    const hint = container.querySelector('[role="status"]');
+    expect(hint?.textContent).toContain(
+      'Counts from the last reset of your usage limit',
+    );
+    expect(hint?.textContent).toContain('limitWindow in runray.config.json');
+    expect(hint?.textContent).not.toMatch(/\$\d/);
   });
 });
