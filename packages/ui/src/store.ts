@@ -62,8 +62,10 @@ export const RETIRED_LIMIT_KEYS = [
 ] as const;
 
 export function dropRetiredLimitKeys(): void {
-  if (typeof localStorage === 'undefined') return;
+  // runs at module load, so even reading the global stays inside the try:
+  // a browser that blocks storage throws on access
   try {
+    if (typeof localStorage === 'undefined') return;
     for (const key of RETIRED_LIMIT_KEYS) localStorage.removeItem(key);
   } catch {
     // storage blocked: there is nothing stored to clean up either
