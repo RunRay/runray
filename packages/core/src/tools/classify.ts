@@ -10,6 +10,7 @@
  * session: `toolUsageAttributes` emits them only when redaction is off. No
  * argument, path or option value is ever part of the result.
  */
+import { TOOL_ATTR } from './attributes.js';
 import {
   ACTIVITY_RANK,
   type Activity,
@@ -21,30 +22,6 @@ import {
   type ToolDef,
 } from './registry.js';
 import { decompose, type ShellDialect, stageProgram } from './shell.js';
-
-/** Reserved span attribute keys of the tool-usage capability (design T3). */
-export const TOOL_ATTR = {
-  /** Activity enum. Its presence marks a span as classified. */
-  activity: 'runray.toolActivity',
-  /** Registry id of the primary tool. */
-  tool: 'runray.tool',
-  /** Table subcommand, or `run` / `script` / `inline`. */
-  sub: 'runray.toolSub',
-  /** Runner the tool was launched through. */
-  via: 'runray.toolVia',
-  /** Other registry tools the command ran. */
-  also: 'runray.toolsAlso',
-  /** `background`, `timeout`, `interrupted`. */
-  flags: 'runray.toolFlags',
-  /** Number of hooks a stop-hook summary reports. */
-  hookCount: 'runray.hookCount',
-  /** Free-form: program name outside the registry. */
-  name: 'runray.toolName',
-  /** Free-form: script, task or script-file name. */
-  script: 'runray.toolScript',
-  /** Free-form: skill name. */
-  skill: 'runray.skill',
-} as const;
 
 /** What a command ran, as far as its text shows. */
 export interface Classification {

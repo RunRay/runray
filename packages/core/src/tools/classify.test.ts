@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { TOOL_ATTR } from './attributes.js';
 import {
   type Classification,
   classifyCommand,
-  TOOL_ATTR,
   toolUsageAttributes,
 } from './classify.js';
 import { ACTIVITIES, RUNNER_IDS, TOOL_IDS, toolById } from './registry.js';

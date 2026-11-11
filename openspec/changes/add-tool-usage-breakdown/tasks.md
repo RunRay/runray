@@ -53,26 +53,26 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 
 ## 2. Adapters stamp identity (goldens change; regeneration deferred to 2.6)
 
-- [ ] 2.1 A claude-code adapter: stamp the classification on `Bash` and
+- [x] 2.1 A claude-code adapter: stamp the classification on `Bash` and
       `PowerShell` spans at the tool emit site, dialect chosen by tool name,
       next to the existing target attributes. Verify: adapter tests that build
       transcripts inline for "Compound command resolved", "Also-ran tools",
       "Identity survives redaction", "Unresolved command" and "Target identity
       is untouched".
-- [ ] 2.2 A opencode adapter: the same for `bash` at the tool-part emit site,
+- [x] 2.2 A opencode adapter: the same for `bash` at the tool-part emit site,
       identical across the three storage eras. Verify: an adapter test for
       "Cross-adapter identity" and an era-parity assertion.
-- [ ] 2.3 A Command result flags (claude-code): `background` from
+- [x] 2.3 A Command result flags (claude-code): `background` from
       `run_in_background` or a recorded background task id, `timeout` from the
       recorded harness timeout, `interrupted` from the result flag, in that
       fixed order. Verify: tests for the three scenarios of "Command result
       flags".
-- [ ] 2.4 A Skill identity: `runray.skill` from the Claude Code `Skill` input,
+- [x] 2.4 A Skill identity: `runray.skill` from the Claude Code `Skill` input,
       unredacted only. For OpenCode's `skill` tool, inspect a real session to
       find where the name is recorded; stamp it if it is, and record the
       finding in an adapter comment if it is not. Verify: tests for both
       scenarios of "Skill identity capture" and the recorded finding.
-- [ ] 2.5 A Allowlist and OTLP validation: add the closed-vocabulary keys to
+- [x] 2.5 A Allowlist and OTLP validation: add the closed-vocabulary keys to
       `attribute-keys.ts`; the OTLP adapter validates incoming `runray.tool*`
       values against their vocabularies and drops free-form keys under
       redaction (T10). Verify: tests for the three scenarios of "Reserved

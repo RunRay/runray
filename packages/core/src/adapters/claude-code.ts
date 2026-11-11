@@ -16,6 +16,7 @@ import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
+import { claudeCommandOutcome, toolUsageSpanAttributes } from './usage.js';
 
 /**
  * Claude Code adapter (task 2.2). Storage layout (verified 2026-07 on CC
@@ -558,12 +559,18 @@ async function emitFromTranscript(
               }),
             }
           : {}),
-        attributes: toolTargetAttributes(
-          'claude-code',
-          tu.name,
-          tu.input,
-          ctx.redact,
-        ),
+        attributes: {
+          ...toolTargetAttributes('claude-code', tu.name, tu.input, ctx.redact),
+          // what the call ran (tool-usage capability): closed-vocabulary
+          // identity in both redact modes, free-form names only unredacted
+          ...toolUsageSpanAttributes(
+            'claude-code',
+            tu.name,
+            tu.input,
+            ctx.redact,
+            claudeCommandOutcome(tu.input, result?.toolUseResult),
+          ),
+        },
         provenance: { file, line: tu.line },
       });
 

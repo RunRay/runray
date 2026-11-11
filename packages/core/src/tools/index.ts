@@ -5,9 +5,16 @@
  * labels and vocabularies from the same registry, never from a copy.
  */
 export {
+  CLOSED_TOOL_ATTRS,
+  FREE_TOOL_ATTRS,
+  isValidToolAttribute,
+  TOOL_ATTR,
+  TOOL_FLAGS,
+  type ToolFlag,
+} from './attributes.js';
+export {
   type Classification,
   classifyCommand,
-  TOOL_ATTR,
   toolUsageAttributes,
 } from './classify.js';
 export {
