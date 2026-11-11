@@ -121,7 +121,7 @@ source cannot provide SHALL be shown as unavailable, never as zero.
   also-ran tool in a command led by `pnpm`
 - WHEN the tool table renders
 - THEN the `git` row shows 85 seconds as its total and 50 seconds, labelled
-  shared, beside it
+  shared, with it in the same cell
 
 #### Scenario: Background call
 - GIVEN a `docker compose up` call sent to the background

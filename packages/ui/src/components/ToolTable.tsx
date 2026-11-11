@@ -41,13 +41,24 @@ const SORT_NAME: Record<ToolSort, string> = {
 const TAG =
   'ml-2 rounded-[4px] border border-border-slate px-1 font-mono text-micro uppercase tracking-[0.05em] text-text-faint';
 const FLAG =
-  'ml-1.5 rounded-[4px] border px-1 font-mono text-micro uppercase tracking-[0.05em]';
-const NUM = 'py-1.5 pl-3 text-right font-mono whitespace-nowrap';
+  'rounded-[4px] border px-1 font-mono text-micro uppercase tracking-[0.05em] whitespace-nowrap';
+// cells align on their first line: a total with a shared note under it is
+// taller than the figures beside it
+const NUM = 'py-1.5 pl-3 text-right align-top font-mono whitespace-nowrap';
 
 function Flags({ stats }: { stats: UsageStats }) {
   const count = (n: number) => (n > 1 ? `${n} ` : '');
+  const any =
+    stats.flags.background > 0 ||
+    stats.flags.timeout > 0 ||
+    stats.flags.interrupted > 0 ||
+    stats.cancelled > 0 ||
+    stats.open > 0;
+  if (!any) return null;
   return (
-    <>
+    // one unit: it moves under the label as a whole when the column is
+    // narrow, and wraps inside itself only when it is wider than the column
+    <span className="ml-1.5 inline-flex flex-wrap gap-x-1.5 gap-y-1">
       {stats.flags.background > 0 && (
         <span
           className={`${FLAG} border-heat-1/60 text-heat-1`}
@@ -88,7 +99,7 @@ function Flags({ stats }: { stats: UsageStats }) {
           {count(stats.open)}no result
         </span>
       )}
-    </>
+    </span>
   );
 }
 
@@ -135,9 +146,12 @@ function Figures({
       <td className={`${NUM} text-text-dim`}>{stats.calls}</td>
       <td className={`${NUM} text-text`}>
         {time(stats.totalMs)}
+        {/* shared time sits under the total, not after it: on one line the
+            column grew to three times its figure and pushed p50, p95 and
+            errors out of a column of ordinary width */}
         {stats.sharedMs > 0 && (
           <span
-            className="ml-1.5 text-text-faint"
+            className="block text-text-faint"
             title="This much of the total was spent in commands that also ran other tools. One command has one duration, so it cannot be divided between them."
           >
             incl. {formatDuration(stats.sharedMs)} shared
@@ -145,7 +159,7 @@ function Figures({
         )}
         {alsoRanMs > 0 && (
           <span
-            className="ml-1.5 text-text-faint"
+            className="block text-text-faint"
             title={`Ran in ${alsoRanCalls} ${alsoRanCalls === 1 ? 'command' : 'commands'} led by another tool. That time is counted on the other tool's row, not in this total.`}
           >
             +{formatDuration(alsoRanMs)} shared
@@ -197,7 +211,7 @@ function ChildRows({ row, tag }: { row: TableRow; tag: string }) {
         >
           <th
             scope="row"
-            className="max-w-[320px] truncate py-1.5 pl-6 text-left font-mono font-normal text-text-dim"
+            className="max-w-[320px] truncate py-1.5 pl-6 text-left align-top font-mono font-normal text-text-dim"
           >
             {child.label}
             {child.note !== undefined && (
@@ -244,37 +258,41 @@ function Row({
   return (
     <>
       <tr className="border-t border-border-slate" title={row.hint}>
+        {/* the name and its tag stay on one line; the markers after them
+            may move under the name, where they start level with it */}
         <th
           scope="row"
-          className="py-1.5 text-left font-mono font-normal whitespace-nowrap text-text"
+          className="py-1.5 pl-4 text-left align-top font-mono font-normal text-text"
         >
-          {expandable ? (
-            <button
-              type="button"
-              aria-expanded={expanded}
-              onClick={onToggle}
-              className="-ml-1 inline-flex items-center gap-1.5 rounded-control px-1 text-left transition-colors duration-150 ease-out hover:bg-surface-variant/40 active:bg-surface-variant"
-            >
-              <span
-                aria-hidden
-                className={`inline-block w-2.5 text-text-faint transition-transform duration-150 ease-out ${expanded ? 'rotate-90' : ''}`}
+          <span className="whitespace-nowrap">
+            {expandable ? (
+              <button
+                type="button"
+                aria-expanded={expanded}
+                onClick={onToggle}
+                className="-ml-5 inline-flex items-center gap-1.5 rounded-control px-1 text-left transition-colors duration-150 ease-out hover:bg-surface-variant/40 active:bg-surface-variant"
               >
-                ▸
+                <span
+                  aria-hidden
+                  className={`inline-block w-2.5 text-text-faint transition-transform duration-150 ease-out ${expanded ? 'rotate-90' : ''}`}
+                >
+                  ▸
+                </span>
+                {row.label}
+              </button>
+            ) : (
+              row.label
+            )}
+            {row.hint !== undefined && (
+              <span className="sr-only">. {row.hint}</span>
+            )}
+            <span className={TAG}>{tag}</span>
+            {row.group === 'utilities' && (
+              <span className="ml-2 font-sans text-text-faint">
+                {row.children.length} tools
               </span>
-              {row.label}
-            </button>
-          ) : (
-            <span className="pl-4">{row.label}</span>
-          )}
-          {row.hint !== undefined && (
-            <span className="sr-only">. {row.hint}</span>
-          )}
-          <span className={TAG}>{tag}</span>
-          {row.group === 'utilities' && (
-            <span className="ml-2 font-sans text-text-faint">
-              {row.children.length} tools
-            </span>
-          )}
+            )}
+          </span>
           <Flags stats={row.stats} />
           <Untimed stats={row.stats} />
         </th>
