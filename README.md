@@ -1,6 +1,8 @@
 # RunRay
 
-RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
+**A profiler for coding-agent sessions.** Open one Claude Code or OpenCode session and see which turns burned money and what to change next time.
+
+RunRay reads the session logs the agents already keep on your disk. It runs locally on your machine and makes no outbound network requests by default.
 
 ```bash
 npx runray demo   # a scrubbed sample session, no agent data needed
@@ -9,7 +11,7 @@ npx runray view   # your own sessions
 
 Needs Node.js 22 or newer.
 
-![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
+![Five steps: npx runray demo, the dashboard with $163 of $484 burned, one session's Waste tab, the leak rail, and a finding with the calls behind it](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/demo.gif)
 
 **Status: alpha.** Everything on this page works in `runray@0.1.0-alpha.6`. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log.
 
@@ -22,6 +24,23 @@ RunRay works one session at a time and answers a different question: where did t
 > "Bash failed three times in a row and the retries cost $0.09" is something you can fix.
 > "138k tokens" is not.
 
+## How it compares
+
+Several tools read the same log files. They answer different questions, and plenty of people run more than one.
+
+| Tool | The question it answers | Scope |
+|---|---|---|
+| [ccusage](https://github.com/ryoppippi/ccusage) | How many tokens and dollars did I use per day, week, month or session? | Totals, across many agent CLIs |
+| [codeburn](https://github.com/getagentseal/codeburn) | Where does my spend go across tools, projects and tasks, and which config or habit wastes tokens over a month? | 40+ tools, a desktop app, `optimize` can apply config fixes for you |
+| [claude-devtools](https://github.com/matt1398/claude-devtools) | What happened in this Claude Code transcript, and what filled the context? | One session, read as a transcript |
+| RunRay | Inside this one session, which turns burned money, how much, and who can fix it? | One session, audited by twelve rules. Claude Code, OpenCode, OTLP import |
+
+RunRay stays inside one session. Every finding points at the spans that caused it and carries its own amount, placed on the session's clock, so you can see when a cache prefix broke and what that cost. Failed tool calls are sorted by who can act on them. Money already burned and savings a different setup would bring are never added into one number. The result exports as a single HTML file for a pull request, with prompts and paths stripped if you ask.
+
+It also does less. It reads three sources, has no menu bar app and no quota view, and never edits your config. If you want a monthly total or a cleanup of unused MCP servers, the tools above do that well.
+
+This table reflects each project's README in November 2026.
+
 ## What you get
 
 | Tab | What it shows |
@@ -33,6 +52,8 @@ RunRay works one session at a time and answers a different question: where did t
 | **Waste** | What the session burned and what it could have saved, each burn placed on the session's clock over the context size it happened in. |
 | **Errors** | Failed calls grouped by who can act on them, with the error text and what to do in your tool. |
 | **Report** | `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` makes it safe to hand over. |
+
+![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
 ### Waste
 

@@ -3,13 +3,17 @@
   "version": "0.1.0-alpha.6",
   "type": "module",
   "license": "MIT",
-  "description": "Zero-config, local-first observability and token audit for local coding agents (Claude Code, OpenCode; OTLP import for others).",
+  "description": "A profiler for coding-agent sessions. See which turns of a Claude Code or OpenCode session burned money and what to change. Local, no telemetry.",
   "keywords": [
     "claude-code",
     "opencode",
     "coding-agent",
+    "ai-agents",
+    "llm",
     "tokens",
+    "token-usage",
     "cost",
+    "profiler",
     "observability",
     "cli"
   ],
