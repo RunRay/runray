@@ -187,10 +187,14 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       the schema-diff check, and
       `openspec validate add-tool-usage-breakdown --strict`. Verify: all four
       pass.
-- [ ] 6.2 Real-session check: open a local session known to use `docker` in
+- [x] 6.2 Real-session check: open a local session known to use `docker` in
       `runray view` and export it with `--redact`. Verify: the Time view shows
       a `docker` row in both; the redacted report shows no program name
       outside the registry; screenshots attached to the PR.
+      Checked on a session with 58 `docker` calls: the row has the same calls
+      and time in the view and in the redacted report. The PR carries the
+      Time view of the demo run in both themes; a screenshot of a real
+      session shows private work and was not published.
 
 ## 7. Fixture with a command skeleton (GATED)
 
