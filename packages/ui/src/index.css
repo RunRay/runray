@@ -469,6 +469,17 @@
     font-weight: 500;
   }
 
+  /* Time view. Waiting on the person shares its hue with idle (nobody was
+     working in either), so the hatch is what tells them apart: pattern
+     carries the difference, not colour alone. */
+  .hatch-waiting {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--color-heat-1) 0 3px,
+      transparent 3px 7px
+    );
+  }
+
   /* Premium dashboard glassmorphism effect */
   .glass-panel {
     background: color-mix(in oklch, var(--color-surface) 80%, transparent);

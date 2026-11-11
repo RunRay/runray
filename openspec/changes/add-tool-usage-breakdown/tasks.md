@@ -110,7 +110,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       model, then tool, then waiting (D3, T8). Verify: unit tests for "Waiting
       on the person is its own segment" and "A tool running during a pending
       question", and the existing segment-sum tests unchanged.
-- [ ] 4.2 B [UI → /frontend-design] Wall-clock strip and legend with the fifth
+- [x] 4.2 B [UI → /frontend-design] Wall-clock strip and legend with the fifth
       segment; update the `time-view` hint and any tour or onboarding copy
       that enumerates the segments. Verify: a component test that renders five
       legend rows and an accessible label naming five segments;

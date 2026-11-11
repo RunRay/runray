@@ -13,7 +13,8 @@ import { ContextualHint } from './ContextualHint';
 
 /**
  * The Time tab (E2): where the wall-clock went — model wait, tool
- * execution, coordination, idle — via the no-double-count interval sweep;
+ * execution, waiting on the person, coordination, idle — via the
+ * no-double-count interval sweep;
  * parallel compression reads as a separate ×N chip, never bar inflation.
  * Time answers a different question than money, so it is a sibling tab of
  * Cost and Timeline, not a buried section.
@@ -27,15 +28,19 @@ const CATEGORY_LABEL: Record<TimeCategory, string> = {
   idle: 'idle',
 };
 
-const CATEGORY_BAR: Record<TimeCategory, string> = {
+/** One fill per segment, shared by the strip and its legend swatch. */
+const CATEGORY_FILL: Record<TimeCategory, string> = {
   model: 'bg-brass/70',
   tool: 'bg-surface-2',
-  waiting: 'bg-heat-1/70',
+  waiting: 'hatch-waiting',
   coordination: 'bg-border-slate',
   idle: 'bg-heat-1/40',
 };
 
-const CATEGORY_DOT: Record<TimeCategory, string> = CATEGORY_BAR;
+const CATEGORY_NOTE: Partial<Record<TimeCategory, string>> = {
+  waiting:
+    'A question or a plan was waiting for your answer and nothing else was running.',
+};
 
 const ORDER = TIME_CATEGORIES;
 
@@ -87,21 +92,24 @@ export function TimeView({
           {breakdown.segments.map((seg) => (
             <div
               key={`${seg.start}`}
-              className={CATEGORY_BAR[seg.category]}
+              className={CATEGORY_FILL[seg.category]}
               style={{ width: `${((seg.end - seg.start) / wall) * 100}%` }}
               title={`${CATEGORY_LABEL[seg.category]} · ${formatDuration(seg.end - seg.start)}`}
             />
           ))}
         </div>
 
-        <table className="mt-3 w-max border-collapse text-label">
+        <table
+          className="mt-3 w-max border-collapse text-label"
+          data-testid="wall-clock-legend"
+        >
           <tbody>
             {ORDER.map((category) => (
-              <tr key={category}>
+              <tr key={category} title={CATEGORY_NOTE[category]}>
                 <td className="flex items-center gap-1.5 py-0.5 pr-4 text-text-dim">
                   <i
                     aria-hidden
-                    className={`inline-block h-2 w-2 rounded-full ${CATEGORY_DOT[category]}`}
+                    className={`inline-block h-2.5 w-2.5 rounded-[2px] ${CATEGORY_FILL[category]}`}
                   />
                   {CATEGORY_LABEL[category]}
                 </td>
