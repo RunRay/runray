@@ -183,7 +183,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 
 ## 6. Integration check
 
-- [ ] 6.1 Full gate: `pnpm lint && pnpm typecheck && pnpm test`, `pnpm bench`,
+- [x] 6.1 Full gate: `pnpm lint && pnpm typecheck && pnpm test`, `pnpm bench`,
       the schema-diff check, and
       `openspec validate add-tool-usage-breakdown --strict`. Verify: all four
       pass.
