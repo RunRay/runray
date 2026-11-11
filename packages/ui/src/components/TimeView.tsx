@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
 import {
   DEFAULT_IDLE_GAP_MS,
+  TIME_CATEGORIES,
   type TimeCategory,
   timeBreakdown,
   toolDurationStats,
@@ -21,6 +22,7 @@ import { ContextualHint } from './ContextualHint';
 const CATEGORY_LABEL: Record<TimeCategory, string> = {
   model: 'model wait',
   tool: 'tool execution',
+  waiting: 'waiting on you',
   coordination: 'coordination',
   idle: 'idle',
 };
@@ -28,18 +30,14 @@ const CATEGORY_LABEL: Record<TimeCategory, string> = {
 const CATEGORY_BAR: Record<TimeCategory, string> = {
   model: 'bg-brass/70',
   tool: 'bg-surface-2',
+  waiting: 'bg-heat-1/70',
   coordination: 'bg-border-slate',
   idle: 'bg-heat-1/40',
 };
 
-const CATEGORY_DOT: Record<TimeCategory, string> = {
-  model: 'bg-brass/70',
-  tool: 'bg-surface-2',
-  coordination: 'bg-border-slate',
-  idle: 'bg-heat-1/40',
-};
+const CATEGORY_DOT: Record<TimeCategory, string> = CATEGORY_BAR;
 
-const ORDER: TimeCategory[] = ['model', 'tool', 'coordination', 'idle'];
+const ORDER = TIME_CATEGORIES;
 
 export function TimeView({
   run,
