@@ -1652,6 +1652,41 @@ describe('claude-code adapter — hook spans', () => {
     });
   });
 
+  it('never lets a file name or a path into a span name (spec scenario)', async () => {
+    const named = (hookName: string, hookEvent: string, n: number) =>
+      hookError(`h${n}`, `2026-11-03T10:00:07.00${n}Z`, {
+        hookName,
+        hookEvent,
+      });
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      // an event that matches on file names: the matcher is project text
+      named('FileChanged:Makefile', 'FileChanged', 1),
+      named('FileChanged:.env.local', 'FileChanged', 2),
+      // a tool event whose matcher is not shaped like a tool name
+      named('PostToolUse:src/billing/invoice.ts', 'PostToolUse', 3),
+      named('PostToolUse:notes.md', 'PostToolUse', 4),
+      named('PreToolUse:C:\\Users\\alex\\plan', 'PreToolUse', 5),
+      // names stay names
+      named('PostToolUse:Edit', 'PostToolUse', 6),
+      named('SessionStart:startup', 'SessionStart', 7),
+      ...turn.slice(3),
+    ]);
+    const names = new Map(hooksOf(run).map((s) => [s.id, s.name]));
+    expect(Object.fromEntries(names)).toEqual({
+      h1: 'FileChanged',
+      h2: 'FileChanged',
+      h3: 'PostToolUse',
+      h4: 'PostToolUse',
+      h5: 'PreToolUse',
+      h6: 'PostToolUse:Edit',
+      h7: 'SessionStart:startup',
+    });
+    expect(JSON.stringify(run.spans)).not.toMatch(
+      /Makefile|env\.local|billing|invoice|notes\.md|alex/,
+    );
+  });
+
   it('emits each hook once from a re-appended transcript', async () => {
     const lines = [
       ...turn,

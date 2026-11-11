@@ -246,19 +246,53 @@ const CLAUDE_META_TYPES = new Set([
 ]);
 
 const HOOK_EVENT_RE = /^[A-Za-z][A-Za-z0-9]*$/;
-/** `Event` or `Event:matcher`, the matcher being a tool name, an agent type
- * or one of the harness's own words (`startup`, `compact`, …). */
-const HOOK_NAME_RE = /^[A-Za-z][A-Za-z0-9]*(?::[A-Za-z0-9_.:@/+-]{1,100})?$/;
+/**
+ * Events whose matcher is a tool name, an agent type or one of the harness's
+ * own words (`startup`, `compact`, `auto`). The matcher of any other event
+ * may be text from the project (a hook on changed files matches on a file
+ * name), so those hooks are named by their event alone.
+ */
+const HOOK_MATCHER_EVENTS: ReadonlySet<string> = new Set([
+  'PreToolUse',
+  'PostToolUse',
+  'PostToolUseFailure',
+  'PermissionRequest',
+  'PermissionDenied',
+  'SubagentStart',
+  'SubagentStop',
+  'SessionStart',
+  'SessionEnd',
+  'PreCompact',
+  'PostCompact',
+  'Notification',
+]);
+/**
+ * A tool name (`Edit`, `mcp__server__tool`), an agent type (`Explore`,
+ * `plugin:agent`) or a harness word. No dot and no slash, so a file name or
+ * a path never has this shape.
+ */
+const HOOK_MATCHER_RE = /^[A-Za-z0-9_-]{1,64}(?::[A-Za-z0-9_-]{1,64}){0,2}$/;
 
 /**
  * The span name of a hook: its event and matcher as the harness wrote them.
- * A hook span keeps its name under redaction, like a tool span, so a value
- * that is not shaped like a name falls back to the bare event, and past that
- * to `hook`: free text never becomes a span name.
+ * A hook span keeps its name under redaction, like a tool span, so the
+ * matcher is kept only for an event that matches on names and only when it
+ * is shaped like one. Anything else falls back to the record's event, and
+ * past that to `hook`: neither free text nor a file name becomes a span name.
  */
 function hookSpanName(hookName: unknown, hookEvent: unknown): string {
   const name = str(hookName);
-  if (name !== undefined && HOOK_NAME_RE.test(name)) return name;
+  if (name !== undefined) {
+    const cut = name.indexOf(':');
+    if (cut === -1) {
+      if (HOOK_EVENT_RE.test(name)) return name;
+    } else if (
+      HOOK_MATCHER_EVENTS.has(name.slice(0, cut)) &&
+      HOOK_MATCHER_RE.test(name.slice(cut + 1))
+    ) {
+      return name;
+    }
+  }
   const event = str(hookEvent);
   return event !== undefined && HOOK_EVENT_RE.test(event) ? event : 'hook';
 }

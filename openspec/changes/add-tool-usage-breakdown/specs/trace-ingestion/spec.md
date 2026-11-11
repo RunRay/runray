@@ -95,8 +95,11 @@ The claude-code adapter SHALL emit a `hook` span for each hook record the
 transcript carries: failed and cancelled hook runs, with their recorded
 duration and outcome, and stop-hook summaries, with zero duration and the
 number of hooks that ran as `runray.hookCount`. A hook span SHALL be named by
-its hook event and matcher. Hook runs the transcript does not record SHALL
-produce no span.
+its hook event and matcher. The matcher SHALL be part of the name only for an
+event that matches on tool names, agent types or the harness's own words, and
+only when it is shaped like such a name; otherwise the span SHALL be named by
+the event alone, because a span name is kept under redaction. Hook runs the
+transcript does not record SHALL produce no span.
 
 #### Scenario: Failed hook with a duration
 - GIVEN a hook record for `PostToolUse:Edit` that ran 688 ms and exited with
@@ -195,6 +198,13 @@ redaction rule as shell tool spans.
 - WHEN the transcript is parsed
 - THEN the hook span is named by the record's hook event, or `hook` when that
   is free text too
+
+#### Scenario: Hook matcher that is a file name or a path
+- GIVEN a hook record named `FileChanged:.env.local`, and another named
+  `PostToolUse:src/billing/invoice.ts`
+- WHEN the transcript is parsed, with or without redaction
+- THEN the hook spans are named `FileChanged` and `PostToolUse`, and no span
+  name holds the file name or the path
 
 ### Requirement: Reserved tool-usage keys from OTLP are validated
 The OTLP adapter SHALL accept an incoming closed-vocabulary tool-usage

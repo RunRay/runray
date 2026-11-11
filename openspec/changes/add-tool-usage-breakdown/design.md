@@ -333,7 +333,11 @@ tool phases.
   command ran the same one.
 - The span name survives redaction, like a tool span's, so it is taken from
   the record only when it is shaped like `Event` or `Event:matcher`; otherwise
-  it falls back to the bare event, and past that to `hook`.
+  it falls back to the bare event, and past that to `hook`. The matcher is
+  kept only for an event that matches on names (tool events, subagent events,
+  session and compaction events, notifications) and only when it has the
+  shape of a tool name or an agent type: no dot and no slash, so a hook that
+  matches on changed files cannot put a file name into a redacted report.
 - Span ids derive from the record's `uuid`, so the duplicate-record rule
   ("first occurrence wins") already covers re-appended transcripts.
 - A container starts no later than a hook it holds. The record is written
