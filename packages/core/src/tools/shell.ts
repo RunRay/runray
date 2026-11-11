@@ -23,6 +23,19 @@ export type Stage = string[];
 /** Stages joined by `|`. */
 export type Pipeline = Stage[];
 
+/**
+ * A stage and what removing the quotes lost: which of its words opened with
+ * one. `$dir = "D:\work"` and `$out = docker ps` are the same three words
+ * once the quotes are gone, and only the second runs a program.
+ */
+export interface ScannedStage {
+  words: Stage;
+  /** Indexes into `words`; one shared empty set when no word was quoted. */
+  quoted: ReadonlySet<number>;
+}
+
+const NONE_QUOTED: ReadonlySet<number> = new Set();
+
 /** Index just past the closing `"` of a string opened before `from`. */
 function skipDouble(src: string, from: number, ps: boolean): number {
   const n = src.length;
@@ -91,6 +104,13 @@ function skipHeredoc(src: string, from: number, delimiter: string): number {
  * position holds an expansion.
  */
 export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
+  return scan(command, dialect).map((pipeline) =>
+    pipeline.map((stage) => stage.words),
+  );
+}
+
+/** `decompose`, with each stage's quoted words marked. */
+export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
   const src =
     command.length > MAX_COMMAND_CHARS
       ? command.slice(0, MAX_COMMAND_CHARS)
@@ -99,20 +119,27 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
   const escapeChar = ps ? '`' : '\\';
   const n = src.length;
 
-  const pipelines: Pipeline[] = [];
-  let pipeline: Pipeline = [];
+  const pipelines: ScannedStage[][] = [];
+  let pipeline: ScannedStage[] = [];
   let stage: Stage = [];
+  /** Indexes of the open stage's quoted words; allocated on first use. */
+  let quoted: Set<number> | undefined;
   let word = '';
   let inWord = false;
   /** The open word has no quoted or escaped part. */
   let bare = true;
+  /** The open word began with a quote. */
+  let opensQuoted = false;
   /** The last operator was `|` and nothing has followed it yet. */
   let afterPipe = false;
   const heredocs: string[] = [];
 
   const pushStage = () => {
-    if (stage.length > 0) pipeline.push(stage);
+    if (stage.length > 0) {
+      pipeline.push({ words: stage, quoted: quoted ?? NONE_QUOTED });
+    }
     stage = [];
+    quoted = undefined;
   };
   const pushPipeline = () => {
     if (pipeline.length > 0) pipelines.push(pipeline);
@@ -123,10 +150,17 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
     if (!inWord) return;
     // a lone, unquoted brace opens or closes a group: a separator, not a word
     const group = bare && (word === '{' || word === '}');
-    if (!group) stage.push(word);
+    if (!group) {
+      if (opensQuoted) {
+        quoted ??= new Set();
+        quoted.add(stage.length);
+      }
+      stage.push(word);
+    }
     word = '';
     inWord = false;
     bare = true;
+    opensQuoted = false;
     if (group) {
       pushStage();
       pushPipeline();
@@ -179,6 +213,7 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
       continue;
     }
     if (c === "'") {
+      if (!inWord) opensQuoted = true;
       let j = i + 1;
       for (;;) {
         const end = src.indexOf("'", j);
@@ -202,6 +237,7 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
       continue;
     }
     if (c === '"') {
+      if (!inWord) opensQuoted = true;
       let j = i + 1;
       while (j < n) {
         const d = src.charAt(j);
@@ -251,6 +287,7 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
       const terminator = `\n${next}@`;
       const end = src.indexOf(terminator, i + 2);
       i = end === -1 ? n : end + terminator.length;
+      opensQuoted = true;
       inWord = true;
       bare = false;
       continue;
@@ -358,6 +395,7 @@ export function decompose(command: string, dialect: ShellDialect): Pipeline[] {
         word = '';
         inWord = false;
         bare = true;
+        opensQuoted = false;
         i += 2;
         continue;
       }
@@ -539,16 +577,24 @@ function programName(
  * lowercase basename without a Windows executable extension. Returns
  * `undefined` when the stage holds no program (only assignments, a loop
  * header, a bare keyword).
+ *
+ * `quoted` is the stage's `ScannedStage.quoted`. It settles the one case the
+ * words alone cannot: after `$x =` PowerShell runs a bare word as a command
+ * and takes a quoted one as the value, so `$dir = "D:\work"` holds no program
+ * while `$out = docker ps` holds `docker`.
  */
 export function stageProgram(
   words: readonly string[],
   dialect: ShellDialect,
+  quoted: ReadonlySet<number> = NONE_QUOTED,
 ): StageProgram | undefined {
   const ps = dialect === 'powershell';
   const skip = SKIP_KEYWORDS[dialect];
   const terminal = TERMINAL_KEYWORDS[dialect];
   let i = 0;
   let called = false;
+  /** The words so far were `$x =`: what follows is the value assigned. */
+  let assigned = false;
   let lastWrapper: string | undefined;
 
   while (i < words.length) {
@@ -570,6 +616,7 @@ export function stageProgram(
     }
     if (following === '=' || following === '+=') {
       i += 2; // `$x = cmd` — the right-hand side may still be a command
+      assigned = true;
       continue;
     }
     if (ASSIGNMENT.test(word) || (ps && PS_ASSIGNMENT.test(word))) {
@@ -582,6 +629,9 @@ export function stageProgram(
       continue;
     }
     if (terminal.has(keyword)) return undefined;
+    // a string literal assigned to a variable; only the call operator runs a
+    // quoted word (`$out = & "C:\tools\x.exe"`)
+    if (ps && assigned && !called && quoted.has(i)) return undefined;
 
     const resolved = programName(word, dialect, called);
     if (resolved.kind === 'none') return undefined;

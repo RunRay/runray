@@ -5,8 +5,14 @@ import {
   classifyCommand,
   toolUsageAttributes,
 } from './classify.js';
-import { ACTIVITIES, RUNNER_IDS, TOOL_IDS, toolById } from './registry.js';
-import type { ShellDialect } from './shell.js';
+import {
+  ACTIVITIES,
+  RUNNER_IDS,
+  TOOL_DEFS,
+  TOOL_IDS,
+  toolById,
+} from './registry.js';
+import { MAX_COMMAND_CHARS, type ShellDialect } from './shell.js';
 
 /**
  * Command classification (tool-usage spec: "Runner unwrapping", "Subcommand
@@ -410,6 +416,45 @@ describe('activity taxonomy', () => {
   ]);
 });
 
+describe('a PowerShell string assigned to a variable is not a call', () => {
+  check([
+    {
+      // was: the `script` pseudo-tool, named after the path's last segment
+      command: '$dir = "D:\\GIT\\project"; Get-ChildItem $dir',
+      dialect: 'powershell',
+      expect: { tool: 'get-childitem', activity: 'explore', also: [] },
+    },
+    {
+      command: '$name = "docker"; Write-Host $name',
+      dialect: 'powershell',
+      expect: { tool: 'write-host', also: [] },
+    },
+    {
+      command: '$file = "package.json"',
+      dialect: 'powershell',
+      expect: { activity: 'other', noTool: true },
+    },
+    {
+      command: '$out = docker ps -q; $out.Count',
+      dialect: 'powershell',
+      expect: { tool: 'docker', sub: 'ps', activity: 'infra' },
+    },
+  ]);
+
+  it('reports no program name for the assigned text', () => {
+    for (const command of [
+      '$file = "package.json"',
+      '$dir = "D:\\GIT\\project"',
+      "$h = @{ tool = 'terraform'; dir = 'infra' }",
+    ]) {
+      const got = classifyCommand(command, 'powershell');
+      expect(got.name, command).toBeUndefined();
+      expect(got.script, command).toBeUndefined();
+      expect(got.tool, command).toBeUndefined();
+    }
+  });
+});
+
 describe('primary tool selection', () => {
   check([
     {
@@ -587,6 +632,97 @@ function mulberry32(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+/**
+ * Tool-usage spec, "Decomposition is total and bounded": no input throws and
+ * the cost is linear in the input. Every registry entry that hands the rest
+ * of the words to another resolution is repeated up to the scanner's cap.
+ */
+describe('classification is total and bounded', () => {
+  /** One unit per way the registry hands off, read from the registry. */
+  const units = new Set<string>(['sudo', 'env', 'xargs', 'timeout 5']);
+  for (const def of TOOL_DEFS) {
+    if (def.runner === true) units.add(def.id);
+    for (const sub of def.runnerSubs ?? []) units.add(`${def.id} ${sub}`);
+    if (def.moduleFlag !== undefined) units.add(`${def.id} ${def.moduleFlag}`);
+    for (const sub of Object.keys(def.skipAfter ?? {})) {
+      units.add(`${def.id} ${sub} a`);
+    }
+    if (def.shell !== undefined) units.add(`${def.id} ${def.shell.flags[0]}`);
+  }
+  const repeated = (unit: string): string =>
+    `${unit} `.repeat(Math.ceil(MAX_COMMAND_CHARS / (unit.length + 1)) + 8);
+
+  it('covers runners, runner subcommands, module flags and shells', () => {
+    for (const unit of ['npx', 'uv run', 'pnpm exec', 'python -m', 'bash -c']) {
+      expect([...units], unit).toContain(unit);
+    }
+    expect([...units].some((u) => u.startsWith('yarn workspace'))).toBe(true);
+  });
+
+  it('never throws on a command that repeats a hand-off up to the cap', () => {
+    for (const unit of units) {
+      for (const dialect of ['posix', 'powershell'] as const) {
+        expect(
+          () => classifyCommand(repeated(unit), dialect),
+          `${unit} (${dialect})`,
+        ).not.toThrow();
+      }
+    }
+  });
+
+  it('never throws on mixed hand-offs either', () => {
+    const all = [...units];
+    const random = mulberry32(0x7001);
+    for (let round = 0; round < 40; round++) {
+      let command = '';
+      while (command.length < MAX_COMMAND_CHARS + 64) {
+        command += `${all[Math.floor(random() * all.length)]} `;
+      }
+      expect(() => classifyCommand(command, 'posix'), command).not.toThrow();
+    }
+  });
+
+  it('stays linear: a capped command of hand-offs costs milliseconds', () => {
+    // before the hand-off limit these took 80 to 170 ms each (quadratic);
+    // the bound leaves two orders of magnitude for a loaded machine
+    for (const unit of ['pnpm exec', 'yarn workspace a', 'uv run', 'npx']) {
+      const command = repeated(unit);
+      let best = Number.POSITIVE_INFINITY;
+      for (let run = 0; run < 5; run++) {
+        const start = performance.now();
+        classifyCommand(command, 'posix');
+        best = Math.min(best, performance.now() - start);
+      }
+      expect(best, unit).toBeLessThan(25);
+    }
+  });
+
+  check([
+    {
+      // four hand-offs are followed
+      command: 'npx npx npx npx vitest run',
+      expect: { tool: 'vitest', sub: 'run', activity: 'test' },
+    },
+    {
+      // the fifth is not: the runner that would hand off again names the call
+      command: 'npx npx npx npx npx vitest run',
+      expect: { tool: 'npx', noSub: true },
+    },
+    {
+      command: 'uv run python -m pytest -k slow',
+      expect: { tool: 'pytest', activity: 'test' },
+    },
+    {
+      command: 'pnpm exec dotenv -e .env -- npx prisma migrate deploy',
+      expect: { tool: 'prisma' },
+    },
+    {
+      command: 'yarn workspace web workspace api build',
+      expect: { tool: 'yarn', activity: 'build' },
+    },
+  ]);
+});
 
 describe('closed vocabulary, by construction', () => {
   const WORDS = [

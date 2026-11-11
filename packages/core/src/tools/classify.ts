@@ -21,7 +21,7 @@ import {
   scriptActivity,
   type ToolDef,
 } from './registry.js';
-import { decompose, type ShellDialect, stageProgram } from './shell.js';
+import { type ShellDialect, scan, stageProgram } from './shell.js';
 
 /** What a command ran, as far as its text shows. */
 export interface Classification {
@@ -48,8 +48,30 @@ interface Candidate {
   script?: string;
 }
 
+/**
+ * How far a command has been followed: into nested shells, and from one
+ * program to the program it hands off to. Both are bounded, so the walk is
+ * bounded whatever a command repeats, and its cost stays linear in the words.
+ */
+interface Trail {
+  shells: number;
+  handoffs: number;
+}
+const START: Trail = { shells: 0, handoffs: 0 };
+
 /** Nested `bash -c "…"` commands are followed this deep. */
 const MAX_SHELL_DEPTH = 2;
+/**
+ * A runner, a runner subcommand, a module flag and a skipped workspace name
+ * each hand the rest of the words to another resolution. `uv run python -m
+ * pytest` is two hand-offs and real commands stop at three; past this many
+ * the program that would hand off again names the call itself.
+ */
+const MAX_HANDOFFS = 4;
+
+function handOff(trail: Trail): Trail {
+  return { shells: trail.shells, handoffs: trail.handoffs + 1 };
+}
 const MAX_ALSO = 8;
 const PLUMBING_RANK = ACTIVITY_RANK.length + 1;
 
@@ -172,7 +194,7 @@ function resolveNamed(
   hasPath: boolean,
   args: readonly string[],
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string | undefined,
 ): Candidate[] {
   const match = lookupTool(name);
@@ -182,14 +204,14 @@ function resolveNamed(
       : [unknownProgram(name, via)];
   }
   const full = match.prefix.length > 0 ? [...match.prefix, ...args] : args;
-  return resolveTool(match.def, full, dialect, depth, via);
+  return resolveTool(match.def, full, dialect, trail, via);
 }
 
 /** The program a runner launches: `rest[0]` is a program or a package spec. */
 function resolveRunnerTarget(
   rest: readonly string[],
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string,
 ): Candidate[] {
   const spec = rest[0];
@@ -203,20 +225,20 @@ function resolveRunnerTarget(
       aliased ??
       (bare.startsWith('@') ? bare.slice(bare.indexOf('/') + 1) : bare);
     if (!PROGRAM_NAME.test(name)) return [];
-    return resolveNamed(name, false, rest.slice(1), dialect, depth, via);
+    return resolveNamed(name, false, rest.slice(1), dialect, trail, via);
   }
   const aliased = own(PACKAGE_ALIASES, spec.toLowerCase());
   if (aliased !== undefined) {
-    return resolveNamed(aliased, false, rest.slice(1), dialect, depth, via);
+    return resolveNamed(aliased, false, rest.slice(1), dialect, trail, via);
   }
-  return resolveWords(rest, dialect, depth, via);
+  return resolveWords(rest, dialect, trail, via);
 }
 
 function resolveTool(
   def: ToolDef,
   args: readonly string[],
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string | undefined,
 ): Candidate[] {
   const base = (extra: Partial<Candidate> = {}): Candidate => ({
@@ -241,11 +263,11 @@ function resolveTool(
         const command =
           shell.rest === true ? args.slice(i + 1).join(' ') : args[i + 1];
         if (command === undefined || command === '') break;
-        if (depth >= MAX_SHELL_DEPTH) return [base({ sub: 'inline' })];
+        if (trail.shells >= MAX_SHELL_DEPTH) return [base({ sub: 'inline' })];
         const nested = candidatesOf(
           command,
           shell.dialect,
-          depth + 1,
+          { shells: trail.shells + 1, handoffs: 0 },
           via ?? `${def.id} ${shell.flags[0]}`,
         );
         return nested.length > 0 ? nested : [base({ sub: 'inline' })];
@@ -270,10 +292,11 @@ function resolveTool(
 
   // the program itself hands off (npx, uvx, wsl, xcrun)
   if (def.runner === true) {
+    if (trail.handoffs >= MAX_HANDOFFS) return [base()];
     const found = resolveRunnerTarget(
       runnerRest(args, def),
       dialect,
-      depth,
+      handOff(trail),
       via ?? def.id,
     );
     return found.length > 0 ? found : [base()];
@@ -293,12 +316,13 @@ function resolveTool(
       const lower = module.toLowerCase();
       const target = own(MODULE_ALIASES, lower) ?? lower;
       if (!PROGRAM_NAME.test(target)) return [base()];
+      if (trail.handoffs >= MAX_HANDOFFS) return [base()];
       return resolveNamed(
         target,
         false,
         args.slice(at + 2),
         dialect,
-        depth,
+        handOff(trail),
         via ?? `${def.id} ${def.moduleFlag}`,
       );
     }
@@ -330,7 +354,7 @@ function resolveTool(
     if (def.scripts !== true) return [base()];
   }
 
-  return resolveSubs(def, args, dialect, depth, via, 0, base);
+  return resolveSubs(def, args, dialect, trail, via, 0, base);
 }
 
 /** Subcommand table, runner subcommands and user-defined scripts. */
@@ -338,7 +362,7 @@ function resolveSubs(
   def: ToolDef,
   args: readonly string[],
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string | undefined,
   from: number,
   base: (extra?: Partial<Candidate>) => Candidate,
@@ -410,6 +434,7 @@ function resolveSubs(
   }
 
   if (def.runnerSubs?.includes(sub) === true) {
+    if (trail.handoffs >= MAX_HANDOFFS) return [base({ sub })];
     let rest = runnerRest(args.slice(last.index + 1), def);
     const skip =
       def.runnerSkip === undefined ? 0 : (own(def.runnerSkip, sub) ?? 0);
@@ -417,7 +442,7 @@ function resolveSubs(
     const found = resolveRunnerTarget(
       rest,
       dialect,
-      depth,
+      handOff(trail),
       via ?? `${def.id} ${sub}`,
     );
     return found.length > 0 ? found : [base({ sub })];
@@ -426,9 +451,17 @@ function resolveSubs(
     def.skipAfter === undefined ? undefined : own(def.skipAfter, sub);
   if (skipAfter !== undefined) {
     const resume = positionals(args, def, last.index + 1)[skipAfter];
-    return resume === undefined
+    return resume === undefined || trail.handoffs >= MAX_HANDOFFS
       ? [base({ sub })]
-      : resolveSubs(def, args, dialect, depth, via, resume.index, base);
+      : resolveSubs(
+          def,
+          args,
+          dialect,
+          handOff(trail),
+          via,
+          resume.index,
+          base,
+        );
   }
   if (def.scriptNext?.includes(sub) === true) {
     const next = positionals(args, def, last.index + 1).find(
@@ -444,10 +477,11 @@ function resolveSubs(
 function resolveWords(
   words: readonly string[],
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string | undefined,
+  quoted?: ReadonlySet<number>,
 ): Candidate[] {
-  const program = stageProgram(words, dialect);
+  const program = stageProgram(words, dialect, quoted);
   if (program === undefined) return [];
   if (program.name === undefined) {
     return [
@@ -463,7 +497,7 @@ function resolveWords(
     program.hasPath,
     program.args,
     dialect,
-    depth,
+    trail,
     via,
   );
 }
@@ -471,13 +505,21 @@ function resolveWords(
 function candidatesOf(
   command: string,
   dialect: ShellDialect,
-  depth: number,
+  trail: Trail,
   via: string | undefined,
 ): Candidate[] {
   const out: Candidate[] = [];
-  for (const pipeline of decompose(command, dialect)) {
+  for (const pipeline of scan(command, dialect)) {
     for (const stage of pipeline) {
-      for (const c of resolveWords(stage, dialect, depth, via)) out.push(c);
+      for (const c of resolveWords(
+        stage.words,
+        dialect,
+        trail,
+        via,
+        stage.quoted,
+      )) {
+        out.push(c);
+      }
     }
   }
   return out;
@@ -496,7 +538,7 @@ export function classifyCommand(
   command: string,
   dialect: ShellDialect,
 ): Classification {
-  const candidates = candidatesOf(command, dialect, 0, undefined);
+  const candidates = candidatesOf(command, dialect, START, undefined);
   let primary: Candidate | undefined;
   let best = Number.POSITIVE_INFINITY;
   for (const c of candidates) {

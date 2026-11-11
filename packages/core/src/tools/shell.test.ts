@@ -3,6 +3,7 @@ import {
   decompose,
   MAX_COMMAND_CHARS,
   type ShellDialect,
+  scan,
   stageProgram,
 } from './shell.js';
 
@@ -378,6 +379,74 @@ describe('stageProgram', () => {
       .flat()
       .map((stage) => stageProgram(stage, 'posix')?.name);
     expect(names).toEqual(['curl', 'sleep', undefined]);
+  });
+});
+
+describe('a PowerShell assignment', () => {
+  /** The program of each stage, read the way the classifier reads it. */
+  const programs = (command: string): Array<string | undefined> =>
+    scan(command, 'powershell')
+      .flat()
+      .map(
+        (stage) => stageProgram(stage.words, 'powershell', stage.quoted)?.name,
+      );
+
+  it('marks the words that opened with a quote', () => {
+    const [stage] = scan(`$dir = "D:\\work" 'a b' c"d"`, 'powershell').flat();
+    expect(stage?.words).toEqual(['$dir', '=', 'D:\\work', 'a b', 'cd']);
+    expect([...(stage?.quoted ?? [])]).toEqual([2, 3]);
+  });
+
+  it('shares one empty set between stages without a quoted word', () => {
+    const [a, b] = scan('pnpm test | tail', 'posix').flat();
+    expect(a?.quoted.size).toBe(0);
+    expect(a?.quoted).toBe(b?.quoted);
+  });
+
+  it('takes a quoted word as the value, not a program (spec scenario)', () => {
+    expect(programs('$dir = "D:\\GIT\\project"; Get-ChildItem $dir')).toEqual([
+      undefined,
+      'get-childitem',
+    ]);
+    expect(programs(`$name = 'docker'`)).toEqual([undefined]);
+    expect(programs('$url = "https://example.com/api/items"')).toEqual([
+      undefined,
+    ]);
+    expect(programs("$text = @'\ndocker run acme\n'@")).toEqual([undefined]);
+    expect(programs("$h = @{ tool = 'terraform'; dir = 'infra' }")).toEqual([
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it('still reads a bare word after the assignment as a command', () => {
+    expect(programs('$out = docker ps -q')).toEqual(['docker']);
+    expect(programs('$files = Get-ChildItem -Recurse')).toEqual([
+      'get-childitem',
+    ]);
+  });
+
+  it('runs a quoted word through the call operator', () => {
+    // `&` after other words ends the stage, so the call is a stage of its own
+    expect(
+      programs('$out = & "C:\\tools\\git.exe" status').filter(Boolean),
+    ).toEqual(['git']);
+    expect(programs('& "C:\\tools\\git.exe" status')).toEqual(['git']);
+  });
+
+  it('leaves a quoted program outside an assignment alone', () => {
+    // a hook command is read in this dialect whenever it holds a Windows
+    // path, and cmd runs a quoted path as it stands
+    expect(
+      programs('"C:\\Program Files\\nodejs\\node.exe" format.mjs'),
+    ).toEqual(['node']);
+  });
+
+  it('keeps POSIX as it was: a quoted command name runs', () => {
+    const [stage] = scan('"docker" ps', 'posix').flat();
+    expect(stageProgram(stage?.words ?? [], 'posix', stage?.quoted)?.name).toBe(
+      'docker',
+    );
   });
 });
 
