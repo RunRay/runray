@@ -273,7 +273,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -331,7 +334,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -551,7 +556,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -609,7 +616,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -667,7 +676,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -1265,7 +1278,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -1377,7 +1394,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -1488,7 +1509,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",
@@ -1546,7 +1571,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/exports/ses_tzdate-dst-fix.json",

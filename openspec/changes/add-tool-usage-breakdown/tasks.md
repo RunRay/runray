@@ -146,12 +146,13 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       `packages/cli/src/profiler-e2e.test.ts` that serves a transcript built
       inline and asserts the payload carries tool-usage attributes. Verify:
       the e2e case passes and the changeset file exists.
-- [ ] 4.8 B Demo data: `scripts/demo/skin.ts` re-skins shell targets but
+- [x] 4.8 B Demo data: `scripts/demo/skin.ts` re-skins shell targets but
       copies tool-usage attributes from the goldens, where commands are filler
       words. Give each re-skinned command the tool identity of its new
       executable, then rebuild with `pnpm demo:build`. Verify: no demo run
       carries a filler word in `runray.toolName`, and the demo Time view lists
-      the storyline tools (`pnpm`, `git`, `npx`).
+      the storyline tools (`pnpm`, `git`, and `tsc` for what ran behind
+      `npx`).
 
 ## 5. Claude Code hook spans (goldens change; regeneration in 5.4)
 

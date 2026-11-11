@@ -1,3 +1,4 @@
+import { toolUsage } from '@runray/core';
 import type { TraceFile } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
@@ -47,6 +48,41 @@ describe('demo', () => {
       expect(run.warnings, run.id).toBeUndefined();
     }
     expect(leaks.slice(0, 5)).toEqual([]);
+  });
+
+  it('lists the storyline tools in its Time view, not filler words', () => {
+    if (dir === undefined) throw new Error('unreachable');
+    const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
+    const tools = new Set<string>();
+    let shellCalls = 0;
+    for (const run of traceFile.runs) {
+      for (const span of run.spans) {
+        expect(span.attributes, span.id).not.toHaveProperty('runray.toolName');
+      }
+      const usage = toolUsage(run.spans);
+      if (run.source.tool === 'otlp') {
+        // an OTLP tool span has a name and no command, so its shell calls
+        // stay under the shell tool: the Time view says so for this run
+        expect(usage.unclassifiedShellCalls, run.id).toBeGreaterThan(0);
+        continue;
+      }
+      expect(usage.unclassifiedShellCalls, run.id).toBe(0);
+      for (const row of usage.rows) {
+        if (row.family !== 'shell') continue;
+        shellCalls += row.calls;
+        tools.add(row.key);
+        // a re-skinned command resolves to a registry tool: nothing is left
+        // in the nameless row, and nothing carries a scrubbed program name
+        expect(row.registry, `${run.id} ${row.key}`).toBe(true);
+      }
+    }
+    expect(shellCalls).toBeGreaterThan(0);
+    // `npx tsc` and `cd app && pnpm test` resolve to the tool that ran
+    expect([...tools]).toEqual(
+      expect.arrayContaining(['pnpm', 'npm', 'git', 'tsc', 'node']),
+    );
+    expect(tools.has('npx')).toBe(false);
+    expect(tools.has('cd')).toBe(false);
   });
 
   it('wraps the goldens in a TraceFile envelope, newest first', () => {

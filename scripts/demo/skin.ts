@@ -16,6 +16,10 @@
 
 import { extractToolTarget } from '../../packages/core/src/adapters/target.js';
 import type { RawRun } from '../../packages/core/src/index.js';
+import {
+  TOOL_ATTR,
+  toolUsageAttributes,
+} from '../../packages/core/src/tools/index.js';
 import type { Run, Span } from '../../packages/schema/src/index.js';
 
 const PREVIEW_CHARS = 200;
@@ -236,6 +240,36 @@ const BY_EXT: Record<string, Partial<Record<Family, string[]>>> = {
   output: { read: ['Reading the background job output in {file}.'] },
 };
 
+/**
+ * What a storyline executable ran, as a command the classifier reads. The
+ * goldens carry the tool identity of the scrubbed command, which is filler;
+ * a re-skinned call gets the identity of its new executable instead, so the
+ * demo's Time view lists the story's tools. Each line agrees with what the
+ * narration says the call was doing. An executable without an entry is
+ * classified as typed.
+ */
+const COMMAND_LINE: Record<string, string> = {
+  pnpm: 'pnpm test',
+  npm: 'npm test',
+  npx: 'npx tsc --noEmit',
+  git: 'git diff',
+  cd: 'cd app && pnpm test',
+  node: 'node scripts/check.mjs',
+  docker: 'docker ps',
+};
+
+/** The classification keys a re-skinned shell call replaces. Result flags
+ * describe how the call ended, not what it ran, and stay as recorded. */
+const CLASSIFICATION_KEYS = [
+  TOOL_ATTR.activity,
+  TOOL_ATTR.tool,
+  TOOL_ATTR.sub,
+  TOOL_ATTR.via,
+  TOOL_ATTR.also,
+  TOOL_ATTR.name,
+  TOOL_ATTR.script,
+];
+
 /** Shell narration by executable, where `checks` would read wrong. */
 const SEARCHY = new Set([
   'rg',
@@ -429,11 +463,16 @@ export function skinRun(golden: Run, story: DemoStory): RawRun {
   const commandsByUse = [...commandUse.entries()].sort(
     (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1),
   );
+  const newUsage = new Map<string, Record<string, unknown>>();
   for (const [i, [oldKey]] of commandsByUse.entries()) {
     const exe = need(story.commands, i, 'commands');
     const t = extractToolTarget('claude-code', 'Bash', { command: exe });
     if (t === undefined) throw new Error(`no target for ${exe}`);
     newTarget.set(oldKey, { key: t.key, display: t.display });
+    newUsage.set(
+      oldKey,
+      toolUsageAttributes(COMMAND_LINE[exe] ?? exe, 'posix', false),
+    );
   }
   const targetOf = (s: Span): string | undefined => {
     const key = (s.attributes as Record<string, unknown>)['runray.targetKey'];
@@ -566,6 +605,11 @@ export function skinRun(golden: Run, story: DemoStory): RawRun {
       if (t === undefined) throw new Error(`unmapped target ${oldKey}`);
       attrs['runray.targetKey'] = t.key;
       if ('runray.target' in attrs) attrs['runray.target'] = t.display;
+      const usage = newUsage.get(oldKey);
+      if (usage !== undefined) {
+        for (const key of CLASSIFICATION_KEYS) delete attrs[key];
+        Object.assign(attrs, usage);
+      }
     }
     const reqModel = attrs['gen_ai.request.model'];
     if (typeof reqModel === 'string') {

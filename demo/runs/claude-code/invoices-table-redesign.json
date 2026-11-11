@@ -1910,7 +1910,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2053,7 +2057,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2217,7 +2223,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2297,7 +2308,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2353,7 +2368,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2409,7 +2429,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2465,7 +2487,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2521,7 +2546,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2577,7 +2606,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2633,7 +2667,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -2966,7 +3004,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -4911,7 +4952,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -5494,7 +5537,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -5550,7 +5600,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -6733,7 +6785,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -6758,7 +6812,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -6814,7 +6870,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -6839,7 +6898,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -6895,7 +6956,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -7861,7 +7924,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -7917,7 +7982,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -7973,7 +8045,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -9530,7 +9606,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -9638,7 +9717,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -10573,7 +10654,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -10629,7 +10717,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -10961,7 +11051,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11017,7 +11109,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11125,7 +11221,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11524,7 +11623,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11580,7 +11686,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11732,7 +11840,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11788,7 +11900,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11844,7 +11958,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -11952,7 +12068,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12348,7 +12467,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12426,7 +12547,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12482,7 +12605,9 @@
       "attributes": {
         "runray.targetKey": "abe3e5d8ddbda689",
         "runray.targetKind": "command",
-        "runray.target": "mkdir"
+        "runray.target": "mkdir",
+        "runray.toolActivity": "system",
+        "runray.tool": "mkdir"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12538,7 +12663,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12591,7 +12718,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12704,7 +12833,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12760,7 +12891,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12816,7 +12951,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -12872,7 +13011,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13213,7 +13354,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13350,7 +13495,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13518,7 +13665,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13543,7 +13692,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13942,7 +14094,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -13998,7 +14152,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14054,7 +14210,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14110,7 +14270,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14439,7 +14602,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14495,7 +14665,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14872,7 +15044,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14928,7 +15102,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -14984,7 +15160,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16094,7 +16272,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16150,7 +16330,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16233,7 +16416,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16319,7 +16505,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16375,7 +16563,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -16986,7 +17177,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -17257,7 +17455,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -17603,7 +17804,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -17659,7 +17867,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -17895,7 +18105,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -17951,7 +18163,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -18297,7 +18512,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -18571,7 +18793,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -18679,7 +18903,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19061,7 +19288,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19448,7 +19678,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19504,7 +19741,9 @@
       "attributes": {
         "runray.targetKey": "abe3e5d8ddbda689",
         "runray.targetKind": "command",
-        "runray.target": "mkdir"
+        "runray.target": "mkdir",
+        "runray.toolActivity": "system",
+        "runray.tool": "mkdir"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19598,7 +19837,9 @@
       "attributes": {
         "runray.targetKey": "abe3e5d8ddbda689",
         "runray.targetKind": "command",
-        "runray.target": "mkdir"
+        "runray.target": "mkdir",
+        "runray.toolActivity": "system",
+        "runray.tool": "mkdir"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19654,7 +19895,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19822,7 +20066,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19878,7 +20124,9 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -19934,7 +20182,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -20385,7 +20635,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -20490,7 +20742,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -20614,7 +20869,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -21156,7 +21414,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -21212,7 +21477,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -21513,7 +21782,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -21713,7 +21984,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -21769,7 +22042,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -22143,7 +22419,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -22351,7 +22634,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -22619,7 +22905,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -22829,7 +23122,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -22885,7 +23180,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23262,7 +23560,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23356,7 +23661,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23468,7 +23777,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23580,7 +23893,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23864,7 +24179,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -23920,7 +24237,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24294,7 +24614,14 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24420,7 +24747,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24479,7 +24808,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24535,7 +24866,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24591,7 +24924,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24705,7 +25040,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24761,7 +25098,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -24877,7 +25218,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25024,7 +25369,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25080,7 +25427,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25371,7 +25722,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25561,7 +25914,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25617,7 +25973,9 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25673,7 +26031,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25732,7 +26092,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25846,7 +26210,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25905,7 +26271,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -25964,7 +26333,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -26023,7 +26396,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -26082,7 +26458,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -26138,7 +26518,9 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -26194,7 +26576,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -27314,7 +27698,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -27373,7 +27759,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -27809,7 +28198,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -27961,7 +28355,9 @@
       "attributes": {
         "runray.targetKey": "abe3e5d8ddbda689",
         "runray.targetKind": "command",
-        "runray.target": "mkdir"
+        "runray.target": "mkdir",
+        "runray.toolActivity": "system",
+        "runray.tool": "mkdir"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -28017,7 +28413,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -28076,7 +28474,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -28372,7 +28774,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -28866,7 +29270,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29138,7 +29544,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29197,7 +29607,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29256,7 +29668,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29350,7 +29764,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29409,7 +29825,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29468,7 +29886,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29641,7 +30062,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -29697,7 +30121,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -30346,7 +30772,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -30616,7 +31046,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -30912,7 +31346,9 @@
       "attributes": {
         "runray.targetKey": "abe3e5d8ddbda689",
         "runray.targetKind": "command",
-        "runray.target": "mkdir"
+        "runray.target": "mkdir",
+        "runray.toolActivity": "system",
+        "runray.tool": "mkdir"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -31893,7 +32329,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32066,7 +32504,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32125,7 +32567,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32280,7 +32724,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32339,7 +32785,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32395,7 +32845,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32454,7 +32908,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32568,7 +33026,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32741,7 +33201,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -32914,7 +33378,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33069,7 +33535,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33128,7 +33596,9 @@
       "attributes": {
         "runray.targetKey": "89eabb08c9d82471",
         "runray.targetKind": "command",
-        "runray.target": "sleep"
+        "runray.target": "sleep",
+        "runray.toolActivity": "system",
+        "runray.tool": "sleep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33184,7 +33654,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33240,7 +33715,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33299,7 +33776,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33410,7 +33889,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33466,7 +33947,12 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolFlags": [
+          "background"
+        ],
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33522,7 +34008,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33668,7 +34157,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33762,7 +34255,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33877,7 +34372,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -33992,7 +34489,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -34406,7 +34905,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -34983,7 +35485,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35077,7 +35581,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35133,7 +35639,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35403,7 +35913,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35518,7 +36031,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35808,7 +36323,9 @@
       "attributes": {
         "runray.targetKey": "e748e1bcfbaf1ed9",
         "runray.targetKind": "command",
-        "runray.target": "taskkill"
+        "runray.target": "taskkill",
+        "runray.toolActivity": "system",
+        "runray.tool": "taskkill"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35929,7 +36446,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -35988,7 +36508,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -36368,7 +36890,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -36596,7 +37120,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -36652,7 +37178,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -37349,7 +37879,9 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",
@@ -38226,7 +38758,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "C:/Users/dev/.claude/projects/C--code-billing-dashboard/72d7b780-6856-4e7b-9e5d-58b7c5aa71ad.jsonl",

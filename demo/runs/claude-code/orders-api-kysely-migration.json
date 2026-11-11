@@ -406,7 +406,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -463,7 +465,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -520,7 +524,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -630,7 +636,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -783,7 +791,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -840,7 +850,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -897,7 +909,9 @@
       "attributes": {
         "runray.targetKey": "1268301e3a2be11a",
         "runray.targetKind": "command",
-        "runray.target": "awk"
+        "runray.target": "awk",
+        "runray.toolActivity": "explore",
+        "runray.tool": "awk"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -954,7 +968,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -1011,7 +1027,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1121,7 +1139,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1344,7 +1364,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1563,7 +1586,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -1620,7 +1645,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1992,7 +2021,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2070,7 +2103,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -2127,7 +2164,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2294,7 +2335,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2405,7 +2448,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -2706,7 +2753,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -2990,7 +3039,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -3079,7 +3131,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -3594,7 +3648,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3651,7 +3707,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -3759,7 +3817,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3816,7 +3876,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -3873,7 +3935,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3930,7 +3994,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -4095,7 +4163,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -4452,7 +4524,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -4477,7 +4551,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5167,7 +5244,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -5362,7 +5441,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5416,7 +5497,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -5473,7 +5556,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -5530,7 +5617,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5584,7 +5673,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -6052,7 +6144,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -6187,7 +6283,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -6454,7 +6553,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -6653,7 +6754,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -6678,7 +6783,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -6978,7 +7086,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7003,7 +7113,9 @@
       "attributes": {
         "runray.targetKey": "1268301e3a2be11a",
         "runray.targetKind": "command",
-        "runray.target": "awk"
+        "runray.target": "awk",
+        "runray.toolActivity": "explore",
+        "runray.tool": "awk"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7124,7 +7236,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7149,7 +7265,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7284,7 +7402,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7366,7 +7487,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7477,7 +7600,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7869,7 +7994,9 @@
       "attributes": {
         "runray.targetKey": "1268301e3a2be11a",
         "runray.targetKind": "command",
-        "runray.target": "awk"
+        "runray.target": "awk",
+        "runray.toolActivity": "explore",
+        "runray.tool": "awk"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7894,7 +8021,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7919,7 +8048,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7976,7 +8107,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -8231,7 +8364,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -8288,7 +8425,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8345,7 +8485,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -8399,7 +8543,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8452,7 +8598,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -8616,7 +8765,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8729,7 +8882,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9032,7 +9189,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9145,7 +9305,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9313,7 +9477,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9370,7 +9536,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -13988,7 +14157,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -14105,7 +14276,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -16123,7 +16296,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -16290,7 +16465,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -16378,7 +16557,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17059,7 +17240,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17148,7 +17331,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17612,7 +17797,9 @@
       "attributes": {
         "runray.targetKey": "94b9211ba3f368e1",
         "runray.targetKind": "command",
-        "runray.target": "curl"
+        "runray.target": "curl",
+        "runray.toolActivity": "web",
+        "runray.tool": "curl"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aa6add2f11b977321.jsonl",
@@ -18174,7 +18361,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -18558,7 +18747,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -18862,7 +19054,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -19705,7 +19900,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -20445,7 +20642,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -20623,7 +20823,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -21269,7 +21471,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -21326,7 +21530,9 @@
       "attributes": {
         "runray.targetKey": "1268301e3a2be11a",
         "runray.targetKind": "command",
-        "runray.target": "awk"
+        "runray.target": "awk",
+        "runray.toolActivity": "explore",
+        "runray.tool": "awk"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -21547,7 +21753,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -22674,7 +22884,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -23288,7 +23502,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -23451,7 +23669,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -23476,7 +23696,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -23810,7 +24033,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a4d0725cbfa322d87.jsonl",
@@ -23835,7 +24060,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -24281,7 +24509,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -24306,7 +24536,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -24664,7 +24897,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25096,7 +25331,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25365,7 +25603,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25482,7 +25722,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a4d0725cbfa322d87.jsonl",
@@ -25706,7 +25948,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25954,7 +26198,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26207,7 +26453,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26353,7 +26601,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26378,7 +26629,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -26570,7 +26823,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26765,7 +27020,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -26874,7 +27133,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -26899,7 +27160,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26956,7 +27219,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -28084,7 +28349,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28233,7 +28500,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28539,7 +28808,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -29716,7 +29988,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30040,7 +30314,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30155,7 +30431,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30454,7 +30733,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -31446,7 +31727,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32004,7 +32287,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32063,7 +32348,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32147,7 +32436,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33192,7 +33483,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33251,7 +33544,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33276,7 +33571,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33335,7 +33632,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33394,7 +33693,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33595,7 +33898,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33654,7 +33959,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33713,7 +34022,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33769,7 +34080,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33828,7 +34141,11 @@
       "attributes": {
         "runray.targetKey": "5b2999028ccb2c54",
         "runray.targetKind": "command",
-        "runray.target": "cd"
+        "runray.target": "cd",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33887,7 +34204,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34140,7 +34459,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34313,7 +34634,9 @@
       "attributes": {
         "runray.targetKey": "d49dd484f982cb4d",
         "runray.targetKind": "command",
-        "runray.target": "echo"
+        "runray.target": "echo",
+        "runray.toolActivity": "system",
+        "runray.tool": "echo"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34372,7 +34695,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34428,7 +34753,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34487,7 +34814,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34543,7 +34873,9 @@
       "attributes": {
         "runray.targetKey": "1268301e3a2be11a",
         "runray.targetKind": "command",
-        "runray.target": "awk"
+        "runray.target": "awk",
+        "runray.toolActivity": "explore",
+        "runray.tool": "awk"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34724,7 +35056,9 @@
       "attributes": {
         "runray.targetKey": "682c9c5ac7133865",
         "runray.targetKind": "command",
-        "runray.target": "diff"
+        "runray.target": "diff",
+        "runray.toolActivity": "explore",
+        "runray.tool": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34958,7 +35292,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35017,7 +35353,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35317,7 +35656,10 @@
       "attributes": {
         "runray.targetKey": "0be35dcd70e641b1",
         "runray.targetKind": "command",
-        "runray.target": "docker"
+        "runray.target": "docker",
+        "runray.toolActivity": "infra",
+        "runray.tool": "docker",
+        "runray.toolSub": "ps"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35376,7 +35718,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35401,7 +35745,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35460,7 +35808,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35519,7 +35871,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35847,7 +36201,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35906,7 +36264,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36024,7 +36384,9 @@
       "attributes": {
         "runray.targetKey": "0f39a863810b2403",
         "runray.targetKind": "command",
-        "runray.target": "tail"
+        "runray.target": "tail",
+        "runray.toolActivity": "explore",
+        "runray.tool": "tail"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36430,7 +36792,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36489,7 +36853,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36548,7 +36914,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36607,7 +36975,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36666,7 +37037,9 @@
       "attributes": {
         "runray.targetKey": "5c3f60e4df3f7c42",
         "runray.targetKind": "command",
-        "runray.target": "jq"
+        "runray.target": "jq",
+        "runray.toolActivity": "explore",
+        "runray.tool": "jq"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37018,7 +37391,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37077,7 +37452,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37133,7 +37510,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37192,7 +37572,9 @@
       "attributes": {
         "runray.targetKey": "7ecdf3e91b127a4b",
         "runray.targetKind": "command",
-        "runray.target": "psql"
+        "runray.target": "psql",
+        "runray.toolActivity": "data",
+        "runray.tool": "psql"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37251,7 +37633,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37493,7 +37879,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38619,7 +39007,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38644,7 +39035,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38703,7 +39097,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38762,7 +39158,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38821,7 +39221,11 @@
       "attributes": {
         "runray.targetKey": "fd77005c0c930f10",
         "runray.targetKind": "command",
-        "runray.target": "pnpm"
+        "runray.target": "pnpm",
+        "runray.toolActivity": "test",
+        "runray.tool": "pnpm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38880,7 +39284,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
