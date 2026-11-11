@@ -221,14 +221,13 @@ function collectDurations(run: Run, byName: Map<string, number[]>): void {
   }
 }
 
-/** Slowest tools of one run, p95-first (stable ties by name). */
-export function toolDurationStats(run: Run): ToolDurationStat[] {
-  const byName = new Map<string, number[]>();
-  collectDurations(run, byName);
-  return statsFromDurations(byName);
-}
-
-/** Cross-run merge for the dashboard By-tool card's duration column. */
+/**
+ * Cross-run merge for the dashboard By-tool card's duration column, keyed
+ * by harness tool name, p95-first (stable ties by name). The per-run view
+ * no longer keys by harness name: the Time tab lists tools by resolved
+ * identity through `@runray/core/tools`. This one stays until the card
+ * moves to tool ids in its own change.
+ */
 export function toolDurationStatsAcrossRuns(
   runs: readonly Run[],
 ): ToolDurationStat[] {

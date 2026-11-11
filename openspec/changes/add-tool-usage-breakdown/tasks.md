@@ -137,7 +137,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       Verify: tests for the three scenarios of "Tool usage degraded states"
       (extending `metadata-only-render.test.tsx`) and for "Limits of tool time
       are stated".
-- [ ] 4.6 B Remove the per-run `toolDurationStats` and its test once the Time
+- [x] 4.6 B Remove the per-run `toolDurationStats` and its test once the Time
       view no longer calls it; keep `toolDurationStatsAcrossRuns` (T11).
       Verify: typecheck passes and no import of the removed function remains.
 - [ ] 4.7 B Release note and end-to-end proof: a changeset (`pnpm changeset`)

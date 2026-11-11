@@ -1,6 +1,6 @@
 import type { Run, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
-import { timeBreakdown, toolDurationStats } from './time-breakdown';
+import { timeBreakdown, toolDurationStatsAcrossRuns } from './time-breakdown';
 
 const T0 = Date.parse('2026-07-02T13:00:00Z');
 const at = (sec: number) => new Date(T0 + sec * 1000).toISOString();
@@ -199,18 +199,23 @@ describe('timeBreakdown — waiting on the person (D3)', () => {
   });
 });
 
-describe('toolDurationStats', () => {
-  it('nearest-rank p50/p95, ordered p95-desc with stable name ties', () => {
-    const spans = [span('session', 'session', 0, 500)];
+describe('toolDurationStatsAcrossRuns', () => {
+  it('merges runs: nearest-rank p50/p95, ordered p95-desc with stable name ties', () => {
+    // ten Bash calls of 1s..10s split over two runs, one Glob call
+    const first = [span('session', 'session', 0, 500)];
+    const second = [span('session', 'session', 0, 500)];
     for (let i = 1; i <= 10; i++) {
-      spans.push(span(`b${i}`, 'tool_call', i * 10, i * 10 + i, 'Bash'));
+      (i % 2 === 0 ? first : second).push(
+        span(`b${i}`, 'tool_call', i * 10, i * 10 + i, 'Bash'),
+      );
     }
-    spans.push(span('g1', 'tool_call', 200, 203, 'Glob'));
-    const stats = toolDurationStats(mkRun(spans));
+    second.push(span('g1', 'tool_call', 200, 203, 'Glob'));
+    const stats = toolDurationStatsAcrossRuns([mkRun(first), mkRun(second)]);
     expect(stats[0]?.name).toBe('Bash');
     expect(stats[0]?.calls).toBe(10);
     expect(stats[0]?.p50Ms).toBe(5000); // nearest-rank: 5th of 10 sorted
     expect(stats[0]?.p95Ms).toBe(10_000); // ceil(0.95*10)=10th
     expect(stats[1]?.name).toBe('Glob');
+    expect(toolDurationStatsAcrossRuns([])).toEqual([]);
   });
 });
