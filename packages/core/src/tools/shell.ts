@@ -26,7 +26,8 @@ export type Pipeline = Stage[];
 /**
  * A stage and what removing the quotes lost: which of its words opened with
  * one. `$dir = "D:\work"` and `$out = docker ps` are the same three words
- * once the quotes are gone, and only the second runs a program.
+ * once the quotes are gone, and only the second runs a program. PowerShell
+ * takes a quoted word for a string wherever a command could stand.
  */
 export interface ScannedStage {
   words: Stage;
@@ -425,8 +426,15 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
         i++;
         continue;
       }
-      if (ps && !inWord && stage.length === 0) {
-        stage.push('&'); // call operator, kept for program resolution
+      // PowerShell's call operator stands where a command can start: at the
+      // head of a stage, or after `$x =`. Kept for program resolution.
+      const last = stage[stage.length - 1];
+      if (
+        ps &&
+        !inWord &&
+        (stage.length === 0 || last === '=' || last === '+=')
+      ) {
+        stage.push('&');
         i++;
         continue;
       }
@@ -655,10 +663,12 @@ function programName(
  * `undefined` when the stage holds no program (only assignments, a loop
  * header, a bare keyword).
  *
- * `quoted` is the stage's `ScannedStage.quoted`. It settles the one case the
- * words alone cannot: after `$x =` PowerShell runs a bare word as a command
- * and takes a quoted one as the value, so `$dir = "D:\work"` holds no program
- * while `$out = docker ps` holds `docker`.
+ * `quoted` is the stage's `ScannedStage.quoted`. It settles what the words
+ * alone cannot: PowerShell runs a bare word as a command and takes a quoted
+ * one as a string, so `$dir = "D:\work"` and a list element on a line of its
+ * own (`"src\a.ts",`) hold no program, while `$out = docker ps` holds
+ * `docker`. Only the call operator runs a quoted word. Without `quoted` every
+ * word is taken as bare, which is how POSIX reads a command name anyway.
  */
 export function stageProgram(
   words: readonly string[],
@@ -670,8 +680,6 @@ export function stageProgram(
   const terminal = TERMINAL_KEYWORDS[dialect];
   let i = 0;
   let called = false;
-  /** The words so far were `$x =`: what follows is the value assigned. */
-  let assigned = false;
   let lastWrapper: string | undefined;
 
   while (i < words.length) {
@@ -690,7 +698,6 @@ export function stageProgram(
     }
     if (following === '=' || following === '+=') {
       i += 2; // `$x = cmd` — the right-hand side may still be a command
-      assigned = true;
       continue;
     }
     // an assignment has a `=` in it: most words are settled without a regex
@@ -707,9 +714,10 @@ export function stageProgram(
       continue;
     }
     if (terminal.has(keyword)) return undefined;
-    // a string literal assigned to a variable; only the call operator runs a
-    // quoted word (`$out = & "C:\tools\x.exe"`)
-    if (ps && assigned && !called && quoted.has(i)) return undefined;
+    // a string, not a command: an assigned value, a list element, text sent
+    // down a pipe. Only the call operator runs a quoted word
+    // (`& "C:\tools\x.exe"`)
+    if (ps && !called && quoted.has(i)) return undefined;
 
     const resolved = programName(word, dialect, called);
     if (resolved.kind === 'none') return undefined;

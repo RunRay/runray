@@ -1625,6 +1625,26 @@ describe('claude-code adapter — hook spans', () => {
     expect(hooksOf(run).map((s) => s.attributes)).toEqual([{}, {}]);
   });
 
+  it('reads a hook command that starts with a quoted Windows path (spec scenario)', async () => {
+    // cmd runs a quoted path as it stands; PowerShell would call it a string
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      hookError('h1', '2026-11-03T10:00:07.000Z', {
+        command:
+          '"C:\\Program Files\\nodejs\\node.exe" C:\\Users\\alex\\.claude\\hooks\\format.mjs',
+      }),
+      ...turn.slice(3),
+    ]);
+    expect(hooksOf(run).map((s) => s.attributes)).toEqual([
+      {
+        'runray.toolActivity': 'run',
+        'runray.tool': 'node',
+        'runray.toolSub': 'script',
+        'runray.toolScript': 'format.mjs',
+      },
+    ]);
+  });
+
   it('never lets free text become a span name', async () => {
     const run = await parseLines([
       ...turn.slice(0, 2),

@@ -198,6 +198,14 @@ redaction rule as shell tool spans.
 - THEN the hook span carries `runray.tool: "node"` and the script name
   `format.mjs`, and no attribute contains a directory of that path
 
+#### Scenario: Hook command that starts with a quoted path
+- GIVEN a failed hook whose command is
+  `"C:\Program Files\nodejs\node.exe" C:\Users\alex\.claude\hooks\format.mjs`
+- WHEN the transcript is parsed without redaction
+- THEN the hook span carries `runray.tool: "node"` and the script name
+  `format.mjs`: the transcript does not say which shell ran the hook, and a
+  quoted path is a program to every shell but PowerShell
+
 ### Requirement: A hook span name holds names only
 A span name is kept under redaction, so the claude-code adapter SHALL take a
 hook span's name from the record only when it is shaped like a hook event,

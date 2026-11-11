@@ -524,6 +524,7 @@ function candidatesOf(
   dialect: ShellDialect,
   trail: Trail,
   via: string | undefined,
+  quotedWordsRun = false,
 ): Candidate[] {
   const out: Candidate[] = [];
   for (const pipeline of scan(command, dialect)) {
@@ -533,13 +534,24 @@ function candidatesOf(
         dialect,
         trail,
         via,
-        stage.quoted,
+        quotedWordsRun ? undefined : stage.quoted,
       )) {
         out.push(c);
       }
     }
   }
   return out;
+}
+
+export interface ClassifyOptions {
+  /**
+   * The text may be run by a shell other than the dialect's own, so a quoted
+   * word is never taken for a string. A hook command with a Windows path is
+   * read as PowerShell for its backslashes, yet cmd may be what runs it, and
+   * cmd runs `"C:\Program Files\nodejs\node.exe" format.mjs` as it stands.
+   * A shell nested inside the command is read by its own rules either way.
+   */
+  quotedWordsRun?: boolean;
 }
 
 /**
@@ -554,8 +566,15 @@ function candidatesOf(
 export function classifyCommand(
   command: string,
   dialect: ShellDialect,
+  options: ClassifyOptions = {},
 ): Classification {
-  const candidates = candidatesOf(command, dialect, START, undefined);
+  const candidates = candidatesOf(
+    command,
+    dialect,
+    START,
+    undefined,
+    options.quotedWordsRun === true,
+  );
   let primary: Candidate | undefined;
   let best = Number.POSITIVE_INFINITY;
   for (const c of candidates) {
@@ -593,8 +612,9 @@ export function toolUsageAttributes(
   command: string,
   dialect: ShellDialect,
   redact: boolean,
+  options: ClassifyOptions = {},
 ): Record<string, unknown> {
-  const c = classifyCommand(command, dialect);
+  const c = classifyCommand(command, dialect, options);
   const out: Record<string, unknown> = { [TOOL_ATTR.activity]: c.activity };
   if (c.tool !== undefined) out[TOOL_ATTR.tool] = c.tool;
   if (c.sub !== undefined) out[TOOL_ATTR.sub] = c.sub;

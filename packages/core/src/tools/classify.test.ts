@@ -451,7 +451,35 @@ describe('a PowerShell string assigned to a variable is not a call', () => {
       dialect: 'powershell',
       expect: { tool: 'docker', sub: 'ps', activity: 'infra' },
     },
+    {
+      // list elements on lines of their own are not runs of a script
+      command:
+        '$files = @(\n  "src\\app.ts",\n  "src\\db.ts"\n)\nGet-Content $files',
+      dialect: 'powershell',
+      expect: { tool: 'get-content', activity: 'explore', also: [] },
+    },
+    {
+      command: '$tool = & "C:\\tools\\git.exe" status',
+      dialect: 'powershell',
+      expect: { tool: 'git', sub: 'status' },
+    },
   ]);
+
+  it('reads a quoted program when another shell may run the text', () => {
+    const command = '"C:\\Program Files\\nodejs\\node.exe" hooks\\format.mjs';
+    expect(classifyCommand(command, 'powershell').tool).toBeUndefined();
+    expect(
+      classifyCommand(command, 'powershell', { quotedWordsRun: true }),
+    ).toMatchObject({ tool: 'node', sub: 'script', script: 'format.mjs' });
+    // a shell nested in such a command is read by its own rules
+    expect(
+      classifyCommand(
+        'powershell -Command "$d = \'D:\\work\'; pnpm test"',
+        'posix',
+        { quotedWordsRun: true },
+      ),
+    ).toMatchObject({ tool: 'pnpm', activity: 'test', also: [] });
+  });
 
   it('reports no program name for the assigned text', () => {
     for (const command of [

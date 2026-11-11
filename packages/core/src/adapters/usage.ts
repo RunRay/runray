@@ -117,7 +117,11 @@ export function hookCommandAttributes(
 ): Record<string, unknown> {
   const text = command?.trim() ?? '';
   if (text === '' || text === CALLBACK_COMMAND) return {};
-  return toolUsageAttributes(text, hookDialect(text), redact);
+  // the dialect is a guess from the text, and cmd runs a quoted path that
+  // PowerShell would take for a string
+  return toolUsageAttributes(text, hookDialect(text), redact, {
+    quotedWordsRun: true,
+  });
 }
 
 /**

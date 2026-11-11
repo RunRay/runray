@@ -212,9 +212,14 @@ no evaluation. PowerShell differs only in its escape character, the call
 operator and `$x = …` assignments, handled by a dialect flag chosen from the
 harness tool name. The scan marks which words opened with a quote, because
 removing the quotes loses the one thing that tells `$dir = "D:\work"` (a
-value) from `$out = docker ps` (a command). The body of a heredoc is skipped
-inside a command substitution too, which is where commit messages are
-passed.
+value) from `$out = docker ps` (a command). PowerShell takes a quoted word
+for a string wherever a command could stand and runs it only through the
+call operator, so a quoted word is never a program there: not after `$x =`,
+not as a list element on a line of its own, not as text sent down a pipe. A
+hook command is the exception: its dialect is a guess from the text, cmd may
+be what runs it, and cmd runs a quoted path, so hook commands are read
+without the marks. The body of a heredoc is skipped inside a command
+substitution too, which is where commit messages are passed.
 
 Alternatives rejected: a shell parsing library adds a runtime dependency
 (AGENTS.md requires a justification), covers POSIX only, and throws on the

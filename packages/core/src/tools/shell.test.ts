@@ -441,7 +441,7 @@ describe('stageProgram', () => {
   });
 });
 
-describe('a PowerShell assignment', () => {
+describe('a quoted PowerShell word', () => {
   /** The program of each stage, read the way the classifier reads it. */
   const programs = (command: string): Array<string | undefined> =>
     scan(command, 'powershell')
@@ -485,20 +485,43 @@ describe('a PowerShell assignment', () => {
     ]);
   });
 
-  it('runs a quoted word through the call operator', () => {
-    // `&` after other words ends the stage, so the call is a stage of its own
-    expect(
-      programs('$out = & "C:\\tools\\git.exe" status').filter(Boolean),
-    ).toEqual(['git']);
+  it('runs through the call operator, also after an assignment', () => {
     expect(programs('& "C:\\tools\\git.exe" status')).toEqual(['git']);
+    expect(programs('$out = & "C:\\tools\\git.exe" status')).toEqual(['git']);
+    expect(programs('. "$PSScriptRoot\\setup.ps1"')).toEqual(['setup.ps1']);
   });
 
-  it('leaves a quoted program outside an assignment alone', () => {
-    // a hook command is read in this dialect whenever it holds a Windows
-    // path, and cmd runs a quoted path as it stands
+  it('is a string at the head of a stage too (spec scenario)', () => {
+    // list elements on lines of their own, and text sent down a pipe
     expect(
-      programs('"C:\\Program Files\\nodejs\\node.exe" format.mjs'),
-    ).toEqual(['node']);
+      programs(
+        '$files = @(\n  "src\\a.ts",\n  "src\\b.ts"\n)\nGet-Content $files',
+      ),
+    ).toEqual([undefined, undefined, undefined, 'get-content']);
+    expect(programs("'docker ps' | Set-Content note.txt")).toEqual([
+      undefined,
+      'set-content',
+    ]);
+    // the keyword, the condition and the block are a stage each
+    expect(programs('if (Test-Path x) { "found" }')).toEqual([
+      undefined,
+      'test-path',
+      undefined,
+    ]);
+  });
+
+  it('runs when the caller says another shell may read the text', () => {
+    // a hook command is read in this dialect whenever it holds a Windows
+    // path, and cmd runs a quoted path as it stands: without the quoted
+    // marks every word is taken as bare
+    const [stage] = scan(
+      '"C:\\Program Files\\nodejs\\node.exe" format.mjs',
+      'powershell',
+    ).flat();
+    expect(stageProgram(stage?.words ?? [], 'powershell')?.name).toBe('node');
+    expect(
+      stageProgram(stage?.words ?? [], 'powershell', stage?.quoted),
+    ).toBeUndefined();
   });
 
   it('keeps POSIX as it was: a quoted command name runs', () => {

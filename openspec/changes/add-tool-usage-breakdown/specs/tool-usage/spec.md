@@ -73,6 +73,18 @@ unresolved.
 - THEN the first stage has no program, because a quoted word after `$dir =`
   is the value assigned, and the second stage's program is `get-childitem`
 
+#### Scenario: PowerShell string at the head of a stage
+- GIVEN a PowerShell command that lists `"src\app.ts",` and `"src\db.ts"` on
+  lines of their own inside `$files = @( … )`, then runs `Get-Content $files`
+- WHEN its programs are resolved
+- THEN neither quoted line is a program, and the only program is
+  `get-content`
+
+#### Scenario: PowerShell call operator runs a quoted word
+- GIVEN the PowerShell command `$out = & "C:\tools\git.exe" status`
+- WHEN its program is resolved
+- THEN the program is `git`
+
 #### Scenario: PowerShell command assigned to a variable
 - GIVEN the PowerShell command `$out = docker ps -q`
 - WHEN its program is resolved
