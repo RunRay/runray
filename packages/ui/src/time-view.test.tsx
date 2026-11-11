@@ -755,7 +755,11 @@ describe('tool table markers (visualizer "Shared, background and partial figures
       '—',
       '0',
     ]);
-    expect(text(rowOf('pnpm'))).toContain('running');
+    // an old session's call without a result is not "running": say what is known
+    expect(text(rowOf('pnpm'))).toContain('no result');
+    expect(
+      q('span[title^="No result was recorded"]', rowOf('pnpm')).title,
+    ).toContain('no time added');
   });
 
   it('marks timeouts and interruptions on the row', () => {

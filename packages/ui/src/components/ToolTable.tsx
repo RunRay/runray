@@ -71,9 +71,9 @@ function Flags({ stats }: { stats: UsageStats }) {
       {stats.open > 0 && (
         <span
           className={`${FLAG} border-border-slate text-text-faint`}
-          title="Still running when the trace was written: counted as a call, no time added."
+          title="No result was recorded: the call was still running when the trace was written, or it was cut off. Counted as a call, no time added."
         >
-          {count(stats.open)}running
+          {count(stats.open)}no result
         </span>
       )}
     </>
@@ -217,7 +217,7 @@ function Row({
       <tr className="border-t border-border-slate" title={row.hint}>
         <th
           scope="row"
-          className="py-1.5 text-left font-mono font-normal text-text"
+          className="py-1.5 text-left font-mono font-normal whitespace-nowrap text-text"
         >
           {expandable ? (
             <button
@@ -423,9 +423,13 @@ export function ToolTable({
                   colSpan={8}
                   className="pt-4 pb-1 text-label text-text-faint"
                 >
-                  Not part of summed tool time. A delegation contains its
-                  agent's own calls, which are counted above; a hook runs inside
-                  the call that triggered it; a question waits on you.
+                  {/* the table can be wider than its scroll box: keep the
+                      sentence inside what is visible without scrolling */}
+                  <div className="max-w-[68ch]">
+                    Not part of summed tool time. A delegation contains its
+                    agent's own calls, which are counted above; a hook runs
+                    inside the call that triggered it; a question waits on you.
+                  </div>
                 </td>
               </tr>
               {apart.map(({ row, tag }) => (
