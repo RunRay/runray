@@ -125,9 +125,16 @@ inline. A fixture that preserves a command's program and subcommand needs a
 scrubber change, which is gated on human sign-off (design D6).
 
 **Insights**: no rule reads the new attributes and no finding changes. Hook
-spans are a new span kind in Claude Code runs, so `dead-end-run`, which takes
-the last non-session span as the run's terminal span, learns to skip them; a
-guard test asserts that findings on the fixtures are unchanged (design T9).
+spans are a new span kind in Claude Code runs, so the three readers that
+looked at every span regardless of kind learn to skip them: `dead-end-run`
+(the run's terminal span), the reprice engine's "errors" risk flag behind
+`model-mismatch`, and triage's count of declined calls. A guard test asserts
+that findings on the fixtures are unchanged (design T9).
+
+**Run bounds and depth**: a run with hook records starts where its first
+hook began and ends where its last one ended, typically a second or two
+either way, and `counts.maxDepth` is one higher where a hook hangs off the
+deepest call.
 
 ## Decisions taken at sign-off
 

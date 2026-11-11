@@ -16,7 +16,12 @@ import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
-import { claudeCommandOutcome, toolUsageSpanAttributes } from './usage.js';
+import {
+  claudeCommandOutcome,
+  hookCommandAttributes,
+  hookSummaryAttributes,
+  toolUsageSpanAttributes,
+} from './usage.js';
 
 /**
  * Claude Code adapter (task 2.2). Storage layout (verified 2026-07 on CC
@@ -45,6 +50,22 @@ import { claudeCommandOutcome, toolUsageSpanAttributes } from './usage.js';
  * id or tool_result is never registered twice (spec: trace-ingestion
  * "Duplicate transcript records"); records without a uuid are never
  * deduplicated.
+ *
+ * Hooks (verified 2026-11 on CC 2.1.170–2.2.x): the transcript records a
+ * hook run in three shapes, and each becomes a `hook` span (spec:
+ * trace-ingestion "Claude Code hook spans").
+ *   attachment / hook_non_blocking_error   a hook that failed: name, command,
+ *                                          durationMs, exitCode, toolUseID
+ *   attachment / hook_cancelled            a hook that was cancelled, with
+ *                                          durationMs and timedOut
+ *   system / stop_hook_summary             the Stop hooks of one turn: a
+ *                                          count and their commands, no time
+ * The record is written when the hook ends, so the span runs from the
+ * timestamp minus `durationMs` to the timestamp. A hook that succeeded
+ * leaves no record, with one exception that is deliberately not a span:
+ * `attachment / hook_additional_context` marks a successful hook that handed
+ * text back to the model, carries no duration, and would put an arbitrary
+ * sample of successful runs next to the complete set of failed ones.
  */
 
 const PREVIEW_CHARS = 200;
@@ -176,9 +197,31 @@ interface LlmGroup {
   outputPreview: string | undefined;
   toolUses: ToolUseRef[];
 }
+/** One hook record: a failed or cancelled hook run, or a turn's stop-hook
+ * summary. The commands are held only until the span is built, where they
+ * are classified and dropped. */
+interface HookRef {
+  uuid: string | undefined;
+  line: number;
+  outcome: 'error' | 'cancelled' | 'summary';
+  /** Hook event and matcher, e.g. `PostToolUse:Edit`. */
+  name: string;
+  /** When the record was written, which is when the hook ended. */
+  timestamp: string;
+  durationMs: number;
+  toolUseId: string | undefined;
+  exitCode: number | undefined;
+  timedOut: boolean;
+  /** A summary whose record lists hook errors. */
+  failed: boolean;
+  /** Hooks a summary stands for. */
+  hookCount: number | undefined;
+  commands: string[];
+}
 interface Transcript {
   groups: LlmGroup[];
   results: Map<string, ToolResultRef>;
+  hooks: HookRef[];
   userText: Map<string, string>;
   sessionId: string | undefined;
   cwd: string | undefined;
@@ -202,6 +245,90 @@ const CLAUDE_META_TYPES = new Set([
   'queue-operation',
 ]);
 
+const HOOK_EVENT_RE = /^[A-Za-z][A-Za-z0-9]*$/;
+/** `Event` or `Event:matcher`, the matcher being a tool name, an agent type
+ * or one of the harness's own words (`startup`, `compact`, …). */
+const HOOK_NAME_RE = /^[A-Za-z][A-Za-z0-9]*(?::[A-Za-z0-9_.:@/+-]{1,100})?$/;
+
+/**
+ * The span name of a hook: its event and matcher as the harness wrote them.
+ * A hook span keeps its name under redaction, like a tool span, so a value
+ * that is not shaped like a name falls back to the bare event, and past that
+ * to `hook`: free text never becomes a span name.
+ */
+function hookSpanName(hookName: unknown, hookEvent: unknown): string {
+  const name = str(hookName);
+  if (name !== undefined && HOOK_NAME_RE.test(name)) return name;
+  const event = str(hookEvent);
+  return event !== undefined && HOOK_EVENT_RE.test(event) ? event : 'hook';
+}
+
+/** The hook run a record stands for; `undefined` for any other record. */
+function hookRecordOf(
+  rec: Json,
+  type: string | undefined,
+  line: number,
+  timestamp: string | undefined,
+): HookRef | undefined {
+  // a hook that cannot be placed in time cannot be a span
+  if (timestamp === undefined || !Number.isFinite(Date.parse(timestamp))) {
+    return undefined;
+  }
+  const uuid = str(rec.uuid);
+  if (type === 'attachment' && isObj(rec.attachment)) {
+    const a = rec.attachment;
+    const kind = str(a.type);
+    if (kind !== 'hook_non_blocking_error' && kind !== 'hook_cancelled') {
+      return undefined;
+    }
+    const command = str(a.command);
+    return {
+      uuid,
+      line,
+      outcome: kind === 'hook_cancelled' ? 'cancelled' : 'error',
+      name: hookSpanName(a.hookName, a.hookEvent),
+      timestamp,
+      durationMs: int(a.durationMs),
+      toolUseId: str(a.toolUseID),
+      exitCode:
+        typeof a.exitCode === 'number' && Number.isInteger(a.exitCode)
+          ? a.exitCode
+          : undefined,
+      timedOut: a.timedOut === true,
+      failed: false,
+      hookCount: undefined,
+      commands: command === undefined ? [] : [command],
+    };
+  }
+  if (type === 'system' && rec.subtype === 'stop_hook_summary') {
+    const commands: string[] = [];
+    if (Array.isArray(rec.hookInfos)) {
+      for (const info of rec.hookInfos) {
+        const command = isObj(info) ? str(info.command) : undefined;
+        if (command !== undefined) commands.push(command);
+      }
+    }
+    return {
+      uuid,
+      line,
+      outcome: 'summary',
+      name: 'Stop',
+      timestamp,
+      durationMs: 0,
+      toolUseId: str(rec.toolUseID),
+      exitCode: undefined,
+      timedOut: false,
+      failed: Array.isArray(rec.hookErrors) && rec.hookErrors.length > 0,
+      hookCount:
+        typeof rec.hookCount === 'number' && Number.isFinite(rec.hookCount)
+          ? int(rec.hookCount)
+          : commands.length,
+      commands,
+    };
+  }
+  return undefined;
+}
+
 async function collectTranscript(
   file: string,
   warnings: RunWarning[],
@@ -209,6 +336,7 @@ async function collectTranscript(
   const t: Transcript = {
     groups: [],
     results: new Map(),
+    hooks: [],
     userText: new Map(),
     sessionId: undefined,
     cwd: undefined,
@@ -358,9 +486,14 @@ async function collectTranscript(
       t.aiTitle = str(rec.aiTitle) ?? t.aiTitle;
     } else if (type === 'custom-title') {
       t.customTitle = str(rec.customTitle) ?? t.customTitle;
+    } else {
+      // a re-appended copy never gets here: the uuid check above skipped it
+      const hook = hookRecordOf(rec, type, line, ts);
+      if (hook !== undefined) t.hooks.push(hook);
     }
-    // other record types (system, attachment, mode, queue-operation, …) carry
-    // no span-relevant data in v0.1 and are skipped silently
+    // every other record type (mode, queue-operation, other attachments and
+    // system notes, …) carries no span-relevant data in v0.1 and is skipped
+    // silently
   }
   return t;
 }
@@ -585,6 +718,65 @@ async function emitFromTranscript(
       }
     }
   }
+
+  // a tool hook names the call that triggered it; every other hook (a
+  // prompt, a session start, a stop) belongs to the transcript's container
+  const toolUseIds = new Set<string>();
+  for (const g of t.groups) for (const tu of g.toolUses) toolUseIds.add(tu.id);
+  for (const hook of t.hooks) {
+    const parentId =
+      hook.toolUseId !== undefined && toolUseIds.has(hook.toolUseId)
+        ? hook.toolUseId
+        : ownerSpanId;
+    ctx.spans.push(hookSpan(hook, file, parentId, ownerSpanId, ctx.redact));
+  }
+}
+
+/** One `hook` span (design T9). It ends where its record was written and
+ * starts `durationMs` earlier; a stop-hook summary has no duration to give. */
+function hookSpan(
+  hook: HookRef,
+  file: string,
+  parentId: string,
+  ownerSpanId: string,
+  redact: boolean,
+): RawSpan {
+  const endMs = Date.parse(hook.timestamp);
+  const startedAt =
+    hook.durationMs > 0
+      ? new Date(endMs - hook.durationMs).toISOString()
+      : hook.timestamp;
+  const status: RawSpan['status'] =
+    hook.outcome === 'cancelled'
+      ? 'cancelled'
+      : hook.outcome === 'error' || hook.failed
+        ? 'error'
+        : 'ok';
+  return {
+    // the record's uuid: a re-appended copy is skipped before it gets here,
+    // so each hook run is one span. A record without one is keyed by where
+    // it stands in its own transcript.
+    id: hook.uuid ?? `${ownerSpanId}:hook:${hook.line}`,
+    parentId,
+    kind: 'hook',
+    name: hook.name,
+    status,
+    // the data model keeps `tool` for tool and MCP calls, and names
+    // `statusReason` as the place for an exit code
+    ...(hook.outcome === 'cancelled' && hook.timedOut
+      ? { statusReason: 'timeout' }
+      : hook.exitCode !== undefined
+        ? { statusReason: `exit ${hook.exitCode}` }
+        : {}),
+    startedAt,
+    endedAt: hook.timestamp,
+    durationMs: hook.durationMs,
+    attributes:
+      hook.outcome === 'summary'
+        ? hookSummaryAttributes(hook.commands, hook.hookCount ?? 0, redact)
+        : hookCommandAttributes(hook.commands[0], redact),
+    provenance: { file, line: hook.line },
+  };
 }
 
 async function emitSubagent(
@@ -776,21 +968,32 @@ async function adoptMetaLinkedAgents(ctx: ParseContext): Promise<void> {
   }
 }
 
-/** Containers must cover their children (async agents outlive their tool result). */
-function extendContainerEnds(spans: RawSpan[]): void {
+/**
+ * Containers must cover their children. At the end: an async agent outlives
+ * its tool result. At the start: a hook's record is written when the hook
+ * ends, so a hook that ran as the session opened began before the
+ * transcript's first record, which is where its container starts.
+ */
+function extendContainers(spans: RawSpan[]): void {
   const byId = new Map(spans.map((s) => [s.id, s]));
   for (const span of spans) {
     const end = span.endedAt ?? span.startedAt;
+    // only hook spans start from a computed instant; every other child
+    // starts at a record of its own transcript
+    const startMs = span.kind === 'hook' ? Date.parse(span.startedAt) : NaN;
     let parentId = span.parentId;
     while (parentId !== null) {
       const parent = byId.get(parentId);
       if (!parent) break;
-      if (
-        (parent.kind === 'subagent' || parent.kind === 'session') &&
-        (parent.endedAt ?? parent.startedAt) < end
-      ) {
-        parent.endedAt = end;
-        parent.durationMs = durationBetween(parent.startedAt, end);
+      if (parent.kind === 'subagent' || parent.kind === 'session') {
+        if (startMs < Date.parse(parent.startedAt)) {
+          parent.startedAt = span.startedAt;
+          parent.durationMs = durationBetween(parent.startedAt, parent.endedAt);
+        }
+        if ((parent.endedAt ?? parent.startedAt) < end) {
+          parent.endedAt = end;
+          parent.durationMs = durationBetween(parent.startedAt, end);
+        }
       }
       parentId = parent.parentId;
     }
@@ -959,7 +1162,7 @@ export const claudeCodeAdapter: SourceAdapter = {
         file: mainFile,
       });
     }
-    extendContainerEnds(ctx.spans);
+    extendContainers(ctx.spans);
 
     const title = ctx.redact ? undefined : (main.customTitle ?? main.aiTitle);
     return {

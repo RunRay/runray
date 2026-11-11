@@ -124,6 +124,17 @@ produce no span.
 - WHEN the transcript is parsed
 - THEN no `hook` span is emitted for them
 
+#### Scenario: A successful hook that returned text
+- GIVEN a record that only carries the text a successful `PostToolUse` hook
+  handed back to the model, with no duration
+- WHEN the transcript is parsed
+- THEN no `hook` span is emitted for it
+
+#### Scenario: Exit code of a failed hook
+- GIVEN a hook record that exited with code 1
+- WHEN the transcript is parsed
+- THEN the hook span carries the status reason `exit 1` and no `tool` object
+
 ### Requirement: Hook spans attach to their trigger and stay out of tool totals
 A hook span SHALL nest under the tool call that triggered it when the record
 names one, and otherwise under the transcript's container span. Hook spans
@@ -134,6 +145,18 @@ change any insight finding.
 - GIVEN a failed `PostToolUse:Edit` hook record naming an `Edit` tool call
 - WHEN the transcript is parsed
 - THEN the hook span's parent is that `Edit` span
+
+#### Scenario: Hook that names no call of its transcript
+- GIVEN a failed `UserPromptSubmit` hook record in a subagent's transcript
+- WHEN the transcript is parsed
+- THEN the hook span's parent is that subagent's span
+
+#### Scenario: Hook that ran before the first record
+- GIVEN a failed `SessionStart` hook record that is the transcript's first
+  record and ran for 1.5 seconds
+- WHEN the transcript is parsed
+- THEN the hook span starts 1.5 seconds before that record, and the session
+  span starts with it
 
 #### Scenario: Totals are unchanged
 - GIVEN a transcript with hook records and the same transcript with those
@@ -159,6 +182,19 @@ redaction rule as shell tool spans.
 - WHEN the transcript is parsed in either redaction mode
 - THEN the hook span carries `runray.tool: "node"`, and no attribute or
   content field contains the path
+
+#### Scenario: Hook command with a Windows path
+- GIVEN a failed hook whose command is
+  `node C:\Users\alex\.claude\hooks\format.mjs`
+- WHEN the transcript is parsed without redaction
+- THEN the hook span carries `runray.tool: "node"` and the script name
+  `format.mjs`, and no attribute contains a directory of that path
+
+#### Scenario: Hook name that is not a name
+- GIVEN a hook record whose hook name is free text
+- WHEN the transcript is parsed
+- THEN the hook span is named by the record's hook event, or `hook` when that
+  is free text too
 
 ### Requirement: Reserved tool-usage keys from OTLP are validated
 The OTLP adapter SHALL accept an incoming closed-vocabulary tool-usage

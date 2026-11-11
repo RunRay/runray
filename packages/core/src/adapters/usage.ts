@@ -15,6 +15,9 @@
  *   from the session. Emitted ONLY when redaction is off, exactly like the
  *   `content` fields (ParseOptions.redact contract in adapter.ts).
  *
+ * Hook spans follow the same rule for the command a hook ran, and a
+ * stop-hook summary carries `runray.hookCount` (design T9).
+ *
  * `target.ts` is untouched: `runray.targetKey` keeps hashing the first token
  * (design D4).
  */
@@ -86,6 +89,67 @@ function flagsOf(outcome: CommandOutcome | undefined): ToolFlag[] {
     interrupted: outcome.interrupted === true,
   };
   return TOOL_FLAGS.filter((flag) => set[flag]);
+}
+
+/** What an SDK callback hook records as its command: there is no program. */
+const CALLBACK_COMMAND = 'callback';
+
+/**
+ * The transcript does not say which shell ran a hook. A backslash before a
+ * name character is a Windows path separator (`C:\Users\…\format.mjs`): bash
+ * would swallow it, so a hook written that way is run by cmd or PowerShell,
+ * and reading it as POSIX would glue the directories into the script name.
+ */
+function hookDialect(command: string): ShellDialect {
+  return /\\[A-Za-z0-9_.]/.test(command) ? 'powershell' : 'posix';
+}
+
+/**
+ * The tool-usage `attributes` payload for the command a hook ran. The
+ * command is user configuration that may hold paths, so it is classified
+ * here and never stored (spec: "Hook commands are classified, never
+ * stored"); the redaction rule is the one shell tool spans follow. `{}` for
+ * a hook without a command of its own.
+ */
+export function hookCommandAttributes(
+  command: string | undefined,
+  redact: boolean,
+): Record<string, unknown> {
+  const text = command?.trim() ?? '';
+  if (text === '' || text === CALLBACK_COMMAND) return {};
+  return toolUsageAttributes(text, hookDialect(text), redact);
+}
+
+/**
+ * The payload for a stop-hook summary, one span standing for `hookCount`
+ * hook runs. A single command is classified in full. Several commands name
+ * a tool only when every one of them ran the same one: a span has one
+ * identity, and picking the first hook's would misreport the others.
+ */
+export function hookSummaryAttributes(
+  commands: readonly string[],
+  hookCount: number,
+  redact: boolean,
+): Record<string, unknown> {
+  const classified = commands.map((c) => hookCommandAttributes(c, redact));
+  const first = classified[0];
+  const out: Record<string, unknown> = {};
+  if (first !== undefined && classified.length === 1) {
+    Object.assign(out, first);
+  } else if (
+    first !== undefined &&
+    first[TOOL_ATTR.tool] !== undefined &&
+    classified.every(
+      (c) =>
+        c[TOOL_ATTR.tool] === first[TOOL_ATTR.tool] &&
+        c[TOOL_ATTR.activity] === first[TOOL_ATTR.activity],
+    )
+  ) {
+    out[TOOL_ATTR.activity] = first[TOOL_ATTR.activity];
+    out[TOOL_ATTR.tool] = first[TOOL_ATTR.tool];
+  }
+  out[TOOL_ATTR.hookCount] = hookCount;
+  return out;
 }
 
 /**

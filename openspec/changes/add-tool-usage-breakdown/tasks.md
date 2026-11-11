@@ -160,7 +160,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       span (T9). Verify: a rule test with a run ending in a failed hook span
       and one ending in an `ok` hook span after a failed tool call, and an
       assertion that findings on every fixture are unchanged.
-- [ ] 5.2 A Emit hook spans from failed and cancelled hook records and from
+- [x] 5.2 A Emit hook spans from failed and cancelled hook records and from
       stop-hook summaries (T9): ids from the record uuid, parent from the
       triggering tool call, the hook command classified and then dropped.
       Verify: adapter tests for every scenario of "Claude Code hook spans",
@@ -173,7 +173,10 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       for "Hook durations are partial".
 - [ ] 5.4 A Regenerate goldens with `pnpm goldens` in a dedicated commit.
       Verify: the diff adds hook spans only where a fixture holds hook
-      records, and no finding or total in any golden changes.
+      records; no finding and no token, cost, call or error total in any
+      golden changes; the only other differences are container and run
+      bounds that now cover a hook, and `counts.maxDepth` one higher where a
+      hook hangs off the deepest call (design T9).
 - [ ] 5.5 A Document hook spans in `docs/02-DATA-MODEL.md`: which records
       become spans, which hook runs leave no record, why durations are
       partial. Verify: the section names the three record shapes from D5.

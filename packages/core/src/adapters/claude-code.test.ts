@@ -1,6 +1,13 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type Candidate, NoSessionYet, type RawRun } from '../adapter.js';
@@ -1280,4 +1287,546 @@ describe('claude-code files that are not sessions', () => {
     expect(raw.spans[0]?.kind).toBe('session');
     expect(raw.spans[0]?.startedAt).toBe('2026-07-02T13:00:00Z');
   });
+});
+
+describe('claude-code adapter — hook spans', () => {
+  // The three shapes a transcript records a hook in (design D5), as Claude
+  // Code writes them: the record's timestamp is when the hook ended.
+  const prompt = (uuid = 'u1', ts = '2026-11-03T10:00:00.000Z') => ({
+    type: 'user',
+    uuid,
+    sessionId: 'sess-hooks',
+    timestamp: ts,
+    cwd: '/home/user/project/x',
+    message: { role: 'user', content: 'tidy the module' },
+  });
+  const edit = (id: string) => ({
+    type: 'tool_use',
+    id,
+    name: 'Edit',
+    input: { file_path: '/x.ts', old_string: 'a', new_string: 'b' },
+  });
+  const hookError = (
+    uuid: string | undefined,
+    ts: string | undefined,
+    attachment: Record<string, unknown> = {},
+    extra: Record<string, unknown> = {},
+  ) => ({
+    type: 'attachment',
+    uuid,
+    sessionId: 'sess-hooks',
+    timestamp: ts,
+    attachment: {
+      type: 'hook_non_blocking_error',
+      hookName: 'PostToolUse:Edit',
+      hookEvent: 'PostToolUse',
+      toolUseID: 't1',
+      command: 'node /Users/alex/.claude/hooks/format.mjs',
+      durationMs: 688,
+      exitCode: 1,
+      stdout: '',
+      stderr: 'Error: Cannot find module /Users/alex/.claude/hooks/format.mjs',
+      ...attachment,
+    },
+    ...extra,
+  });
+  const hookCancelled = (uuid: string, ts: string, durationMs: number) => ({
+    type: 'attachment',
+    uuid,
+    sessionId: 'sess-hooks',
+    timestamp: ts,
+    attachment: {
+      type: 'hook_cancelled',
+      hookName: 'UserPromptSubmit',
+      hookEvent: 'UserPromptSubmit',
+      toolUseID: 'not-a-tool-call',
+      command: 'python3 "$CLAUDE_PLUGIN_ROOT/hooks/remind.py"',
+      durationMs,
+      timedOut: true,
+      timeoutMs: 30000,
+    },
+  });
+  const stopSummary = (
+    uuid: string,
+    ts: string,
+    commands: string[],
+    extra: Record<string, unknown> = {},
+  ) => ({
+    type: 'system',
+    subtype: 'stop_hook_summary',
+    uuid,
+    sessionId: 'sess-hooks',
+    timestamp: ts,
+    hookCount: commands.length,
+    hookInfos: commands.map((command) => ({ command })),
+    hookErrors: [],
+    preventedContinuation: false,
+    stopReason: '',
+    hasOutput: false,
+    level: 'suggestion',
+    toolUseID: 'not-a-tool-call',
+    ...extra,
+  });
+  // one turn: a prompt, an Edit whose PostToolUse hook failed, a reply
+  const turn = [
+    prompt(),
+    assistant('a1', 'u1', 'm1', '2026-11-03T10:00:05.000Z', [edit('t1')]),
+    hookError('h1', '2026-11-03T10:00:07.000Z'),
+    toolResult('r1', '2026-11-03T10:00:07.002Z', 't1'),
+    assistant('a2', 'r1', 'm2', '2026-11-03T10:00:09.000Z', [
+      { type: 'text', text: 'done' },
+    ]),
+  ];
+  const conversation = turn.filter((r) => r.type !== 'attachment');
+
+  async function parseFiles(
+    files: Record<string, readonly unknown[]>,
+    redact = false,
+  ): Promise<RawRun> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-hooks-'));
+    try {
+      for (const [name, lines] of Object.entries(files)) {
+        const path = join(dir, 'proj', name);
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(
+          path,
+          `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+        );
+      }
+      const [candidate] = await claudeCodeAdapter.detect([dir]);
+      if (candidate === undefined) throw new Error('not detected');
+      return await claudeCodeAdapter.parse(candidate, { redact });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  const parseLines = (lines: readonly unknown[], redact = false) =>
+    parseFiles({ 'sess-hooks.jsonl': lines }, redact);
+  const hooksOf = (run: RawRun) => run.spans.filter((s) => s.kind === 'hook');
+
+  it('emits a failed hook with its duration, ending where the record was written', async () => {
+    const run = await parseLines(turn);
+    const hooks = hooksOf(run);
+    expect(hooks).toHaveLength(1);
+    const [hook] = hooks;
+    expect(hook).toMatchObject({
+      id: 'h1',
+      kind: 'hook',
+      name: 'PostToolUse:Edit',
+      status: 'error',
+      startedAt: '2026-11-03T10:00:06.312Z',
+      endedAt: '2026-11-03T10:00:07.000Z',
+      durationMs: 688,
+      // the data model keeps `tool` for tool and MCP calls
+      statusReason: 'exit 1',
+      provenance: { line: 3 },
+    });
+    expect(hook?.tool).toBeUndefined();
+    expect(hook?.content).toBeUndefined();
+  });
+
+  it('nests a tool hook under the call that triggered it', async () => {
+    const run = await parseLines(turn);
+    expect(hooksOf(run)[0]?.parentId).toBe('t1');
+    // the hook ran inside the call: the call's own bounds are untouched
+    const call = run.spans.find((s) => s.id === 't1');
+    expect(call?.startedAt).toBe('2026-11-03T10:00:05.000Z');
+    expect(call?.endedAt).toBe('2026-11-03T10:00:07.002Z');
+  });
+
+  it('emits a cancelled hook, with the timeout as the reason', async () => {
+    const run = await parseLines([
+      prompt(),
+      hookCancelled('h0', '2026-11-03T10:00:04.000Z', 3_000),
+      ...turn.slice(1),
+    ]);
+    const hook = hooksOf(run).find((s) => s.name === 'UserPromptSubmit');
+    expect(hook).toMatchObject({
+      id: 'h0',
+      status: 'cancelled',
+      statusReason: 'timeout',
+      startedAt: '2026-11-03T10:00:01.000Z',
+      endedAt: '2026-11-03T10:00:04.000Z',
+      durationMs: 3_000,
+      // not a tool hook: it belongs to the transcript's container
+      parentId: 'sess-hooks',
+    });
+    expect(hook?.tool).toBeUndefined();
+    expect(hook?.attributes).toEqual({
+      'runray.toolActivity': 'run',
+      'runray.tool': 'python',
+      'runray.toolSub': 'script',
+      'runray.toolScript': 'remind.py',
+    });
+  });
+
+  it('emits a stop-hook summary as a zero-duration span with its hook count', async () => {
+    const run = await parseLines([
+      ...turn,
+      stopSummary('s1', '2026-11-03T10:00:09.500Z', [
+        'node "$CLAUDE_PLUGIN_ROOT/hooks/a.mjs"',
+        'node "$CLAUDE_PLUGIN_ROOT/hooks/b.mjs"',
+        'node /Users/alex/.claude/hooks/c.mjs',
+      ]),
+    ]);
+    const stop = hooksOf(run).find((s) => s.name === 'Stop');
+    expect(stop).toMatchObject({
+      id: 's1',
+      status: 'ok',
+      startedAt: '2026-11-03T10:00:09.500Z',
+      endedAt: '2026-11-03T10:00:09.500Z',
+      durationMs: 0,
+      parentId: 'sess-hooks',
+    });
+    // three hooks, one tool: the span may name it, and nothing else
+    expect(stop?.attributes).toEqual({
+      'runray.toolActivity': 'run',
+      'runray.tool': 'node',
+      'runray.hookCount': 3,
+    });
+    expect(stop?.tool).toBeUndefined();
+  });
+
+  it('names no tool for a summary of hooks that ran different ones, and marks listed errors', async () => {
+    const run = await parseLines([
+      ...turn,
+      stopSummary(
+        's1',
+        '2026-11-03T10:00:09.500Z',
+        ['node /h/a.mjs', 'python3 /h/b.py'],
+        { hookErrors: ['b.py exited with code 2'] },
+      ),
+      // one command: it is classified like any single hook
+      stopSummary('s2', '2026-11-03T10:00:09.600Z', ['bash ~/.claude/done.sh']),
+      // a count without commands still says how many ran
+      stopSummary('s3', '2026-11-03T10:00:09.700Z', [], { hookCount: 2 }),
+    ]);
+    const byId = new Map(hooksOf(run).map((s) => [s.id, s]));
+    expect(byId.get('s1')?.status).toBe('error');
+    expect(byId.get('s1')?.attributes).toEqual({ 'runray.hookCount': 2 });
+    expect(byId.get('s2')?.status).toBe('ok');
+    expect(byId.get('s2')?.attributes).toEqual({
+      'runray.toolActivity': 'run',
+      'runray.tool': 'bash',
+      'runray.toolSub': 'script',
+      'runray.toolScript': 'done.sh',
+      'runray.hookCount': 1,
+    });
+    expect(byId.get('s3')?.attributes).toEqual({ 'runray.hookCount': 2 });
+  });
+
+  it('emits nothing for hooks the transcript does not record', async () => {
+    const run = await parseLines([
+      ...conversation,
+      // a successful hook that handed text to the model: no duration, and
+      // only some successful runs leave one, so it is not a span
+      {
+        type: 'attachment',
+        uuid: 'c1',
+        sessionId: 'sess-hooks',
+        timestamp: '2026-11-03T10:00:07.001Z',
+        attachment: {
+          type: 'hook_additional_context',
+          hookName: 'PostToolUse:Edit',
+          hookEvent: 'PostToolUse',
+          toolUseID: 't1',
+          content: ['formatted'],
+        },
+      },
+      // an attachment that is not about hooks at all
+      {
+        type: 'attachment',
+        uuid: 'c2',
+        sessionId: 'sess-hooks',
+        timestamp: '2026-11-03T10:00:07.001Z',
+        attachment: { type: 'diagnostics', files: [] },
+      },
+      // a system note that is not a stop-hook summary
+      {
+        type: 'system',
+        subtype: 'turn_duration',
+        uuid: 'c3',
+        sessionId: 'sess-hooks',
+        timestamp: '2026-11-03T10:00:09.100Z',
+        durationMs: 9100,
+      },
+      // a hook record that cannot be placed in time
+      hookError('c4', undefined),
+      hookError('c5', 'yesterday'),
+    ]);
+    expect(hooksOf(run)).toEqual([]);
+  });
+
+  it('leaves tool totals alone', async () => {
+    // `maxDepth` is the one count a hook can move: it hangs off its call
+    const counts = (run: RawRun) => {
+      const { maxDepth: _depth, ...rest } = normalize(priceRun(run)).totals
+        .counts;
+      return rest;
+    };
+    const withHooks = await parseLines([
+      ...turn,
+      stopSummary('s1', '2026-11-03T10:00:09.500Z', ['node /h/a.mjs'], {
+        hookErrors: ['boom'],
+      }),
+    ]);
+    const without = await parseLines(conversation);
+    expect(hooksOf(withHooks)).toHaveLength(2);
+    expect(hooksOf(withHooks).every((s) => s.status === 'error')).toBe(true);
+    expect(counts(withHooks)).toEqual(counts(without));
+    expect(counts(withHooks)).toMatchObject({ toolCalls: 1, toolErrors: 0 });
+  });
+
+  it.each([false, true])(
+    'classifies the hook command and stores none of it (redact: %s)',
+    async (redact) => {
+      const run = await parseLines(
+        [
+          ...turn,
+          // a Windows path that a POSIX reading would glue into the script name
+          hookError('h2', '2026-11-03T10:00:08.000Z', {
+            command: 'node C:\\Users\\alex\\.claude\\hooks\\format.mjs',
+            toolUseID: 'not-a-tool-call',
+            hookName: 'SessionStart:startup',
+          }),
+          stopSummary('s1', '2026-11-03T10:00:09.500Z', [
+            'node /Users/alex/.claude/hooks/format.mjs',
+          ]),
+        ],
+        redact,
+      );
+      const hooks = hooksOf(run);
+      expect(hooks).toHaveLength(3);
+      for (const hook of hooks) {
+        expect(hook.attributes).toMatchObject({
+          'runray.toolActivity': 'run',
+          'runray.tool': 'node',
+          'runray.toolSub': 'script',
+        });
+        // the script's file name is free-form text: local reports only
+        expect(hook.attributes['runray.toolScript']).toBe(
+          redact ? undefined : 'format.mjs',
+        );
+      }
+      // no path, no user name, no stderr anywhere in the run
+      expect(JSON.stringify(run.spans)).not.toMatch(
+        /alex|\.claude|hooks[\\/]|Cannot find/,
+      );
+    },
+  );
+
+  it('stamps nothing for an SDK callback hook or a hook without a command', async () => {
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      hookError('h1', '2026-11-03T10:00:07.000Z', { command: 'callback' }),
+      hookError('h2', '2026-11-03T10:00:07.001Z', { command: undefined }),
+      ...turn.slice(3),
+    ]);
+    expect(hooksOf(run).map((s) => s.attributes)).toEqual([{}, {}]);
+  });
+
+  it('never lets free text become a span name', async () => {
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      hookError('h1', '2026-11-03T10:00:07.000Z', {
+        hookName: 'tempor enim sed',
+      }),
+      hookError('h2', '2026-11-03T10:00:07.001Z', {
+        hookName: 'tempor enim sed',
+        hookEvent: 'magna minim amet',
+      }),
+      hookError('h3', '2026-11-03T10:00:07.002Z', {
+        hookName: 'PreToolUse:mcp__plugin_docs_docs__resolve-library-id',
+      }),
+      hookError('h4', '2026-11-03T10:00:07.003Z', {
+        hookName: 'SubagentStop:feature-dev:code-reviewer',
+      }),
+      ...turn.slice(3),
+    ]);
+    const names = new Map(hooksOf(run).map((s) => [s.id, s.name]));
+    expect(Object.fromEntries(names)).toEqual({
+      h1: 'PostToolUse',
+      h2: 'hook',
+      h3: 'PreToolUse:mcp__plugin_docs_docs__resolve-library-id',
+      h4: 'SubagentStop:feature-dev:code-reviewer',
+    });
+  });
+
+  it('emits each hook once from a re-appended transcript', async () => {
+    const lines = [
+      ...turn,
+      hookCancelled('h2', '2026-11-03T10:00:50.000Z', 30_000),
+      stopSummary('s1', '2026-11-03T10:00:51.000Z', ['node /h/a.mjs']),
+    ];
+    const once = await parseLines(lines);
+    const twice = await parseLines([
+      ...lines,
+      { type: 'bridge-session', sessionId: 'sess-hooks', bridgeSessionId: 'c' },
+      ...lines.map((r) => ({ ...r, version: '2.1.258', slug: 'copy' })),
+    ]);
+    expect(hooksOf(twice).map((s) => s.id)).toEqual(['h1', 'h2', 's1']);
+    // the first copy keeps its provenance line
+    expect(hooksOf(twice).map((s) => s.provenance.line)).toEqual([3, 6, 7]);
+    const plain = (run: RawRun) =>
+      hooksOf(run).map((s) => ({
+        ...s,
+        provenance: { line: s.provenance.line },
+      }));
+    expect(plain(twice)).toEqual(plain(once));
+    const ids = twice.spans.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('keys a hook record without a uuid by its place in its own transcript', async () => {
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      hookError(undefined, '2026-11-03T10:00:07.000Z'),
+      hookError(undefined, '2026-11-03T10:00:07.001Z'),
+      ...turn.slice(3),
+    ]);
+    expect(hooksOf(run).map((s) => s.id)).toEqual([
+      'sess-hooks:hook:3',
+      'sess-hooks:hook:4',
+    ]);
+  });
+
+  it('opens the session where a start-up hook began, before the first record', async () => {
+    const run = await parseLines([
+      hookError(
+        'h0',
+        '2026-11-03T09:59:59.000Z',
+        {
+          hookName: 'SessionStart:startup',
+          hookEvent: 'SessionStart',
+          toolUseID: 'not-a-tool-call',
+          durationMs: 1500,
+        },
+        { parentUuid: null },
+      ),
+      ...turn,
+    ]);
+    const session = run.spans.find((s) => s.kind === 'session');
+    const hook = hooksOf(run).find((s) => s.id === 'h0');
+    expect(hook?.startedAt).toBe('2026-11-03T09:59:57.500Z');
+    expect(hook?.parentId).toBe(session?.id);
+    // the container covers its child at both ends
+    expect(session?.startedAt).toBe('2026-11-03T09:59:57.500Z');
+    expect(session?.endedAt).toBe('2026-11-03T10:00:09.000Z');
+    expect(session?.durationMs).toBe(11_500);
+    const normalized = normalize(priceRun(run));
+    expect(normalized.startedAt).toBe('2026-11-03T09:59:57.500Z');
+    expect(normalized.durationMs).toBe(11_500);
+  });
+
+  it('gives a subagent its own hooks', async () => {
+    const run = await parseFiles({
+      'sess-hooks.jsonl': [
+        prompt(),
+        assistant('a1', 'u1', 'm1', '2026-11-03T10:00:05.000Z', [
+          {
+            type: 'tool_use',
+            id: 'tA',
+            name: 'Agent',
+            input: { subagent_type: 'reviewer', description: 'd', prompt: 'p' },
+          },
+        ]),
+        toolResult('r1', '2026-11-03T10:01:00.000Z', 'tA', {
+          toolUseResult: { agentId: 'abc123', status: 'completed' },
+        }),
+      ],
+      'sess-hooks/subagents/agent-abc123.jsonl': [
+        { ...prompt('cu1', '2026-11-03T10:00:06.000Z'), isSidechain: true },
+        assistant('ca1', 'cu1', 'cm1', '2026-11-03T10:00:10.000Z', [
+          edit('ct1'),
+        ]),
+        // a tool hook inside the agent, and one that names no call of its
+        hookError('ch1', '2026-11-03T10:00:12.000Z', { toolUseID: 'ct1' }),
+        hookError('ch2', '2026-11-03T10:00:13.000Z', { toolUseID: 't1' }),
+        toolResult('cr1', '2026-11-03T10:00:14.000Z', 'ct1'),
+      ],
+    });
+    const byId = new Map(hooksOf(run).map((s) => [s.id, s]));
+    expect(byId.get('ch1')?.parentId).toBe('ct1');
+    // `t1` is not a call of this transcript: the agent's own span holds it
+    expect(byId.get('ch2')?.parentId).toBe('abc123');
+    expect(byId.get('ch1')?.provenance.file).toMatch(/agent-abc123\.jsonl$/);
+  });
+
+  it('changes no finding and no total on the committed fixtures', async () => {
+    // spec: "Findings are unchanged". Every fixture, parsed as committed and
+    // from a copy with its hook records taken out.
+    const source = fileURLToPath(
+      new URL('../../../../fixtures/claude-code', import.meta.url),
+    );
+    const isHookRecord = (line: string): boolean => {
+      if (!line.includes('hook')) return false;
+      try {
+        const rec = JSON.parse(line) as Record<string, unknown>;
+        const attachment = rec.attachment as { type?: unknown } | undefined;
+        return (
+          (rec.type === 'attachment' &&
+            (attachment?.type === 'hook_non_blocking_error' ||
+              attachment?.type === 'hook_cancelled')) ||
+          (rec.type === 'system' && rec.subtype === 'stop_hook_summary')
+        );
+      } catch {
+        return false;
+      }
+    };
+    const live = (candidates: Candidate[]) =>
+      candidates.filter((c) => !/[\\/]raw[\\/]/.test(c.runRef));
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-nohooks-'));
+    try {
+      cpSync(source, dir, { recursive: true });
+      const original = live(await claudeCodeAdapter.detect([source]));
+      const stripped = live(await claudeCodeAdapter.detect([dir]));
+      expect(stripped).toHaveLength(original.length);
+      let removed = 0;
+      for (const candidate of stripped) {
+        for (const file of candidate.files) {
+          if (!file.endsWith('.jsonl')) continue;
+          const lines = readFileSync(file, 'utf8').split('\n');
+          const kept = lines.filter((line) => !isHookRecord(line));
+          removed += lines.length - kept.length;
+          if (kept.length !== lines.length) {
+            writeFileSync(file, kept.join('\n'));
+          }
+        }
+      }
+      expect(removed).toBeGreaterThan(1000);
+
+      const pipeline = async (c: Candidate) =>
+        applyInsights(
+          normalize(
+            priceRun(await claudeCodeAdapter.parse(c, { redact: false })),
+          ),
+        );
+      let hookSpans = 0;
+      for (const [i, candidate] of original.entries()) {
+        const withHooks = await pipeline(candidate);
+        const without = await pipeline(stripped[i] as Candidate);
+        hookSpans += withHooks.spans.filter((s) => s.kind === 'hook').length;
+        expect(without.spans.filter((s) => s.kind === 'hook')).toEqual([]);
+        // tokens, cost, calls and errors are the same; `maxDepth` may be
+        // one deeper, where a hook hangs off the deepest call
+        const depth = withHooks.totals.counts.maxDepth;
+        expect([0, 1], candidate.runRef).toContain(
+          depth - without.totals.counts.maxDepth,
+        );
+        expect(withHooks.totals, candidate.runRef).toEqual({
+          ...without.totals,
+          counts: { ...without.totals.counts, maxDepth: depth },
+        });
+        expect(withHooks.insights, candidate.runRef).toEqual(without.insights);
+        // every other span is still there, one for one
+        expect(
+          withHooks.spans.filter((s) => s.kind !== 'hook').map((s) => s.id),
+          candidate.runRef,
+        ).toEqual(without.spans.map((s) => s.id));
+      }
+      expect(hookSpans).toBeGreaterThan(1000);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 120_000);
 });

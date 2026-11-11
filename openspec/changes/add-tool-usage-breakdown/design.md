@@ -128,6 +128,12 @@ subtype `stop_hook_summary` (hook count, commands, errors; no duration).
 Successful `PreToolUse` and `PostToolUse` hooks leave nothing. The sample has
 25,636 failed-hook records, which the product currently ignores.
 
+A fourth shape exists and is deliberately not a span: `attachment` records of
+type `hook_additional_context`, written when a successful hook hands text
+back to the model. They carry no duration and no outcome, and only the
+successful runs that returned text leave one, so counting them would put an
+arbitrary sample of successes next to the complete set of failures.
+
 Rule: emit what is recorded (T9) and label hook time as covering failed and
 cancelled runs only. Rejected: emitting nothing until the source records
 successes, because the failures alone are useful (a hook failing on most edits
@@ -305,25 +311,52 @@ tool phases.
 
 - `hook_non_blocking_error`: kind `hook`, name = `hookName` (event and
   matcher, e.g. `PostToolUse:Edit`), status `error`, `endedAt` = record
-  timestamp, `startedAt` = that minus `durationMs`, `tool.exitCode` from the
-  record, parent = the span whose id equals `toolUseID` when one exists, else
-  the transcript's container span.
+  timestamp, `startedAt` = that minus `durationMs`,
+  `statusReason: "exit <code>"` from the record's exit code, parent = the span
+  whose id equals `toolUseID` when one exists, else the transcript's container
+  span. The exit code does not go into `tool`: the data model keeps that
+  object for tool and MCP calls and names `statusReason` as the place for an
+  exit code, and readers such as the dashboard's "worst tool" note take a
+  span with `tool.isError` for a failed tool call.
 - `hook_cancelled`: the same with status `cancelled` and
   `statusReason: "timeout"` when the record says it timed out.
 - `stop_hook_summary`: kind `hook`, name `Stop`, zero duration at the record
   timestamp, `runray.hookCount`, status `error` when the record lists hook
   errors, else `ok`.
 - The hook command goes through `classify` and is then dropped. A command of
-  `callback` (an SDK callback hook) carries no tool.
+  `callback` (an SDK callback hook) carries no tool. The transcript does not
+  say which shell ran the hook, so a command with a backslash before a name
+  character is read in the PowerShell dialect: bash would swallow that
+  backslash, and a POSIX reading would glue the directories of
+  `C:\Users\…\format.mjs` into the script name. A summary of one command is
+  classified in full; a summary of several names a tool only when every
+  command ran the same one.
+- The span name survives redaction, like a tool span's, so it is taken from
+  the record only when it is shaped like `Event` or `Event:matcher`; otherwise
+  it falls back to the bare event, and past that to `hook`.
 - Span ids derive from the record's `uuid`, so the duplicate-record rule
   ("first occurrence wins") already covers re-appended transcripts.
+- A container starts no later than a hook it holds. The record is written
+  when the hook ends, so a hook that ran as the session opened began before
+  the transcript's first record.
+
+Measured on 150 recent sessions from one machine: every `PreToolUse` and
+`PostToolUse` hook span lies inside its tool span (7,899 of 7,899), which is
+what T7 relies on; hook spans move a run's start earlier in 103 sessions
+(median 1.6 s) and its end later in 124 (median 2.8 s), and the run grows by
+more than 1% in 5 of them.
 
 Totals and triage count only `tool_call` and `mcp_call`, so hook spans do not
-move them. One rule does look at every non-session span: `dead-end-run` takes
-the last one as the run's terminal span. A trailing failed hook would create a
-finding, and a trailing `Stop` span would hide one. The rule's terminal-span
-selection therefore skips `hook` spans. That also corrects the same latent
-effect for OTLP runs, which already carry `claude_code.hook` spans.
+move them, with one exception: `counts.maxDepth` is the depth of the deepest
+span, and a hook under the deepest call is one level deeper. Three readers
+looked at every span regardless of kind and now skip hooks. `dead-end-run`
+takes the last non-session span as the run's terminal span: a trailing failed
+hook would create a finding, and a trailing `Stop` span would hide one. The
+reprice engine marks a subtree risky for a model swap when a span in it
+errored, so one failed hook silenced `model-mismatch` for a whole session.
+Triage counts cancelled spans as calls the person declined, which a hook
+cancelled on a timeout is not. The three corrections also apply to OTLP runs,
+which already carry `claude_code.hook` spans.
 
 ### T10 — OTLP
 
