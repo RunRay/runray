@@ -2578,7 +2578,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -2603,7 +2605,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -2628,7 +2632,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -3096,7 +3102,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -3154,7 +3162,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -3212,7 +3222,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -3508,7 +3520,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -4940,7 +4954,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -5164,7 +5180,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -5222,7 +5240,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6386,7 +6406,9 @@
       "attributes": {
         "runray.targetKey": "b2a5b2b92f9d1fb2",
         "runray.targetKind": "command",
-        "runray.target": "elit"
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6444,7 +6466,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6469,7 +6493,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6635,7 +6661,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6660,7 +6688,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",
@@ -6772,7 +6802,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/opencode/sqlite/subagents/opencode.db",

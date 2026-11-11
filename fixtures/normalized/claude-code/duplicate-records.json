@@ -85,7 +85,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/duplicate-records/duplicate-records.jsonl",
@@ -144,7 +146,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/duplicate-records/duplicate-records.jsonl",

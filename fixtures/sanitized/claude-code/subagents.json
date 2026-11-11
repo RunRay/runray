@@ -414,7 +414,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -471,7 +472,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -528,7 +530,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -639,7 +642,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -793,7 +797,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -850,7 +855,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -907,7 +913,8 @@
       },
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -964,7 +971,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -1021,7 +1029,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -1132,7 +1141,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -1359,7 +1369,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -1587,7 +1598,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -1644,7 +1656,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -2023,7 +2036,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -2101,7 +2115,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -2158,7 +2173,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -2328,7 +2344,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -2442,7 +2459,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -2750,7 +2768,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -3038,7 +3057,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -3128,7 +3148,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -3644,7 +3665,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -3701,7 +3723,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -3815,7 +3838,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-5",
@@ -3872,7 +3897,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -3929,7 +3955,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -3986,7 +4013,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -4157,7 +4185,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -4517,7 +4546,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -4541,7 +4571,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -5238,7 +5269,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -5436,7 +5468,8 @@
       },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -5493,7 +5526,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -5550,7 +5584,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -5607,7 +5642,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -5664,7 +5700,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -6141,7 +6178,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -6276,7 +6314,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -6542,7 +6581,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -6745,7 +6785,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -6769,7 +6810,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -7075,7 +7117,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -7099,7 +7142,8 @@
       },
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -7222,7 +7266,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -7246,7 +7291,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -7381,7 +7427,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -7462,7 +7509,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -7576,7 +7624,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-12",
@@ -7974,7 +8024,8 @@
       },
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -7998,7 +8049,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -8022,7 +8074,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -8079,7 +8132,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -8339,7 +8393,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -8396,7 +8451,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -8453,7 +8509,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -8510,7 +8567,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -8566,7 +8624,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-12",
@@ -8728,7 +8787,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-5",
@@ -8841,7 +8901,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -9149,7 +9210,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -9262,7 +9324,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -9431,7 +9494,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -9488,7 +9552,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-15",
@@ -14077,7 +14142,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -14191,7 +14257,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -16197,7 +16264,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -16359,7 +16427,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -16446,7 +16515,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -17123,7 +17193,8 @@
       },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -17213,7 +17284,8 @@
       },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -17674,7 +17746,8 @@
       },
       "attributes": {
         "runray.targetKey": "b2a5b2b92f9d1fb2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-10",
@@ -18229,7 +18302,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-9",
@@ -18612,7 +18687,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -18913,7 +18989,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-9",
@@ -19739,7 +19816,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -20475,7 +20553,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -20649,7 +20728,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -21291,7 +21371,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -21348,7 +21429,8 @@
       },
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -21567,7 +21649,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -22688,7 +22771,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -23296,7 +23380,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-9",
@@ -23457,7 +23542,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -23481,7 +23567,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -23814,7 +23901,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-6",
@@ -23838,7 +23926,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-9",
@@ -24283,7 +24372,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -24307,7 +24397,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -24666,7 +24757,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -25100,7 +25192,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -25371,7 +25464,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -25488,7 +25582,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-6",
@@ -25713,7 +25808,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-17",
@@ -25958,7 +26055,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -26210,7 +26308,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -26357,7 +26456,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -26381,7 +26481,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -26579,7 +26680,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -26776,7 +26878,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -26886,7 +26989,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -26910,7 +27014,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-17",
@@ -26967,7 +27072,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-18",
@@ -28112,7 +28218,8 @@
       },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -28262,7 +28369,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -28569,7 +28677,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -29736,7 +29845,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -30059,7 +30169,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -30177,7 +30288,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -30479,7 +30591,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -31500,7 +31613,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -32069,7 +32183,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -32128,7 +32243,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -32211,7 +32327,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33279,7 +33396,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33338,7 +33456,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33362,7 +33481,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33421,7 +33541,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33480,7 +33601,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33678,7 +33800,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33737,7 +33861,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33796,7 +33921,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33855,7 +33981,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33914,7 +34041,8 @@
       },
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -33973,7 +34101,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34235,7 +34364,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34414,7 +34545,8 @@
       },
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34473,7 +34605,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34532,7 +34665,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34591,7 +34726,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34650,7 +34786,8 @@
       },
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -34831,7 +34968,8 @@
       },
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35066,7 +35204,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35125,7 +35264,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35428,7 +35568,8 @@
       },
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35487,7 +35628,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35511,7 +35653,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35570,7 +35713,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35629,7 +35773,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -35967,7 +36112,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36026,7 +36172,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36144,7 +36291,8 @@
       },
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36554,7 +36702,9 @@
       },
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36613,7 +36763,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36672,7 +36823,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36731,7 +36883,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -36790,7 +36943,8 @@
       },
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37151,7 +37305,8 @@
       },
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37210,7 +37365,8 @@
       },
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37269,7 +37425,8 @@
       },
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37328,7 +37485,8 @@
       },
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37387,7 +37545,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -37631,7 +37790,8 @@
       },
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -38764,7 +38924,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -38788,7 +38949,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -38847,7 +39009,8 @@
       },
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -38906,7 +39069,8 @@
       },
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -38965,7 +39129,8 @@
       },
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -39024,7 +39189,8 @@
       },
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",

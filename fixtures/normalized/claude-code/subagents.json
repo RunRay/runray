@@ -412,7 +412,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -469,7 +471,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -526,7 +530,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -636,7 +642,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -789,7 +797,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -846,7 +856,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -903,7 +915,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -960,7 +974,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -1017,7 +1033,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1127,7 +1145,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1350,7 +1370,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1569,7 +1591,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -1626,7 +1650,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -1998,7 +2024,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2076,7 +2104,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -2133,7 +2163,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2300,7 +2332,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -2411,7 +2445,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -2712,7 +2748,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -2996,7 +3034,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -3085,7 +3125,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -3600,7 +3642,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3657,7 +3701,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -3765,7 +3811,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3822,7 +3870,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -3879,7 +3929,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -3936,7 +3988,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -4101,7 +4155,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -4458,7 +4514,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -4483,7 +4541,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5173,7 +5233,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -5368,7 +5430,9 @@
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
-        "runray.target": "minim"
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5422,7 +5486,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -5479,7 +5545,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -5536,7 +5604,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -5590,7 +5660,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -6058,7 +6130,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -6193,7 +6267,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -6460,7 +6536,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -6659,7 +6737,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -6684,7 +6764,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -6984,7 +7066,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7009,7 +7093,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7130,7 +7216,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7155,7 +7243,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7290,7 +7380,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7372,7 +7464,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7483,7 +7577,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7875,7 +7971,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -7900,7 +7998,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -7925,7 +8025,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -7982,7 +8084,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -8237,7 +8341,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -8294,7 +8400,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8351,7 +8459,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -8405,7 +8515,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8458,7 +8570,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aaf4ecf811a4f10b4.jsonl",
@@ -8622,7 +8736,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a3799e6e3eafb5135.jsonl",
@@ -8735,7 +8851,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9038,7 +9156,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9151,7 +9271,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9319,7 +9441,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -9376,7 +9500,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ad48207ee1f5ac6ad.jsonl",
@@ -13994,7 +14120,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -14111,7 +14239,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -16129,7 +16259,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -16296,7 +16428,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -16384,7 +16518,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17065,7 +17201,9 @@
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
-        "runray.target": "minim"
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17154,7 +17292,9 @@
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
-        "runray.target": "minim"
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -17618,7 +17758,9 @@
       "attributes": {
         "runray.targetKey": "b2a5b2b92f9d1fb2",
         "runray.targetKind": "command",
-        "runray.target": "elit"
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-aa6add2f11b977321.jsonl",
@@ -18180,7 +18322,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -18564,7 +18708,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -18868,7 +19014,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -19711,7 +19859,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -20451,7 +20601,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -20629,7 +20781,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -21275,7 +21429,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -21332,7 +21488,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -21553,7 +21711,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -22680,7 +22840,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -23294,7 +23456,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -23457,7 +23621,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -23482,7 +23648,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -23816,7 +23984,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a4d0725cbfa322d87.jsonl",
@@ -23841,7 +24011,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a7879a373bd4d3082.jsonl",
@@ -24287,7 +24459,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -24312,7 +24486,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -24670,7 +24846,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25102,7 +25280,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25371,7 +25551,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25488,7 +25670,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-a4d0725cbfa322d87.jsonl",
@@ -25712,7 +25896,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -25960,7 +26146,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26213,7 +26401,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26359,7 +26549,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26384,7 +26576,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -26576,7 +26770,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26771,7 +26967,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -26880,7 +27078,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -26905,7 +27105,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-add694d3b7a9193dc.jsonl",
@@ -26962,7 +27164,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42/subagents/agent-ae41d06aac4c25b7d.jsonl",
@@ -28090,7 +28294,9 @@
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
-        "runray.target": "minim"
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28239,7 +28445,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -28545,7 +28753,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -29722,7 +29932,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30046,7 +30258,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30161,7 +30375,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -30460,7 +30676,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -31452,7 +31670,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32010,7 +32230,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32069,7 +32291,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -32153,7 +32377,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33198,7 +33424,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33257,7 +33485,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33282,7 +33512,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33341,7 +33573,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33400,7 +33634,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33601,7 +33837,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33660,7 +33898,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33719,7 +33959,9 @@
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
         "runray.targetKind": "command",
-        "runray.target": "lorem"
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33775,7 +34017,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33834,7 +34078,9 @@
       "attributes": {
         "runray.targetKey": "1847f92ff65b2482",
         "runray.targetKind": "command",
-        "runray.target": "ipsum"
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -33893,7 +34139,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34146,7 +34394,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34319,7 +34569,9 @@
       "attributes": {
         "runray.targetKey": "0e3f84d5b5622bbc",
         "runray.targetKind": "command",
-        "runray.target": "minim"
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34378,7 +34630,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34434,7 +34688,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34493,7 +34749,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34549,7 +34807,9 @@
       "attributes": {
         "runray.targetKey": "dd908e402f0ed076",
         "runray.targetKind": "command",
-        "runray.target": "aliqua"
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34730,7 +34990,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -34964,7 +35226,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35023,7 +35287,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35323,7 +35589,9 @@
       "attributes": {
         "runray.targetKey": "80afa4d5dce61b88",
         "runray.targetKind": "command",
-        "runray.target": "dolor"
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35382,7 +35650,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35407,7 +35677,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35466,7 +35738,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35525,7 +35799,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35853,7 +36129,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -35912,7 +36190,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36030,7 +36310,9 @@
       "attributes": {
         "runray.targetKey": "17bf76f2ec5787e7",
         "runray.targetKind": "command",
-        "runray.target": "adipiscing"
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36436,7 +36718,9 @@
       "attributes": {
         "runray.targetKey": "b626edd3511d1cd3",
         "runray.targetKind": "command",
-        "runray.target": "sed"
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36495,7 +36779,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36554,7 +36840,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36613,7 +36901,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -36672,7 +36962,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37024,7 +37316,9 @@
       "attributes": {
         "runray.targetKey": "0606febe907fe10e",
         "runray.targetKind": "command",
-        "runray.target": "tempor"
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37083,7 +37377,9 @@
       "attributes": {
         "runray.targetKey": "f0d4bb326b8f2209",
         "runray.targetKind": "command",
-        "runray.target": "consectetur"
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37139,7 +37435,9 @@
       "attributes": {
         "runray.targetKey": "0aa376785bf36b65",
         "runray.targetKind": "command",
-        "runray.target": "aliquip"
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37198,7 +37496,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37257,7 +37557,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -37499,7 +37801,9 @@
       "attributes": {
         "runray.targetKey": "2a628374f92f1df7",
         "runray.targetKind": "command",
-        "runray.target": "incididunt"
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38625,7 +38929,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38650,7 +38956,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38709,7 +39017,9 @@
       "attributes": {
         "runray.targetKey": "b1aaca441475334b",
         "runray.targetKind": "command",
-        "runray.target": "nostrud"
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38768,7 +39078,9 @@
       "attributes": {
         "runray.targetKey": "a127bddc834d93a2",
         "runray.targetKind": "command",
-        "runray.target": "enim"
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38827,7 +39139,9 @@
       "attributes": {
         "runray.targetKey": "c630015fb12b8ae9",
         "runray.targetKind": "command",
-        "runray.target": "sit"
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
@@ -38886,7 +39200,9 @@
       "attributes": {
         "runray.targetKey": "4a878befb30ac9b0",
         "runray.targetKind": "command",
-        "runray.target": "quis"
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
       },
       "provenance": {
         "file": "fixtures/claude-code/subagents/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",

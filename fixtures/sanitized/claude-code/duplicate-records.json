@@ -87,7 +87,8 @@
       },
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",
@@ -149,7 +150,8 @@
       },
       "attributes": {
         "runray.targetKey": "de3876a0ed57ee18",
-        "runray.targetKind": "command"
+        "runray.targetKind": "command",
+        "runray.toolActivity": "other"
       },
       "provenance": {
         "file": "transcript-1",

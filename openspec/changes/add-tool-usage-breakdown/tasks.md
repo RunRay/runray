@@ -78,7 +78,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       redaction (T10). Verify: tests for the three scenarios of "Reserved
       tool-usage keys from OTLP are validated", the two new "Attribute
       allowlist" scenarios, and the redaction-parity suite green.
-- [ ] 2.6 A Regenerate goldens with `pnpm goldens` in a dedicated commit.
+- [x] 2.6 A Regenerate goldens with `pnpm goldens` in a dedicated commit.
       Verify: the diff adds `runray.tool*` attributes to shell spans and
       changes nothing else; the path-shape totality assertion still passes on
       the sanitized and metadata-only goldens.
