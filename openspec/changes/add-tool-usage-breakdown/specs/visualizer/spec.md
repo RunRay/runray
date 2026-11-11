@@ -171,6 +171,13 @@ SHALL show an explanatory empty state.
 - THEN shell calls are listed under `Bash`, and the view states once that the
   trace was recorded before tool identification
 
+#### Scenario: Imported trace without commands
+- GIVEN an OTLP run whose shell tool spans carry a tool name and no command
+- WHEN the Time view renders
+- THEN shell calls are listed under the harness tool name, and the view
+  states once that the source records no command to identify, not that the
+  trace is old
+
 #### Scenario: Redacted report
 - GIVEN a redacted report whose shell calls ran `docker` and a program
   outside the registry

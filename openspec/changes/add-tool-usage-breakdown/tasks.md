@@ -99,7 +99,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       activity totals (T7, T11). Verify: tests for every scenario of "Tool
       usage aggregation", "Sub-rows by subcommand and name", "Time
       attribution" and "Containers, hooks and waiting stay out of tool time".
-- [ ] 3.3 A Invariants over real shapes: run the aggregation against every
+- [x] 3.3 A Invariants over real shapes: run the aggregation against every
       committed golden, including the metadata-only ones. Verify: a test
       asserting no throw, row totals summing to summed tool time, and activity
       totals partitioning it, on every golden.
@@ -130,7 +130,10 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       hooks are listed apart", including the keyboard scenario.
 - [ ] 4.5 B [UI → /frontend-design] Degraded states and the limits note: the
       pre-change trace notice, the "other command" row, the metadata-only
-      empty state, the explanation of permission wait and shared time.
+      empty state, the explanation of permission wait and shared time. An
+      OTLP run also has unclassified shell calls (its tool spans carry no
+      command, T10), so the notice is worded by source and does not call such
+      a run "recorded before tool identification".
       Verify: tests for the three scenarios of "Tool usage degraded states"
       (extending `metadata-only-render.test.tsx`) and for "Limits of tool time
       are stated".
