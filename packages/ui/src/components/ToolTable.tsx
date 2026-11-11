@@ -72,6 +72,14 @@ function Flags({ stats }: { stats: UsageStats }) {
           {count(stats.flags.interrupted)}interrupted
         </span>
       )}
+      {stats.cancelled > 0 && (
+        <span
+          className={`${FLAG} border-heat-2/60 text-heat-2`}
+          title="Cancelled before it finished: a hook stopped by its timeout, or a call you declined. Not counted as an error."
+        >
+          {count(stats.cancelled)}cancelled
+        </span>
+      )}
       {stats.open > 0 && (
         <span
           className={`${FLAG} border-border-slate text-text-faint`}

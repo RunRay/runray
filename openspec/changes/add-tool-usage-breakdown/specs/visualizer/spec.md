@@ -139,6 +139,12 @@ source cannot provide SHALL be shown as unavailable, never as zero.
 - WHEN the hook rows render
 - THEN they carry no claim that only failed and cancelled runs are listed
 
+#### Scenario: Cancelled runs are marked apart from errors
+- GIVEN a `UserPromptSubmit` hook that was cancelled on its timeout twice and
+  failed once
+- WHEN its row renders
+- THEN the row is marked with two cancelled runs and its error count is one
+
 #### Scenario: Stop hooks reported together
 - GIVEN a run with two stop-hook summaries of three hooks each
 - WHEN the hook rows render

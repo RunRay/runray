@@ -1071,6 +1071,39 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
     ]);
   });
 
+  it('marks the runs a hook was cancelled in, apart from its errors', () => {
+    const cancelled = (start: number) =>
+      span({
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        start,
+        ms: 30 * SEC,
+        status: 'cancelled',
+        statusReason: 'timeout',
+      });
+    const run = mkRun(
+      [
+        cancelled(0),
+        cancelled(MIN),
+        hook('UserPromptSubmit', 'python3 /h/remind.py', 2 * MIN, SEC),
+      ],
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    const row = rowOf('UserPromptSubmit');
+    expect(cells(row)[0]).toBe('UserPromptSubmithook2 cancelled');
+    // three runs, one of them an error: a cancelled run is not one
+    expect(cells(row)[1]).toBe('3');
+    expect(cells(row)[7]).toBe('1');
+    expect(
+      all('span[title]', row).some((el) =>
+        (el.getAttribute('title') ?? '').startsWith(
+          'Cancelled before it finished',
+        ),
+      ),
+    ).toBe(true);
+  });
+
   it('says what each kind of row is, right above it', () => {
     const agent = span({ name: 'Agent', start: 0, ms: MIN });
     const subagent = span({

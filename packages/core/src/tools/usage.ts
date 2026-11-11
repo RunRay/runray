@@ -36,6 +36,11 @@ export interface UsageStats {
   calls: number;
   /** Calls whose status is `error`. */
   errors: number;
+  /**
+   * Calls whose status is `cancelled`: a hook stopped by its timeout, a
+   * call the person declined. Not errors, and counted apart from them.
+   */
+  cancelled: number;
   /** Calls with no recorded end: counted, adding no time to any figure. */
   open: number;
   /**
@@ -181,6 +186,7 @@ function delegationDuration(
 class Tally {
   calls = 0;
   errors = 0;
+  cancelled = 0;
   open = 0;
   untimed = 0;
   hookRuns = 0;
@@ -199,6 +205,7 @@ class Tally {
   add(span: Span, id: ToolIdentity, duration: number | undefined): void {
     this.calls++;
     if (span.status === 'error') this.errors++;
+    if (span.status === 'cancelled') this.cancelled++;
     for (const flag of id.flags) this.flags[flag]++;
     if (!this.byActivity.has(id.activity)) this.byActivity.set(id.activity, 0);
     if (id.hookRuns !== undefined) {
@@ -240,6 +247,7 @@ class Tally {
     return {
       calls: this.calls,
       errors: this.errors,
+      cancelled: this.cancelled,
       open: this.open,
       untimed: this.untimed,
       hookRuns: this.hookRuns,

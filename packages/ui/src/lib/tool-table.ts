@@ -144,6 +144,7 @@ function utilitiesRow(
   const stats: UsageStats = {
     calls: 0,
     errors: 0,
+    cancelled: 0,
     open: 0,
     untimed: 0,
     hookRuns: 0,
@@ -158,6 +159,7 @@ function utilitiesRow(
   for (const m of members) {
     stats.calls += m.calls;
     stats.errors += m.errors;
+    stats.cancelled += m.cancelled;
     stats.open += m.open;
     stats.untimed += m.untimed;
     stats.hookRuns += m.hookRuns;

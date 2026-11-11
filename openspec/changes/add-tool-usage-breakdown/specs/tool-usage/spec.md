@@ -380,6 +380,13 @@ contribute a call and no time.
 - WHEN the run is aggregated
 - THEN the call is counted and adds no time to any figure
 
+#### Scenario: Cancelled calls are counted apart from errors
+- GIVEN a hook cancelled on its timeout after 30 seconds and a failed run of
+  the same hook
+- WHEN the run is aggregated
+- THEN the row has two calls, one cancelled and one error, and the cancelled
+  run's 30 seconds are in its total
+
 #### Scenario: Hook runs reported without a duration
 - GIVEN three stop-hook summaries beside two failed `Stop` hook runs of 800
   and 1,200 milliseconds

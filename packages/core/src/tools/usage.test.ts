@@ -387,6 +387,46 @@ describe('toolUsage — spec scenarios of "Containers, hooks and waiting stay ou
     ]);
   });
 
+  it('counts cancelled calls apart from errors', () => {
+    const usage = toolUsage([
+      // a hook the harness stopped on its timeout
+      span({
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        ms: 30 * SEC,
+        status: 'cancelled',
+        statusReason: 'timeout',
+      }),
+      span({
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        ms: SEC,
+        status: 'error',
+      }),
+      // a call the person declined
+      span({
+        name: 'Write',
+        ms: 2 * SEC,
+        status: 'cancelled',
+        statusReason: 'user-rejected',
+      }),
+      span({ name: 'Write', ms: SEC }),
+    ]);
+    expect(usage.hooks.rows[0]).toMatchObject({
+      key: 'UserPromptSubmit',
+      calls: 2,
+      cancelled: 1,
+      errors: 1,
+      // a cancelled run still took its time
+      totalMs: 31 * SEC,
+    });
+    expect(row(usage, 'Write')).toMatchObject({
+      calls: 2,
+      cancelled: 1,
+      errors: 0,
+    });
+  });
+
   it('reports no untimed call outside hook summaries', () => {
     const usage = toolUsage(mixedRun());
     for (const row of [
