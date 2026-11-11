@@ -14,6 +14,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { HINT_COPY } from './components/ContextualHint';
 import { TimeView } from './components/TimeView';
+import { familyCounts, tableRows, UTILITIES_ROW } from './lib/tool-table';
 import {
   activityParts,
   formatShare,
@@ -158,8 +159,12 @@ const q = <T extends Element = HTMLElement>(
 const all = (selector: string, scope: Element = container): HTMLElement[] => [
   ...scope.querySelectorAll<HTMLElement>(selector),
 ];
-const text = (el: Element): string =>
-  (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+/** What a screen reader would read: decorative glyphs are left out. */
+const text = (el: Element): string => {
+  const copy = el.cloneNode(true) as Element;
+  for (const hidden of copy.querySelectorAll('[aria-hidden]')) hidden.remove();
+  return (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
+};
 /** The text of each cell of a table row. */
 const cells = (row: Element): string[] => [...row.children].map(text);
 
@@ -426,5 +431,556 @@ describe('activity bar (visualizer "Tool time by activity")', () => {
     expect(
       container.querySelector('[aria-label="Tool time by activity"]'),
     ).toBe(null);
+  });
+});
+
+/** Calls one after another, a second apart, so nothing overlaps. */
+function sequence(build: (at: (ms: number) => number) => Span[]): Span[] {
+  let t = 0;
+  return build((ms) => {
+    const start = t;
+    t += ms + SEC;
+    return start;
+  });
+}
+
+function mcp(server: string, tool: string, start: number, ms: number): Span {
+  const name = `mcp__${server}__${tool}`;
+  return span({
+    kind: 'mcp_call',
+    name,
+    start,
+    ms,
+    tool: { name, mcpServer: server, isError: false },
+  });
+}
+
+describe('tool table (visualizer "Tool usage table")', () => {
+  const table = () => q('[aria-label="Tools"]');
+  /** Ranked rows only: the first tbody, without revealed sub-rows. */
+  const body = () => q('tbody', table());
+  const rowOf = (label: string, scope: Element = table()): HTMLElement => {
+    const found = all('tbody tr', scope).find((tr) =>
+      text(tr.children[0] as Element).startsWith(label),
+    );
+    if (found === undefined) throw new Error(`no row ${label}`);
+    return found;
+  };
+  const labels = (scope: Element = body()) =>
+    all('tr > th[scope="row"]', scope).map((th) => text(th));
+  const expander = (label: string) =>
+    q<HTMLButtonElement>('button[aria-expanded]', rowOf(label));
+  const filter = (label: string): HTMLElement => {
+    const found = all('[aria-label="Filter tools by family"] button').find(
+      (b) => text(b).startsWith(label),
+    );
+    if (found === undefined) throw new Error(`no filter ${label}`);
+    return found;
+  };
+  const figures = (label: string) => cells(rowOf(label)).slice(1);
+
+  it('lists tools by identity instead of one row for the shell (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('docker ps', at(2 * SEC), 2 * SEC),
+        shell('docker build .', at(40 * SEC), 40 * SEC),
+        shell('vitest run', at(30 * SEC), 30 * SEC),
+        shell('vitest run', at(50 * SEC), 50 * SEC),
+        shell('vitest run', at(10 * SEC), 10 * SEC),
+      ]),
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(labels()).toEqual(['vitestshell', 'dockershell']);
+    expect(text(table())).not.toContain('Bash');
+    // calls, total, share, p50, p95, max, errors
+    expect(figures('vitest')).toEqual([
+      '3',
+      '1m 30s',
+      '68%',
+      '30s',
+      '50s',
+      '50s',
+      '0',
+    ]);
+    expect(figures('docker')).toEqual([
+      '2',
+      '42s',
+      '32%',
+      '2.0s',
+      '40s',
+      '40s',
+      '0',
+    ]);
+  });
+
+  it('shows the programs behind the shell and expands to subcommands (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('docker exec db psql', at(4 * SEC), 4 * SEC),
+        shell('docker exec db psql -c "select 1"', at(3 * SEC), 3 * SEC),
+        shell('docker exec -it web sh', at(2 * SEC), 2 * SEC),
+        shell('docker exec api env', at(SEC), SEC),
+        shell('docker ps', at(500), 500),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(labels()).toEqual(['dockershell']);
+    expect(figures('docker')[0]).toBe('5');
+    expect(expander('docker').getAttribute('aria-expanded')).toBe('false');
+    expect(all('tbody tr', table())).toHaveLength(1);
+
+    act(() => expander('docker').click());
+    expect(expander('docker').getAttribute('aria-expanded')).toBe('true');
+    const subs = all('tbody tr', table()).slice(1);
+    expect(subs.map((tr) => cells(tr).slice(0, 3))).toEqual([
+      ['exec', '4', '10s'],
+      ['ps', '1', '500ms'],
+    ]);
+  });
+
+  it('rolls MCP tools up to their server (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        ...Array.from({ length: 6 }, () =>
+          mcp('playwright', 'browser_click', at(SEC), SEC),
+        ),
+        ...Array.from({ length: 4 }, () =>
+          mcp('playwright', 'browser_type', at(SEC), SEC),
+        ),
+        ...Array.from({ length: 2 }, () =>
+          mcp('playwright', 'browser_close', at(SEC), SEC),
+        ),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(labels()).toEqual(['playwrightmcp']);
+    expect(figures('playwright')[0]).toBe('12');
+    act(() => expander('playwright').click());
+    expect(
+      all('tbody tr', table())
+        .slice(1)
+        .map((tr) => cells(tr).slice(0, 2)),
+    ).toEqual([
+      ['browser_click', '6'],
+      ['browser_type', '4'],
+      ['browser_close', '2'],
+    ]);
+  });
+
+  it('filters by family and exposes the filter as pressed (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('docker ps', at(3 * SEC), 3 * SEC),
+        span({ name: 'Read', start: at(2 * SEC), ms: 2 * SEC }),
+        mcp('playwright', 'browser_click', at(SEC), SEC),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(filter('all').getAttribute('aria-pressed')).toBe('true');
+    expect(text(filter('all'))).toBe('all 3');
+    expect(labels()).toHaveLength(3);
+
+    act(() => filter('mcp').click());
+    expect(filter('mcp').getAttribute('aria-pressed')).toBe('true');
+    expect(filter('all').getAttribute('aria-pressed')).toBe('false');
+    expect(labels()).toEqual(['playwrightmcp']);
+
+    act(() => filter('built-in').click());
+    expect(labels()).toEqual(['Readbuilt-in']);
+    act(() => filter('all').click());
+    expect(labels()).toHaveLength(3);
+  });
+
+  it('has a native, focusable expand control that reports its state (spec scenario)', () => {
+    const run = mkRun(
+      [shell('git status', 0, SEC), shell('git diff', 2 * SEC, SEC)],
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    const control = expander('git');
+    // a native button: Enter and Space activate it without any key handler
+    expect(control.tagName).toBe('BUTTON');
+    expect(control.type).toBe('button');
+    expect(control.tabIndex).toBe(0);
+    control.focus();
+    expect(document.activeElement).toBe(control);
+    act(() => control.click());
+    expect(expander('git').getAttribute('aria-expanded')).toBe('true');
+    expect(labels(table())).toContain('status');
+    act(() => expander('git').click());
+    expect(expander('git').getAttribute('aria-expanded')).toBe('false');
+    expect(labels(table())).not.toContain('status');
+  });
+
+  it('re-sorts by p95 and by calls and says which column sorts', () => {
+    const run = mkRun(
+      sequence((at) => [
+        // many short calls
+        ...Array.from({ length: 6 }, () =>
+          span({ name: 'Read', start: at(SEC), ms: SEC }),
+        ),
+        // one long call
+        shell('cargo build', at(5 * SEC), 5 * SEC),
+        // most time in total
+        shell('vitest run', at(4 * SEC), 4 * SEC),
+        shell('vitest run', at(4 * SEC), 4 * SEC),
+      ]),
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    const header = (label: string): HTMLElement => {
+      const found = all('thead th', table()).find((th) =>
+        text(th).startsWith(label),
+      );
+      if (found === undefined) throw new Error(`no header ${label}`);
+      return found;
+    };
+    const order = () => labels().map((l) => l.replace(/(shell|built-in)$/, ''));
+    expect(order()).toEqual(['vitest', 'Read', 'cargo']);
+    expect(header('total').getAttribute('aria-sort')).toBe('descending');
+    expect(header('p95').getAttribute('aria-sort')).toBe('none');
+    expect(text(table())).toContain('tools · by total time');
+
+    act(() => q('button', header('p95')).click());
+    expect(order()).toEqual(['cargo', 'vitest', 'Read']);
+    expect(header('p95').getAttribute('aria-sort')).toBe('descending');
+    expect(header('total').getAttribute('aria-sort')).toBe('none');
+    expect(text(table())).toContain('tools · by p95');
+
+    act(() => q('button', header('calls')).click());
+    expect(order()).toEqual(['Read', 'vitest', 'cargo']);
+  });
+
+  it('narrows to the activity selected in the bar and back (spec scenario)', () => {
+    mount(<TimeView run={tenActivities()} />);
+    expect(labels().length).toBeGreaterThan(8);
+    const entry = all('[data-testid="activity-legend"] button').find((b) =>
+      text(b).startsWith('Test'),
+    );
+    act(() => entry?.click());
+    expect(labels()).toEqual(['vitestshell']);
+    expect(text(table())).toContain('tools · by total time · Test only');
+    // the share keeps the run-wide denominator: 60s of 3m 45s
+    expect(figures('vitest')[2]).toBe('27%');
+
+    const clear = all('button').find((b) => text(b) === 'Show all activities');
+    act(() => clear?.click());
+    expect(labels().length).toBeGreaterThan(8);
+  });
+
+  it('narrows to every folded activity when the neutral part is selected', () => {
+    mount(<TimeView run={tenActivities()} />);
+    const entry = all('[data-testid="activity-legend"] button').find((b) =>
+      text(b).startsWith('4 smaller activities'),
+    );
+    act(() => entry?.click());
+    expect(labels().map((l) => l.replace(/shell$/, ''))).toEqual([
+      'git',
+      'pnpm',
+      'docker',
+      'curl',
+    ]);
+  });
+});
+
+describe('tool table markers (visualizer "Shared, background and partial figures are marked")', () => {
+  const table = () => q('[aria-label="Tools"]');
+  const rowOf = (label: string): HTMLElement => {
+    const found = all('tbody tr', table()).find((tr) =>
+      text(tr.children[0] as Element).startsWith(label),
+    );
+    if (found === undefined) throw new Error(`no row ${label}`);
+    return found;
+  };
+
+  it('shows shared time beside the total, never inside it (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('git commit -m wip', at(85 * SEC), 85 * SEC),
+        shell('git add -A && pnpm build', at(50 * SEC), 50 * SEC),
+      ]),
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    const git = cells(rowOf('git'));
+    expect(git[1]).toBe('1');
+    expect(git[2]).toBe('1m 25s+50s shared');
+    const also = q('span[title*="led by another tool"]', rowOf('git'));
+    expect(text(also)).toBe('+50s shared');
+    expect(also.getAttribute('title')).toContain('Ran in 1 command');
+
+    // the tool that led the command says how much of its own total was shared
+    const pnpm = cells(rowOf('pnpm'));
+    expect(pnpm[2]).toBe('50sincl. 50s shared');
+    // and the totals still add up to the two calls
+    expect(text(q('[aria-label="Tool time by activity"]'))).toContain(
+      'summed tool time · 2m 15s',
+    );
+  });
+
+  it('marks a call sent to the background and says what the time means (spec scenario)', () => {
+    const up = shell('docker compose up -d', 0, 72 * SEC);
+    up.attributes['runray.toolFlags'] = ['background'];
+    const run = mkRun([up, shell('docker ps', 2 * MIN, SEC)], 5 * MIN);
+    mount(<TimeView run={run} />);
+    const marker = q('span[title^="Sent to the background"]', rowOf('docker'));
+    expect(text(marker)).toBe('bg');
+    expect(marker.getAttribute('title')).toBe(
+      'Sent to the background: the time shown is the launch, not the run.',
+    );
+    act(() =>
+      q<HTMLButtonElement>('button[aria-expanded]', rowOf('docker')).click(),
+    );
+    // the marker sits on the subcommand that was sent there, not on its sibling
+    expect(rowOf('compose up').querySelector('[title^="Sent to"]')).not.toBe(
+      null,
+    );
+    expect(rowOf('ps').querySelector('[title^="Sent to"]')).toBe(null);
+  });
+
+  it('shows a figure the source cannot provide as unavailable, never as zero', () => {
+    const run = mkRun([shell('pnpm dev', 0, null)], MIN);
+    mount(<TimeView run={run} />);
+    // calls, total, share, p50, p95, max, errors
+    expect(cells(rowOf('pnpm')).slice(1)).toEqual([
+      '1',
+      '—',
+      '0%',
+      '—',
+      '—',
+      '—',
+      '0',
+    ]);
+    expect(text(rowOf('pnpm'))).toContain('running');
+  });
+
+  it('marks timeouts and interruptions on the row', () => {
+    const slow = shell('cargo build', 0, 2 * MIN);
+    slow.attributes['runray.toolFlags'] = ['timeout', 'interrupted'];
+    slow.status = 'error';
+    mount(<TimeView run={mkRun([slow], 5 * MIN)} />);
+    expect(text(rowOf('cargo'))).toContain('timed out');
+    expect(text(rowOf('cargo'))).toContain('interrupted');
+    expect(cells(rowOf('cargo')).at(-1)).toBe('1');
+  });
+});
+
+describe('utilities, delegations and hooks in the tool table', () => {
+  const table = () => q('[aria-label="Tools"]');
+  const rowOf = (label: string, scope: Element = table()): HTMLElement => {
+    const found = all('tbody tr', scope).find((tr) =>
+      text(tr.children[0] as Element).startsWith(label),
+    );
+    if (found === undefined) throw new Error(`no row ${label}`);
+    return found;
+  };
+
+  it('folds shell utilities into one group row (spec scenario)', () => {
+    const calls = sequence((at) => [
+      ...Array.from({ length: 17 }, () =>
+        shell('grep -rn x src', at(SEC), SEC),
+      ),
+      ...Array.from({ length: 9 }, () =>
+        shell('sed -n 1,5p a.txt', at(SEC), SEC),
+      ),
+      ...Array.from({ length: 7 }, () => shell('cat a.txt', at(SEC), SEC)),
+      ...Array.from({ length: 5 }, () => shell('ls -la', at(SEC), SEC)),
+      shell('vitest run', at(20 * SEC), 20 * SEC),
+    ]);
+    mount(<TimeView run={mkRun(calls, 5 * MIN)} />);
+    const rows = all('tbody tr', table());
+    expect(rows).toHaveLength(2);
+    const group = cells(rowOf('shell utilities'));
+    expect(group[0]).toBe('shell utilitiesshell4 tools');
+    // thirty-eight calls and their combined time
+    expect(group[1]).toBe('38');
+    expect(group[2]).toBe('38s');
+    // percentiles across different tools are not a figure anyone computed
+    expect(group[4]).toBe('—');
+    expect(group[5]).toBe('—');
+    expect(group[6]).toBe('1.0s');
+
+    act(() =>
+      q<HTMLButtonElement>(
+        'button[aria-expanded]',
+        rowOf('shell utilities'),
+      ).click(),
+    );
+    // the group leads on total time, its four tools follow, then vitest
+    expect(
+      all('tbody tr', table())
+        .slice(1, 5)
+        .map((tr) => cells(tr).slice(0, 3)),
+    ).toEqual([
+      ['grep', '17', '17s'],
+      ['sed', '9', '9.0s'],
+      ['cat', '7', '7.0s'],
+      ['ls', '5', '5.0s'],
+    ]);
+  });
+
+  it('keeps a single utility as a row of its own', () => {
+    mount(<TimeView run={mkRun([shell('grep -rn x src', 0, SEC)], MIN)} />);
+    expect(text(table())).not.toContain('shell utilities');
+    expect(cells(rowOf('grep'))[0]).toBe('grepshell');
+  });
+
+  it('lists a delegation apart, with its own tool calls among the ranked rows (spec scenario)', () => {
+    const agent = span({ name: 'Agent', start: 0, ms: 3 * MIN });
+    const subagent = span({
+      kind: 'subagent',
+      name: 'subagent:Explore',
+      parentId: agent.id,
+      agent: { name: 'Explore' },
+      start: 0,
+      ms: 3 * MIN,
+    });
+    const run = mkRun(
+      [
+        agent,
+        subagent,
+        span({ name: 'Grep', parentId: subagent.id, start: SEC, ms: MIN }),
+        span({ name: 'Read', parentId: subagent.id, start: 90 * SEC, ms: MIN }),
+        span({ name: 'AskUserQuestion', start: 4 * MIN, ms: 10 * MIN }),
+        span({
+          kind: 'hook',
+          name: 'PostToolUse:Edit',
+          start: 15 * MIN,
+          ms: 350,
+        }),
+      ],
+      16 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    const apart = q('[data-testid="tools-apart"]', table());
+    expect(text(apart)).toContain('Not part of summed tool time.');
+    expect(cells(rowOf('Explore', apart)).slice(0, 3)).toEqual([
+      'Exploreagent',
+      '1',
+      '3m 0s',
+    ]);
+    expect(cells(rowOf('AskUserQuestion', apart)).slice(0, 3)).toEqual([
+      'AskUserQuestionwaits on you',
+      '1',
+      '10m 0s',
+    ]);
+    expect(cells(rowOf('PostToolUse:Edit', apart)).slice(0, 3)).toEqual([
+      'PostToolUse:Edithook',
+      '1',
+      '350ms',
+    ]);
+    // the agent's own calls are ranked, and they are all the sum holds
+    const ranked = q('tbody', table());
+    expect(all('tr', ranked)).toHaveLength(2);
+    expect(text(ranked)).toContain('Grep');
+    expect(text(ranked)).toContain('Read');
+    expect(text(ranked)).not.toContain('Explore');
+    expect(text(q('[aria-label="Tool time by activity"]'))).toContain(
+      'summed tool time · 2m 0s',
+    );
+  });
+
+  it('hides the group under a family filter, where it would not belong', () => {
+    const agent = span({ name: 'Agent', start: 0, ms: MIN });
+    const subagent = span({
+      kind: 'subagent',
+      name: 'subagent:Explore',
+      parentId: agent.id,
+      start: 0,
+      ms: MIN,
+    });
+    const run = mkRun(
+      [
+        agent,
+        subagent,
+        span({ name: 'Read', parentId: subagent.id, start: SEC, ms: SEC }),
+        shell('docker ps', 2 * MIN, SEC),
+      ],
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(table().querySelector('[data-testid="tools-apart"]')).not.toBe(null);
+    const shellFilter = all(
+      '[aria-label="Filter tools by family"] button',
+    ).find((b) => text(b).startsWith('shell'));
+    act(() => shellFilter?.click());
+    expect(table().querySelector('[data-testid="tools-apart"]')).toBe(null);
+  });
+
+  it('pages a long list of sub-rows', () => {
+    const calls = sequence((at) =>
+      Array.from({ length: 12 }, (_, i) =>
+        shell(
+          `node scripts/step-${String(i).padStart(2, '0')}.mjs`,
+          at(SEC),
+          SEC,
+        ),
+      ),
+    );
+    mount(<TimeView run={mkRun(calls, 5 * MIN)} />);
+    act(() =>
+      q<HTMLButtonElement>('button[aria-expanded]', rowOf('node')).click(),
+    );
+    // the row, eight sub-rows, one "show more" line
+    expect(all('tbody tr', table())).toHaveLength(10);
+    const more = all('button', table()).find((b) =>
+      text(b).startsWith('Show 4 more'),
+    );
+    act(() => more?.click());
+    expect(all('tbody tr', table())).toHaveLength(13);
+  });
+});
+
+describe('tableRows', () => {
+  const rows = () =>
+    runToolUsage(
+      mkRun(
+        sequence((at) => [
+          shell('grep x', at(3 * SEC), 3 * SEC),
+          shell('ls', at(SEC), SEC),
+          shell('docker ps', at(2 * SEC), 2 * SEC),
+          span({ name: 'Read', start: at(SEC), ms: SEC }),
+        ]),
+        MIN,
+      ),
+    );
+
+  it('folds utilities, keeps the rest, and sorts by the chosen figure', () => {
+    const usage = rows();
+    const shown = tableRows(usage.rows, usage.summedMs, {
+      family: 'all',
+      sort: 'total',
+    });
+    expect(shown.map((r) => [r.id, r.stats.totalMs])).toEqual([
+      [UTILITIES_ROW, 4 * SEC],
+      ['shell/registry/docker', 2 * SEC],
+      ['harness/name/Read', SEC],
+    ]);
+    const group = shown[0];
+    expect(group).toMatchObject({ group: 'utilities', percentiles: false });
+    expect(group?.children.map((c) => c.label)).toEqual(['grep', 'ls']);
+    expect(group?.share).toBeCloseTo(4 / 7);
+  });
+
+  it('counts tools per family in a fixed order', () => {
+    expect(familyCounts(rows().rows)).toEqual([
+      { family: 'shell', count: 3 },
+      { family: 'harness', count: 1 },
+    ]);
+  });
+
+  it('does not fold when the family filter leaves one utility', () => {
+    const usage = runToolUsage(
+      mkRun([shell('grep x', 0, SEC), shell('docker ps', 2 * SEC, SEC)], MIN),
+    );
+    const shown = tableRows(usage.rows, usage.summedMs, {
+      family: 'shell',
+      sort: 'calls',
+    });
+    expect(shown.map((r) => r.label)).toEqual(['docker', 'grep']);
   });
 });

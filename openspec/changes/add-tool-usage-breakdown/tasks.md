@@ -121,7 +121,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       filters the table. Verify: component tests for the four scenarios of
       "Tool time by activity"; the palette's separation check on the ink and
       paper surfaces recorded in the PR; `theme-tokens.test.ts` green.
-- [ ] 4.4 B [UI → /frontend-design] Tool table from `usage`: family tag,
+- [x] 4.4 B [UI → /frontend-design] Tool table from `usage`: family tag,
       columns, share bar, sort by total, p95 or calls, expandable sub-rows,
       family filter, the utilities group, the delegations-and-hooks group, the
       shared, background and partial markers. Verify: component tests for

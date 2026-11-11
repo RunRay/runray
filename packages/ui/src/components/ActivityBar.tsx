@@ -68,7 +68,12 @@ export function ActivityBar({
         ))}
       </div>
 
-      <ul className="mt-3 gap-x-6 sm:columns-2" data-testid="activity-legend">
+      {/* column-width, not a breakpoint: the card is narrow whenever the
+          inspector is open, whatever the window measures */}
+      <ul
+        className="mt-3 max-w-[760px] columns-[17rem] gap-x-6"
+        data-testid="activity-legend"
+      >
         {parts.map((part) => (
           <li key={part.id} className="break-inside-avoid">
             <button

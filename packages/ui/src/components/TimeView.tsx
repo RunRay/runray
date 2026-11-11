@@ -1,3 +1,4 @@
+import { toolUsage } from '@runray/core/tools';
 import type { Run } from '@runray/schema';
 import { useMemo, useState } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
@@ -6,12 +7,12 @@ import {
   TIME_CATEGORIES,
   type TimeCategory,
   timeBreakdown,
-  toolDurationStats,
 } from '../lib/time-breakdown';
 import { activityParts, runToolUsage } from '../lib/tool-usage';
 import { useAppStore } from '../store';
 import { ActivityBar } from './ActivityBar';
 import { ContextualHint } from './ContextualHint';
+import { ToolTable } from './ToolTable';
 
 /**
  * The Time tab (E2): where the wall-clock went — model wait, tool
@@ -56,7 +57,6 @@ export function TimeView({
   const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
   const manifest = propManifest ?? storeManifest;
   const breakdown = useMemo(() => timeBreakdown(run), [run]);
-  const tools = useMemo(() => toolDurationStats(run).slice(0, 8), [run]);
   const usage = useMemo(() => runToolUsage(run), [run]);
   const parts = useMemo(() => activityParts(usage), [usage]);
   // the selection belongs to one run: another run starts unfiltered
@@ -67,6 +67,15 @@ export function TimeView({
     selection?.run === run && parts.some((p) => p.id === selection.part)
       ? selection.part
       : null;
+  const current = parts.find((p) => p.id === selectedPart);
+  // a selected part narrows the rows; shares keep the run-wide denominator
+  const shownRows = useMemo(
+    () =>
+      current === undefined
+        ? usage.rows
+        : toolUsage(run.spans, { activities: current.activities }).rows,
+    [run, usage, current],
+  );
   const idleFindings = useMemo(
     () => run.insights.filter((i) => i.ruleId === 'idle-cache-expiry'),
     [run.insights],
@@ -189,45 +198,15 @@ export function TimeView({
         />
       )}
 
-      {tools.length > 0 && (
-        <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
-          <p className="micro-label text-text-faint">slowest tools · p95</p>
-          <table className="mt-1 w-full border-collapse text-label">
-            <thead>
-              <tr className="micro-label text-text-faint">
-                <th className="pb-1 text-left font-normal">tool</th>
-                <th className="pb-1 text-right font-normal">calls</th>
-                <th className="pb-1 text-right font-normal">p50</th>
-                <th className="pb-1 text-right font-normal">p95</th>
-                <th className="pb-1 text-right font-normal">max</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tools.map((tool) => (
-                <tr key={tool.name} className="border-t border-border-slate">
-                  <td className="max-w-[240px] truncate py-1 pr-3 font-mono text-text">
-                    {tool.name}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-dim">
-                    {tool.calls}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-dim">
-                    {formatDuration(tool.p50Ms)}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text">
-                    {formatDuration(tool.p95Ms)}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-faint">
-                    {formatDuration(tool.maxMs)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+      {(shownRows.length > 0 || usage.calls > 0) && (
+        <ToolTable
+          usage={usage}
+          rows={shownRows}
+          {...(current === undefined ? {} : { activityLabel: current.label })}
+        />
       )}
 
-      {tools.length === 0 &&
+      {usage.calls === 0 &&
         (manifest?.profile === 'metadata-only' || manifest?.spansPruned) && (
           <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
             <p className="text-label text-text-faint">
