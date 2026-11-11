@@ -12,13 +12,13 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 
 ## 1. Decomposition and registry (nothing calls it; goldens byte-identical)
 
-- [ ] 1.1 A Shell scanner in `packages/core/src/tools/shell.ts` (T4): pipelines
+- [x] 1.1 A Shell scanner in `packages/core/src/tools/shell.ts` (T4): pipelines
       and stages, quotes, escapes, command substitution, heredoc bodies,
       comments, the PowerShell dialect, the 8,192-character cap. Verify:
       table-driven tests covering every scenario of "Shell command
       decomposition" and "Decomposition is total and bounded", plus a
       property test over random and adversarial strings that asserts no throw.
-- [ ] 1.2 A Program resolution within a stage: skip assignments, wrappers and
+- [x] 1.2 A Program resolution within a stage: skip assignments, wrappers and
       control keywords; normalise to a lowercase basename without Windows
       executable extensions; report unresolved when the last path segment
       holds an expansion. Verify: table-driven tests for the five scenarios of
