@@ -177,7 +177,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       golden changes; the only other differences are container and run
       bounds that now cover a hook, and `counts.maxDepth` one higher where a
       hook hangs off the deepest call (design T9).
-- [ ] 5.5 A Document hook spans in `docs/02-DATA-MODEL.md`: which records
+- [x] 5.5 A Document hook spans in `docs/02-DATA-MODEL.md`: which records
       become spans, which hook runs leave no record, why durations are
       partial. Verify: the section names the three record shapes from D5.
 

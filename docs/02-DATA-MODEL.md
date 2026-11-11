@@ -49,9 +49,9 @@ TraceFile
 | `id` | string | Unique within Run. |
 | `parentId` | string \| null | null = root. Subagent spans parent under the delegating `tool_call` (mirrors Claude Code's native OTel nesting). |
 | `kind` | enum | see tree above. |
-| `name` | string | e.g. `"Bash"`, `"claude-sonnet-4-6"`, `"subagent:code-reviewer"`. |
+| `name` | string | e.g. `"Bash"`, `"claude-sonnet-4-6"`, `"subagent:code-reviewer"`, `"PostToolUse:Edit"`. |
 | `status` | enum | `ok` \| `error` \| `cancelled` \| `in_progress` \| `unknown` |
-| `statusReason?` | string | Short machine-ish reason (exit code, stop reason). |
+| `statusReason?` | string | Short machine-ish reason (exit code, stop reason): `user-rejected` on a declined call, `exit 1` on a failed hook, `timeout` on a hook cancelled by its timeout. |
 | `startedAt` / `endedAt?` / `durationMs?` | | `endedAt` may be absent for in-progress spans (watch mode). |
 | `depth` | int | Delegation depth (root session = 0). Derived. |
 | `llm?` | object | Only for `llm_call`: `provider`, `model`, `tokens {input, output, cacheRead, cacheWrite, reasoning?}`, `costUSD?`, `costSource: reported\|computed\|unknown`, `stopReason?`. |
@@ -75,15 +75,15 @@ TraceFile
 | `runray.targetKind` | `file-read` \| `file-write` \| `command` | same | closed |
 | `runray.target` | basename or first command token, at most 80 chars | same | free-form |
 | `runray.mcpDetection` | `name-heuristic` | OpenCode MCP calls classified by name | closed |
-| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`) | closed |
-| `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell spans whose command resolved | closed |
+| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`), and every Claude Code hook span whose record names a command | closed |
+| `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell and hook spans whose command resolved | closed |
 | `runray.toolSub` | a subcommand from that tool's table (`compose up`, `diff`), or `run` / `script` / `inline` | when present | closed |
 | `runray.toolVia` | the runner the tool was launched through (`npx`, `pnpm exec`, `bash -c`) | when a runner was unwrapped | closed |
 | `runray.toolsAlso` | up to 8 other registry ids the command ran, in order of appearance | when non-empty | closed |
 | `runray.toolFlags` | a subset of `background`, `timeout`, `interrupted`, in that order | Claude Code shell spans, when non-empty | closed |
-| `runray.hookCount` | number of hooks a stop-hook summary reports | reserved for hook spans; not emitted yet | closed |
-| `runray.toolName` | a program name outside the registry | shell spans | free-form |
-| `runray.toolScript` | a script, task or script-file name (`db:reset`, `deploy.sh`) | shell spans | free-form |
+| `runray.hookCount` | number of hook runs a stop-hook summary stands for | Claude Code `Stop` hook spans built from a summary | closed |
+| `runray.toolName` | a program name outside the registry | shell and hook spans | free-form |
+| `runray.toolScript` | a script, task or script-file name (`db:reset`, `deploy.sh`) | shell and hook spans | free-form |
 | `runray.skill` | name of the invoked skill | skill tool spans | free-form |
 
 Rules that hold for the tool-usage keys (`runray.tool*`, `runray.skill`):
@@ -96,6 +96,39 @@ Rules that hold for the tool-usage keys (`runray.tool*`, `runray.skill`):
 - `runray.targetKey` still hashes the first token of a command, so `cd apps && pnpm test` and `cd apps && git status` share a key. The primary tool is in `runray.tool`.
 
 The registry, its labels and the vocabularies are exported as `@runray/core/tools`.
+
+### Hook spans
+
+A `hook` span is one hook run, or one report about several. Where it comes from decides how complete it is.
+
+**Claude Code transcripts** record a hook in three shapes, and each becomes a span:
+
+| Record | Span | Time |
+|---|---|---|
+| `attachment` of type `hook_non_blocking_error` | status `error`, `statusReason: "exit <code>"` | the record's `durationMs` |
+| `attachment` of type `hook_cancelled` | status `cancelled`, `statusReason: "timeout"` when the record says it timed out | the record's `durationMs` |
+| `system` of subtype `stop_hook_summary` | named `Stop`, status `ok` (or `error` when the record lists hook errors), `runray.hookCount` | none: zero duration at the record's timestamp |
+
+What the transcript does not record:
+
+- A hook that succeeds leaves no record. This covers every `PreToolUse` and `PostToolUse` hook that ran clean, which is most hook runs in a healthy setup.
+- One exception is deliberately not a span: an `attachment` of type `hook_additional_context`, written when a successful hook hands text back to the model. It has no duration, and only the successful runs that returned text leave one, so counting it would put an arbitrary sample of successes next to the complete set of failures.
+- A stop-hook summary names the hooks that ran at the end of a turn and gives no duration for any of them.
+
+So hook durations are partial by construction: they cover failed and cancelled runs only. A hook that always succeeds is invisible, and the time hooks took in total is not derivable from a transcript. The Time view states this above the hook rows.
+
+How a hook span is built:
+
+- **Name.** The record's hook event and matcher (`PostToolUse:Edit`, `SessionStart:startup`, `UserPromptSubmit`). The name survives redaction like a tool span's, so it is taken from the record only when it is shaped like a name; otherwise the span is named by the bare event, and past that `hook`.
+- **Time.** The record is written when the hook ends. The span ends at the record's timestamp and starts `durationMs` earlier. A container span starts no later than a hook it holds, so a session whose first record is a failed start-up hook opens where that hook began.
+- **Parent.** The tool call the record names, when that call is in the same transcript; otherwise the transcript's container (the session, or the subagent whose transcript it is). In 150 sessions from one machine every tool hook lay inside its tool span, which is why hook time is not added to summed tool time.
+- **Command.** Classified like a shell command and then dropped: the span carries `runray.tool`, `runray.toolSub` and the other tool-usage keys, never the command or its paths. A summary of several commands names a tool only when every one of them ran the same one.
+- **No `tool` object.** That object is for `tool_call` and `mcp_call`. A hook's exit code is in `statusReason`.
+- **Id.** The record's `uuid`, so a transcript re-appended after a bridge yields each hook span once.
+
+Hook spans do not count toward `counts.toolCalls` or `counts.toolErrors`, are not triaged as errors and change no finding. They do count as spans: `counts.maxDepth` is one higher where a hook hangs off the deepest call, and a run starts and ends with its first and last hook.
+
+**OTLP imports** carry `claude_code.hook` spans as their exporter wrote them, with their own timings. The **OpenCode** adapter emits no hook spans.
 
 ### RunTotals (derived)
 ```jsonc
@@ -131,6 +164,7 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 | Run | `<session>.jsonl` + sibling `<session-uuid>/subagents/**/agent-*.jsonl` transcripts (CC ≥ 2.1) | `session/…/ses_*.json` or `session` table row | spans sharing `session.id` |
 | Turn / LLM call | assistant message + `usage` | assistant `message` (+`parts`) with token fields incl. `reasoning` | `llm_request` span |
 | Tool call | `tool_use` content block + paired `tool_result` | `part` of tool type with state | `claude_code.tool` span |
+| Hook | `attachment` records `hook_non_blocking_error` and `hook_cancelled`, `system` record `stop_hook_summary`; a successful hook leaves none (see "Hook spans") | no hook spans | `claude_code.hook` span |
 | Subagent | CC ≥ 2.1: `Agent` tool_use (`input: {subagent_type, description, prompt}`); child transcript is a **separate** `agent-<agentId>.jsonl` under `<session-uuid>/subagents/` (workflow agents under `subagents/workflows/wf_*/`). Joins, in precedence order (CC ≥ 2.2): (1) `toolUseResult.agentId` on ANY tool's result — sync `Agent` calls and forked skills (`Skill` result with `status:'forked'`, name from `commandName`); (2) the `agent-<agentId>.meta.json` sidecar (`{agentType, name?, description?, toolUseId?, parentAgentId?, spawnDepth}`) — background agents leave no agentId on any result, `toolUseId` names the spawning tool_use, `parentAgentId` the enclosing agent for nested spawns. Mapping: `subagent_type`/`commandName`/sidecar `name`→`agentType` → `agent.name`, `description` → `content.delegationReason`. Legacy: inline records with `isSidechain: true` in the MAIN transcript linked to a `Task` tool_use (agent transcripts carry `isSidechain: true` routinely in CC ≥ 2.2 — NOT a legacy marker) | child session with `parentID` | spans nested under parent's tool span |
 | Provenance | file + line offset | file path or `(db, table, rowid)` | span id |
 

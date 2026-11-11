@@ -9,5 +9,6 @@ The Time tab now shows which programs a session ran, not only which harness tool
 - The wall-clock strip has a fifth segment, "waiting on you", for questions and plan approvals that sat unanswered.
 - When one command ran several tools, its time counts for one of them and is marked as shared on the others.
 - Agent delegations are listed apart, with the time their subagent actually ran.
+- Hooks from Claude Code sessions are listed apart too: each hook that failed or was cancelled, how long it ran and which tool its command started. A hook that succeeds leaves no record in the transcript, so only failed and cancelled runs are shown, and the view says so.
 
 With `--redact` and in sanitized exports the tool ids stay, so a shared report keeps its rows. Names outside the fixed list, such as your own scripts, are removed and appear as one "other command" row. A redacted report therefore now shows which well-known tools a session used.
