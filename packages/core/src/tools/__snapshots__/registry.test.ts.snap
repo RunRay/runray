@@ -995,7 +995,6 @@ exports[`registry invariants > keeps the runner vocabulary stable 1`] = `
   "xcrun",
   "yarn dlx",
   "yarn exec",
-  "yarn node",
   "zsh -c",
 ]
 `;

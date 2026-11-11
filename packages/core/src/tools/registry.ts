@@ -150,6 +150,7 @@ function simple(
   }));
 }
 
+const POSIX_SHELL_OPTIONS = ['-o', '+o', '-O', '+O', '--rcfile', '--init-file'];
 const POSIX_SHELL: ShellSpec = {
   dialect: 'posix',
   flags: ['-c'],
@@ -316,7 +317,7 @@ const RICH: ToolDef[] = [
     scripts: true,
     valueOptions: PM_VALUE_OPTIONS,
     scriptNext: ['run'],
-    runnerSubs: ['exec', 'dlx', 'node'],
+    runnerSubs: ['exec', 'dlx'],
     skipAfter: { workspace: 1 },
     subs: subs({
       same: `install add remove up upgrade upgrade-interactive audit outdated
@@ -1354,16 +1355,66 @@ const RICH: ToolDef[] = [
       ],
     },
   },
-  { id: 'bash', label: 'bash', activity: 'run', shell: POSIX_SHELL },
-  { id: 'sh', label: 'sh', activity: 'run', shell: POSIX_SHELL },
-  { id: 'zsh', label: 'zsh', activity: 'run', shell: POSIX_SHELL },
-  { id: 'dash', label: 'dash', activity: 'run', shell: POSIX_SHELL },
-  { id: 'ksh', label: 'ksh', activity: 'run', shell: POSIX_SHELL },
-  { id: 'fish', label: 'fish', activity: 'run', shell: POSIX_SHELL },
+  {
+    id: 'bash',
+    label: 'bash',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
+  {
+    id: 'sh',
+    label: 'sh',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
+  {
+    id: 'zsh',
+    label: 'zsh',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
+  {
+    id: 'dash',
+    label: 'dash',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
+  {
+    id: 'ksh',
+    label: 'ksh',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
+  {
+    id: 'fish',
+    label: 'fish',
+    activity: 'run',
+    shell: POSIX_SHELL,
+    valueOptions: POSIX_SHELL_OPTIONS,
+  },
   {
     id: 'powershell',
     label: 'powershell',
     activity: 'run',
+    // compared case-insensitively: PowerShell options are
+    valueOptions: [
+      '-executionpolicy',
+      '-ep',
+      '-windowstyle',
+      '-w',
+      '-inputformat',
+      '-outputformat',
+      '-configurationname',
+      '-workingdirectory',
+      '-wd',
+      '-version',
+      '-psconsolefile',
+    ],
     shell: { dialect: 'powershell', flags: ['-command', '-c'] },
   },
   {
@@ -1746,16 +1797,19 @@ const SCRIPT_PATTERNS: ReadonlyArray<readonly [RegExp, Activity]> = [
 /**
  * Activity of a user-defined script or task name (`test:e2e`, `db:reset`,
  * `assembleDebug`). Colon-separated segments are read left to right and the
- * first one that matches a pattern decides; the default is `run`.
+ * first one that matches a pattern decides; otherwise `fallback`.
  */
-export function scriptActivity(name: string): Activity {
+export function scriptActivity(
+  name: string,
+  fallback: Activity = 'run',
+): Activity {
   for (const segment of name.toLowerCase().split(':')) {
     if (segment === '') continue;
     for (const [pattern, activity] of SCRIPT_PATTERNS) {
       if (pattern.test(segment)) return activity;
     }
   }
-  return 'run';
+  return fallback;
 }
 
 /** How a harness tool takes part in a session. */

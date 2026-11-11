@@ -33,7 +33,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       JVM, .NET, Apple toolchains). Verify: an invariants test (unique ids and
       aliases, non-empty labels, activities inside the enum) and a snapshot
       test of the id list.
-- [ ] 1.4 A Classification in `tools/classify.ts`: runner unwrapping with
+- [x] 1.4 A Classification in `tools/classify.ts`: runner unwrapping with
       nested shells to depth 2, subcommand lookup, package-manager scripts and
       script-name activity patterns, primary selection by rank, also-ran list
       capped at eight, the shape gate for free-form names (T3), and the
