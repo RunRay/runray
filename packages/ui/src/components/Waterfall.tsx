@@ -46,6 +46,9 @@ const ROW_PX = 32;
 const INDENT_PX = 16;
 /** A delegation rail's x within its depth step: under that depth's caret. */
 const RAIL_X = 13;
+/** The tree gutter within a depth step: bracket, rail and caret column. A
+ *  label never starts inside it, so the guides never cross its text. */
+const LABEL_GUTTER_PX = 26;
 /** Label flips to the left of the bar when it starts past this point. */
 const LABEL_FLIP_PCT = 55;
 /** How long the evidence rows stay lit after an insight lands the view. */
@@ -536,6 +539,13 @@ export function SpanRow({
 
   const label = (
     <>
+      {isError && (
+        // the error's shape signal, beside the red name: on the bar it
+        // overhung a thin bar and ran into the label
+        <span aria-hidden className="mr-1 text-[10px] text-span-error">
+          ✕
+        </span>
+      )}
       <span className={isError ? 'text-span-error' : 'text-text'}>
         {span.name}
       </span>
@@ -731,15 +741,10 @@ export function SpanRow({
             animation: `bar-in 150ms ${animationDelayMs}ms cubic-bezier(0,0,0.2,1) backwards`,
           }),
         }}
-      >
-        {isError && (
-          <span className="absolute -top-0.5 left-0.5 text-[10px] leading-none text-span-error">
-            ✕
-          </span>
-        )}
-      </span>
+      />
 
-      {/* label: name · duration · cost — flips sides near the right edge */}
+      {/* label: name · duration · cost — flips sides near the right edge,
+          and clears the tree gutter when the bar sits inside it */}
       <span
         aria-hidden
         className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-label"
@@ -747,7 +752,9 @@ export function SpanRow({
           labelOnLeft
             ? { right: `calc(${100 - leftPct}% + 6px)` }
             : {
-                left: `calc(${Math.min(leftPct + widthPct, 100)}% + 6px)`,
+                left: `max(calc(${Math.min(leftPct + widthPct, 100)}% + 6px), ${
+                  indent + LABEL_GUTTER_PX
+                }px)`,
               }
         }
       >
