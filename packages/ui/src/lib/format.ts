@@ -51,11 +51,14 @@ export function formatRelativeTime(iso: string, referenceIso: string): string {
 }
 
 export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${Math.round(ms)}ms`;
+  // every threshold sits where the smaller unit would round up to a full
+  // larger one, so no part ever reads "1000ms", "60s" or "1m 60s"
+  if (ms < 999.5) return `${Math.round(ms)}ms`;
   const s = ms / 1000;
-  if (s < 60) return `${s.toFixed(s < 10 ? 1 : 0)}s`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ${Math.round(s % 60)}s`;
+  if (s < 59.5) return `${s.toFixed(s < 9.95 ? 1 : 0)}s`;
+  const total = Math.round(s);
+  const m = Math.floor(total / 60);
+  if (m < 60) return `${m}m ${total % 60}s`;
   return `${Math.floor(m / 60)}h ${m % 60}m`;
 }
 
