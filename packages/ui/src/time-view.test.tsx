@@ -672,6 +672,27 @@ describe('tool table (visualizer "Tool usage table")', () => {
     expect(labels().length).toBeGreaterThan(8);
   });
 
+  it('lists no tool of another activity that only also ran (spec scenario)', () => {
+    // one command ran git and then the tests: a test call, led by vitest
+    const run = mkRun(
+      [
+        shell('git add -A && vitest run', 0, 60 * SEC),
+        shell('git status', 61 * SEC, 2 * SEC),
+      ],
+      2 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(labels()).toEqual(['vitestshell', 'gitshell']);
+
+    const entry = all('[data-testid="activity-legend"] button').find((b) =>
+      text(b).startsWith('Test'),
+    );
+    act(() => entry?.click());
+    expect(labels()).toEqual(['vitestshell']);
+    const filter = q('[aria-label="Filter tools by family"]', table());
+    expect(all('button', filter).map(text)).toEqual(['all 1']);
+  });
+
   it('narrows to every folded activity when the neutral part is selected', () => {
     mount(<TimeView run={tenActivities()} />);
     const entry = all('[data-testid="activity-legend"] button').find((b) =>

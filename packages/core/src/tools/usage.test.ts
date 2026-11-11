@@ -677,6 +677,34 @@ describe('toolUsage — options and totality', () => {
     }
   });
 
+  it('gives a tool that only also ran no row of its own when narrowed (spec scenario)', () => {
+    // `git add -A && pnpm build` is a build call led by pnpm; git also ran
+    const spans = mixedRun();
+    const all = toolUsage(spans);
+    expect(row(all, 'git')).toMatchObject({ alsoRanCalls: 1 });
+
+    const build = toolUsage(spans, { activities: ['build'] });
+    expect(build.rows.map((r) => r.key)).toEqual(['pnpm']);
+    expect(build.rows.every((r) => r.activity === 'build')).toBe(true);
+
+    // a tool with a call of its own in the selection keeps the shared time
+    const both = toolUsage(spans, { activities: ['build', 'vcs'] });
+    expect(row(both, 'git')).toMatchObject({
+      calls: 1,
+      alsoRanCalls: 1,
+      alsoRanMs: 60 * SEC,
+    });
+
+    // unnarrowed, a tool known only from another tool's command is listed
+    const only = toolUsage([shell('git add -A && pnpm build', 60 * SEC)]);
+    expect(row(only, 'git')).toMatchObject({ calls: 0, alsoRanMs: 60 * SEC });
+    expect(
+      toolUsage([shell('git add -A && pnpm build', 60 * SEC)], {
+        activities: ['build'],
+      }).rows.map((r) => r.key),
+    ).toEqual(['pnpm']);
+  });
+
   it('narrows the rows to several activities at once', () => {
     const spans = mixedRun();
     const all = toolUsage(spans);

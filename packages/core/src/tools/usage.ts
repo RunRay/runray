@@ -139,6 +139,9 @@ export interface ToolUsageOptions {
   /**
    * Narrow `rows` to calls of these activities. Every other figure stays
    * run-wide, so a share keeps its denominator while the table is filtered.
+   * A tool with no call of these activities gets no row, even when a command
+   * of one of them also ran it; a tool that has such a call keeps its
+   * also-ran time.
    */
   activities?: readonly Activity[];
 }
@@ -363,9 +366,14 @@ class RowSet {
     }
   }
 
-  finish(): ToolRow[] {
+  /**
+   * `ownCallsOnly` leaves out a tool that has no call of its own here and is
+   * known only because another tool's command also ran it.
+   */
+  finish(ownCallsOnly = false): ToolRow[] {
     const out: ToolRow[] = [];
     for (const row of this.rows.values()) {
+      if (ownCallsOnly && row.tally.calls === 0) continue;
       const subs: ToolSubRow[] = [];
       const named = [...row.subs.values()].some(
         (s) => s.sub !== undefined || s.detail !== undefined,
@@ -479,7 +487,9 @@ export function toolUsage(
   return {
     summedMs,
     calls,
-    rows: ranked.finish(),
+    // narrowed rows are the tools that did the selected kind of work: a tool
+    // of another activity that only also ran in such a command is not one
+    rows: ranked.finish(options.activities !== undefined),
     activities,
     agents: group(agents),
     hooks: group(hooks),
