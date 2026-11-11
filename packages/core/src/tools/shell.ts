@@ -58,10 +58,19 @@ function skipDouble(src: string, from: number, ps: boolean): number {
   return n;
 }
 
-/** Index just past the `)` matching the `(` at `open`; the input's end when
- * it never closes. Quotes inside are skipped as units. */
+/**
+ * Index just past the `)` matching the `(` at `open`; the input's end when
+ * it never closes. Quotes inside are skipped as units, and so is the body of
+ * a heredoc opened inside: `"$(cat <<'EOF' … EOF)"` is how a commit message
+ * is usually passed, and its text holds apostrophes and brackets that open
+ * and close nothing.
+ */
 function skipParens(src: string, open: number, ps: boolean): number {
   const n = src.length;
+  // `$((1 << 4))` is arithmetic: `<<` shifts, it opens no heredoc
+  const heredocsAllowed = !ps && src.charAt(open + 1) !== '(';
+  /** Heredocs opened on the current line; their bodies start at its end. */
+  let heredocs: string[] | undefined;
   let depth = 0;
   let i = open;
   while (i < n) {
@@ -79,10 +88,49 @@ function skipParens(src: string, open: number, ps: boolean): number {
       i = skipDouble(src, i + 1, ps) - 1;
     } else if (ps ? c === '`' : c === '\\') {
       i++;
+    } else if (heredocsAllowed && c === '<' && src.charAt(i + 1) === '<') {
+      if (src.charAt(i + 2) === '<') {
+        i += 2; // here-string
+      } else {
+        const [delimiter, after] = heredocDelimiter(src, i + 2);
+        if (delimiter !== '') {
+          heredocs ??= [];
+          heredocs.push(delimiter);
+        }
+        i = after - 1;
+      }
+    } else if (c === '\n' && heredocs !== undefined) {
+      i++;
+      for (const delimiter of heredocs) i = skipHeredoc(src, i, delimiter);
+      heredocs = undefined;
+      continue;
     }
     i++;
   }
   return n;
+}
+
+/**
+ * The delimiter a heredoc names and the index just past it, read from the
+ * character after `<<`. An empty delimiter means the text names none.
+ */
+function heredocDelimiter(
+  src: string,
+  from: number,
+): [delimiter: string, after: number] {
+  const n = src.length;
+  let j = from;
+  if (src.charAt(j) === '-') j++;
+  while (src.charAt(j) === ' ' || src.charAt(j) === '\t') j++;
+  const quote = src.charAt(j);
+  if (quote === "'" || quote === '"') {
+    const end = src.indexOf(quote, j + 1);
+    return [src.slice(j + 1, end === -1 ? n : end), end === -1 ? n : end + 1];
+  }
+  if (src.charAt(j) === '\\') j++;
+  const start = j;
+  while (j < n && /[A-Za-z0-9_.-]/.test(src.charAt(j))) j++;
+  return [src.slice(start, j), j];
 }
 
 /** Index of the line after the heredoc body that `delimiter` closes. */
@@ -327,24 +375,10 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
         i += 3;
         continue;
       }
-      let j = i + 2;
-      if (src.charAt(j) === '-') j++;
-      while (src.charAt(j) === ' ' || src.charAt(j) === '\t') j++;
-      let delimiter = '';
-      const quote = src.charAt(j);
-      if (quote === "'" || quote === '"') {
-        const end = src.indexOf(quote, j + 1);
-        delimiter = src.slice(j + 1, end === -1 ? n : end);
-        j = end === -1 ? n : end + 1;
-      } else {
-        if (src.charAt(j) === '\\') j++;
-        const start = j;
-        while (j < n && /[A-Za-z0-9_.-]/.test(src.charAt(j))) j++;
-        delimiter = src.slice(start, j);
-      }
+      const [delimiter, after] = heredocDelimiter(src, i + 2);
       if (delimiter !== '') heredocs.push(delimiter);
       endWord();
-      i = j;
+      i = after;
       continue;
     }
     if (c === ';') {

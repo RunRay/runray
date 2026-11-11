@@ -54,6 +54,41 @@ const SPLIT: SplitCase[] = [
     expected: [[['cat'], ['grep', 'x']], [['echo', 'done']]],
   },
   {
+    // the usual way to pass a commit message; its apostrophe closes nothing
+    name: 'heredoc inside a quoted command substitution',
+    command:
+      "git commit -m \"$(cat <<'EOF'\nfix: don't break the build\nEOF\n)\" && pnpm test",
+    expected: [
+      [
+        [
+          'git',
+          'commit',
+          '-m',
+          "$(cat <<'EOF'\nfix: don't break the build\nEOF\n)",
+        ],
+      ],
+      [['pnpm', 'test']],
+    ],
+  },
+  {
+    name: 'heredoc inside a bare substitution, body with a bracket and a quote',
+    command: 'echo $(cat <<EOF\nstep 1) it\'s "odd\nEOF\n) && docker ps',
+    expected: [
+      [['echo', '$(cat <<EOF\nstep 1) it\'s "odd\nEOF\n)']],
+      [['docker', 'ps']],
+    ],
+  },
+  {
+    name: 'heredoc in a substitution that never ends: the rest is one word',
+    command: 'echo "$(cat <<EOF\nno end && docker ps',
+    expected: [[['echo', '$(cat <<EOF\nno end && docker ps']]],
+  },
+  {
+    name: 'a shift inside arithmetic opens no heredoc',
+    command: 'echo $((1 << 4))\ndocker ps',
+    expected: [[['echo', '$((1 << 4))']], [['docker', 'ps']]],
+  },
+  {
     name: 'here-string is an ordinary redirection',
     command: 'grep foo <<< "docker ps" && ls',
     expected: [[['grep', 'foo', '<<<', 'docker ps']], [['ls']]],
