@@ -42,7 +42,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       "Package-manager scripts", "Activity taxonomy", "Primary tool selection"
       and "Privacy class of identity values", including the argument-leak
       scenario in both redaction modes.
-- [ ] 1.5 A Browser-safe export `@runray/core/tools` in core `package.json`,
+- [x] 1.5 A Browser-safe export `@runray/core/tools` in core `package.json`,
       registered in `browser-safe.test.ts` (T1), and a `scripts/bench.ts`
       entry that classifies a 1 MB command and a batch of typical commands.
       Verify: the import-graph purity test passes for the new entrypoint and

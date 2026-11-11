@@ -119,6 +119,19 @@ export {
   scrubIdentityRuns,
 } from './sanitize/index.js';
 export { stripBom } from './text.js';
+export {
+  ACTIVITIES,
+  type Activity,
+  type Classification,
+  classifyCommand,
+  harnessActivity,
+  RUNNER_IDS,
+  type ShellDialect,
+  TOOL_ATTR,
+  TOOL_IDS,
+  toolLabel,
+  toolUsageAttributes,
+} from './tools/index.js';
 export type {
   TranscriptOptions,
   TranscriptProvenance,
