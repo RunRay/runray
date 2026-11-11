@@ -72,13 +72,24 @@ function isOtherCommand(row: ToolRow): boolean {
   );
 }
 
-function childLabel(row: ToolRow, label: string): string {
-  if (label.length > 0) return label;
+function childLabel(row: ToolRow, sub: ToolRow['subs'][number]): string {
+  if (sub.label.length > 0) return sub.label;
+  if (row.family === 'hook') {
+    // a hook's sub-rows are the tools its commands ran: one without a name
+    // is either a turn's hooks reported together, or a hook whose program
+    // the trace does not name
+    return sub.untimed === sub.calls ? 'turn summaries' : 'no program named';
+  }
   return isOtherCommand(row) ? 'unnamed' : 'no subcommand';
 }
 
 function toRow(row: ToolRow, summedMs: number): TableRow {
-  const activities = new Set(row.subs.map((s) => s.activity));
+  // the kind of work tells sub-rows of one tool apart (`pnpm test` from
+  // `pnpm build`); a hook's sub-rows are already told apart by their tool
+  const activities =
+    row.family === 'hook'
+      ? new Set<string>()
+      : new Set(row.subs.map((s) => s.activity));
   return {
     id: row.id,
     label: row.label,
@@ -99,7 +110,7 @@ function toRow(row: ToolRow, summedMs: number): TableRow {
       : {}),
     children: row.subs.map((sub) => ({
       id: `${row.id}/${sub.id}`,
-      label: childLabel(row, sub.label),
+      label: childLabel(row, sub),
       ...(activities.size > 1 ? { note: ACTIVITY_LABELS[sub.activity] } : {}),
       stats: sub,
     })),
@@ -134,6 +145,8 @@ function utilitiesRow(
     calls: 0,
     errors: 0,
     open: 0,
+    untimed: 0,
+    hookRuns: 0,
     totalMs: 0,
     sharedMs: 0,
     p50Ms: 0,
@@ -146,6 +159,8 @@ function utilitiesRow(
     stats.calls += m.calls;
     stats.errors += m.errors;
     stats.open += m.open;
+    stats.untimed += m.untimed;
+    stats.hookRuns += m.hookRuns;
     stats.totalMs += m.totalMs;
     stats.sharedMs += m.sharedMs;
     stats.p95Ms = Math.max(stats.p95Ms, m.p95Ms);
@@ -219,4 +234,29 @@ export function tableRows(
 /** Rows kept out of summed tool time: shown as they are, never folded. */
 export function sideRows(rows: readonly ToolRow[]): TableRow[] {
   return rows.map((row) => toRow(row, 0));
+}
+
+/**
+ * What the hook rows cover, said above them (visualizer "Hook durations are
+ * partial"). A Claude Code transcript records a hook only when it fails or
+ * is cancelled, so its rows are a part of what ran; an imported trace
+ * carries the hook spans its exporter wrote.
+ */
+export function hookNote(source: string): string {
+  return source === 'claude-code'
+    ? "Failed and cancelled runs only: a hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it."
+    : 'A hook runs inside the call that triggered it.';
+}
+
+/**
+ * What a row's untimed calls are, said on the row: a turn's Stop hooks are
+ * reported together, as a count without a duration. `undefined` when every
+ * call of the row is timed.
+ */
+export function untimedNote(stats: UsageStats): string | undefined {
+  if (stats.untimed === 0) return undefined;
+  const runs = `${stats.hookRuns.toLocaleString('en-US')} hook ${stats.hookRuns === 1 ? 'run' : 'runs'}`;
+  if (stats.untimed === stats.calls) return `${runs}, time not recorded`;
+  const summaries = `${stats.untimed.toLocaleString('en-US')} turn ${stats.untimed === 1 ? 'summary' : 'summaries'}`;
+  return `incl. ${summaries} of ${runs}, time not recorded`;
 }

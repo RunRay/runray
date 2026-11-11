@@ -1,16 +1,18 @@
 import type { ToolRow, ToolUsage, UsageStats } from '@runray/core/tools';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { formatDuration } from '../lib/format';
 import {
   CHILD_PAGE,
   FAMILY_LABELS,
   type FamilyFilter,
   familyCounts,
+  hookNote,
   sideRows,
   type TableChild,
   type TableRow,
   type ToolSort,
   tableRows,
+  untimedNote,
 } from '../lib/tool-table';
 import { formatShare } from '../lib/tool-usage';
 
@@ -20,7 +22,9 @@ import { formatShare } from '../lib/tool-usage';
  * `vitest` are rows and `Bash` is not. Ranked by total time, re-sortable by
  * p95 and by calls, filterable by family; a row with subcommands expands to
  * them. What is kept out of summed tool time (delegations, hooks, questions
- * to the person) is listed apart, under a line that says so.
+ * to the person) is listed apart, each kind under a line that says what its
+ * rows are. For hooks from a Claude Code transcript that line is a limit:
+ * only failed and cancelled runs are recorded.
  */
 
 const SORTS: ReadonlyArray<{ id: ToolSort; label: string }> = [
@@ -80,6 +84,20 @@ function Flags({ stats }: { stats: UsageStats }) {
   );
 }
 
+/** Calls the source reports without a duration, said beside the label. */
+function Untimed({ stats }: { stats: UsageStats }) {
+  const note = untimedNote(stats);
+  if (note === undefined) return null;
+  return (
+    <span
+      className="ml-2 font-sans text-text-faint"
+      title="A turn's Stop hooks are reported together, as a count. The transcript records no duration for them."
+    >
+      {note}
+    </span>
+  );
+}
+
 /** The seven figure cells every row and sub-row shares. */
 function Figures({
   stats,
@@ -95,7 +113,9 @@ function Figures({
   alsoRanMs?: number;
   alsoRanCalls?: number;
 }) {
-  const timed = stats.calls > stats.open;
+  // a figure the source cannot provide is unavailable, never zero: a call
+  // without a result has no time yet, a stop-hook summary records none
+  const timed = stats.calls > stats.open + stats.untimed;
   const time = (ms: number) => (timed ? formatDuration(ms) : '—');
   const unavailable = (
     <span title="Not computed across different tools. Expand the group for each tool's own figures.">
@@ -176,6 +196,7 @@ function ChildRows({ row, tag }: { row: TableRow; tag: string }) {
               <span className="font-sans text-text-faint"> · {child.note}</span>
             )}
             <Flags stats={child.stats} />
+            <Untimed stats={child.stats} />
           </th>
           <Figures stats={child.stats} />
         </tr>
@@ -247,6 +268,7 @@ function Row({
             </span>
           )}
           <Flags stats={row.stats} />
+          <Untimed stats={row.stats} />
         </th>
         <Figures
           stats={row.stats}
@@ -291,15 +313,28 @@ export function ToolTable({
     [rows, usage.summedMs, activeFamily, sort],
   );
   const apart = useMemo(
-    () => [
-      ...sideRows(usage.agents.rows).map((row) => ({ row, tag: 'agent' })),
-      ...sideRows(usage.hooks.rows).map((row) => ({ row, tag: 'hook' })),
-      ...sideRows(usage.waiting.rows).map((row) => ({
-        row,
-        tag: 'waits on you',
-      })),
-    ],
-    [usage],
+    () =>
+      [
+        {
+          id: 'agents',
+          tag: 'agent',
+          note: "A delegation contains its agent's own calls, which are counted above.",
+          rows: sideRows(usage.agents.rows),
+        },
+        {
+          id: 'hooks',
+          tag: 'hook',
+          note: hookNote(source),
+          rows: sideRows(usage.hooks.rows),
+        },
+        {
+          id: 'waiting',
+          tag: 'waits on you',
+          note: 'A question or a plan that waited for your answer.',
+          rows: sideRows(usage.waiting.rows),
+        },
+      ].filter((group) => group.rows.length > 0),
+    [usage, source],
   );
   const showApart =
     apart.length > 0 && activeFamily === 'all' && activityLabel === undefined;
@@ -419,27 +454,34 @@ export function ToolTable({
           {showApart && (
             <tbody data-testid="tools-apart">
               <tr className="border-t border-border-slate">
-                <td
-                  colSpan={8}
-                  className="pt-4 pb-1 text-label text-text-faint"
-                >
-                  {/* the table can be wider than its scroll box: keep the
-                      sentence inside what is visible without scrolling */}
-                  <div className="max-w-[68ch]">
-                    Not part of summed tool time. A delegation contains its
-                    agent's own calls, which are counted above; a hook runs
-                    inside the call that triggered it; a question waits on you.
-                  </div>
+                <td colSpan={8} className="pt-4 text-label text-text-dim">
+                  Not part of summed tool time
                 </td>
               </tr>
-              {apart.map(({ row, tag }) => (
-                <Row
-                  key={row.id}
-                  row={row}
-                  tag={tag}
-                  expanded={expanded.has(row.id)}
-                  onToggle={() => toggle(row.id)}
-                />
+              {apart.map((group, index) => (
+                <Fragment key={group.id}>
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className={`${index === 0 ? 'pt-1.5' : 'pt-3.5'} pb-1.5 text-label text-text-faint`}
+                      data-testid={`tools-apart-${group.id}`}
+                    >
+                      {/* the table can be wider than its scroll box: keep
+                          the sentence inside what is visible without
+                          scrolling */}
+                      <div className="max-w-[68ch]">{group.note}</div>
+                    </td>
+                  </tr>
+                  {group.rows.map((row) => (
+                    <Row
+                      key={row.id}
+                      row={row}
+                      tag={group.tag}
+                      expanded={expanded.has(row.id)}
+                      onToggle={() => toggle(row.id)}
+                    />
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           )}

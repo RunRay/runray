@@ -167,7 +167,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       "Hook spans attach to their trigger and stay out of tool totals" and
       "Hook commands are classified, never stored", plus a re-appended
       transcript emitting each hook span once.
-- [ ] 5.3 B [UI → /frontend-design] Hook rows in the delegations-and-hooks
+- [x] 5.3 B [UI → /frontend-design] Hook rows in the delegations-and-hooks
       group, with the "failed and cancelled runs only" label and a count
       without a time for zero-duration `Stop` spans. Verify: a component test
       for "Hook durations are partial".

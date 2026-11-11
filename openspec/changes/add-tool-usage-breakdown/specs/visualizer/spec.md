@@ -134,6 +134,17 @@ source cannot provide SHALL be shown as unavailable, never as zero.
 - WHEN the hook rows render
 - THEN their time is labelled as covering failed and cancelled runs only
 
+#### Scenario: Source that records every hook run
+- GIVEN an imported run whose hook spans come from its exporter
+- WHEN the hook rows render
+- THEN they carry no claim that only failed and cancelled runs are listed
+
+#### Scenario: Stop hooks reported together
+- GIVEN a run with two stop-hook summaries of three hooks each
+- WHEN the hook rows render
+- THEN the `Stop` row shows two calls and six hook runs, and its time
+  figures are shown as unavailable, not as zero
+
 ### Requirement: Shell utilities are grouped
 The tool table SHALL present the shell tools the registry marks as utilities
 (`grep`, `sed`, `cat`, `ls` and the like) as one collapsed group row that
@@ -157,6 +168,13 @@ of summed tool time.
 - WHEN the tool table renders
 - THEN the agent appears in the separate group with its three minutes, and
   its tool calls appear among the ranked rows
+
+#### Scenario: A hook expands to the tools it ran
+- GIVEN a `PostToolUse:Edit` hook that failed twice running `prettier` and
+  once running a `node` script
+- WHEN the person expands its row
+- THEN one sub-row per tool is revealed, with the script's name only in an
+  unredacted trace
 
 ### Requirement: Tool usage degraded states
 The Time view SHALL render a truthful tool breakdown for payloads that carry

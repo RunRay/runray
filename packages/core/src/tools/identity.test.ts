@@ -484,6 +484,82 @@ describe('toolIdentity — other families', () => {
     );
   });
 
+  it('names the tool a hook command ran as its subcommand', () => {
+    const hook = (command: string, redact: boolean) =>
+      toolIdentity(
+        span({
+          kind: 'hook',
+          name: 'PostToolUse:Edit',
+          attributes: toolUsageAttributes(command, 'posix', redact),
+        }),
+      );
+    const local = hook('node /Users/alex/.claude/hooks/format.mjs', false);
+    expect(local).toMatchObject({
+      family: 'hook',
+      key: 'PostToolUse:Edit',
+      label: 'PostToolUse:Edit',
+      // a hook is not a registry tool, even when its command ran one
+      registry: false,
+      sub: 'node',
+      detail: 'format.mjs',
+      activity: 'run',
+    });
+    // the script's name is free-form text: a redacted trace keeps the tool
+    const redacted = hook('node /Users/alex/.claude/hooks/format.mjs', true);
+    expect(redacted).toMatchObject({ key: 'PostToolUse:Edit', sub: 'node' });
+    expect(redacted?.detail).toBeUndefined();
+    expect(redacted?.hookRuns).toBeUndefined();
+  });
+
+  it('keeps a hook whose program is outside the registry under the hook name', () => {
+    const hook = (redact: boolean) =>
+      toolIdentity(
+        span({
+          kind: 'hook',
+          name: 'UserPromptSubmit',
+          attributes: toolUsageAttributes(
+            'acme-remind --quiet',
+            'posix',
+            redact,
+          ),
+        }),
+      );
+    expect(hook(false)).toMatchObject({
+      key: 'UserPromptSubmit',
+      detail: 'acme-remind',
+    });
+    expect(hook(false)?.sub).toBeUndefined();
+    expect(hook(true)?.sub).toBeUndefined();
+    expect(hook(true)?.detail).toBeUndefined();
+  });
+
+  it('reads a stop-hook summary as several runs without one command', () => {
+    const summary = toolIdentity(
+      span({
+        kind: 'hook',
+        name: 'Stop',
+        attributes: {
+          [TOOL_ATTR.activity]: 'run',
+          [TOOL_ATTR.tool]: 'node',
+          [TOOL_ATTR.hookCount]: 3,
+        },
+      }),
+    );
+    expect(summary).toMatchObject({ family: 'hook', key: 'Stop', hookRuns: 3 });
+    // three hooks, not one command: there is no subcommand to split by
+    expect(summary?.sub).toBeUndefined();
+    expect(summary?.detail).toBeUndefined();
+    // a count outside the vocabulary is ignored, like any other value
+    const bogus = toolIdentity(
+      span({
+        kind: 'hook',
+        name: 'Stop',
+        attributes: { [TOOL_ATTR.hookCount]: 'three' },
+      }),
+    );
+    expect(bogus?.hookRuns).toBeUndefined();
+  });
+
   it('resolves only tool, MCP and hook spans', () => {
     for (const kind of ['session', 'turn', 'llm_call', 'subagent', 'other']) {
       const s = span({ kind: kind as Span['kind'], name: 'x' });

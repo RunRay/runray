@@ -64,7 +64,8 @@ export interface ToolIdentity {
   registry: boolean;
   /**
    * Closed vocabulary: a table subcommand (`compose up`), one of `run`,
-   * `script` and `inline`, or the tool name of an MCP call.
+   * `script` and `inline`, the tool name of an MCP call, or the registry id
+   * of the tool a hook's command ran.
    */
   sub?: string;
   /**
@@ -72,6 +73,11 @@ export interface ToolIdentity {
    * a program outside the registry. Absent under redaction.
    */
   detail?: string;
+  /**
+   * Set on a hook span that reports several hook runs together (a stop-hook
+   * summary): how many. The source records no duration for such a span.
+   */
+  hookRuns?: number;
   activity: Activity;
   /** Runner the tool was launched through (`pnpm exec`). */
   via?: string;
@@ -253,6 +259,30 @@ function shellIdentity(span: Span, base: Base, name: string): ToolIdentity {
 }
 
 /**
+ * A hook is keyed by its name (event and matcher). What its command ran is
+ * the subcommand, so two hooks on one event stay apart: `PostToolUse:Edit`
+ * can hold a `prettier` sub-row and a `node` one. A summary of several hook
+ * runs has no one command and no duration.
+ */
+function hookIdentity(span: Span, base: Base): ToolIdentity {
+  const activity = activityOf(span) ?? 'other';
+  const count = span.attributes[TOOL_ATTR.hookCount];
+  if (isValidToolAttribute(TOOL_ATTR.hookCount, count)) {
+    return identity(base, 'hook', span.name, activity, {
+      hookRuns: count as number,
+    });
+  }
+  const def = stampedTool(span);
+  const detail = text(
+    span.attributes[def === undefined ? TOOL_ATTR.name : TOOL_ATTR.script],
+  );
+  return identity(base, 'hook', span.name, activity, {
+    ...(def === undefined ? {} : { sub: def.id }),
+    ...(detail === undefined ? {} : { detail }),
+  });
+}
+
+/**
  * The identity of a tool, MCP or hook span; `undefined` for any other kind.
  * Pure: the same span and context always resolve to the same identity.
  * Without a context no call is recognised as a container.
@@ -265,12 +295,7 @@ export function toolIdentity(
   const flags = flagsOf(span);
 
   if (span.kind === 'hook') {
-    return identity(
-      { flags, container: false },
-      'hook',
-      span.name,
-      activityOf(span) ?? 'other',
-    );
+    return hookIdentity(span, { flags, container: false });
   }
 
   const name = harnessName(span);

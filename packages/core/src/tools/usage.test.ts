@@ -297,6 +297,107 @@ describe('toolUsage — spec scenarios of "Containers, hooks and waiting stay ou
     });
     expect(usage.rows.some((r) => r.family === 'hook')).toBe(false);
   });
+
+  const hook = (name: string, command: string, ms: number, redact = false) =>
+    span({
+      kind: 'hook',
+      name,
+      ms,
+      status: 'error',
+      attributes: toolUsageAttributes(command, 'posix', redact),
+    });
+  const summary = (hookCount: number) =>
+    span({
+      kind: 'hook',
+      name: 'Stop',
+      ms: 0,
+      attributes: { [TOOL_ATTR.hookCount]: hookCount },
+    });
+
+  it('splits a hook row by the tool its command ran', () => {
+    const spans = (redact: boolean) => [
+      hook('PostToolUse:Edit', 'npx prettier --write x.ts', 400, redact),
+      hook('PostToolUse:Edit', 'npx prettier --write y.ts', 600, redact),
+      hook('PostToolUse:Edit', 'node /h/format.mjs', 300, redact),
+      hook('PostToolUse:Edit', 'node /h/lint.mjs', 200, redact),
+    ];
+    const subs = (redact: boolean) =>
+      toolUsage(spans(redact)).hooks.rows[0]?.subs.map((s) => [
+        s.label,
+        s.calls,
+        s.totalMs,
+      ]);
+    expect(toolUsage(spans(false)).hooks.rows).toHaveLength(1);
+    expect(subs(false)).toEqual([
+      ['prettier', 2, 1000],
+      ['node format.mjs', 1, 300],
+      ['node lint.mjs', 1, 200],
+    ]);
+    // a redacted trace keeps one sub-row per tool
+    expect(subs(true)).toEqual([
+      ['prettier', 2, 1000],
+      ['node', 2, 500],
+    ]);
+    // a hook's tool never becomes a ranked row or an also-ran figure
+    expect(toolUsage(spans(false)).rows).toEqual([]);
+    expect(toolUsage(spans(false)).summedMs).toBe(0);
+  });
+
+  it('counts a stop-hook summary as a call without a duration (spec scenario)', () => {
+    const usage = toolUsage([summary(3), summary(3), summary(2)]);
+    expect(usage.hooks).toMatchObject({ calls: 3, totalMs: 0 });
+    expect(usage.hooks.rows[0]).toMatchObject({
+      key: 'Stop',
+      calls: 3,
+      untimed: 3,
+      hookRuns: 8,
+      // not open: the record is complete, it only carries no time
+      open: 0,
+      totalMs: 0,
+      p50Ms: 0,
+      maxMs: 0,
+      subs: [],
+    });
+  });
+
+  it('keeps a summary out of the percentiles of the timed runs beside it', () => {
+    const usage = toolUsage([
+      summary(3),
+      summary(3),
+      summary(3),
+      hook('Stop', 'node /h/stop.mjs', 800),
+      hook('Stop', 'node /h/stop.mjs', 1200),
+    ]);
+    const stop = usage.hooks.rows[0];
+    expect(stop).toMatchObject({
+      calls: 5,
+      untimed: 3,
+      hookRuns: 9,
+      errors: 2,
+      totalMs: 2000,
+      // over the two timed runs: three zeroes would have made this 0
+      p50Ms: 800,
+      maxMs: 1200,
+    });
+    expect(
+      stop?.subs.map((s) => [s.label, s.calls, s.untimed, s.totalMs]),
+    ).toEqual([
+      ['node stop.mjs', 2, 0, 2000],
+      ['', 3, 3, 0],
+    ]);
+  });
+
+  it('reports no untimed call outside hook summaries', () => {
+    const usage = toolUsage(mixedRun());
+    for (const row of [
+      ...usage.rows,
+      ...usage.agents.rows,
+      ...usage.hooks.rows,
+      ...usage.waiting.rows,
+    ]) {
+      expect([row.key, row.untimed, row.hookRuns]).toEqual([row.key, 0, 0]);
+    }
+  });
 });
 
 describe('toolUsage — delegations', () => {

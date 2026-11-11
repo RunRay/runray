@@ -13,6 +13,11 @@
  * subagent (their time is the subagent's own calls, counted once), calls
  * that wait on the person, and hook spans. It is a sum, not wall-clock:
  * parallel calls overlap.
+ *
+ * Hook rows are keyed by hook name, with one sub-row per tool the hook's
+ * command ran. A hook span that reports several runs together (a stop-hook
+ * summary) is a call without a duration: it is counted as `untimed`, never
+ * as zero milliseconds.
  */
 import type { Span } from '@runray/schema';
 import { TOOL_FLAGS, type ToolFlag } from './attributes.js';
@@ -33,6 +38,13 @@ export interface UsageStats {
   errors: number;
   /** Calls with no recorded end: counted, adding no time to any figure. */
   open: number;
+  /**
+   * Calls the source reports without a duration (stop-hook summaries):
+   * counted, adding no time to any figure.
+   */
+  untimed: number;
+  /** Hook runs the untimed calls stand for. */
+  hookRuns: number;
   /** Summed duration of the closed calls. */
   totalMs: number;
   /** The part of `totalMs` spent in commands that also ran other tools. */
@@ -48,7 +60,7 @@ export interface UsageStats {
 export interface ToolSubRow extends UsageStats {
   /** Unique within its row. */
   id: string;
-  /** Closed vocabulary: a subcommand or an MCP tool name. */
+  /** Closed vocabulary: a subcommand, an MCP tool name or a hook's tool. */
   sub?: string;
   /** Free-form: a script or program name. Absent under redaction. */
   detail?: string;
@@ -170,6 +182,8 @@ class Tally {
   calls = 0;
   errors = 0;
   open = 0;
+  untimed = 0;
+  hookRuns = 0;
   totalMs = 0;
   sharedMs = 0;
   readonly durations: number[] = [];
@@ -187,6 +201,13 @@ class Tally {
     if (span.status === 'error') this.errors++;
     for (const flag of id.flags) this.flags[flag]++;
     if (!this.byActivity.has(id.activity)) this.byActivity.set(id.activity, 0);
+    if (id.hookRuns !== undefined) {
+      // several hook runs reported as one record, with no duration: a zero
+      // here would read as "took no time" and drag every percentile down
+      this.untimed++;
+      this.hookRuns += id.hookRuns;
+      return;
+    }
     if (duration === undefined) {
       this.open++;
       return;
@@ -220,6 +241,8 @@ class Tally {
       calls: this.calls,
       errors: this.errors,
       open: this.open,
+      untimed: this.untimed,
+      hookRuns: this.hookRuns,
       totalMs: this.totalMs,
       sharedMs: this.sharedMs,
       p50Ms: nearestRank(sorted, 50),

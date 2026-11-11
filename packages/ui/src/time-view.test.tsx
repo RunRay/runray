@@ -861,7 +861,7 @@ describe('utilities, delegations and hooks in the tool table', () => {
     );
     mount(<TimeView run={run} />);
     const apart = q('[data-testid="tools-apart"]', table());
-    expect(text(apart)).toContain('Not part of summed tool time.');
+    expect(text(apart)).toContain('Not part of summed tool time');
     expect(cells(rowOf('Explore', apart)).slice(0, 3)).toEqual([
       'Exploreagent',
       '1',
@@ -936,6 +936,172 @@ describe('utilities, delegations and hooks in the tool table', () => {
     );
     act(() => more?.click());
     expect(all('tbody tr', table())).toHaveLength(13);
+  });
+});
+
+describe('hook rows (visualizer "Hook durations are partial")', () => {
+  const table = () => q('[aria-label="Tools"]');
+  const apart = () => q('[data-testid="tools-apart"]', table());
+  const rowOf = (label: string): HTMLElement => {
+    const found = all('tr', apart()).find((tr) =>
+      text(tr.children[0] as Element).startsWith(label),
+    );
+    if (found === undefined) throw new Error(`no row ${label}`);
+    return found;
+  };
+  /** A failed hook, stamped the way the adapter stamps its command. */
+  const hook = (name: string, command: string, start: number, ms: number) =>
+    span({
+      kind: 'hook',
+      name,
+      start,
+      ms,
+      status: 'error',
+      statusReason: 'exit 1',
+      attributes: toolUsageAttributes(command, 'posix', false),
+    });
+  /** A turn's Stop hooks, reported together: a count and no duration. */
+  const stop = (start: number, hookCount: number) =>
+    span({
+      kind: 'hook',
+      name: 'Stop',
+      start,
+      ms: 0,
+      attributes: { 'runray.hookCount': hookCount },
+    });
+  const session = (source = 'claude-code') =>
+    mkRun(
+      [
+        span({ name: 'Edit', start: 0, ms: 2 * SEC }),
+        hook('PostToolUse:Edit', 'npx prettier --write src/a.ts', SEC, 400),
+        hook('PostToolUse:Edit', 'npx prettier --write src/b.ts', 3 * SEC, 600),
+        hook(
+          'PostToolUse:Edit',
+          'node /Users/alex/hooks/lint.mjs',
+          5 * SEC,
+          300,
+        ),
+        stop(10 * SEC, 3),
+        stop(20 * SEC, 3),
+      ],
+      MIN,
+      source,
+    );
+
+  it('labels hook time as failed and cancelled runs only (spec scenario)', () => {
+    mount(<TimeView run={session()} />);
+    const note = text(q('[data-testid="tools-apart-hooks"]', apart()));
+    expect(note).toContain('Failed and cancelled runs only');
+    expect(note).toContain('a hook that succeeds leaves no record');
+    // the label stands above the rows it is about
+    const lines = all('tr', apart()).map((tr) => text(tr));
+    expect(lines[0]).toBe('Not part of summed tool time');
+    expect(lines[1]).toBe(note);
+    expect(lines[2]).toMatch(/^PostToolUse:Edit/);
+  });
+
+  it('does not claim that limit for a source that records every hook run', () => {
+    mount(<TimeView run={session('otlp')} />);
+    const note = text(q('[data-testid="tools-apart-hooks"]', apart()));
+    expect(note).toBe('A hook runs inside the call that triggered it.');
+    expect(text(apart())).not.toContain('Failed and cancelled');
+  });
+
+  it('shows a turn summary as a count without a time, never as zero', () => {
+    mount(<TimeView run={session()} />);
+    expect(cells(rowOf('Stop'))).toEqual([
+      'Stophook6 hook runs, time not recorded',
+      '2',
+      '—',
+      '',
+      '—',
+      '—',
+      '—',
+      '0',
+    ]);
+    // the timed row beside it keeps its figures
+    expect(cells(rowOf('PostToolUse:Edit')).slice(0, 3)).toEqual([
+      'PostToolUse:Edithook',
+      '3',
+      '1.3s',
+    ]);
+    expect(cells(rowOf('PostToolUse:Edit'))[7]).toBe('3');
+  });
+
+  it('expands a hook to the tools its commands ran', () => {
+    mount(<TimeView run={session()} />);
+    const row = rowOf('PostToolUse:Edit');
+    const toggle = q<HTMLButtonElement>('button[aria-expanded]', row);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    act(() => toggle.click());
+    const lines = all('tr', apart()).map((tr) => cells(tr).slice(0, 3));
+    const at = lines.findIndex((c) => c[0]?.startsWith('PostToolUse:Edit'));
+    expect(lines.slice(at + 1, at + 3)).toEqual([
+      ['prettier', '2', '1.0s'],
+      ['node lint.mjs', '1', '300ms'],
+    ]);
+    // the directory of the hook script is not in the page
+    expect(text(table())).not.toContain('alex');
+    // a summary has no command to split by: its row does not expand
+    expect(rowOf('Stop').querySelector('button[aria-expanded]')).toBe(null);
+  });
+
+  it('keeps failed Stop hooks and turn summaries apart inside one row', () => {
+    const run = mkRun(
+      [
+        hook('Stop', 'node /h/stop.mjs', SEC, 800),
+        stop(10 * SEC, 3),
+        stop(20 * SEC, 2),
+      ],
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(cells(rowOf('Stop')).slice(0, 3)).toEqual([
+      'Stophookincl. 2 turn summaries of 5 hook runs, time not recorded',
+      '3',
+      '800ms',
+    ]);
+    act(() =>
+      q<HTMLButtonElement>('button[aria-expanded]', rowOf('Stop')).click(),
+    );
+    const lines = all('tr', apart()).map((tr) => cells(tr).slice(0, 3));
+    expect(lines.slice(-2)).toEqual([
+      ['node stop.mjs', '1', '800ms'],
+      ['turn summaries5 hook runs, time not recorded', '2', '—'],
+    ]);
+  });
+
+  it('says what each kind of row is, right above it', () => {
+    const agent = span({ name: 'Agent', start: 0, ms: MIN });
+    const subagent = span({
+      kind: 'subagent',
+      name: 'subagent:Explore',
+      parentId: agent.id,
+      agent: { name: 'Explore' },
+      start: 0,
+      ms: MIN,
+    });
+    const run = mkRun(
+      [
+        agent,
+        subagent,
+        span({ name: 'AskUserQuestion', start: 2 * MIN, ms: MIN }),
+        stop(4 * MIN, 1),
+      ],
+      5 * MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(
+      all('tr', apart()).map((tr) => text(tr.children[0] as Element)),
+    ).toEqual([
+      'Not part of summed tool time',
+      "A delegation contains its agent's own calls, which are counted above.",
+      'Exploreagent',
+      "Failed and cancelled runs only: a hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it.",
+      'Stophook1 hook run, time not recorded',
+      'A question or a plan that waited for your answer.',
+      'AskUserQuestionwaits on you',
+    ]);
   });
 });
 

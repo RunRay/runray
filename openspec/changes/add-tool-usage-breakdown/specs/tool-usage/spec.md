@@ -326,6 +326,18 @@ tool name.
 - WHEN it is resolved
 - THEN the family is `shell` and the tool key and label are `Bash`
 
+#### Scenario: Hook span with a classified command
+- GIVEN a `PostToolUse:Edit` hook span stamped with tool `node`
+- WHEN it is resolved
+- THEN the family is `hook`, the tool key is `PostToolUse:Edit` and the
+  subcommand is `node`
+
+#### Scenario: Stop-hook summary
+- GIVEN a `Stop` hook span that reports three hook runs together
+- WHEN it is resolved
+- THEN the identity says it stands for three hook runs and carries no
+  subcommand
+
 ### Requirement: Identity outside the registry and outside the vocabulary
 A classified shell span whose program is not a registry tool SHALL resolve to
 one fixed key, with the program name, where the trace carries it, as
@@ -367,6 +379,13 @@ contribute a call and no time.
 - GIVEN a shell call with no result yet
 - WHEN the run is aggregated
 - THEN the call is counted and adds no time to any figure
+
+#### Scenario: Hook runs reported without a duration
+- GIVEN three stop-hook summaries beside two failed `Stop` hook runs of 800
+  and 1,200 milliseconds
+- WHEN the run is aggregated
+- THEN the `Stop` row has five calls, three of them untimed, a total of two
+  seconds and a median of 800 milliseconds
 
 ### Requirement: Sub-rows by subcommand and name
 Where the trace carries a script or program name, a sub-row SHALL be split by

@@ -387,6 +387,18 @@ program names as its sub-rows; under redaction that is the single nameless
 its key is a registry id, because OpenCode names its shell tool `bash`, which
 is also a registry tool.
 
+A hook row is keyed by the hook's name, and the tool its command ran is the
+identity's `sub`, so two hooks on one event stay apart as sub-rows
+(`PostToolUse:Edit` → `prettier`, `node format.mjs`) and the classification
+stamped at parse time is shown rather than only stored. A stop-hook summary
+has no one command and no duration: its identity carries the number of hook
+runs it stands for, and the aggregation counts it as an untimed call. A zero
+would read as "took no time" and pull every percentile of the row down, so
+`untimed` calls add nothing to the time figures, the way calls still in
+progress add nothing. The view says above the hook rows what they cover, by
+source: a Claude Code transcript records only failed and cancelled runs,
+while an imported trace carries whatever its exporter wrote.
+
 The UI's `toolDurationStats` is removed with its last caller;
 `toolDurationStatsAcrossRuns` stays, because the dashboard "By tool" card
 still keys by harness name until its own change.
