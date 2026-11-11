@@ -56,7 +56,11 @@ export const FREE_TOOL_ATTRS: readonly string[] = [
 
 /** Subcommand tokens that are not table entries of any one tool. */
 const GENERIC_SUBS: readonly string[] = ['run', 'script', 'inline'];
-const MAX_ALSO = 8;
+/**
+ * How many also-ran tools one span names. The classifier stops there and
+ * the validator rejects a longer list, so both read this one constant.
+ */
+export const MAX_ALSO = 8;
 
 const TOOL_ID_SET: ReadonlySet<string> = new Set(TOOL_IDS);
 const RUNNER_SET: ReadonlySet<string> = new Set(RUNNER_IDS);

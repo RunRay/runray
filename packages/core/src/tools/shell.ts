@@ -36,6 +36,17 @@ export interface ScannedStage {
 
 const NONE_QUOTED: ReadonlySet<number> = new Set();
 
+/**
+ * The characters the scan gives a meaning to. Every other one is part of a
+ * word, so a run of them is taken in one step.
+ */
+const MEANINGFUL = new Uint8Array(128);
+for (const ch of '\n \t\r\\`\'"@$<>#;|&()') MEANINGFUL[ch.charCodeAt(0)] = 1;
+
+function isPlain(code: number): boolean {
+  return code >= 128 || MEANINGFUL[code] !== 1;
+}
+
 /** Index just past the closing `"` of a string opened before `from`. */
 function skipDouble(src: string, from: number, ps: boolean): number {
   const n = src.length;
@@ -448,9 +459,13 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
       i++;
       continue;
     }
-    word += c;
+    // no branch above took this character: it is part of a word, and so is
+    // every plain character after it
+    let j = i + 1;
+    while (j < n && isPlain(src.charCodeAt(j))) j++;
+    word += j === i + 1 ? c : src.slice(i, j);
     inWord = true;
-    i++;
+    i = j;
   }
   endPipeline();
   return pipelines;
@@ -576,7 +591,24 @@ const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*(\[[^\]]*\])?\+?=/;
 const PS_ASSIGNMENT = /^\$[A-Za-z_][\w:]*\+?=/;
 const REDIRECTION = /^(\d*|&)[<>]/;
 const BARE_REDIRECTION = /^(\d*|&)[<>]{1,2}$/;
-const PROGRAM_NAME = /^[a-z0-9_][a-z0-9_.+@-]{0,63}$/;
+/** A normalised program name: what `stageProgram` returns and the registry keys on. */
+export const PROGRAM_NAME = /^[a-z0-9_][a-z0-9_.+@-]{0,63}$/;
+const WINDOWS_EXTENSION = /\.(exe|cmd|bat|com)$/;
+
+/**
+ * What a redirection word does to the words after it: `2` when it stands
+ * alone and takes the next word as its target (`>`, `2>>`), `1` when the
+ * target is attached (`2>&1`, `>out.log`), `0` for any other word. A
+ * redirection starts with `<`, `>`, `&` or a digit, so most words are
+ * settled by their first character.
+ */
+export function redirectionWidth(word: string): 0 | 1 | 2 {
+  const c = word.charCodeAt(0);
+  // `<` 60, `>` 62, `&` 38, digits 48 to 57
+  if (c !== 60 && c !== 62 && c !== 38 && (c < 48 || c > 57)) return 0;
+  if (BARE_REDIRECTION.test(word)) return 2;
+  return REDIRECTION.test(word) ? 1 : 0;
+}
 
 type NameResult =
   | { kind: 'name'; name: string; hasPath: boolean }
@@ -594,7 +626,7 @@ function programName(
       return { kind: 'name', name: 'test', hasPath: false };
     if (word === ':') return { kind: 'name', name: 'true', hasPath: false };
   }
-  const normalized = word.replace(/\\/g, '/');
+  const normalized = word.includes('\\') ? word.replace(/\\/g, '/') : word;
   const cut = normalized.lastIndexOf('/');
   const hasPath = cut !== -1;
   const base = hasPath ? normalized.slice(cut + 1) : normalized;
@@ -606,7 +638,12 @@ function programName(
       return { kind: 'none' };
     return { kind: 'unresolved', hasPath };
   }
-  const name = base.toLowerCase().replace(/\.(exe|cmd|bat|com)$/, '');
+  const lower = base.toLowerCase();
+  // `.` 46: only a name with a three-letter extension can lose one
+  const name =
+    lower.charCodeAt(lower.length - 4) === 46
+      ? lower.replace(WINDOWS_EXTENSION, '')
+      : lower;
   if (!PROGRAM_NAME.test(name) || /^\d+$/.test(name)) return { kind: 'none' };
   return { kind: 'name', name, hasPath };
 }
@@ -646,12 +683,9 @@ export function stageProgram(
       i++;
       continue;
     }
-    if (BARE_REDIRECTION.test(word)) {
-      i += 2;
-      continue;
-    }
-    if (REDIRECTION.test(word)) {
-      i++;
+    const redirection = redirectionWidth(word);
+    if (redirection > 0) {
+      i += redirection;
       continue;
     }
     if (following === '=' || following === '+=') {
@@ -659,7 +693,11 @@ export function stageProgram(
       assigned = true;
       continue;
     }
-    if (ASSIGNMENT.test(word) || (ps && PS_ASSIGNMENT.test(word))) {
+    // an assignment has a `=` in it: most words are settled without a regex
+    if (
+      word.includes('=') &&
+      (ASSIGNMENT.test(word) || (ps && PS_ASSIGNMENT.test(word)))
+    ) {
       i++;
       continue;
     }

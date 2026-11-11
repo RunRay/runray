@@ -10,7 +10,7 @@
  * session: `toolUsageAttributes` emits them only when redaction is off. No
  * argument, path or option value is ever part of the result.
  */
-import { TOOL_ATTR } from './attributes.js';
+import { MAX_ALSO, TOOL_ATTR } from './attributes.js';
 import {
   ACTIVITY_RANK,
   type Activity,
@@ -21,7 +21,13 @@ import {
   scriptActivity,
   type ToolDef,
 } from './registry.js';
-import { type ShellDialect, scan, stageProgram } from './shell.js';
+import {
+  PROGRAM_NAME,
+  redirectionWidth,
+  type ShellDialect,
+  scan,
+  stageProgram,
+} from './shell.js';
 
 /** What a command ran, as far as its text shows. */
 export interface Classification {
@@ -72,18 +78,16 @@ const MAX_HANDOFFS = 4;
 function handOff(trail: Trail): Trail {
   return { shells: trail.shells, handoffs: trail.handoffs + 1 };
 }
-const MAX_ALSO = 8;
 const PLUMBING_RANK = ACTIVITY_RANK.length + 1;
+/** Targets of one multi-target call (`gradle clean assembleDebug`) that are read. */
+const MAX_TARGETS = 8;
 
-const PROGRAM_NAME = /^[a-z0-9_][a-z0-9_.+@-]{0,63}$/;
 /** Shape gate for a free-form program name: keeps script fragments out. */
 const FREE_NAME = /^[a-z0-9][a-z0-9._+-]{1,39}$/;
 const SCRIPT_NAME = /^[A-Za-z0-9:][A-Za-z0-9:._+@-]{0,59}$/;
 const SCRIPT_FILE =
   /\.(sh|bash|zsh|ps1|psm1|py|js|mjs|cjs|ts|mts|cts|tsx|jsx|rb|pl|php|lua)$/i;
 const ASSIGNMENT_ARG = /^[A-Za-z_][A-Za-z0-9_]*=/;
-const REDIRECTION = /^(\d*|&)[<>]/;
-const BARE_REDIRECTION = /^(\d*|&)[<>]{1,2}$/;
 const NUMERIC = /^\d+$/;
 
 function own<T>(
@@ -114,17 +118,23 @@ interface Positional {
   index: number;
 }
 
-/** The words of `args` that are neither options, option values, variable
- * assignments nor redirections. */
+/**
+ * The words of `args` that are neither options, option values, variable
+ * assignments nor redirections. Reading stops after `limit` of them: a
+ * caller wants the first one or two, not every word of a long command.
+ * `numbers: false` also leaves out words that are only digits.
+ */
 function positionals(
   args: readonly string[],
   def: ToolDef,
   from = 0,
+  limit = Number.POSITIVE_INFINITY,
+  numbers = true,
 ): Positional[] {
   const caseless = def.shell?.dialect === 'powershell';
   const out: Positional[] = [];
   let literal = false;
-  for (let i = from; i < args.length; i++) {
+  for (let i = from; i < args.length && out.length < limit; i++) {
     const word = args[i] as string;
     if (!literal) {
       if (word === '--') {
@@ -137,13 +147,14 @@ function positionals(
         continue;
       }
       if (def.toolchainPrefix === true && word.startsWith('+')) continue;
-      if (ASSIGNMENT_ARG.test(word)) continue;
-      if (BARE_REDIRECTION.test(word)) {
-        i++;
+      if (word.includes('=') && ASSIGNMENT_ARG.test(word)) continue;
+      const redirection = redirectionWidth(word);
+      if (redirection > 0) {
+        i += redirection - 1;
         continue;
       }
-      if (REDIRECTION.test(word)) continue;
     }
+    if (!numbers && NUMERIC.test(word)) continue;
     out.push({ word, index: i });
   }
   return out;
@@ -282,7 +293,7 @@ function resolveTool(
       }
       break; // a positional before any command flag: a script file
     }
-    const file = positionals(args, def)[0];
+    const file = positionals(args, def, 0, 1)[0];
     if (file === undefined) return [base()];
     const script = scriptName(file.word);
     return [
@@ -302,7 +313,7 @@ function resolveTool(
     return found.length > 0 ? found : [base()];
   }
 
-  const first = positionals(args, def)[0];
+  const first = positionals(args, def, 0, 1)[0];
 
   // `python -m pytest`: the module is the tool
   if (def.moduleFlag !== undefined) {
@@ -386,7 +397,13 @@ function resolveSubs(
       ...(script === undefined ? {} : { script }),
     });
   };
-  const pos = positionals(args, def, from).filter((p) => !NUMERIC.test(p.word));
+  const pos = positionals(
+    args,
+    def,
+    from,
+    def.multi === true ? MAX_TARGETS : 2,
+    false,
+  );
 
   if (def.multi === true) {
     // several targets in one call: the best-ranked one names it; on a tie a
@@ -394,7 +411,7 @@ function resolveSubs(
     // tool's default (`gradle clean assembleDebug` is the assemble)
     let best: Candidate | undefined;
     let bestScore = Number.POSITIVE_INFINITY;
-    for (const p of pos.slice(0, 8)) {
+    for (const p of pos) {
       if (def.scriptNext?.includes(p.word) === true) continue;
       let candidate: Candidate | undefined;
       let known = true;
@@ -450,7 +467,9 @@ function resolveSubs(
   const skipAfter =
     def.skipAfter === undefined ? undefined : own(def.skipAfter, sub);
   if (skipAfter !== undefined) {
-    const resume = positionals(args, def, last.index + 1)[skipAfter];
+    const resume = positionals(args, def, last.index + 1, skipAfter + 1)[
+      skipAfter
+    ];
     return resume === undefined || trail.handoffs >= MAX_HANDOFFS
       ? [base({ sub })]
       : resolveSubs(
@@ -464,9 +483,7 @@ function resolveSubs(
         );
   }
   if (def.scriptNext?.includes(sub) === true) {
-    const next = positionals(args, def, last.index + 1).find(
-      (p) => !NUMERIC.test(p.word),
-    );
+    const next = positionals(args, def, last.index + 1, 1, false)[0];
     return next === undefined
       ? [base({ sub })]
       : [{ ...asScript(next.word), sub }];
