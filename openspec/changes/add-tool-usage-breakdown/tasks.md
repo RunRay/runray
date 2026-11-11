@@ -115,7 +115,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       that enumerates the segments. Verify: a component test that renders five
       legend rows and an accessible label naming five segments;
       `onboarding.test.ts` green.
-- [ ] 4.3 B [UI → /frontend-design] Activity bar (T12): fixed activity order,
+- [x] 4.3 B [UI → /frontend-design] Activity bar (T12): fixed activity order,
       six colored parts plus one neutral part plus the unresolved pattern,
       legend with time and share, the summed-time heading, selection that
       filters the table. Verify: component tests for the four scenarios of

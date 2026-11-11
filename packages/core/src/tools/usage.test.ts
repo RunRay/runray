@@ -520,7 +520,7 @@ describe('toolUsage — options and totality', () => {
   it('narrows the rows to one activity and keeps the run-wide figures', () => {
     const spans = mixedRun();
     const all = toolUsage(spans);
-    const tests = toolUsage(spans, { activity: 'test' });
+    const tests = toolUsage(spans, { activities: ['test'] });
     expect(tests.rows.map((r) => r.key)).toEqual(['pnpm']);
     expect(row(tests, 'pnpm')).toMatchObject({ calls: 1, totalMs: 40_000 });
     expect(tests.summedMs).toBe(all.summedMs);
@@ -529,8 +529,22 @@ describe('toolUsage — options and totality', () => {
 
     // per activity, the narrowed rows add up to that activity's total
     for (const { activity, totalMs } of all.activities) {
-      expect(sum(toolUsage(spans, { activity }).rows), activity).toBe(totalMs);
+      expect(
+        sum(toolUsage(spans, { activities: [activity] }).rows),
+        activity,
+      ).toBe(totalMs);
     }
+  });
+
+  it('narrows the rows to several activities at once', () => {
+    const spans = mixedRun();
+    const all = toolUsage(spans);
+    const total = (activity: string) =>
+      all.activities.find((a) => a.activity === activity)?.totalMs ?? 0;
+    const both = toolUsage(spans, { activities: ['test', 'vcs'] });
+    expect(both.rows.map((r) => r.key)).toEqual(['pnpm', 'git']);
+    expect(sum(both.rows)).toBe(total('test') + total('vcs'));
+    expect(toolUsage(spans, { activities: [] }).rows).toEqual([]);
   });
 
   it('returns an empty result for a run without tool spans', () => {

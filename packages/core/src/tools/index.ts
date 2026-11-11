@@ -30,6 +30,7 @@ export {
 } from './identity.js';
 export {
   ACTIVITIES,
+  ACTIVITY_LABELS,
   ACTIVITY_RANK,
   type Activity,
   activityRank,

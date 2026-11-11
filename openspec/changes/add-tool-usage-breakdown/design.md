@@ -336,9 +336,12 @@ keep them by key without inspecting values.
 ### T11 — Aggregation lives in core
 
 `usage.ts` returns the ranked rows, the three side groups, `Σ` and the
-activity totals. It takes an optional activity that narrows the rows and
-nothing else, so a filtered table recomputes its counts and percentiles while
-shares keep the run-wide denominator.
+activity totals. It takes an optional set of activities that narrows the rows
+and nothing else, so a filtered table recomputes its counts and percentiles
+while shares keep the run-wide denominator. A set, not one activity, because
+the bar's neutral part stands for several. Activity labels live beside the
+vocabulary in core (`ACTIVITY_LABELS`) for the same reason the registry
+labels do.
 
 An identity separates what is closed vocabulary from what is session text:
 `sub` is a table subcommand or an MCP tool name, `detail` is a script or
@@ -364,6 +367,18 @@ the survivors. The palette is derived from the project's tokens under
 `/frontend-design` and must pass adjacent-pair separation for common color
 vision deficiencies on both the ink and the paper surface; the legend carries
 every value as text, so color is never the only carrier.
+
+The six colors are handed to the six largest activities in the fixed activity
+order, so what sits next to what in the bar is always a pair of palette
+neighbours, and that is the pair the check covers. The shipped ramp runs sky,
+olive, pink, orange, blue, amber, then the neutral. It was found by searching
+hue orders and lightness per theme for the largest minimum neighbour distance:
+24.5 OKLab ΔE on ink and 26.5 on paper across normal vision, protanopia and
+deuteranopia, every part at 3:1 or better on the card ground
+(`activity-palette.test.ts` holds the floor at 12). Brand violet is left out
+because it is model wait in the strip above, and red because it means error.
+The first palette, taken from the mock, failed the check (8.9 between two
+neighbours under protanopia) and was replaced.
 
 ## Risks / Trade-offs
 

@@ -171,7 +171,7 @@ describe('toolUsage over every committed golden', () => {
 
       it('narrows to each activity without losing or adding time', () => {
         for (const { activity, totalMs, calls } of usage.activities) {
-          const narrowed = toolUsage(run.spans, { activity });
+          const narrowed = toolUsage(run.spans, { activities: [activity] });
           expect(sum(narrowed.rows), activity).toBe(totalMs);
           expect(count(narrowed.rows), activity).toBe(calls);
         }

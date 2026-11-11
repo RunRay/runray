@@ -1,5 +1,5 @@
 import type { Run } from '@runray/schema';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
 import {
   DEFAULT_IDLE_GAP_MS,
@@ -8,7 +8,9 @@ import {
   timeBreakdown,
   toolDurationStats,
 } from '../lib/time-breakdown';
+import { activityParts, runToolUsage } from '../lib/tool-usage';
 import { useAppStore } from '../store';
+import { ActivityBar } from './ActivityBar';
 import { ContextualHint } from './ContextualHint';
 
 /**
@@ -55,6 +57,16 @@ export function TimeView({
   const manifest = propManifest ?? storeManifest;
   const breakdown = useMemo(() => timeBreakdown(run), [run]);
   const tools = useMemo(() => toolDurationStats(run).slice(0, 8), [run]);
+  const usage = useMemo(() => runToolUsage(run), [run]);
+  const parts = useMemo(() => activityParts(usage), [usage]);
+  // the selection belongs to one run: another run starts unfiltered
+  const [selection, setSelection] = useState<{ run: Run; part: string } | null>(
+    null,
+  );
+  const selectedPart =
+    selection?.run === run && parts.some((p) => p.id === selection.part)
+      ? selection.part
+      : null;
   const idleFindings = useMemo(
     () => run.insights.filter((i) => i.ruleId === 'idle-cache-expiry'),
     [run.insights],
@@ -164,6 +176,17 @@ export function TimeView({
             ))}
           </ul>
         </section>
+      )}
+
+      {parts.length > 0 && (
+        <ActivityBar
+          usage={usage}
+          parts={parts}
+          selected={selectedPart}
+          onSelect={(part) =>
+            setSelection(part === null ? null : { run, part })
+          }
+        />
       )}
 
       {tools.length > 0 && (

@@ -35,6 +35,31 @@ export const ACTIVITIES = [
 export type Activity = (typeof ACTIVITIES)[number];
 
 /**
+ * What each activity is called wherever it is shown. Lives beside the
+ * vocabulary so the viewer and a later CLI report cannot word it twice.
+ */
+export const ACTIVITY_LABELS: Readonly<Record<Activity, string>> = {
+  explore: 'Search & read',
+  edit: 'Edit files',
+  run: 'Run scripts',
+  check: 'Lint, format, types',
+  build: 'Build',
+  test: 'Test',
+  vcs: 'Version control',
+  deps: 'Dependencies',
+  infra: 'Containers & infra',
+  cloud: 'Cloud & deploy',
+  data: 'Databases',
+  web: 'Network & web',
+  system: 'Files & system',
+  devices: 'Devices & emulators',
+  agent: 'Planning & delegation',
+  human: 'Waiting on you',
+  integration: 'MCP tools',
+  other: 'Unresolved',
+};
+
+/**
  * Expected-duration order used to pick the primary tool of a command that
  * runs several (design T6): the activity that usually takes longest names
  * the call. Derived from mean call durations in the measured sample; a fixed

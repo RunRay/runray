@@ -120,10 +120,10 @@ export interface ToolUsage {
 
 export interface ToolUsageOptions {
   /**
-   * Narrow `rows` to calls of one activity. Every other figure stays
+   * Narrow `rows` to calls of these activities. Every other figure stays
    * run-wide, so a share keeps its denominator while the table is filtered.
    */
-  activity?: Activity;
+  activities?: readonly Activity[];
 }
 
 /** Nearest-rank percentile over a sorted-ascending array (deterministic). */
@@ -432,7 +432,10 @@ export function toolUsage(
       summedMs += duration;
     }
     byActivity.set(id.activity, total);
-    if (options.activity === undefined || options.activity === id.activity) {
+    if (
+      options.activities === undefined ||
+      options.activities.includes(id.activity)
+    ) {
       ranked.add(span, id, duration);
     }
   }

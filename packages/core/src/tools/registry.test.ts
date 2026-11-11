@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTIVITIES,
+  ACTIVITY_LABELS,
   ACTIVITY_RANK,
   activityRank,
   HARNESS_TOOLS,
@@ -89,6 +90,13 @@ describe('registry invariants', () => {
     expect(activityRank('build')).toBeLessThan(activityRank('vcs'));
     expect(activityRank('other')).toBeLessThan(activityRank('system'));
     expect(activityRank('system')).toBeLessThan(activityRank('explore'));
+  });
+
+  it('labels every activity once, with distinct text', () => {
+    expect(Object.keys(ACTIVITY_LABELS).sort()).toEqual([...ACTIVITIES].sort());
+    const labels = Object.values(ACTIVITY_LABELS);
+    expect(labels.every((label) => label.trim().length > 0)).toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
   it('marks plumbing and utilities only on system and explore tools', () => {
