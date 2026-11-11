@@ -140,7 +140,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 - [x] 4.6 B Remove the per-run `toolDurationStats` and its test once the Time
       view no longer calls it; keep `toolDurationStatsAcrossRuns` (T11).
       Verify: typecheck passes and no import of the removed function remains.
-- [ ] 4.7 B Release note and end-to-end proof: a changeset (`pnpm changeset`)
+- [x] 4.7 B Release note and end-to-end proof: a changeset (`pnpm changeset`)
       describing the Time view change; the component tree in
       `docs/05-ARCHITECTURE.md`; a case in
       `packages/cli/src/profiler-e2e.test.ts` that serves a transcript built
