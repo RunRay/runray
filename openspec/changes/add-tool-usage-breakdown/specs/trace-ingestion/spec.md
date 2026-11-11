@@ -95,11 +95,8 @@ The claude-code adapter SHALL emit a `hook` span for each hook record the
 transcript carries: failed and cancelled hook runs, with their recorded
 duration and outcome, and stop-hook summaries, with zero duration and the
 number of hooks that ran as `runray.hookCount`. A hook span SHALL be named by
-its hook event and matcher. The matcher SHALL be part of the name only for an
-event that matches on tool names, agent types or the harness's own words, and
-only when it is shaped like such a name; otherwise the span SHALL be named by
-the event alone, because a span name is kept under redaction. Hook runs the
-transcript does not record SHALL produce no span.
+its hook event and matcher. Hook runs the transcript does not record SHALL
+produce no span.
 
 #### Scenario: Failed hook with a duration
 - GIVEN a hook record for `PostToolUse:Edit` that ran 688 ms and exited with
@@ -192,6 +189,14 @@ redaction rule as shell tool spans.
 - WHEN the transcript is parsed without redaction
 - THEN the hook span carries `runray.tool: "node"` and the script name
   `format.mjs`, and no attribute contains a directory of that path
+
+### Requirement: A hook span name holds names only
+A span name is kept under redaction, so the claude-code adapter SHALL take a
+hook span's name from the record only when it is shaped like a hook event,
+optionally followed by a matcher. The matcher SHALL be kept only for an event
+that matches on tool names, agent types or the harness's own words, and only
+when it is shaped like such a name. In every other case the span SHALL be
+named by the event alone, or `hook` when the event is not a name either.
 
 #### Scenario: Hook name that is not a name
 - GIVEN a hook record whose hook name is free text
