@@ -214,10 +214,10 @@ function Row({
   const expandable = row.children.length > 0;
   return (
     <>
-      <tr className="border-t border-border-slate">
+      <tr className="border-t border-border-slate" title={row.hint}>
         <th
           scope="row"
-          className="max-w-[340px] py-1.5 text-left font-mono font-normal text-text"
+          className="py-1.5 text-left font-mono font-normal text-text"
         >
           {expandable ? (
             <button
@@ -236,6 +236,9 @@ function Row({
             </button>
           ) : (
             <span className="pl-4">{row.label}</span>
+          )}
+          {row.hint !== undefined && (
+            <span className="sr-only">. {row.hint}</span>
           )}
           <span className={TAG}>{tag}</span>
           {row.group === 'utilities' && (
@@ -262,6 +265,7 @@ export function ToolTable({
   usage,
   rows,
   activityLabel,
+  source,
 }: {
   /** The run-wide aggregation: the denominator and the side groups. */
   usage: ToolUsage;
@@ -269,6 +273,8 @@ export function ToolTable({
   rows: readonly ToolRow[];
   /** Label of the activity the rows are narrowed to, when they are. */
   activityLabel?: string;
+  /** The run's source tool: words the notice for calls without a program. */
+  source: string;
 }) {
   const [family, setFamily] = useState<FamilyFilter>('all');
   const [sort, setSort] = useState<ToolSort>('total');
@@ -341,6 +347,17 @@ export function ToolTable({
             )}
         </div>
       </div>
+
+      {usage.unclassifiedShellCalls > 0 && (
+        <p
+          className="mt-2 max-w-[80ch] text-label text-text-dim"
+          data-testid="tools-unclassified"
+        >
+          {source === 'otlp'
+            ? 'This source records the name of the shell tool and no command, so shell calls are listed under that tool, not by the program they ran.'
+            : 'This trace was recorded before tool identification, so shell calls are listed under the shell tool, not by the program they ran. Export the session again to see the programs.'}
+        </p>
+      )}
 
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-label">
@@ -424,6 +441,17 @@ export function ToolTable({
           )}
         </table>
       </div>
+
+      <p
+        className="mt-3 max-w-[80ch] text-label text-text-faint"
+        data-testid="tools-limits"
+      >
+        A call is timed from the request to its result, so its time includes any
+        wait for your permission: the source does not record that wait on its
+        own. A command that ran several tools has one duration, which cannot be
+        divided between them. It counts for the tool that usually takes longest
+        and is shown as shared on the others.
+      </p>
     </section>
   );
 }

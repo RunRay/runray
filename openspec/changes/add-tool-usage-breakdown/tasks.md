@@ -128,7 +128,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       every scenario of "Tool usage table", "Shared, background and partial
       figures are marked", "Shell utilities are grouped" and "Delegations and
       hooks are listed apart", including the keyboard scenario.
-- [ ] 4.5 B [UI → /frontend-design] Degraded states and the limits note: the
+- [x] 4.5 B [UI → /frontend-design] Degraded states and the limits note: the
       pre-change trace notice, the "other command" row, the metadata-only
       empty state, the explanation of permission wait and shared time. An
       OTLP run also has unclassified shell calls (its tool spans carry no

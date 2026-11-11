@@ -935,6 +935,137 @@ describe('utilities, delegations and hooks in the tool table', () => {
   });
 });
 
+describe('degraded states (visualizer "Tool usage degraded states")', () => {
+  const table = () => q('[aria-label="Tools"]');
+  const names = () =>
+    all('tbody tr > th[scope="row"]', table()).map((th) => text(th));
+  const notice = () =>
+    container.querySelector('[data-testid="tools-unclassified"]');
+
+  it('lists a trace recorded before tool identification under Bash and says so once (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        span({ name: 'Bash', start: at(3 * SEC), ms: 3 * SEC }),
+        span({ name: 'Bash', start: at(2 * SEC), ms: 2 * SEC }),
+        span({ name: 'Read', start: at(SEC), ms: SEC }),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(names()).toEqual(['Bashshell', 'Readbuilt-in']);
+    expect(all('[data-testid="tools-unclassified"]')).toHaveLength(1);
+    expect(text(notice() as Element)).toContain(
+      'recorded before tool identification',
+    );
+    expect(text(notice() as Element)).toContain('Export the session again');
+  });
+
+  it('words the notice by source for an import that carries no command (spec scenario)', () => {
+    // the shape the OTLP adapter emits: a generic span name, the tool in tool.name
+    const run = mkRun(
+      [
+        span({
+          name: 'claude_code.tool',
+          tool: { name: 'Bash', isError: false },
+          start: 0,
+          ms: 2 * SEC,
+        }),
+      ],
+      MIN,
+      'otlp',
+    );
+    mount(<TimeView run={run} />);
+    expect(names()).toEqual(['Bashshell']);
+    expect(text(notice() as Element)).toContain(
+      'records the name of the shell tool and no command',
+    );
+    expect(text(notice() as Element)).not.toContain('recorded before');
+    expect(text(notice() as Element)).not.toContain('Export the session again');
+  });
+
+  it('says nothing when every shell call is classified', () => {
+    mount(<TimeView run={mkRun([shell('docker ps', 0, SEC)], MIN)} />);
+    expect(notice()).toBe(null);
+  });
+
+  it('shows one nameless row for other programs in a redacted report (spec scenario)', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('docker ps', at(2 * SEC), 2 * SEC, true),
+        shell('acme-deploy --prod', at(9 * SEC), 9 * SEC, true),
+        shell('frobctl sync', at(4 * SEC), 4 * SEC, true),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    const rows = all('tbody tr', table());
+    expect(rows).toHaveLength(2);
+    expect(cells(rows[0] as Element).slice(1, 3)).toEqual(['2', '13s']);
+    expect(text(rows[0] as Element)).toContain('other command');
+    expect(text(rows[1] as Element)).toContain('docker');
+    // nothing to expand, and no name anywhere on the page
+    expect(rows[0]?.querySelector('button[aria-expanded]')).toBe(null);
+    expect(text(container)).not.toMatch(/acme|frobctl/);
+    expect(rows[0]?.getAttribute('title')).toContain(
+      'Their names are not in this report',
+    );
+  });
+
+  it('names those programs in a local, unredacted view', () => {
+    const run = mkRun(
+      sequence((at) => [
+        shell('acme-deploy --prod', at(9 * SEC), 9 * SEC),
+        shell('frobctl sync', at(4 * SEC), 4 * SEC),
+      ]),
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    act(() => q<HTMLButtonElement>('button[aria-expanded]', table()).click());
+    const [row, ...programs] = names();
+    expect(row).toContain('other command');
+    // the row says what it holds to a screen reader too
+    expect(row).toContain('Programs outside the tool list, by name.');
+    expect(programs).toEqual(['acme-deploy', 'frobctl']);
+  });
+
+  it('explains an empty run instead of drawing empty charts', () => {
+    const run = mkRun(
+      [span({ kind: 'llm_call', name: 'model', start: 0, ms: MIN })],
+      MIN,
+    );
+    mount(<TimeView run={run} />);
+    expect(text(q('[data-testid="tools-empty"]'))).toBe(
+      'This session made no tool calls, so there is no tool time to break down.',
+    );
+    expect(container.querySelector('[aria-label="Tools"]')).toBe(null);
+  });
+
+  it('still lists delegations when they are all the run has', () => {
+    const agent = span({ name: 'Agent', start: 0, ms: MIN });
+    const subagent = span({
+      kind: 'subagent',
+      name: 'subagent:Explore',
+      parentId: agent.id,
+      start: 0,
+      ms: MIN,
+    });
+    mount(<TimeView run={mkRun([agent, subagent], 2 * MIN)} />);
+    expect(text(q('[data-testid="tools-apart"]'))).toContain('Explore');
+    expect(container.querySelector('[data-testid="tools-empty"]')).toBe(null);
+  });
+});
+
+describe('limits (visualizer "Limits of tool time are stated")', () => {
+  it('explains permission wait and shared time inside the breakdown (spec scenario)', () => {
+    mount(<TimeView run={mkRun([shell('docker ps', 0, SEC)], MIN)} />);
+    const note = q('[data-testid="tools-limits"]', q('[aria-label="Tools"]'));
+    expect(text(note)).toContain('includes any wait for your permission');
+    expect(text(note)).toContain('does not record that wait on its own');
+    expect(text(note)).toContain('has one duration');
+    expect(text(note)).toContain('shown as shared on the others');
+  });
+});
+
 describe('tableRows', () => {
   const rows = () =>
     runToolUsage(

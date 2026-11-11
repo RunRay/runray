@@ -61,14 +61,20 @@ export interface TableRow {
   share: number;
   /** False for shell calls of a trace recorded before classification. */
   classified: boolean;
+  /** What the row stands for, where its label does not say. */
+  hint?: string;
   children: TableChild[];
+}
+
+function isOtherCommand(row: ToolRow): boolean {
+  return (
+    row.family === 'shell' && row.key === OTHER_COMMAND_KEY && !row.registry
+  );
 }
 
 function childLabel(row: ToolRow, label: string): string {
   if (label.length > 0) return label;
-  return row.key === OTHER_COMMAND_KEY && !row.registry
-    ? 'unnamed'
-    : 'no subcommand';
+  return isOtherCommand(row) ? 'unnamed' : 'no subcommand';
 }
 
 function toRow(row: ToolRow, summedMs: number): TableRow {
@@ -83,6 +89,14 @@ function toRow(row: ToolRow, summedMs: number): TableRow {
     alsoRanCalls: row.alsoRanCalls,
     share: summedMs > 0 ? row.totalMs / summedMs : 0,
     classified: row.classified,
+    ...(isOtherCommand(row)
+      ? {
+          hint:
+            row.subs.length > 0
+              ? 'Programs outside the tool list, by name.'
+              : 'Programs outside the tool list, or commands whose program could not be read. Their names are not in this report.',
+        }
+      : {}),
     children: row.subs.map((sub) => ({
       id: `${row.id}/${sub.id}`,
       label: childLabel(row, sub.label),

@@ -68,6 +68,11 @@ export function TimeView({
       ? selection.part
       : null;
   const current = parts.find((p) => p.id === selectedPart);
+  const hasToolSpans =
+    usage.calls + usage.agents.calls + usage.hooks.calls + usage.waiting.calls >
+    0;
+  const pruned =
+    manifest?.profile === 'metadata-only' || manifest?.spansPruned === true;
   // a selected part narrows the rows; shares keep the run-wide denominator
   const shownRows = useMemo(
     () =>
@@ -198,24 +203,33 @@ export function TimeView({
         />
       )}
 
-      {(shownRows.length > 0 || usage.calls > 0) && (
+      {hasToolSpans ? (
         <ToolTable
           usage={usage}
           rows={shownRows}
+          source={run.source.tool}
           {...(current === undefined ? {} : { activityLabel: current.label })}
         />
-      )}
-
-      {usage.calls === 0 &&
-        (manifest?.profile === 'metadata-only' || manifest?.spansPruned) && (
-          <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
-            <p className="text-label text-text-faint">
-              Turn and tool breakdowns are omitted under the{' '}
-              <code className="font-mono text-text-dim">metadata-only</code>{' '}
-              profile.
+      ) : (
+        <section
+          className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card"
+          data-testid="tools-empty"
+        >
+          {pruned ? (
+            <p className="max-w-[80ch] text-label text-text-dim">
+              Tool time by activity and the tool table are left out of this
+              report. It was exported with the{' '}
+              <code className="font-mono text-text">metadata-only</code>{' '}
+              profile, which keeps session totals and drops individual calls.
             </p>
-          </section>
-        )}
+          ) : (
+            <p className="text-label text-text-dim">
+              This session made no tool calls, so there is no tool time to break
+              down.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
