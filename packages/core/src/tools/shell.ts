@@ -440,6 +440,7 @@ const WRAPPERS: Readonly<Record<string, WrapperSpec>> = {
   'cross-env-shell': {},
   dotenv: { valueOptions: ['-e', '-v', '-p'] },
   'env-cmd': { valueOptions: ['-f', '-e', '-r'] },
+  shx: {},
   call: {},
 };
 

@@ -23,7 +23,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       executable extensions; report unresolved when the last path segment
       holds an expansion. Verify: table-driven tests for the five scenarios of
       "Program resolution within a stage".
-- [ ] 1.3 A Registry in `tools/registry.ts` (T5): the activity enum and the
+- [x] 1.3 A Registry in `tools/registry.ts` (T5): the activity enum and the
       expected-duration rank (T6); tool entries with label, activity, aliases
       and the `utility` / `plumbing` marks; subcommand tables and global
       options for git, docker, gh, kubectl, cargo, go, dotnet, flutter, dart,
