@@ -47,7 +47,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       entry that classifies a 1 MB command and a batch of typical commands.
       Verify: the import-graph purity test passes for the new entrypoint and
       `pnpm bench` reports the entry inside the existing budgets.
-- [ ] 1.6 A Document the module in `docs/05-ARCHITECTURE.md` (decomposition
+- [x] 1.6 A Document the module in `docs/05-ARCHITECTURE.md` (decomposition
       rules, registry shape, the two privacy classes). Verify: the section
       names the files and exports that exist after 1.5.
 

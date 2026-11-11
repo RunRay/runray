@@ -227,10 +227,18 @@ globalOptions? }`. `subs` maps a subcommand (one or two words) to an optional
 activity override. Package managers and task runners carry their own command
 list; any other first word is a script (spec: "Package-manager scripts"),
 whose activity comes from name patterns: `test*`/`e2e*`/`spec*` to `test`,
-`build*`/`compile*`/`bundle*` to `build`, `lint*`/`format*`/`fmt*`/
-`typecheck`/`type-check`/`check*`/`verify*` to `check`, `db:*`/`migrat*`/
-`seed*` to `data`, `dev`/`start`/`serve`/`preview`/`watch` to `run`, anything
-else to `run`.
+`build*`/`compile*`/`bundle*`/`assemble*` to `build`, `lint*`/`format*`/
+`fmt*`/`typecheck`/`type-check`/`check*`/`verify*` to `check`, `db:*`/
+`migrat*`/`seed*` to `data`, `dev`/`start`/`serve`/`preview`/`watch` to
+`run`. A name that matches nothing takes the tool's own activity (`make all`
+is a build), except under a package manager, whose own default
+(dependencies) says nothing about its scripts: there it is `run`. Tools that
+take several targets in one call (`make`, `gradle`, `mvn`, `turbo`,
+`xcodebuild`) are named by their best-ranked target, so
+`gradle clean assembleDebug` is the assemble.
+
+A file run by path (`./scripts/deploy.sh`, `.\build.ps1`) resolves to the
+pseudo-tool `script`; its file name is free-form (`runray.toolScript`).
 
 A prototype registry of 353 names covered 96.6% of shell calls and 89.9% of
 shell time in the sample. The shipped registry is seeded more widely than
@@ -247,10 +255,13 @@ lowercase, so one table serves both and OTLP imports).
 "First heavy tool" attributes `git add -A && pnpm build` to `git`. The sample
 gives mean call durations per activity that separate cleanly: build 63 s,
 check 51 s, test 34 s, data 25 s, cloud 19 s, deps 18 s, devices 17 s, web
-16 s, run 12 s, infra 9 s, vcs 6 s, explore 3.5 s. The rank is that order,
-followed by `agent`, `system`, `explore`, `other`, with plumbing last; ties go
-to the earlier program. It is a fixed array in core, not a per-run statistic,
-so the result stays a pure function of the command.
+16 s, run 12 s, infra 9 s, vcs 6 s, explore 3.5 s. The rank is that order
+down to `vcs`, then the harness-only activities, then `other`, `system` and
+`explore`, with plumbing last; ties go to the earlier program. `other` sits
+above the utilities on purpose: in `ls && acme-deploy --prod` the program
+outside the registry is the work, not `ls`. It is a fixed array in core
+(`ACTIVITY_RANK`), not a per-run statistic, so the result stays a pure
+function of the command.
 
 Candidates are the programs of every stage, not only pipeline heads, so a
 heavy tool downstream of a pipe (`cat dump.sql | docker exec -i db psql`) is

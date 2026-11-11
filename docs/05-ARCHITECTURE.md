@@ -96,6 +96,20 @@ Błąd wywołania to nie jedna rzecz: na realnych sesjach jedna trzecia „błę
 
 Findingi jednej sesji są listą płaską — na realnych sesjach to osiemnaście prawie identycznych przerwań cache i trzynaście re-readów za grosze obok jednej górnej granicy „growing context". `wasteRun(run)` nie wykrywa nic nowego: układa findingi silnika po regule, dzieli klasą z rejestru `RULE_META` na **burned** (waste, nagłówek = `totals.costUSD.wastedEstimate`, z capem) i **opportunities** (Σ estymat, górne granice, nigdy dodawane do burned), ocenia każdą grupę **od sumy** tą samą funkcją `gradeSeverity` i tymi samymi progami, którymi silnik ocenia pojedynczy finding (`insights/severity.ts`, moduł czysty), zwija grupę, której wszystkie findingi są poniżej `warningFloorUSD`, a kształt przerwania cache (`compaction` · `front` · `history`) czyta z dwóch spanów dowodu wspólną funkcją `breakShape` (`insights/cache-shape.ts`), tą samą, którą reguła słowuje finding. Dla klasy waste emituje zdarzenia na osi sesji (`burn` w chwili przerwania lub pierwszego dowodu, `compaction` osobno, `idle` jako pasmo od końca wywołania przed przerwą do wznowienia) i listę kontekstu każdego wywołania modelu (input + cache read + cache write), z których UI rysuje oś wycieków. Czysta funkcja runu, deterministyczna w każdym porządku; WeakMap-cache po stronie UI (`lib/waste.ts`). Formuła nadwyżki kontekstu reguły `context-bloat` (od czwartego wywołania głównego zakresu, tokeny ponad próg po stawce, jaką to wywołanie faktycznie zapłaciło za token wejściowy) mieszka w `insights/context-excess.ts`: reguła liczy nią estymatę względem baseline (mediana kontekstu trzech pierwszych wywołań), a `contextCapEstimates(run, pricing?)` powtarza ją z pułapem 100k / 200k / 400k zamiast baseline, żeby zakładka Waste powiedziała wprost, ile dałoby utrzymanie kontekstu poniżej pułapu; bez tabeli cen tokeny zostają, kwoty są `undefined`. Analiza na 72 realnych sesjach użytkownika (2026-09-04): 20 sesji z ≥10 findingami, w 9 suma estymat przekracza koszt sesji.
 
+### 2.7 Tool usage (`tools/`, subpath `@runray/core/tools`)
+
+Nazwa narzędzia harnessu mówi za mało. Na 2 743 realnych transkryptach użytkownika (2026-11-11) `Bash` i `PowerShell` trzymają 64% czasu spanów narzędzi, a 90% komend jest złożonych. Moduł odpowiada na dwa pytania: jaki program wywołanie uruchomiło i jaka to była praca. Nic go jeszcze nie woła, adaptery podłącza grupa 2 zmiany `add-tool-usage-breakdown`.
+
+**Dekompozycja** (`shell.ts`). `decompose(command, dialect)` jednym przebiegiem dzieli komendę na potoki i etapy. Potok kończą `&&` `||` `;` oraz nowa linia, etap kończy `|`. Nieprzezroczyste są: cudzysłowy, podstawienia `$(…)`, treść heredoców, here-stringi PowerShella. Czytane jest najwyżej 8 192 znaki (`MAX_COMMAND_CHARS`), a funkcja nie rzuca na żadnym wejściu. `stageProgram(words, dialect)` pomija przypisania zmiennych, wrappery (`sudo` `env` `timeout 30` `xargs` `cross-env`) oraz słowa sterujące. Nazwę programu sprowadza do basename małymi literami bez `.exe` `.cmd` `.bat`. Program zaczynający się od zmiennej (`"$BIN"`) zostaje nierozwiązany.
+
+**Rejestr** (`registry.ts`). Zamknięty słownik 951 id narzędzi, każde z etykietą i domyślną aktywnością. Narzędzia wielozadaniowe (`git` `docker` `gh` `kubectl` `cargo`, menedżery pakietów) mają tabele podkomend. Obok leżą: lista runnerów, aliasy paczek npm, aliasy modułów Pythona, tabela narzędzi harnessu dla Claude Code i OpenCode. Nazwa spoza rejestru nigdy nie staje się id. Lista id jest pod snapshotem, więc usunięcie albo zmiana nazwy to świadomy diff. Aktywność pochodzi z zamkniętego zbioru 18 wartości (`ACTIVITIES`).
+
+**Klasyfikacja** (`classify.ts`). `classifyCommand` rozwija runnery (`npx` `pnpm exec` `uv run` `python -m`) i zagnieżdżone powłoki (`bash -c`, do głębokości 2). Podkomendę czyta z tabeli. Nazwę skryptu menedżera pakietów zamienia na aktywność wzorcami: `test*` → test · `build*` → build · `db:*` → data. Program główny to ten o najwyższej pozycji w `ACTIVITY_RANK`, czyli w porządku typowego czasu trwania. Przy remisie wygrywa wcześniejszy. Pozostałe ciężkie narzędzia trafiają na listę `also`, najwyżej osiem.
+
+**Dwie klasy prywatności.** Wartości ze słownika zamkniętego (id, podkomenda z tabeli, aktywność, runner) są identyczne w obu trybach redakcji. Wartości swobodne, czyli nazwę programu spoza rejestru i nazwę skryptu, `toolUsageAttributes` emituje tylko bez redakcji. Argumenty, ścieżki oraz wartości opcji nie wchodzą do wyniku w żadnym trybie. Klucze atrybutów trzyma `TOOL_ATTR`.
+
+Koszt mierzy `pnpm bench`: 10 tys. typowych komend poniżej 250 ms, komenda 1 MB poniżej 5 ms, bo czytane jest pierwsze 8 kB.
+
 ## 3. `packages/cli` — pełna specyfikacja
 
 ```
@@ -144,6 +158,8 @@ Eksport singlefile: szablon `ui/dist-export/index.html` (vite-plugin-singlefile)
 | Scroll waterfall 10k spanów | 60 fps (wirtualizacja) |
 | RAM procesu CLI | < 500 MB na `large` |
 | Rozmiar `report.html` | < 1.5 MB + dane |
+| Klasyfikacja 10 tys. komend shell (`tools/`) | < 250 ms |
+| Klasyfikacja jednej komendy 1 MB | < 5 ms (czytane 8 kB) |
 Bench: `pnpm bench` (tinybench) w CI jako informacyjny, fail dopiero przy 2× regresji.
 
 ## 6. Bezpieczeństwo i prywatność (USP, nie checklist)
