@@ -91,14 +91,14 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 - [x] 3.1 A `tools/identity.ts`: span to identity (family, key, label,
       subcommand, activity, flags, container mark), with the fallback for
       spans that carry no tool-usage attributes (T2). Verify: tests for every
-      scenario of "Tool identity resolution" and "Harness tool
-      classification".
-- [ ] 3.2 A `tools/usage.ts`: ranked rows with sub-rows, total, shared and
+      scenario of "Tool identity resolution", "Identity outside the registry
+      and outside the vocabulary" and "Harness tool classification".
+- [x] 3.2 A `tools/usage.ts`: ranked rows with sub-rows, total, shared and
       also-ran time, nearest-rank percentiles, errors and flag counts; the
       utilities group mark; the three side groups; summed tool time and
       activity totals (T7, T11). Verify: tests for every scenario of "Tool
-      usage aggregation", "Time attribution" and "Containers, hooks and
-      waiting stay out of tool time".
+      usage aggregation", "Sub-rows by subcommand and name", "Time
+      attribution" and "Containers, hooks and waiting stay out of tool time".
 - [ ] 3.3 A Invariants over real shapes: run the aggregation against every
       committed golden, including the metadata-only ones. Verify: a test
       asserting no throw, row totals summing to summed tool time, and activity

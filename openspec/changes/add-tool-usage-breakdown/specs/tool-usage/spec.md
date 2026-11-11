@@ -326,12 +326,32 @@ tool name.
 - WHEN it is resolved
 - THEN the family is `shell` and the tool key and label are `Bash`
 
+### Requirement: Identity outside the registry and outside the vocabulary
+A classified shell span whose program is not a registry tool SHALL resolve to
+one fixed key, with the program name, where the trace carries it, as
+free-form detail. Attribute values SHALL be checked against their
+vocabularies before use, and a value outside its vocabulary SHALL be ignored.
+
+#### Scenario: Program outside the registry
+- GIVEN shell spans classified from `acme-deploy --prod`, one parsed with
+  redaction and one without
+- WHEN both are resolved
+- THEN both have the same fixed key, and only the unredacted one carries
+  `acme-deploy`, as detail
+
+#### Scenario: Value outside its vocabulary
+- GIVEN a shell span whose `runray.tool` value is not a registry id
+- WHEN it is resolved
+- THEN the value is ignored and the span resolves as a program outside the
+  registry
+
 ### Requirement: Tool usage aggregation
 The system SHALL aggregate a run's resolved spans into one row per tool, each
 with its call count, error count, total time, shared time, also-ran time, and
 nearest-rank p50, p95 and maximum duration, plus one sub-row per subcommand.
 Rows SHALL be ordered by total time descending, then by key, so the output is
-deterministic. Spans still in progress SHALL contribute a call and no time.
+deterministic and independent of span order. Spans still in progress SHALL
+contribute a call and no time.
 
 #### Scenario: One row per tool, sub-rows per subcommand
 - GIVEN a run with four `docker exec` calls and one `docker ps` call
@@ -347,6 +367,31 @@ deterministic. Spans still in progress SHALL contribute a call and no time.
 - GIVEN a shell call with no result yet
 - WHEN the run is aggregated
 - THEN the call is counted and adds no time to any figure
+
+### Requirement: Sub-rows by subcommand and name
+Where the trace carries a script or program name, a sub-row SHALL be split by
+that name, so the local view tells one script from another and a redacted
+trace keeps one sub-row per subcommand. Calls to programs outside the
+registry SHALL share one row. The sub-rows of a row SHALL partition its
+calls.
+
+#### Scenario: Script names split a subcommand
+- GIVEN the calls `pnpm build`, `pnpm test:e2e` and `pnpm install`
+- WHEN the run is aggregated from an unredacted trace and from a redacted one
+- THEN the `pnpm` row has the sub-rows `run build`, `run test:e2e` and
+  `install` in the first, and `run` and `install` in the second
+
+#### Scenario: Programs outside the registry share one row
+- GIVEN calls to two programs outside the registry
+- WHEN the run is aggregated
+- THEN there is one row for them, with one sub-row per program name in an
+  unredacted trace and no sub-rows in a redacted one
+
+#### Scenario: Calls without a subcommand
+- GIVEN the calls `git status` and `git frobnicate ./x`
+- WHEN the run is aggregated
+- THEN the `git` row has a `status` sub-row and one unnamed sub-row, and
+  their calls and time add up to the row's
 
 ### Requirement: Time attribution
 A call's whole duration SHALL be attributed to its primary tool. A call with
@@ -374,7 +419,10 @@ SHALL equal the summed duration of the aggregated calls.
 ### Requirement: Containers, hooks and waiting stay out of tool time
 Summed tool time SHALL exclude tool spans that contain a subagent, hook spans
 and spans whose activity is `human`; each of the three SHALL be aggregated in
-its own group. Activity totals SHALL partition summed tool time exactly.
+its own group. Activity totals SHALL partition summed tool time exactly. The
+time of a call that contains a subagent SHALL be the longer of the call and
+the subagent span it contains, because a call that launches its agent in the
+background returns before the agent has finished.
 
 #### Scenario: A delegation is not double-counted
 - GIVEN an `Agent` call lasting three minutes whose subagent ran two minutes
@@ -382,6 +430,12 @@ its own group. Activity totals SHALL partition summed tool time exactly.
 - WHEN the run is aggregated
 - THEN the three minutes appear only in the agent group, and the subagent's
   tool calls count toward summed tool time once
+
+#### Scenario: A delegation launched in the background
+- GIVEN an `Agent` call that returned after 133 milliseconds and whose
+  subagent ran for 221 seconds
+- WHEN the run is aggregated
+- THEN the agent group shows 221 seconds for it
 
 #### Scenario: Waiting is not tool time
 - GIVEN an `AskUserQuestion` call answered after ten minutes

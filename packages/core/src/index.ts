@@ -134,9 +134,15 @@ export {
   TOOL_IDS,
   type ToolFamily,
   type ToolIdentity,
+  type ToolRow,
+  type ToolSubRow,
+  type ToolUsage,
+  type ToolUsageOptions,
   toolIdentity,
   toolLabel,
+  toolUsage,
   toolUsageAttributes,
+  type UsageGroup,
 } from './tools/index.js';
 export type {
   TranscriptOptions,

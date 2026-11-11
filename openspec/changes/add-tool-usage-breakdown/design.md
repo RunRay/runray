@@ -285,6 +285,12 @@ uses.
 `Σ` is not wall-clock: parallel calls overlap. The wall-clock strip keeps
 using the interval sweep; the activity bar is labelled as summed.
 
+A container's time in the agent group is the longer of the call and the
+subagent span it contains. The call alone understates it: in 120 recent
+sessions from the measured machine, 203 of 257 `Agent` calls returned in under
+a tenth of their subagent's duration (agents launched in the background), and
+the calls summed to 201 minutes against 2,061 minutes for their subagents.
+
 ### T8 — How a span becomes "waiting"
 
 Activity `human` comes from the harness-tool table: Claude Code
@@ -330,7 +336,22 @@ keep them by key without inspecting values.
 ### T11 — Aggregation lives in core
 
 `usage.ts` returns the ranked rows, the three side groups, `Σ` and the
-activity totals. The UI's `toolDurationStats` is removed with its last caller;
+activity totals. It takes an optional activity that narrows the rows and
+nothing else, so a filtered table recomputes its counts and percentiles while
+shares keep the run-wide denominator.
+
+An identity separates what is closed vocabulary from what is session text:
+`sub` is a table subcommand or an MCP tool name, `detail` is a script or
+program name. Sub-rows are keyed by both, so the local view shows
+`run build` beside `run test:e2e` and a redacted trace degrades to one `run`
+sub-row without a second code path. Shell calls whose program is not a
+registry tool share one row under a fixed key (`other-command`), with the
+program names as its sub-rows; under redaction that is the single nameless
+"other command" row the visualizer spec asks for. A row's id includes whether
+its key is a registry id, because OpenCode names its shell tool `bash`, which
+is also a registry tool.
+
+The UI's `toolDurationStats` is removed with its last caller;
 `toolDurationStatsAcrossRuns` stays, because the dashboard "By tool" card
 still keys by harness name until its own change.
 

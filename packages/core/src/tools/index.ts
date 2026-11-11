@@ -53,3 +53,13 @@ export {
   type StageProgram,
   stageProgram,
 } from './shell.js';
+export {
+  type ActivityTotal,
+  type ToolRow,
+  type ToolSubRow,
+  type ToolUsage,
+  type ToolUsageOptions,
+  toolUsage,
+  type UsageGroup,
+  type UsageStats,
+} from './usage.js';
