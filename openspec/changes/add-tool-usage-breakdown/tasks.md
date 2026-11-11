@@ -156,7 +156,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 
 ## 5. Claude Code hook spans (goldens change; regeneration in 5.4)
 
-- [ ] 5.1 A `dead-end-run` skips `hook` spans when it picks the run's terminal
+- [x] 5.1 A `dead-end-run` skips `hook` spans when it picks the run's terminal
       span (T9). Verify: a rule test with a run ending in a failed hook span
       and one ending in an `ok` hook span after a failed tool call, and an
       assertion that findings on every fixture are unchanged.
