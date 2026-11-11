@@ -88,7 +88,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
 
 ## 3. Resolver and aggregation
 
-- [ ] 3.1 A `tools/identity.ts`: span to identity (family, key, label,
+- [x] 3.1 A `tools/identity.ts`: span to identity (family, key, label,
       subcommand, activity, flags, container mark), with the fallback for
       spans that carry no tool-usage attributes (T2). Verify: tests for every
       scenario of "Tool identity resolution" and "Harness tool

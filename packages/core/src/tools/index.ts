@@ -18,6 +18,17 @@ export {
   toolUsageAttributes,
 } from './classify.js';
 export {
+  type IdentityContext,
+  identityContext,
+  isToolSpan,
+  OTHER_COMMAND_KEY,
+  OTHER_COMMAND_LABEL,
+  TOOL_FAMILIES,
+  type ToolFamily,
+  type ToolIdentity,
+  toolIdentity,
+} from './identity.js';
+export {
   ACTIVITIES,
   ACTIVITY_RANK,
   type Activity,
