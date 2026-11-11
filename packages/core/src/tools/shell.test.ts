@@ -237,6 +237,18 @@ interface ProgramCase {
 
 const PROGRAMS: ProgramCase[] = [
   {
+    name: '`command -v` asks about a name, it does not run it',
+    stage: 'command -v docker',
+    program: 'which',
+    args: ['docker'],
+  },
+  {
+    name: '`command` without a lookup option runs the program',
+    stage: 'command docker ps',
+    program: 'docker',
+    args: ['ps'],
+  },
+  {
     name: 'assignment and wrappers are skipped (spec scenario)',
     stage: 'DATABASE_URL=x sudo timeout 30 docker ps',
     program: 'docker',

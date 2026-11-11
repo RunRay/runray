@@ -504,6 +504,15 @@ describe('primary tool selection', () => {
       expect: { tool: 'cat', also: [] },
     },
     {
+      // a check that docker exists is not a docker call
+      command: 'command -v docker >/dev/null && echo found',
+      expect: { tool: 'which', activity: 'explore', also: [] },
+    },
+    {
+      command: 'command -v pnpm',
+      expect: { tool: 'which', activity: 'explore', also: [] },
+    },
+    {
       // the apostrophe in the message used to swallow everything after it
       command:
         "git commit -m \"$(cat <<'EOF'\nfix: don't run docker here\nEOF\n)\" && pnpm test",

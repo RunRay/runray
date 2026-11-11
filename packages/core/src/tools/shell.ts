@@ -475,6 +475,11 @@ interface WrapperSpec {
   valueOptions?: readonly string[];
   /** Positional words the wrapper consumes before the wrapped command. */
   positionals?: number;
+  /**
+   * Options that turn the wrapper into a question about a name: with one of
+   * them it runs nothing, and the stage is the program `as` instead.
+   */
+  lookup?: { options: readonly string[]; as: string };
 }
 
 /** Commands that run another command and are never the tool themselves. */
@@ -487,7 +492,8 @@ const WRAPPERS: Readonly<Record<string, WrapperSpec>> = {
   nohup: {},
   nice: { valueOptions: ['-n'] },
   ionice: { valueOptions: ['-c', '-n', '-p'] },
-  command: {},
+  // `command -v docker` asks where docker is; it is not a docker call
+  command: { lookup: { options: ['-v', '-V'], as: 'which' } },
   builtin: {},
   exec: { valueOptions: ['-a'] },
   stdbuf: {},
@@ -698,6 +704,14 @@ export function stageProgram(
         break;
       }
       if (w.startsWith('-') && w.length > 1) {
+        if (wrapper.lookup?.options.includes(w) === true) {
+          return {
+            name: wrapper.lookup.as,
+            unresolved: false,
+            hasPath: false,
+            args: words.slice(i + 1),
+          };
+        }
         i += wrapper.valueOptions?.includes(w) === true ? 2 : 1;
         continue;
       }
