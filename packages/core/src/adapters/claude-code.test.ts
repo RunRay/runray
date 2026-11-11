@@ -1828,11 +1828,20 @@ describe('claude-code adapter — hook spans', () => {
         return false;
       }
     };
+    // `large/*.jsonl` is generated on a developer's machine for the bench and
+    // is not in the repository. Counting it made this test depend on whether
+    // the file happened to exist: it passed locally and failed in CI.
+    const local = /[\\/]large[\\/][^\\/]*\.jsonl$/;
     const live = (candidates: Candidate[]) =>
-      candidates.filter((c) => !/[\\/]raw[\\/]/.test(c.runRef));
+      candidates.filter(
+        (c) => !/[\\/]raw[\\/]/.test(c.runRef) && !local.test(c.runRef),
+      );
     const dir = mkdtempSync(join(tmpdir(), 'runray-cc-nohooks-'));
     try {
-      cpSync(source, dir, { recursive: true });
+      cpSync(source, dir, {
+        recursive: true,
+        filter: (from) => !local.test(from),
+      });
       const original = live(await claudeCodeAdapter.detect([source]));
       const stripped = live(await claudeCodeAdapter.detect([dir]));
       expect(stripped).toHaveLength(original.length);
@@ -1848,7 +1857,9 @@ describe('claude-code adapter — hook spans', () => {
           }
         }
       }
-      expect(removed).toBeGreaterThan(1000);
+      // the comparison below must have something to compare: the committed
+      // fixtures hold 295 hook records
+      expect(removed).toBeGreaterThan(200);
 
       const pipeline = async (c: Candidate) =>
         applyInsights(
@@ -1879,7 +1890,9 @@ describe('claude-code adapter — hook spans', () => {
           candidate.runRef,
         ).toEqual(without.spans.map((s) => s.id));
       }
-      expect(hookSpans).toBeGreaterThan(1000);
+      // each record is one span, except a copy re-appended to its transcript
+      expect(hookSpans).toBeGreaterThan(200);
+      expect(hookSpans).toBeLessThanOrEqual(removed);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
