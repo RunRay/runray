@@ -85,6 +85,29 @@ describe('demo', () => {
     expect(tools.has('cd')).toBe(false);
   });
 
+  it('names its hook spans the way a project would, not after filler', () => {
+    if (dir === undefined) throw new Error('unreachable');
+    const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
+    let hookCalls = 0;
+    for (const run of traceFile.runs) {
+      if (run.source.tool !== 'claude-code') continue;
+      const { hooks } = toolUsage(run.spans);
+      hookCalls += hooks.calls;
+      for (const row of hooks.rows) {
+        // event and matcher, the matcher being the tool the hook guards
+        expect(row.key, run.id).toMatch(
+          /^(PreToolUse:[A-Z]\w+|UserPromptSubmit)$/,
+        );
+        // one script behind them all, resolved to the tool that runs it
+        expect(
+          row.subs.map((s) => s.label),
+          run.id,
+        ).toEqual(['node guard-edits.mjs']);
+      }
+    }
+    expect(hookCalls).toBeGreaterThan(0);
+  });
+
   it('wraps the goldens in a TraceFile envelope, newest first', () => {
     if (dir === undefined) throw new Error('unreachable');
     const traceFile = loadDemoTraceFile(dir, '0.0.0-test');

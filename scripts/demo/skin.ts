@@ -258,6 +258,14 @@ const COMMAND_LINE: Record<string, string> = {
   docker: 'docker ps',
 };
 
+/**
+ * What the story's hook ran. The goldens carry hook spans from Claude Code
+ * transcripts, named and classified from scrubbed filler; the demo names
+ * them by where they hang (a hook under a tool call guards that tool) and
+ * gives them one script, so the Time view lists a hook a project could have.
+ */
+const HOOK_COMMAND = 'node .claude/hooks/guard-edits.mjs';
+
 /** The classification keys a re-skinned shell call replaces. Result flags
  * describe how the call ended, not what it ran, and stay as recorded. */
 const CLASSIFICATION_KEYS = [
@@ -610,6 +618,17 @@ export function skinRun(golden: Run, story: DemoStory): RawRun {
         for (const key of CLASSIFICATION_KEYS) delete attrs[key];
         Object.assign(attrs, usage);
       }
+    }
+    // an imported trace names its hook spans itself; a transcript's are
+    // scrubbed along with everything else
+    if (s.kind === 'hook' && golden.source.tool === 'claude-code') {
+      const parent = s.parentId === null ? undefined : byId.get(s.parentId);
+      next.name =
+        parent?.tool === undefined
+          ? 'UserPromptSubmit'
+          : `PreToolUse:${parent.name}`;
+      for (const key of CLASSIFICATION_KEYS) delete attrs[key];
+      Object.assign(attrs, toolUsageAttributes(HOOK_COMMAND, 'posix', false));
     }
     const reqModel = attrs['gen_ai.request.model'];
     if (typeof reqModel === 'string') {

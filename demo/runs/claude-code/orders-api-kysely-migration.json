@@ -9811,6 +9811,28 @@
       }
     },
     {
+      "id": "8a9b3fcc-210d-46dc-a566-c75d9d1b4e89",
+      "parentId": "toolu_014b1c4Q5KkH5UbLskpvbSbb",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T11:39:03.938Z",
+      "endedAt": "2026-07-06T11:39:04.248Z",
+      "durationMs": 310,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 76
+      }
+    },
+    {
       "id": "msg_01HniuZmoSSGdmr5SaQYYVgV",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -9868,6 +9890,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 88
+      }
+    },
+    {
+      "id": "0f298a6d-acad-426c-89ab-885afb999a60",
+      "parentId": "toolu_01HfhFWtTMvXThGbSeYpJGc3",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T11:42:13.788Z",
+      "endedAt": "2026-07-06T11:42:14.034Z",
+      "durationMs": 246,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 91
       }
     },
     {
@@ -27603,6 +27647,28 @@
       }
     },
     {
+      "id": "41ff004a-b5e6-402d-b50b-d53340c749b5",
+      "parentId": "toolu_01G9GHM88RRWpX75VUFpHt49",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:02:01.359Z",
+      "endedAt": "2026-07-06T12:02:01.702Z",
+      "durationMs": 343,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 249
+      }
+    },
+    {
       "id": "msg_01CUoZrSwuHE9tgtF7f97rtu",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -27955,6 +28021,28 @@
       }
     },
     {
+      "id": "488edd7a-a14b-4cc1-af0d-1b9d4661d3d6",
+      "parentId": "toolu_01DfahqSvAi3bfjJQmWgASKJ",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:16:13.721Z",
+      "endedAt": "2026-07-06T12:16:13.974Z",
+      "durationMs": 253,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 287
+      }
+    },
+    {
       "id": "msg_01BXQ8HA7de6T773qCV4GaJA",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -28012,6 +28100,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 293
+      }
+    },
+    {
+      "id": "3e955a84-34a4-4d67-9af5-97273a248b91",
+      "parentId": "toolu_01SF8hZwy1CpuJfzUP3pPsuY",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:16:56.580Z",
+      "endedAt": "2026-07-06T12:16:56.804Z",
+      "durationMs": 224,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 294
       }
     },
     {
@@ -28154,6 +28264,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 301
+      }
+    },
+    {
+      "id": "a517963f-67f7-45e5-9f14-35e8a5ba42af",
+      "parentId": "toolu_015QaLKcgu1a972pa4k2AULh",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:17:13.004Z",
+      "endedAt": "2026-07-06T12:17:13.248Z",
+      "durationMs": 244,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 302
       }
     },
     {
@@ -30502,6 +30634,28 @@
       }
     },
     {
+      "id": "9c1bff43-fda4-46b2-bab4-4301465ca739",
+      "parentId": "toolu_012GQa9cuPeJjJQmNdbwyGA4",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:53:18.301Z",
+      "endedAt": "2026-07-06T12:53:18.543Z",
+      "durationMs": 242,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 542
+      }
+    },
+    {
       "id": "msg_01WXyFP4EubPMavNJ5yt6mh5",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -30560,6 +30714,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 546
+      }
+    },
+    {
+      "id": "1dc08652-3714-4cd9-8dc3-e92520c9ef80",
+      "parentId": "toolu_01KXC23p63pimv5wagArgqea",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:53:34.031Z",
+      "endedAt": "2026-07-06T12:53:34.310Z",
+      "durationMs": 279,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 547
       }
     },
     {
@@ -30624,6 +30800,28 @@
       }
     },
     {
+      "id": "0e92591c-25bd-4e4a-a7fb-6562574a50e6",
+      "parentId": "toolu_01BqK4pJ1REcTkU79YthJfHM",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:53:45.911Z",
+      "endedAt": "2026-07-06T12:53:46.177Z",
+      "durationMs": 266,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 554
+      }
+    },
+    {
       "id": "msg_01R3cSiQ6oCbGxXWTKh9HHpB",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -30679,6 +30877,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 558
+      }
+    },
+    {
+      "id": "33fea751-6c7b-48c9-a8b1-ed6df2ef0813",
+      "parentId": "toolu_01Nov9H8tx2DD7VhLPwV2U42",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:53:53.502Z",
+      "endedAt": "2026-07-06T12:53:53.740Z",
+      "durationMs": 238,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 559
       }
     },
     {
@@ -30857,6 +31077,28 @@
       }
     },
     {
+      "id": "f2baf496-9310-427a-b6f6-7a0595c082fd",
+      "parentId": "toolu_01XxQnRue5f3mu4Nzf2FqMnh",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:11.945Z",
+      "endedAt": "2026-07-06T12:54:12.214Z",
+      "durationMs": 269,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 568
+      }
+    },
+    {
       "id": "msg_014a2c3XJ3AymKs26C2AkdAE",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -30912,6 +31154,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 570
+      }
+    },
+    {
+      "id": "f756fe3e-a2c9-4655-8bf3-219f8ab413ec",
+      "parentId": "toolu_01AYX4s26jbCbeAqKWbtcAkV",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:20.691Z",
+      "endedAt": "2026-07-06T12:54:20.959Z",
+      "durationMs": 268,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 571
       }
     },
     {
@@ -30973,6 +31237,28 @@
       }
     },
     {
+      "id": "e3078bee-66f2-41ec-b912-8d4f6db3d7cd",
+      "parentId": "toolu_01SddHi1FmNKvT7pXthunGSz",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:28.804Z",
+      "endedAt": "2026-07-06T12:54:29.083Z",
+      "durationMs": 279,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 574
+      }
+    },
+    {
       "id": "msg_01EPFo8a3y3C8WttJnSEjZs2",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31028,6 +31314,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 576
+      }
+    },
+    {
+      "id": "a6cc25e8-508a-4b02-8e64-4a7f5cb369a7",
+      "parentId": "toolu_012m5VtaejSfTig6WWR91qWK",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:36.371Z",
+      "endedAt": "2026-07-06T12:54:36.655Z",
+      "durationMs": 284,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 579
       }
     },
     {
@@ -31092,6 +31400,28 @@
       }
     },
     {
+      "id": "38438d55-8fdf-4b61-a013-13a4ef66c135",
+      "parentId": "toolu_01S5aHQpuSZfH6u9zoXFVn8T",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:43.821Z",
+      "endedAt": "2026-07-06T12:54:44.058Z",
+      "durationMs": 237,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 585
+      }
+    },
+    {
       "id": "msg_01AVJEn3t8N4rEUZYDLBLGcd",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31147,6 +31477,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 587
+      }
+    },
+    {
+      "id": "b5629543-6ddd-4970-b3d4-3199d0325b62",
+      "parentId": "toolu_015dBLbR253eybgpMuL8Cqyv",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:51.112Z",
+      "endedAt": "2026-07-06T12:54:51.329Z",
+      "durationMs": 217,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 588
       }
     },
     {
@@ -31211,6 +31563,28 @@
       }
     },
     {
+      "id": "70b4b1e0-ab51-4e4a-8ad8-614ef7dbb38f",
+      "parentId": "toolu_01NhV9dfrFBs5quZiTtVMZRi",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:54:59.055Z",
+      "endedAt": "2026-07-06T12:54:59.315Z",
+      "durationMs": 260,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 593
+      }
+    },
+    {
       "id": "msg_018vtTYTRYzwtV9YF6LDptuW",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31266,6 +31640,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 597
+      }
+    },
+    {
+      "id": "6374b7cc-4d31-487f-822e-44495f881838",
+      "parentId": "toolu_01VdMDAvDPkeeYDK6mCbuNGU",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:55:11.959Z",
+      "endedAt": "2026-07-06T12:55:12.167Z",
+      "durationMs": 208,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 598
       }
     },
     {
@@ -31327,6 +31723,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 602
+      }
+    },
+    {
+      "id": "30bc43a5-fd78-4fdb-8865-16cb9b414f4a",
+      "parentId": "toolu_01LJRaMuQfY4a4FJ3fKvFxbz",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:55:18.707Z",
+      "endedAt": "2026-07-06T12:55:18.916Z",
+      "durationMs": 209,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 603
       }
     },
     {
@@ -31560,6 +31978,28 @@
       }
     },
     {
+      "id": "3b5d61e1-4396-405c-8c61-7fb5b942c9fd",
+      "parentId": "toolu_013Sugtt4C5vaG7GJ3njiqh2",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:57:18.229Z",
+      "endedAt": "2026-07-06T12:57:18.500Z",
+      "durationMs": 271,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 624
+      }
+    },
+    {
       "id": "msg_01TgiNbLjZZEgyUx6b7T9pa5",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31618,6 +32058,28 @@
       }
     },
     {
+      "id": "cbabf5d9-9d51-414c-a2e4-9edc067a2174",
+      "parentId": "toolu_01Kw9VKTNT63Mpt1torJFdqv",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:57:24.915Z",
+      "endedAt": "2026-07-06T12:57:25.214Z",
+      "durationMs": 299,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 627
+      }
+    },
+    {
       "id": "msg_0133Utb636zsJEy6rQJW45nT",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31673,6 +32135,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 629
+      }
+    },
+    {
+      "id": "4573aa13-3e8a-4f31-bc6e-4f145fd39208",
+      "parentId": "toolu_015tPhVT1X3AMB7W59DUnsAF",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:57:33.510Z",
+      "endedAt": "2026-07-06T12:57:33.737Z",
+      "durationMs": 227,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 630
       }
     },
     {
@@ -31879,6 +32363,28 @@
       }
     },
     {
+      "id": "650bd84a-91f2-4091-a396-1901b74f9130",
+      "parentId": "toolu_01XGpvJahbysvonURp3hL6e1",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:59:16.110Z",
+      "endedAt": "2026-07-06T12:59:16.326Z",
+      "durationMs": 216,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 646
+      }
+    },
+    {
       "id": "msg_01GAP4YEe2QHdNUER5z4bscP",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31937,6 +32443,28 @@
       }
     },
     {
+      "id": "516f8f8b-9e16-427d-a75d-48b39cc419f4",
+      "parentId": "toolu_01JbWk2fi4dTUuNGmtkxrYd1",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:59:25.577Z",
+      "endedAt": "2026-07-06T12:59:25.835Z",
+      "durationMs": 258,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 651
+      }
+    },
+    {
       "id": "msg_01EruYoDPw6cpEwifNZ4Y4vy",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -31992,6 +32520,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 653
+      }
+    },
+    {
+      "id": "4e726696-f7fc-48d2-af5b-7604438df530",
+      "parentId": "toolu_01Agqkpkm6kReRoECUDi6euj",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:59:32.722Z",
+      "endedAt": "2026-07-06T12:59:32.973Z",
+      "durationMs": 251,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 654
       }
     },
     {
@@ -32056,6 +32606,28 @@
       }
     },
     {
+      "id": "3cea5b1c-2117-4d08-8276-1c9adee28420",
+      "parentId": "toolu_01BktN9XYEjXNDGUe5BjF1Qb",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T12:59:59.463Z",
+      "endedAt": "2026-07-06T12:59:59.683Z",
+      "durationMs": 220,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 661
+      }
+    },
+    {
       "id": "msg_01QX6MSJQuKMJR5aW6ey858g",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -32111,6 +32683,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 663
+      }
+    },
+    {
+      "id": "518a644e-68d0-4b16-b5fc-87633f36c3f9",
+      "parentId": "toolu_018wddpkDnmWv7VdqQKVWZvM",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:00:10.054Z",
+      "endedAt": "2026-07-06T13:00:10.330Z",
+      "durationMs": 276,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 664
       }
     },
     {
@@ -32175,6 +32769,28 @@
       }
     },
     {
+      "id": "d9dbbbb3-69ff-4632-9cc9-ddbfdec7ac93",
+      "parentId": "toolu_013ZG4PtXcUNMsrvDD7Sof6v",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:01:54.355Z",
+      "endedAt": "2026-07-06T13:01:54.600Z",
+      "durationMs": 245,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 671
+      }
+    },
+    {
       "id": "msg_01Y6s5XVkwifu7LZrZLsUa65",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -32233,6 +32849,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 676
+      }
+    },
+    {
+      "id": "9e06958e-966f-4f47-b947-6001b97698a1",
+      "parentId": "toolu_019goKKpBkKMMdZ4ZrWkQdum",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:02:15.529Z",
+      "endedAt": "2026-07-06T13:02:15.756Z",
+      "durationMs": 227,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 677
       }
     },
     {
@@ -32619,6 +33257,28 @@
       }
     },
     {
+      "id": "c6225e2f-77e2-4393-9b95-4ba801e0e8ed",
+      "parentId": "toolu_011UFdtKjjdUjRAKLN7vbsjX",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:03:49.349Z",
+      "endedAt": "2026-07-06T13:03:49.571Z",
+      "durationMs": 222,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 706
+      }
+    },
+    {
       "id": "msg_01BQ5o1KjTTwBNXXPjAoq1h5",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -32677,6 +33337,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 710
+      }
+    },
+    {
+      "id": "1a5697e4-fe56-4940-a9fc-70332a9e14e7",
+      "parentId": "toolu_01Kqc1oXn8xuvcJyhCUqRUUN",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:04:08.071Z",
+      "endedAt": "2026-07-06T13:04:08.320Z",
+      "durationMs": 249,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 711
       }
     },
     {
@@ -32905,6 +33587,28 @@
       }
     },
     {
+      "id": "e98507f0-2b54-4338-9f3b-731c081416d6",
+      "parentId": "toolu_01UxSGanFj1gFUdF23Bab8k3",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:05:59.453Z",
+      "endedAt": "2026-07-06T13:05:59.719Z",
+      "durationMs": 266,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 733
+      }
+    },
+    {
       "id": "msg_01Wvb1pvzkLuSKcMjkQ6rD6q",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -32963,6 +33667,28 @@
       }
     },
     {
+      "id": "b8f6e541-30dd-45cc-8b60-55f6bec308b6",
+      "parentId": "toolu_01PSGRw8Hhsff5ztdJeX2tGf",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:06:10.719Z",
+      "endedAt": "2026-07-06T13:06:10.993Z",
+      "durationMs": 274,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 736
+      }
+    },
+    {
       "id": "msg_01PKL7VFap8YuXwRH3JUz745",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -33018,6 +33744,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 738
+      }
+    },
+    {
+      "id": "87d2eb47-ed81-4a90-9dde-330c78cb50b2",
+      "parentId": "toolu_01Ju3xxP1fxv6tLZPGNCAR9E",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:06:18.435Z",
+      "endedAt": "2026-07-06T13:06:18.851Z",
+      "durationMs": 416,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 739
       }
     },
     {
@@ -33141,6 +33889,28 @@
       }
     },
     {
+      "id": "5085ea43-4448-4503-99dd-fc93239d7921",
+      "parentId": "toolu_01KSyqdSyUbnt8hmgLwTtHBg",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:06:45.399Z",
+      "endedAt": "2026-07-06T13:06:45.663Z",
+      "durationMs": 264,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 750
+      }
+    },
+    {
       "id": "msg_01A8dYx7dk9YtxxR3R6qbiiD",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -33196,6 +33966,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 752
+      }
+    },
+    {
+      "id": "39bbe21b-aee2-4fe3-a2a3-36f4f8560306",
+      "parentId": "toolu_01Lrmecs8QtTsH4teRrxinz9",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:06:50.495Z",
+      "endedAt": "2026-07-06T13:06:50.745Z",
+      "durationMs": 250,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 753
       }
     },
     {
@@ -33257,6 +34049,28 @@
       }
     },
     {
+      "id": "60bc9f48-d987-49f8-81dd-ab98c2c462a2",
+      "parentId": "toolu_011v2p3VvcVGnhM2zUxHUSQ9",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:07:04.973Z",
+      "endedAt": "2026-07-06T13:07:05.253Z",
+      "durationMs": 280,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 756
+      }
+    },
+    {
       "id": "msg_01NyQr9TT9rBLKJZ87aR9iaS",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -33315,6 +34129,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 763
+      }
+    },
+    {
+      "id": "7f3dff94-78af-41d3-9071-3dca6dbf3b4b",
+      "parentId": "toolu_013CFjBg7XcCWjVGptgGJJ9X",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:07:45.140Z",
+      "endedAt": "2026-07-06T13:07:45.409Z",
+      "durationMs": 269,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 764
       }
     },
     {
@@ -33429,6 +34265,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 769
+      }
+    },
+    {
+      "id": "064ed481-f536-4bee-a979-d304ab200fe0",
+      "parentId": "toolu_01LipX38LpYXWDzFoPpsg1UZ",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:08:00.802Z",
+      "endedAt": "2026-07-06T13:08:01.071Z",
+      "durationMs": 269,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 770
       }
     },
     {
@@ -33766,6 +34624,28 @@
       }
     },
     {
+      "id": "10c63040-abec-4192-95b1-9a144373d316",
+      "parentId": "toolu_01JyNwfFCFY3Q12BPAyzp6iL",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:10:53.659Z",
+      "endedAt": "2026-07-06T13:10:53.874Z",
+      "durationMs": 215,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 798
+      }
+    },
+    {
       "id": "toolu_01CCAvo9wL6xAAusLZ2zmrk5",
       "parentId": "msg_01RxUHGpbjJBR6RLnuh4Dqxz",
       "kind": "tool_call",
@@ -33790,6 +34670,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 800
+      }
+    },
+    {
+      "id": "27042d4f-3aca-4581-8c2f-cf9e0bbee950",
+      "parentId": "toolu_01CCAvo9wL6xAAusLZ2zmrk5",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:10:55.164Z",
+      "endedAt": "2026-07-06T13:10:55.398Z",
+      "durationMs": 234,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 801
       }
     },
     {
@@ -33820,6 +34722,28 @@
       }
     },
     {
+      "id": "8542192d-7010-4080-a128-ab9085ab2299",
+      "parentId": "toolu_01C1KKpAXt2LfikpFrDajtN8",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:10:56.666Z",
+      "endedAt": "2026-07-06T13:10:57.184Z",
+      "durationMs": 518,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 804
+      }
+    },
+    {
       "id": "toolu_01HmkuyaxhCGVzkpaqRopi5Z",
       "parentId": "msg_01RxUHGpbjJBR6RLnuh4Dqxz",
       "kind": "tool_call",
@@ -33844,6 +34768,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 806
+      }
+    },
+    {
+      "id": "6fa72dff-dd0e-42b4-8344-157742fe2474",
+      "parentId": "toolu_01HmkuyaxhCGVzkpaqRopi5Z",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:10:57.627Z",
+      "endedAt": "2026-07-06T13:10:57.853Z",
+      "durationMs": 226,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 809
       }
     },
     {
@@ -34411,6 +35357,28 @@
       }
     },
     {
+      "id": "a195e1a9-4170-4366-96c2-95448c3727aa",
+      "parentId": "toolu_01EMYMK88UvJr6ZcZKuH6fxN",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:16:14.065Z",
+      "endedAt": "2026-07-06T13:16:14.338Z",
+      "durationMs": 273,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 851
+      }
+    },
+    {
       "id": "msg_01M4GLBrvt88hzTcwL8Zue52",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -34580,6 +35548,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 858
+      }
+    },
+    {
+      "id": "628310cc-bbd2-41bf-ba74-e5678fa63c63",
+      "parentId": "toolu_013HRMtWMiEVvzp22RiqScWW",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:16:31.101Z",
+      "endedAt": "2026-07-06T13:16:31.540Z",
+      "durationMs": 439,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 859
       }
     },
     {
@@ -34944,6 +35934,28 @@
       }
     },
     {
+      "id": "7ad36df1-93bc-487b-80ea-33a533918da9",
+      "parentId": "toolu_019DWynTgiJwhY4yAaQrfb3W",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:20:55.515Z",
+      "endedAt": "2026-07-06T13:20:56.057Z",
+      "durationMs": 542,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 885
+      }
+    },
+    {
       "id": "msg_011Jpb7Lk9GiwoT3mo42mEe1",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -35002,6 +36014,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 889
+      }
+    },
+    {
+      "id": "54f80d5c-62d0-4e1e-b7e8-b46c302bdbb6",
+      "parentId": "toolu_0126YX4Xcvi92kX5sU36ubY1",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:21:13.292Z",
+      "endedAt": "2026-07-06T13:21:13.558Z",
+      "durationMs": 266,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 890
       }
     },
     {
@@ -35241,6 +36275,28 @@
       }
     },
     {
+      "id": "c1ca7889-bdf9-4b92-a5bd-1936bde36752",
+      "parentId": "toolu_01L1y5F9nEpsUa8bHdojhqU9",
+      "kind": "hook",
+      "name": "PreToolUse:Write",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:38:23.706Z",
+      "endedAt": "2026-07-06T13:38:23.986Z",
+      "durationMs": 280,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 918
+      }
+    },
+    {
       "id": "msg_015eoxZerfEitqEWC8q9hA6Q",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -35425,6 +36481,28 @@
       }
     },
     {
+      "id": "ce237d90-277f-4a03-affe-f3c75ca956bc",
+      "parentId": "toolu_016Qe8Q3nAwx7ytE8Z7fxqRk",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:39:16.551Z",
+      "endedAt": "2026-07-06T13:39:16.833Z",
+      "durationMs": 282,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 931
+      }
+    },
+    {
       "id": "msg_012wMQKK5p7eScoSysnKyoia",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -35483,6 +36561,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 939
+      }
+    },
+    {
+      "id": "6620e3f6-7852-44f5-bcfb-8001d9894130",
+      "parentId": "toolu_01UtqFVpsDCcJjLLjEudp7dV",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:39:55.948Z",
+      "endedAt": "2026-07-06T13:39:56.207Z",
+      "durationMs": 259,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 940
       }
     },
     {
@@ -35547,6 +36647,28 @@
       }
     },
     {
+      "id": "7914ddf3-5056-4fb4-9d59-4d720bf20ef6",
+      "parentId": "toolu_012R2YWK5Y8MgdAi2pj3tNqS",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:40:18.611Z",
+      "endedAt": "2026-07-06T13:40:18.878Z",
+      "durationMs": 267,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 947
+      }
+    },
+    {
       "id": "msg_01YMbb9kHXUzAPyNTQ4pSx6b",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -35602,6 +36724,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 949
+      }
+    },
+    {
+      "id": "098eabbb-903d-46d6-bea7-9075ba4ab899",
+      "parentId": "toolu_01CgL9zNkJHsbEaMJNQ9mMXm",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:40:28.680Z",
+      "endedAt": "2026-07-06T13:40:28.950Z",
+      "durationMs": 270,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 950
       }
     },
     {
@@ -35942,6 +37086,28 @@
       }
     },
     {
+      "id": "871f7438-5a76-4666-ab26-01e47092af3e",
+      "parentId": "toolu_01EiFsvyKGinKpte7dy3tK3R",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:44:51.106Z",
+      "endedAt": "2026-07-06T13:44:51.368Z",
+      "durationMs": 262,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 978
+      }
+    },
+    {
       "id": "msg_01JksNNNd9S5nZTaSaq3C8En",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -35997,6 +37163,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 980
+      }
+    },
+    {
+      "id": "72b7b4bf-47c1-4d18-aa9d-21f36d4fc7d6",
+      "parentId": "toolu_016PGGmYqZpAJUdTV41m5FdV",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:45:01.644Z",
+      "endedAt": "2026-07-06T13:45:01.904Z",
+      "durationMs": 260,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 981
       }
     },
     {
@@ -36058,6 +37246,28 @@
       }
     },
     {
+      "id": "a21fa982-7ac8-438a-ae0a-43313ed8e72c",
+      "parentId": "toolu_01CHsBXNeZWKQ3YGmV72VKVG",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:45:12.053Z",
+      "endedAt": "2026-07-06T13:45:12.324Z",
+      "durationMs": 271,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 985
+      }
+    },
+    {
       "id": "msg_01VrDmWU1uURKmFT8pv8aerU",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -36113,6 +37323,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 987
+      }
+    },
+    {
+      "id": "cdf71177-d44a-4370-950e-15eef3d2a8c5",
+      "parentId": "toolu_01TYB5fNRFQC6uHt76LAMnFM",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T13:45:27.890Z",
+      "endedAt": "2026-07-06T13:45:28.184Z",
+      "durationMs": 294,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 988
       }
     },
     {
@@ -37282,6 +38514,28 @@
       }
     },
     {
+      "id": "f344ffe1-21f9-4b29-ba98-7eec6bf8a989",
+      "parentId": "toolu_014qS2ymevDneMGaUs6vVcoH",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:18:45.306Z",
+      "endedAt": "2026-07-06T14:18:45.561Z",
+      "durationMs": 255,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1087
+      }
+    },
+    {
       "id": "msg_013T9RLNHow98qBfekaAM5rx",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -37337,6 +38591,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1091
+      }
+    },
+    {
+      "id": "4ce1a2f1-f4cd-45d5-9d0a-41f3cc4dce64",
+      "parentId": "toolu_0183UzqS8M9Fn1mMtR5kG4Wa",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:18:52.933Z",
+      "endedAt": "2026-07-06T14:18:53.149Z",
+      "durationMs": 216,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1092
       }
     },
     {
@@ -38234,6 +39510,28 @@
       }
     },
     {
+      "id": "0238663a-e9c6-421f-952f-13b0ef898725",
+      "parentId": "toolu_01AYNRxzCUZTbq4RStVWnbn9",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:50:18.777Z",
+      "endedAt": "2026-07-06T14:50:19.043Z",
+      "durationMs": 266,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1181
+      }
+    },
+    {
       "id": "msg_018Sbi87sWLma9znGmv2unKx",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -38289,6 +39587,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1185
+      }
+    },
+    {
+      "id": "9ab0e0de-59a0-4f37-a8cf-bfccdb560d10",
+      "parentId": "toolu_014w5hkPd3Udy2NbKXcvsMJh",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:50:31.274Z",
+      "endedAt": "2026-07-06T14:50:31.613Z",
+      "durationMs": 339,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1186
       }
     },
     {
@@ -38353,6 +39673,28 @@
       }
     },
     {
+      "id": "1aa66dc5-1ecd-49dc-96a3-a0654c926bd4",
+      "parentId": "toolu_01KZLzddDY2SEiFcVKpcmhwG",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:50:39.985Z",
+      "endedAt": "2026-07-06T14:50:40.451Z",
+      "durationMs": 466,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1192
+      }
+    },
+    {
       "id": "msg_0187VUvFCwT8g4yE6nFvE1wP",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -38408,6 +39750,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1194
+      }
+    },
+    {
+      "id": "447cfa64-e018-4f79-9624-c071f086cac8",
+      "parentId": "toolu_01MwKdstdddWqau3VYRaqvsr",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:50:51.610Z",
+      "endedAt": "2026-07-06T14:50:51.884Z",
+      "durationMs": 274,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1195
       }
     },
     {
@@ -38469,6 +39833,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1199
+      }
+    },
+    {
+      "id": "183041a3-909f-4df7-83b4-a84a1d611f89",
+      "parentId": "toolu_014UZpRJ57ASLXTEFYAaHF3W",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:04.559Z",
+      "endedAt": "2026-07-06T14:51:04.801Z",
+      "durationMs": 242,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1200
       }
     },
     {
@@ -38611,6 +39997,28 @@
       }
     },
     {
+      "id": "6eaaef1f-551e-4b0d-b7e0-7d7fbfc91359",
+      "parentId": "toolu_01Ws2j22iK6WereHfrQMBQDM",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:21.615Z",
+      "endedAt": "2026-07-06T14:51:21.896Z",
+      "durationMs": 281,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1210
+      }
+    },
+    {
       "id": "toolu_01Tmym6oMmdmtpVNMcToJYnX",
       "parentId": "msg_018yFWyGhjNXgv3r2LZdjuEW",
       "kind": "tool_call",
@@ -38635,6 +40043,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1212
+      }
+    },
+    {
+      "id": "00295567-048b-4c98-a7fa-cd0dd2f73fc3",
+      "parentId": "toolu_01Tmym6oMmdmtpVNMcToJYnX",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:23.270Z",
+      "endedAt": "2026-07-06T14:51:23.509Z",
+      "durationMs": 239,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1213
       }
     },
     {
@@ -38699,6 +40129,28 @@
       }
     },
     {
+      "id": "1358b585-12c1-495a-a2ff-b8b8b8cb7513",
+      "parentId": "toolu_019jMJC9W6qXJ2fopcW3aEfT",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:34.436Z",
+      "endedAt": "2026-07-06T14:51:34.718Z",
+      "durationMs": 282,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1217
+      }
+    },
+    {
       "id": "toolu_01PLysZEpGqKvZctd2STqjYJ",
       "parentId": "msg_01KnbhSk9oxRk1We5RLtjxDM",
       "kind": "tool_call",
@@ -38726,6 +40178,28 @@
       }
     },
     {
+      "id": "916af104-5966-4681-98f2-d973652d584d",
+      "parentId": "toolu_01PLysZEpGqKvZctd2STqjYJ",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:36.833Z",
+      "endedAt": "2026-07-06T14:51:37.044Z",
+      "durationMs": 211,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1220
+      }
+    },
+    {
       "id": "toolu_01QTbCJf8PwAewSpva7cy3XM",
       "parentId": "msg_01KnbhSk9oxRk1We5RLtjxDM",
       "kind": "tool_call",
@@ -38750,6 +40224,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1222
+      }
+    },
+    {
+      "id": "a726354f-a9a3-43ed-8b23-ffee79ae8fb3",
+      "parentId": "toolu_01QTbCJf8PwAewSpva7cy3XM",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:51:37.857Z",
+      "endedAt": "2026-07-06T14:51:38.069Z",
+      "durationMs": 212,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1225
       }
     },
     {
@@ -38898,6 +40394,28 @@
       }
     },
     {
+      "id": "1a5f3ec9-9eac-4ed9-9fc0-0373daf08023",
+      "parentId": "toolu_01RADgjS8HjjgLs5c4wBD9Ft",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:52:12.616Z",
+      "endedAt": "2026-07-06T14:52:12.890Z",
+      "durationMs": 274,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1236
+      }
+    },
+    {
       "id": "msg_01VcfnGUvXieMyEdZPeawxKW",
       "parentId": "72de75e7-d5ab-4c07-a381-6539f4e34e42",
       "kind": "llm_call",
@@ -38953,6 +40471,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1239
+      }
+    },
+    {
+      "id": "1664a1f0-ae11-44fb-8747-d43b174b520d",
+      "parentId": "toolu_013s1XWYZoryY2VVzro2DKJ6",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T14:52:25.457Z",
+      "endedAt": "2026-07-06T14:52:25.853Z",
+      "durationMs": 396,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1240
       }
     },
     {
@@ -39443,6 +40983,28 @@
       "provenance": {
         "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
         "line": 1279
+      }
+    },
+    {
+      "id": "e2ace5e6-d717-49bd-988a-fe7aeeb9a13b",
+      "parentId": "toolu_01XWuZhMhWPxSDJju5jnG2yZ",
+      "kind": "hook",
+      "name": "PreToolUse:Edit",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-06T15:05:20.745Z",
+      "endedAt": "2026-07-06T15:05:21.022Z",
+      "durationMs": 277,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "guard-edits.mjs"
+      },
+      "provenance": {
+        "file": "/home/dev/.claude/projects/-home-dev-code-orders-api/72de75e7-d5ab-4c07-a381-6539f4e34e42.jsonl",
+        "line": 1280
       }
     },
     {
