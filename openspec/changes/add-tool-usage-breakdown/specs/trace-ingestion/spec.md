@@ -39,6 +39,14 @@ command text SHALL NOT be stored.
 - THEN the span carries `runray.toolActivity: "other"` and no other
   tool-usage attribute
 
+#### Scenario: Unresolved program behind a runner
+- GIVEN the shell call `npx acme-deploy@1.2.3`, whose program is outside the
+  registry, parsed with redaction on
+- WHEN the transcript is parsed
+- THEN the span carries `runray.toolActivity: "other"` and
+  `runray.toolVia: "npx"`, the runner being a closed-vocabulary value that was
+  resolved, and carries no tool id and no program name
+
 #### Scenario: Cross-adapter identity
 - GIVEN a Claude Code `Bash` call and an OpenCode `bash` call with the same
   command

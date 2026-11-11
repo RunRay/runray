@@ -75,7 +75,7 @@ TraceFile
 | `runray.targetKind` | `file-read` \| `file-write` \| `command` | same | closed |
 | `runray.target` | basename or first command token, at most 80 chars | same | free-form |
 | `runray.mcpDetection` | `name-heuristic` | OpenCode MCP calls classified by name | closed |
-| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`), and every Claude Code hook span whose record names a command | closed |
+| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`), and every Claude Code hook span whose record names a command. A stop-hook summary carries it only when it names one command or when all its commands ran the same tool | closed |
 | `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell and hook spans whose command resolved | closed |
 | `runray.toolSub` | a subcommand from that tool's table (`compose up`, `diff`), or `run` / `script` / `inline` | when present | closed |
 | `runray.toolVia` | the runner the tool was launched through (`npx`, `pnpm exec`, `bash -c`) | when a runner was unwrapped | closed |

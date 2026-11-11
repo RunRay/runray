@@ -37,6 +37,13 @@ apply to POSIX shells and to PowerShell.
 - WHEN it is decomposed
 - THEN it yields two pipelines whose programs are `flutter` and `get-process`
 
+#### Scenario: Heredoc inside a command substitution
+- GIVEN the command `git commit -m "$(cat <<'EOF' … EOF)" && pnpm test`, whose
+  heredoc body holds an apostrophe and a closing bracket
+- WHEN it is decomposed
+- THEN it yields two pipelines, `git commit` with the substitution as one
+  word and `pnpm test`, and nothing in the body opens or closes a quote
+
 ### Requirement: Program resolution within a stage
 For each stage the system SHALL skip variable assignments, wrapper commands
 and shell control keywords, then take the next word as the program and
@@ -60,6 +67,22 @@ unresolved.
 - WHEN its program is resolved
 - THEN the program is `git`
 
+#### Scenario: PowerShell string assigned to a variable
+- GIVEN the PowerShell command `$dir = "D:\work\app"; Get-ChildItem $dir`
+- WHEN its programs are resolved
+- THEN the first stage has no program, because a quoted word after `$dir =`
+  is the value assigned, and the second stage's program is `get-childitem`
+
+#### Scenario: PowerShell command assigned to a variable
+- GIVEN the PowerShell command `$out = docker ps -q`
+- WHEN its program is resolved
+- THEN the program is `docker`
+
+#### Scenario: A lookup is not a call
+- GIVEN the stage `command -v docker`
+- WHEN its program is resolved
+- THEN the program is `which`, not `docker`
+
 #### Scenario: Variable directory, literal name
 - GIVEN the stage `$ANDROID_HOME/platform-tools/adb devices`
 - WHEN its program is resolved
@@ -75,7 +98,8 @@ When a stage's program is a runner from the closed runner list (package
 runners such as `npx`, `pnpm exec`, `uv run` and `python -m`, and nested
 shells such as `bash -c`), the system SHALL resolve the tool the runner
 launches and record the runner separately. Nested shell commands SHALL be
-decomposed recursively to a bounded depth.
+decomposed recursively to a bounded depth, and a chain of runners SHALL be
+followed to a bounded length.
 
 #### Scenario: Package runner
 - GIVEN the stage `npx vitest run`
@@ -264,6 +288,13 @@ and adapters.
 - GIVEN a command of one million characters
 - WHEN it is decomposed
 - THEN only its first 8,192 characters are read and the call completes
+
+#### Scenario: Command that repeats a runner
+- GIVEN a command of 8,000 characters that is one runner repeated, such as
+  `uv run uv run …` or `pnpm exec pnpm exec …`
+- WHEN it is classified
+- THEN a result is returned without an error, in time proportional to the
+  number of words, and the tool is the runner at which following stopped
 
 #### Scenario: Same command, same result
 - GIVEN the same command text in a Claude Code `Bash` call and an OpenCode

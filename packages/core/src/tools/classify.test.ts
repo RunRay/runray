@@ -24,15 +24,21 @@ import { MAX_COMMAND_CHARS, type ShellDialect } from './shell.js';
 interface Row {
   command: string;
   dialect?: ShellDialect;
-  expect: Partial<Classification> & { noTool?: true; noSub?: true };
+  expect: Partial<Classification> & {
+    noTool?: true;
+    noSub?: true;
+    /** `toMatchObject` cannot say a field is absent; this does. */
+    noScript?: true;
+  };
 }
 
 function check(rows: Row[]): void {
   for (const row of rows) {
     it(row.command.replace(/\n/g, '⏎'), () => {
       const got = classifyCommand(row.command, row.dialect ?? 'posix');
-      const { noTool, noSub, ...fields } = row.expect;
+      const { noTool, noSub, noScript, ...fields } = row.expect;
       expect(got).toMatchObject(fields);
+      if (noScript === true) expect(got.script).toBeUndefined();
       if (noTool === true) expect(got.tool).toBeUndefined();
       if (noSub === true) expect(got.sub).toBeUndefined();
     });
@@ -273,8 +279,14 @@ describe('package-manager scripts', () => {
       expect: { tool: 'npm', sub: 'run', script: 'db:reset', activity: 'data' },
     },
     {
+      // spec scenario "Own command": no script name is reported
       command: 'pnpm install --frozen-lockfile',
-      expect: { tool: 'pnpm', sub: 'install', activity: 'deps' },
+      expect: {
+        tool: 'pnpm',
+        sub: 'install',
+        activity: 'deps',
+        noScript: true,
+      },
     },
     {
       command: 'pnpm -r run build',
@@ -837,10 +849,28 @@ describe('closed vocabulary, by construction', () => {
     }
   });
 
-  it('classifies the same text identically for both shell tools of one dialect', () => {
+  it('is a function of the text alone: no call changes the next one', () => {
+    // the same command before and after a batch of unrelated ones, in both
+    // dialects, so state kept between calls would show
     const command = 'cd apps/web && pnpm exec vitest run';
-    expect(toolUsageAttributes(command, 'posix', true)).toEqual(
-      toolUsageAttributes(command, 'posix', true),
+    const before = JSON.stringify(toolUsageAttributes(command, 'posix', true));
+    for (const other of [
+      'docker compose up -d',
+      '$dir = "D:\\work"; Get-ChildItem $dir',
+      "cat <<'EOF'\nbody\nEOF",
+      'npx npx npx npx npx vitest',
+    ]) {
+      classifyCommand(other, 'posix');
+      classifyCommand(other, 'powershell');
+    }
+    expect(JSON.stringify(toolUsageAttributes(command, 'posix', true))).toBe(
+      before,
     );
+    expect(JSON.parse(before)).toEqual({
+      'runray.toolActivity': 'test',
+      'runray.tool': 'vitest',
+      'runray.toolSub': 'run',
+      'runray.toolVia': 'pnpm exec',
+    });
   });
 });

@@ -418,6 +418,18 @@ describe('stageProgram', () => {
     });
   }
 
+  it('names the programs behind a PowerShell call operator (spec scenario)', () => {
+    const names = scan(
+      '& "C:\\tools\\flutter\\bin\\flutter.bat" test; Get-Process',
+      'powershell',
+    )
+      .flat()
+      .map(
+        (stage) => stageProgram(stage.words, 'powershell', stage.quoted)?.name,
+      );
+    expect(names).toEqual(['flutter', 'get-process']);
+  });
+
   it('finds the programs of a loop, never its keywords (spec scenario)', () => {
     const names = decompose(
       'until curl -sf localhost:3000; do sleep 2; done',

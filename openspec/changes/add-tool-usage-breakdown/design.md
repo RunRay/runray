@@ -184,7 +184,7 @@ Consumers never read the attributes. `identity.ts` is the single reader
 
 | Key | Value | Emitted | Allowlisted |
 |---|---|---|---|
-| `runray.toolActivity` | activity enum | every shell and hook-command span, every mode | yes |
+| `runray.toolActivity` | activity enum | every shell span and every hook span whose command, or whose commands alike, ran one tool; every mode | yes |
 | `runray.tool` | registry id | when resolved, every mode | yes |
 | `runray.toolSub` | table subcommand, or `run` / `script` / `inline` | when present, every mode | yes |
 | `runray.toolVia` | runner id from the closed runner list | when unwrapped, every mode | yes |
@@ -210,7 +210,11 @@ A single left-to-right pass over at most 8,192 characters with a small state
 separators and word boundaries and nothing else: no expansion, no globbing,
 no evaluation. PowerShell differs only in its escape character, the call
 operator and `$x = …` assignments, handled by a dialect flag chosen from the
-harness tool name.
+harness tool name. The scan marks which words opened with a quote, because
+removing the quotes loses the one thing that tells `$dir = "D:\work"` (a
+value) from `$out = docker ps` (a command). The body of a heredoc is skipped
+inside a command substitution too, which is where commit messages are
+passed.
 
 Alternatives rejected: a shell parsing library adds a runtime dependency
 (AGENTS.md requires a justification), covers POSIX only, and throws on the
@@ -219,8 +223,14 @@ malformed and truncated commands transcripts are full of. A regex split on
 messages and inline scripts live.
 
 Properties tested rather than assumed: never throws (property test over
-random and adversarial strings), linear time (a bench entry on a 1 MB input),
-nested-shell recursion bounded at depth 2.
+random strings, and every hand-off the registry defines repeated up to the
+cap), linear time (a bench entry on a capped chain of runners, which is the
+worst case; the 1 MB entry shows the cap), nested-shell recursion bounded at
+depth 2 and a chain of hand-offs at four. A hand-off is a runner, a runner
+subcommand, a module flag or a skipped workspace name; past the fourth, the
+program that would hand off again names the call. Without that bound a
+command repeating `uv run` overflowed the stack and one repeating
+`pnpm exec` cost quadratic time.
 
 Known and accepted gap: about 7% of shell time in the sample starts with a
 variable or a substitution in the program position (`"$BIN/tool"`, `$(which
@@ -228,15 +238,18 @@ x)`). That is unresolvable without evaluation and is reported as unresolved.
 
 ### T5 — Registry content and maintenance
 
-An entry is `{ id, label, activity, aliases?, utility?, plumbing?, subs?,
-globalOptions? }`. `subs` maps a subcommand (one or two words) to an optional
-activity override. Package managers and task runners carry their own command
+An entry is `{ id, label, activity, utility?, plumbing?, subs?,
+valueOptions? }`, plus the fields that say how a program hands off (`runner`,
+`runnerSubs`, `moduleFlag`, `shell`, `interpreter`); aliases live in one
+table beside the entries. `subs` maps a subcommand (one or two words) to an
+optional activity override. Package managers and task runners carry their own command
 list; any other first word is a script (spec: "Package-manager scripts"),
-whose activity comes from name patterns: `test*`/`e2e*`/`spec*` to `test`,
-`build*`/`compile*`/`bundle*`/`assemble*` to `build`, `lint*`/`format*`/
-`fmt*`/`typecheck`/`type-check`/`check*`/`verify*` to `check`, `db:*`/
-`migrat*`/`seed*` to `data`, `dev`/`start`/`serve`/`preview`/`watch` to
-`run`. A name that matches nothing takes the tool's own activity (`make all`
+whose activity comes from name patterns, read per colon-separated segment:
+`test*`/`e2e*`/`spec*`/`unit*`/`integration*` to `test`,
+`build*`/`compile*`/`bundle*`/`assemble*`/`dist*` to `build`, `lint*`/
+`format*`/`fmt*`/`typecheck`/`type-check`/`check*`/`verify*`/`validate*`/
+`prettier*`/`eslint*`/`tsc*` to `check`, `db*`/`migrat*`/`seed*`/`prisma*`/
+`drizzle*` to `data`, `dev`/`start`/`serve`/`preview`/`watch` to `run`. A name that matches nothing takes the tool's own activity (`make all`
 is a build), except under a package manager, whose own default
 (dependencies) says nothing about its scripts: there it is `run`. Tools that
 take several targets in one call (`make`, `gradle`, `mvn`, `turbo`,
@@ -410,9 +423,10 @@ still keys by harness name until its own change.
 ### T12 — Activity colors
 
 The bar colors at most six activities and folds the rest into one neutral
-part, with unresolved time drawn as a pattern. Color follows the activity, in
-a fixed order, never its rank in the current run, so a filter does not repaint
-the survivors. The palette is derived from the project's tokens under
+part, with unresolved time drawn as a pattern. Within a run a color belongs
+to its activity: selecting a part narrows the table and repaints nothing.
+From one run to the next the same activity can take another color, because
+the six go to the run's six largest activities (next paragraph). The palette is derived from the project's tokens under
 `/frontend-design` and must pass adjacent-pair separation for common color
 vision deficiencies on both the ink and the paper surface; the legend carries
 every value as text, so color is never the only carrier.
@@ -437,7 +451,7 @@ neighbours under protanopia) and was replaced.
 - **A redacted export discloses the tool stack** → accepted at sign-off (D1);
   documented in `docs/02-DATA-MODEL.md` next to the keys.
 - **Registry gaps look like "unresolved"** → locally the out-of-registry name
-  is visible in the "other programs" group, which is how a gap gets noticed;
+  is visible in the "other command" row, which is how a gap gets noticed;
   the id snapshot test keeps additions cheap and removals deliberate.
 - **A wrong id from unusual syntax** → the scanner reports unresolved rather
   than guessing whenever the program position holds an expansion; arguments
