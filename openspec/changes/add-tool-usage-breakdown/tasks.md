@@ -171,7 +171,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       group, with the "failed and cancelled runs only" label and a count
       without a time for zero-duration `Stop` spans. Verify: a component test
       for "Hook durations are partial".
-- [ ] 5.4 A Regenerate goldens with `pnpm goldens` in a dedicated commit.
+- [x] 5.4 A Regenerate goldens with `pnpm goldens` in a dedicated commit.
       Verify: the diff adds hook spans only where a fixture holds hook
       records; no finding and no token, cost, call or error total in any
       golden changes; the only other differences are container and run

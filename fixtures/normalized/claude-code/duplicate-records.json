@@ -212,6 +212,26 @@
       }
     },
     {
+      "id": "74bc62a3-7512-460d-a993-ed95d9831b5e",
+      "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
+      "kind": "hook",
+      "name": "hook",
+      "status": "error",
+      "statusReason": "exit 1",
+      "startedAt": "2026-09-03T17:22:48.993Z",
+      "endedAt": "2026-09-03T17:22:49.522Z",
+      "durationMs": 529,
+      "depth": 1,
+      "attributes": {
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
+      },
+      "provenance": {
+        "file": "fixtures/claude-code/duplicate-records/duplicate-records.jsonl",
+        "line": 26
+      }
+    },
+    {
       "id": "msg_011CegtkqZgmNHGvDQhcRxWN",
       "parentId": "ed1bef26-fc12-4296-9dcf-19fc7063111e",
       "kind": "llm_call",
