@@ -82,7 +82,7 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       Verify: the diff adds `runray.tool*` attributes to shell spans and
       changes nothing else; the path-shape totality assertion still passes on
       the sanitized and metadata-only goldens.
-- [ ] 2.7 A Document the reserved attributes in `docs/02-DATA-MODEL.md`: key,
+- [x] 2.7 A Document the reserved attributes in `docs/02-DATA-MODEL.md`: key,
       value, privacy class, behaviour under redaction, and the disclosure note
       from D1. Verify: the table matches T3 key for key.
 
@@ -143,6 +143,12 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       `packages/cli/src/profiler-e2e.test.ts` that serves a transcript built
       inline and asserts the payload carries tool-usage attributes. Verify:
       the e2e case passes and the changeset file exists.
+- [ ] 4.8 B Demo data: `scripts/demo/skin.ts` re-skins shell targets but
+      copies tool-usage attributes from the goldens, where commands are filler
+      words. Give each re-skinned command the tool identity of its new
+      executable, then rebuild with `pnpm demo:build`. Verify: no demo run
+      carries a filler word in `runray.toolName`, and the demo Time view lists
+      the storyline tools (`pnpm`, `git`, `npx`).
 
 ## 5. Claude Code hook spans (goldens change; regeneration in 5.4)
 

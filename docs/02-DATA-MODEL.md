@@ -58,8 +58,44 @@ TraceFile
 | `tool?` | object | Only for `tool_call`/`mcp_call`: `name`, `mcpServer?`, `isError`, `exitCode?`, `outputBytes?`, `linesAdded?`, `linesRemoved?` (file-modifying tools only, when derivable from the source record). |
 | `agent?` | object | For `subagent`/`session`: `{ name?, sessionId? }`. |
 | `content?` | object | `{ promptPreview?, outputPreview?, delegationReason? }` — all prompt-derived text lives here and is nulled by `--redact`; previews are first N chars; `delegationReason` (subagent spans) is the Task description; tool spans carry `outputPreview` only for a failed or user-rejected result (N chars of its text starting at the line that names the failure). A user-rejected call has `status: cancelled` + `statusReason: user-rejected`, never `error`. |
-| `attributes` | object | Passthrough bag; prefer `gen_ai.*` keys where applicable. |
+| `attributes` | object | Passthrough bag; prefer `gen_ai.*` keys where applicable. Adapter-emitted keys use the reserved `runray.` prefix, listed under "Reserved span attributes". |
 | `provenance` | object | `{ file, line?, recordId? }`. |
+
+### Reserved span attributes (`runray.*`)
+
+`attributes` is a free-form bag. Adapters use the reserved `runray.` prefix for facts the schema has no field for. Each key belongs to one of two privacy classes.
+
+**Closed.** The value is a hash, an enum, a count or an entry from a fixed list in `packages/core` (`tools/registry.ts`). These keys are emitted in every redaction mode and survive the `sanitized` and `metadata-only` profiles.
+
+**Free-form.** The value is text from the session. These keys are emitted only when redaction is off, and the sanitized profiles drop them.
+
+| Key | Value | On which spans | Class |
+|---|---|---|---|
+| `runray.targetKey` | 16-hex hash of the normalized target: a POSIX path, or the first token of a command | recognized file and command tools | closed |
+| `runray.targetKind` | `file-read` \| `file-write` \| `command` | same | closed |
+| `runray.target` | basename or first command token, at most 80 chars | same | free-form |
+| `runray.mcpDetection` | `name-heuristic` | OpenCode MCP calls classified by name | closed |
+| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`) | closed |
+| `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell spans whose command resolved | closed |
+| `runray.toolSub` | a subcommand from that tool's table (`compose up`, `diff`), or `run` / `script` / `inline` | when present | closed |
+| `runray.toolVia` | the runner the tool was launched through (`npx`, `pnpm exec`, `bash -c`) | when a runner was unwrapped | closed |
+| `runray.toolsAlso` | up to 8 other registry ids the command ran, in order of appearance | when non-empty | closed |
+| `runray.toolFlags` | a subset of `background`, `timeout`, `interrupted`, in that order | Claude Code shell spans, when non-empty | closed |
+| `runray.hookCount` | number of hooks a stop-hook summary reports | reserved for hook spans; not emitted yet | closed |
+| `runray.toolName` | a program name outside the registry | shell spans | free-form |
+| `runray.toolScript` | a script, task or script-file name (`db:reset`, `deploy.sh`) | shell spans | free-form |
+| `runray.skill` | name of the invoked skill | skill tool spans | free-form |
+
+Rules that hold for the tool-usage keys (`runray.tool*`, `runray.skill`):
+
+- The command text is never stored. No argument, path or option value enters an attribute.
+- An absent key means "does not apply". No key is emitted with an empty value.
+- `runray.toolActivity` marks a span as classified. A shell span without it comes from a trace produced before tool identification.
+- A redacted export still discloses the tool stack: it shows that a session ran `terraform` or `stripe`, the same way it already shows MCP server names. It never shows a program outside the registry, a script name or a skill name.
+- A closed key arriving through OTLP is kept only when its value is inside the vocabulary, in every redaction mode. That is why the sanitizer can keep these keys by name without inspecting their values.
+- `runray.targetKey` still hashes the first token of a command, so `cd apps && pnpm test` and `cd apps && git status` share a key. The primary tool is in `runray.tool`.
+
+The registry, its labels and the vocabularies are exported as `@runray/core/tools`.
 
 ### RunTotals (derived)
 ```jsonc
