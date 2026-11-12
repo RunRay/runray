@@ -167,6 +167,33 @@ describe('model-mismatch', () => {
     ).toHaveLength(0);
   });
 
+  it('reads the same when a hook failed next to the work', () => {
+    // a failed hook is the harness's script failing, not the model's work:
+    // it must not turn the session into a risky place to save
+    const steps = [root(), opusCall('l1', 1), tool('t1', 2)];
+    const failedHooks = [
+      base('h1', {
+        kind: 'hook',
+        name: 'PostToolUse:Edit',
+        status: 'error',
+        parentId: 't1',
+        startedAt: ts(2),
+      }),
+      base('h2', {
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        status: 'cancelled',
+        startedAt: ts(3),
+      }),
+    ];
+    const findings = (spans: RawSpan[]) =>
+      applyInsights(mkRun(spans)).insights.filter(
+        (i) => i.ruleId === 'model-mismatch',
+      );
+    expect(findings(steps)).toHaveLength(1);
+    expect(findings([...steps, ...failedHooks])).toEqual(findings(steps));
+  });
+
   it('excludes subtrees already claimed by expensive-subagent (no double counting)', () => {
     const run = applyInsights(
       mkRun([

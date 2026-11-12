@@ -2578,7 +2578,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -2603,7 +2606,11 @@
       "attributes": {
         "runray.targetKey": "b1c14e0d0f7c3343",
         "runray.targetKind": "command",
-        "runray.target": "node"
+        "runray.target": "node",
+        "runray.toolActivity": "run",
+        "runray.tool": "node",
+        "runray.toolSub": "script",
+        "runray.toolScript": "check.mjs"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -2628,7 +2635,9 @@
       "attributes": {
         "runray.targetKey": "32694bc3295987cb",
         "runray.targetKind": "command",
-        "runray.target": "head"
+        "runray.target": "head",
+        "runray.toolActivity": "explore",
+        "runray.tool": "head"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -3096,7 +3105,9 @@
       "attributes": {
         "runray.targetKey": "5e47b2cfb8c17909",
         "runray.targetKind": "command",
-        "runray.target": "wc"
+        "runray.target": "wc",
+        "runray.toolActivity": "explore",
+        "runray.tool": "wc"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -3154,7 +3165,9 @@
       "attributes": {
         "runray.targetKey": "bdf0855a5a458587",
         "runray.targetKind": "command",
-        "runray.target": "find"
+        "runray.target": "find",
+        "runray.toolActivity": "explore",
+        "runray.tool": "find"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -3212,7 +3225,9 @@
       "attributes": {
         "runray.targetKey": "5631dfe800994414",
         "runray.targetKind": "command",
-        "runray.target": "ls"
+        "runray.target": "ls",
+        "runray.toolActivity": "explore",
+        "runray.tool": "ls"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -3508,7 +3523,10 @@
       "attributes": {
         "runray.targetKey": "1f6a29b174c83833",
         "runray.targetKind": "command",
-        "runray.target": "npx"
+        "runray.target": "npx",
+        "runray.toolActivity": "check",
+        "runray.tool": "tsc",
+        "runray.toolVia": "npx"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -4940,7 +4958,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -5164,7 +5184,9 @@
       "attributes": {
         "runray.targetKey": "5a54787658e4f10f",
         "runray.targetKind": "command",
-        "runray.target": "rg"
+        "runray.target": "rg",
+        "runray.toolActivity": "explore",
+        "runray.tool": "rg"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -5222,7 +5244,9 @@
       "attributes": {
         "runray.targetKey": "bb9027d195381144",
         "runray.targetKind": "command",
-        "runray.target": "grep"
+        "runray.target": "grep",
+        "runray.toolActivity": "explore",
+        "runray.tool": "grep"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6386,7 +6410,9 @@
       "attributes": {
         "runray.targetKey": "06745c0784b9c60b",
         "runray.targetKind": "command",
-        "runray.target": "cat"
+        "runray.target": "cat",
+        "runray.toolActivity": "explore",
+        "runray.tool": "cat"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6444,7 +6470,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6469,7 +6499,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6635,7 +6669,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6660,7 +6698,11 @@
       "attributes": {
         "runray.targetKey": "326a479afe6d1859",
         "runray.targetKind": "command",
-        "runray.target": "npm"
+        "runray.target": "npm",
+        "runray.toolActivity": "test",
+        "runray.tool": "npm",
+        "runray.toolSub": "run",
+        "runray.toolScript": "test"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",
@@ -6772,7 +6814,10 @@
       "attributes": {
         "runray.targetKey": "542abc6b4fe81518",
         "runray.targetKind": "command",
-        "runray.target": "git"
+        "runray.target": "git",
+        "runray.toolActivity": "vcs",
+        "runray.tool": "git",
+        "runray.toolSub": "diff"
       },
       "provenance": {
         "file": "/home/dev/.local/share/opencode/opencode.db",

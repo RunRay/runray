@@ -494,8 +494,14 @@ const expensiveSubagent: InsightRule = {
 const deadEndRun: InsightRule = {
   id: 'dead-end-run',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
-    const nonSession = run.spans.filter((s) => s.kind !== 'session');
-    const last = nonSession[nonSession.length - 1];
+    // the terminal span is the last thing the agent did. A hook is the
+    // harness reacting around that step: a failed hook after a clean finish
+    // is not a dead end, and a `Stop` hook after a failed call must not hide
+    // one (add-tool-usage-breakdown, design T9)
+    const steps = run.spans.filter(
+      (s) => s.kind !== 'session' && s.kind !== 'hook',
+    );
+    const last = steps[steps.length - 1];
     const sessionError = run.spans.find(
       (s) => s.kind === 'session' && s.status === 'error',
     );

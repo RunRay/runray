@@ -14,6 +14,11 @@ import {
   isReservedMetadataKey,
 } from '../attribute-keys.js';
 import { stripBom } from '../text.js';
+import {
+  CLOSED_TOOL_ATTRS,
+  isValidToolAttribute,
+  TOOL_ATTR,
+} from '../tools/attributes.js';
 import { errorPreview } from './error-preview.js';
 
 /**
@@ -298,6 +303,8 @@ function statusOf(span: Json, attrs: Map<string, unknown>): RawSpan['status'] {
   return 'ok';
 }
 
+const CLOSED_TOOL_KEYS: ReadonlySet<string> = new Set(CLOSED_TOOL_ATTRS);
+
 /** gen_ai.* passthrough — keys and values unchanged (values decoded from the
  * OTLP AnyValue envelope; that encoding is transport, not data). Under
  * redaction both prefixes are filtered to their metadata keys
@@ -308,13 +315,23 @@ function statusOf(span: Json, attrs: Map<string, unknown>): RawSpan['status'] {
  * UI). The 1-hour cache-write count passes through but is never DERIVED
  * here, so an OTLP capture whose emitter omits the split prices 1h writes
  * at the 5m rate and reads lower than the same session parsed from its
- * JSONL transcript. */
+ * JSONL transcript. The closed-vocabulary tool-usage keys are the one
+ * exception to "values unchanged": a value outside its key's vocabulary is
+ * dropped in every mode (trace-ingestion "Reserved tool-usage keys from OTLP
+ * are validated"). */
 function genAiAttributes(attrs: Map<string, unknown>, redact: boolean): Json {
   const out: Json = {};
   for (const [key, value] of attrs) {
     if (value === undefined) continue;
     if (key.startsWith('gen_ai.')) {
       if (!redact || isGenAiMetadataKey(key)) out[key] = value;
+    } else if (CLOSED_TOOL_KEYS.has(key)) {
+      // tool-usage identity: kept in every mode, but only with a value from
+      // the key's closed vocabulary — an emitter cannot smuggle text through
+      // a key the sanitizer keeps by name
+      if (isValidToolAttribute(key, value, attrs.get(TOOL_ATTR.tool))) {
+        out[key] = value;
+      }
     } else if (key.startsWith('runray.') || key.startsWith('tracepulse.')) {
       // reserved prefix survives passthrough (X2), but redaction keeps only
       // identity keys — never the display token or any other content key

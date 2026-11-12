@@ -386,8 +386,8 @@ Body:   Indentation shows who called whom. Rows in separate lanes ran
 **Step 2 — anchor `time-tab`**
 ```
 Title:  Where the time went
-Body:   The Time tab splits clock time between the model thinking and the
-        agent waiting on tools.
+Body:   The Time & Tools tab splits clock time between the model thinking,
+        tools running and the session waiting on you.
 ```
 
 **Step 3 — anchor `errors-tab`**
@@ -415,7 +415,7 @@ Title:  First run checklist (25%)
 Items:
   [x] Found agent logs on disk
   [ ] Inspect subagents and lanes in Timeline
-  [ ] Trace clock time in Time view
+  [ ] Trace clock time in Time & Tools
   [ ] Review tool errors or test What-If repricing
 ```
 
@@ -425,7 +425,7 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 
 | Key | Copy |
 |---|---|
-| `time-view` | `Clock time, not the sum of spans. Shows where the session was stuck waiting.` |
+| `time-view` | `Clock time, not the sum of spans. Shows where the session waited: on the model, on tools, or on you.` |
 | `errors-view` | `Grouped by who can fix it. Most failed commands are the agent exploring; broken tools are real bugs.` |
 | `waste-view` | `Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.` |
 | `what-if` | `Re-price this session against another model. Calculations stay on this machine.` |

@@ -415,7 +415,9 @@
       "attributes": {
         "runray.targetKey": "4b388a5c87d1660a",
         "runray.targetKind": "command",
-        "runray.target": "ip"
+        "runray.target": "ip",
+        "runray.toolActivity": "system",
+        "runray.tool": "ip"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d528266001DMV9A7zHzM1y31/prt_c4d528b43001YKiuu9tzBIrfmG.json",
@@ -473,7 +475,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d528e11001WbuIzmhtIlLAoi/prt_c4d529f680013C1UmRn2HfEKto.json",
@@ -693,7 +697,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d53074c001TrKnQrgVELgQrJ/prt_c4d530f49001qXCJ4gAX4Xr2G0.json",
@@ -751,7 +757,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d53119e001XJNj2pdjybI7zW/prt_c4d5316dc001yTmZPi50ng3Jm4.json",
@@ -809,7 +817,9 @@
       "attributes": {
         "runray.targetKey": "b2a5b2b92f9d1fb2",
         "runray.targetKind": "command",
-        "runray.target": "elit"
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d5318ef001Q7h8g7NghKo52a/prt_c4d5320ad001zKxYrEuc3P5r4K.json",
@@ -1407,7 +1417,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d57d233001f051lzblcj02Sc/prt_c4d57df46001KuNVLTucghYpas.json",
@@ -1519,7 +1531,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d58b8bd001NURvK2lwhuigSH/prt_c4d58e3d0001dkk4vPr9wP7VJ1.json",
@@ -1630,7 +1644,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d591c1f0013vt4pAUaFye2dM/prt_c4d591f76001NeRKno0W6K75rS.json",
@@ -1688,7 +1704,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/storage/simple/storage/part/msg_c4d5931d9001KMGvDASHZ9s3b5/prt_c4d5945420015e62TN518npakk.json",

@@ -273,7 +273,9 @@
       "attributes": {
         "runray.targetKey": "4b388a5c87d1660a",
         "runray.targetKind": "command",
-        "runray.target": "ip"
+        "runray.target": "ip",
+        "runray.toolActivity": "system",
+        "runray.tool": "ip"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -331,7 +333,9 @@
       "attributes": {
         "runray.targetKey": "ea2a7304668fca5d",
         "runray.targetKind": "command",
-        "runray.target": "labore"
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -551,7 +555,9 @@
       "attributes": {
         "runray.targetKey": "f6e2f31d10ac27e4",
         "runray.targetKind": "command",
-        "runray.target": "magna"
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -609,7 +615,9 @@
       "attributes": {
         "runray.targetKey": "68dcd9239087779c",
         "runray.targetKind": "command",
-        "runray.target": "veniam"
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -667,7 +675,9 @@
       "attributes": {
         "runray.targetKey": "b2a5b2b92f9d1fb2",
         "runray.targetKind": "command",
-        "runray.target": "elit"
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -1265,7 +1275,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -1377,7 +1389,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -1488,7 +1502,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",
@@ -1546,7 +1562,9 @@
       "attributes": {
         "runray.targetKey": "448761c297738ea3",
         "runray.targetKind": "command",
-        "runray.target": "amet"
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
       },
       "provenance": {
         "file": "fixtures/opencode/export-json/simple.json",

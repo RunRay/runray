@@ -1,18 +1,23 @@
+import { toolUsage } from '@runray/core/tools';
 import type { Run } from '@runray/schema';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
 import {
   DEFAULT_IDLE_GAP_MS,
+  TIME_CATEGORIES,
   type TimeCategory,
   timeBreakdown,
-  toolDurationStats,
 } from '../lib/time-breakdown';
+import { activityParts, runToolUsage } from '../lib/tool-usage';
 import { useAppStore } from '../store';
+import { ActivityBar } from './ActivityBar';
 import { ContextualHint } from './ContextualHint';
+import { ToolTable } from './ToolTable';
 
 /**
  * The Time tab (E2): where the wall-clock went — model wait, tool
- * execution, coordination, idle — via the no-double-count interval sweep;
+ * execution, waiting on the person, coordination, idle — via the
+ * no-double-count interval sweep;
  * parallel compression reads as a separate ×N chip, never bar inflation.
  * Time answers a different question than money, so it is a sibling tab of
  * Cost and Timeline, not a buried section.
@@ -21,25 +26,26 @@ import { ContextualHint } from './ContextualHint';
 const CATEGORY_LABEL: Record<TimeCategory, string> = {
   model: 'model wait',
   tool: 'tool execution',
+  waiting: 'waiting on you',
   coordination: 'coordination',
   idle: 'idle',
 };
 
-const CATEGORY_BAR: Record<TimeCategory, string> = {
+/** One fill per segment, shared by the strip and its legend swatch. */
+const CATEGORY_FILL: Record<TimeCategory, string> = {
   model: 'bg-brass/70',
   tool: 'bg-surface-2',
+  waiting: 'hatch-waiting',
   coordination: 'bg-border-slate',
   idle: 'bg-heat-1/40',
 };
 
-const CATEGORY_DOT: Record<TimeCategory, string> = {
-  model: 'bg-brass/70',
-  tool: 'bg-surface-2',
-  coordination: 'bg-border-slate',
-  idle: 'bg-heat-1/40',
+const CATEGORY_NOTE: Partial<Record<TimeCategory, string>> = {
+  waiting:
+    'A question or a plan was waiting for your answer and nothing else was running.',
 };
 
-const ORDER: TimeCategory[] = ['model', 'tool', 'coordination', 'idle'];
+const ORDER = TIME_CATEGORIES;
 
 export function TimeView({
   run,
@@ -51,7 +57,30 @@ export function TimeView({
   const storeManifest = useAppStore((s) => s.viewConfig?.manifest);
   const manifest = propManifest ?? storeManifest;
   const breakdown = useMemo(() => timeBreakdown(run), [run]);
-  const tools = useMemo(() => toolDurationStats(run).slice(0, 8), [run]);
+  const usage = useMemo(() => runToolUsage(run), [run]);
+  const parts = useMemo(() => activityParts(usage), [usage]);
+  // the selection belongs to one run: another run starts unfiltered
+  const [selection, setSelection] = useState<{ run: Run; part: string } | null>(
+    null,
+  );
+  const selectedPart =
+    selection?.run === run && parts.some((p) => p.id === selection.part)
+      ? selection.part
+      : null;
+  const current = parts.find((p) => p.id === selectedPart);
+  const hasToolSpans =
+    usage.calls + usage.agents.calls + usage.hooks.calls + usage.waiting.calls >
+    0;
+  const pruned =
+    manifest?.profile === 'metadata-only' || manifest?.spansPruned === true;
+  // a selected part narrows the rows; shares keep the run-wide denominator
+  const shownRows = useMemo(
+    () =>
+      current === undefined
+        ? usage.rows
+        : toolUsage(run.spans, { activities: current.activities }).rows,
+    [run, usage, current],
+  );
   const idleFindings = useMemo(
     () => run.insights.filter((i) => i.ruleId === 'idle-cache-expiry'),
     [run.insights],
@@ -89,21 +118,24 @@ export function TimeView({
           {breakdown.segments.map((seg) => (
             <div
               key={`${seg.start}`}
-              className={CATEGORY_BAR[seg.category]}
+              className={CATEGORY_FILL[seg.category]}
               style={{ width: `${((seg.end - seg.start) / wall) * 100}%` }}
               title={`${CATEGORY_LABEL[seg.category]} · ${formatDuration(seg.end - seg.start)}`}
             />
           ))}
         </div>
 
-        <table className="mt-3 w-max border-collapse text-label">
+        <table
+          className="mt-3 w-max border-collapse text-label"
+          data-testid="wall-clock-legend"
+        >
           <tbody>
             {ORDER.map((category) => (
-              <tr key={category}>
+              <tr key={category} title={CATEGORY_NOTE[category]}>
                 <td className="flex items-center gap-1.5 py-0.5 pr-4 text-text-dim">
                   <i
                     aria-hidden
-                    className={`inline-block h-2 w-2 rounded-full ${CATEGORY_DOT[category]}`}
+                    className={`inline-block h-2.5 w-2.5 rounded-[2px] ${CATEGORY_FILL[category]}`}
                   />
                   {CATEGORY_LABEL[category]}
                 </td>
@@ -160,54 +192,44 @@ export function TimeView({
         </section>
       )}
 
-      {tools.length > 0 && (
-        <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
-          <p className="micro-label text-text-faint">slowest tools · p95</p>
-          <table className="mt-1 w-full border-collapse text-label">
-            <thead>
-              <tr className="micro-label text-text-faint">
-                <th className="pb-1 text-left font-normal">tool</th>
-                <th className="pb-1 text-right font-normal">calls</th>
-                <th className="pb-1 text-right font-normal">p50</th>
-                <th className="pb-1 text-right font-normal">p95</th>
-                <th className="pb-1 text-right font-normal">max</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tools.map((tool) => (
-                <tr key={tool.name} className="border-t border-border-slate">
-                  <td className="max-w-[240px] truncate py-1 pr-3 font-mono text-text">
-                    {tool.name}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-dim">
-                    {tool.calls}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-dim">
-                    {formatDuration(tool.p50Ms)}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text">
-                    {formatDuration(tool.p95Ms)}
-                  </td>
-                  <td className="py-1 text-right font-mono text-text-faint">
-                    {formatDuration(tool.maxMs)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+      {parts.length > 0 && (
+        <ActivityBar
+          usage={usage}
+          parts={parts}
+          selected={selectedPart}
+          onSelect={(part) =>
+            setSelection(part === null ? null : { run, part })
+          }
+        />
       )}
 
-      {tools.length === 0 &&
-        (manifest?.profile === 'metadata-only' || manifest?.spansPruned) && (
-          <section className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card">
-            <p className="text-label text-text-faint">
-              Turn and tool breakdowns are omitted under the{' '}
-              <code className="font-mono text-text-dim">metadata-only</code>{' '}
-              profile.
+      {hasToolSpans ? (
+        <ToolTable
+          usage={usage}
+          rows={shownRows}
+          source={run.source.tool}
+          {...(current === undefined ? {} : { activityLabel: current.label })}
+        />
+      ) : (
+        <section
+          className="rounded border border-border-slate bg-surface-container-low p-4 shadow-card"
+          data-testid="tools-empty"
+        >
+          {pruned ? (
+            <p className="max-w-[80ch] text-label text-text-dim">
+              Tool time by activity and the tool table are left out of this
+              report. It was exported with the{' '}
+              <code className="font-mono text-text">metadata-only</code>{' '}
+              profile, which keeps session totals and drops individual calls.
             </p>
-          </section>
-        )}
+          ) : (
+            <p className="text-label text-text-dim">
+              This session made no tool calls, so there is no tool time to break
+              down.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
