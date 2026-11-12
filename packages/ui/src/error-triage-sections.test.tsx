@@ -155,3 +155,22 @@ describe('ErrorTriageSections', () => {
     expect(html).toBe('');
   });
 });
+
+describe('ErrorTriageSections — a shell failure', () => {
+  it('names the program when it says the tool never came back', () => {
+    const failed = tool('e1', 1, 'Bash', 'error', 'sess', 'Exit code 1', {
+      attributes: {
+        'runray.toolActivity': 'test',
+        'runray.tool': 'pnpm',
+        'runray.toolSub': 'run',
+      },
+    });
+    const ls = tool('ok1', 2, 'Bash', 'ok', 'sess', undefined, {
+      attributes: { 'runray.toolActivity': 'explore', 'runray.tool': 'ls' },
+    });
+    const html = renderToStaticMarkup(
+      <ErrorTriageSections span={failed} run={run([failed, ls])} />,
+    );
+    expect(html).toContain('No later pnpm run · test call in this scope.');
+  });
+});
