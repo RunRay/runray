@@ -5,6 +5,8 @@ import {
   endMs,
   startMs,
 } from '../insights/helpers.js';
+import { toolIdentity } from '../tools/identity.js';
+import type { Activity } from '../tools/registry.js';
 import { classifyError } from './classify.js';
 import {
   ERROR_CLASS_META,
@@ -25,6 +27,17 @@ import {
  * bill it once). Recovery: the next call of the same tool in the same scope
  * — ok, another failure, or none at all. Cancelled spans (a declined call)
  * are counted but never triaged: they are the person's decision.
+ *
+ * "The same tool" of a classified shell call is the program it ran, read
+ * through `toolIdentity`: registry tool, subcommand and activity. A failed
+ * `pnpm test` is answered by the next `pnpm test`, not by the next `ls`, and
+ * a `pnpm test` and a `git push` failure are two clusters. Every part of
+ * that key is closed vocabulary that survives redaction, so redaction never
+ * changes which calls are the same tool (it can still change a failure's
+ * class, which is read from the text); the free-form script or program name
+ * is never part of it. A shell call without tool-usage
+ * attributes (a trace from before commands were classified) is keyed on the
+ * harness tool name, as every other call is.
  */
 
 export type RecoveryKind = 'ok' | 'error' | 'none';
@@ -45,14 +58,30 @@ export interface ErrorOccurrence {
 
 export type ClusterOutcome = 'recovered' | 'looping' | 'unrecovered';
 
+/** The program a cluster of shell failures ran. */
+export interface ClusterProgram {
+  /** A registry tool id, or `other-command` for a program outside it. */
+  key: string;
+  /** The tool and its subcommand: `pnpm run`, `git push`, `other command`. */
+  label: string;
+  /** Closed-vocabulary subcommand (`run`, `push`, `compose up`). */
+  sub?: string;
+  /** The kind of work the calls did; tells `pnpm run test` from `pnpm run build`. */
+  activity: Activity;
+}
+
 export interface ErrorCluster {
-  /** `${classId}|${tool}` — stable across reloads. */
+  /** `${classId}|${tool}`, plus `|${program key}|${sub}|${activity}` for a
+   * cluster with a program — stable across reloads. */
   key: string;
   classId: ErrorClassId;
   owner: ErrorOwner;
   label: string;
-  /** Tool name, or the model for model-call failures. */
+  /** Tool name as the harness gave it (`Bash` for every shell call), or the
+   * model for model-call failures. */
   tool: string;
+  /** Set for a cluster of classified shell calls: the program they ran. */
+  program?: ClusterProgram;
   kind: Span['kind'];
   mcpServer: string | undefined;
   occurrences: ErrorOccurrence[];
@@ -102,11 +131,36 @@ function isFailure(s: Span): boolean {
   );
 }
 
+/** The program a classified shell call ran; undefined for any other call. */
+function programOf(s: Span): ClusterProgram | undefined {
+  if (s.kind !== 'tool_call') return undefined;
+  const id = toolIdentity(s);
+  if (id === undefined || id.family !== 'shell' || !id.classified) {
+    return undefined;
+  }
+  return {
+    key: id.key,
+    label: id.sub === undefined ? id.label : `${id.label} ${id.sub}`,
+    ...(id.sub === undefined ? {} : { sub: id.sub }),
+    activity: id.activity,
+  };
+}
+
+/** What makes two calls "the same tool" for recovery and clustering. */
+function sameToolKey(s: Span, program: ClusterProgram | undefined): string {
+  if (s.kind === 'llm_call') return 'llm';
+  return program === undefined
+    ? s.name
+    : `${s.name}|${program.key}|${program.sub ?? ''}|${program.activity}`;
+}
+
 export function triageRun(run: Run): RunTriage {
   const scopeOf = buildScopeIndex(run);
   const spans = chronological(run.spans);
   const llmsByScope = new Map<string, Span[]>();
   const sameKindByScope = new Map<string, Span[]>();
+  // by span object, not id: an id is not guaranteed unique across a run
+  const programs = new Map<Span, ClusterProgram>();
   let cancelled = 0;
   for (const s of spans) {
     // "calls you declined": a hook the harness cancelled on a timeout is
@@ -123,7 +177,9 @@ export function triageRun(run: Run): RunTriage {
       s.kind === 'mcp_call' ||
       s.kind === 'llm_call'
     ) {
-      const k = `${scope}|${s.kind === 'llm_call' ? 'llm' : s.name}`;
+      const program = programOf(s);
+      if (program !== undefined) programs.set(s, program);
+      const k = `${scope}|${sameToolKey(s, program)}`;
       const list = sameKindByScope.get(k) ?? [];
       list.push(s);
       sameKindByScope.set(k, list);
@@ -168,11 +224,12 @@ export function triageRun(run: Run): RunTriage {
     }
     reactionTotal += reactionUSD;
 
-    // recovery: the next call of the same tool (or the next model call)
+    // recovery: the next call of the same tool — for a classified shell
+    // call, the same program doing the same kind of work — or the next
+    // model call
+    const program = programs.get(s);
     const peers =
-      sameKindByScope.get(
-        `${scope}|${s.kind === 'llm_call' ? 'llm' : s.name}`,
-      ) ?? [];
+      sameKindByScope.get(`${scope}|${sameToolKey(s, program)}`) ?? [];
     const idx = peers.indexOf(s);
     const next = idx >= 0 ? peers[idx + 1] : undefined;
     const recovery: ErrorOccurrence['recovery'] =
@@ -186,7 +243,10 @@ export function triageRun(run: Run): RunTriage {
     if (recovery.kind === 'ok') recovered++;
 
     const tool = s.kind === 'llm_call' ? (s.llm?.model ?? s.name) : s.name;
-    const key = `${classId}|${tool}`;
+    const key =
+      program === undefined
+        ? `${classId}|${tool}`
+        : `${classId}|${sameToolKey(s, program)}`;
     const occurrence: ErrorOccurrence = {
       spanId: s.id,
       startedAt: s.startedAt,
@@ -203,6 +263,7 @@ export function triageRun(run: Run): RunTriage {
         owner,
         label: ERROR_CLASS_META[classId].label,
         tool,
+        ...(program === undefined ? {} : { program }),
         kind: s.kind,
         mcpServer: s.tool?.mcpServer,
         occurrences: [occurrence],

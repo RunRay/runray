@@ -14,7 +14,13 @@ import type { Run } from '@runray/schema';
 import { useMemo, useState } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
 import { toHash } from '../lib/router';
-import { formatOffset, OWNER_FILL, runTriage } from '../lib/triage';
+import {
+  clusterToolName,
+  clusterToolText,
+  formatOffset,
+  OWNER_FILL,
+  runTriage,
+} from '../lib/triage';
 import { useAppStore } from '../store';
 import { ContextualHint } from './ContextualHint';
 import { InlineCode, PlaybookList, PlaybookSteps } from './PlaybookSteps';
@@ -215,7 +221,7 @@ function Summary({ run, triage }: { run: Run; triage: RunTriage }) {
           Math.max(0, ((Date.parse(o.startedAt) - start) / duration) * 100),
         ).toFixed(3),
       ),
-      title: `${formatOffset(Date.parse(o.startedAt) - start)} · ${c.tool} · ${c.label}`,
+      title: `${formatOffset(Date.parse(o.startedAt) - start)} · ${clusterToolText(c)} · ${c.label}`,
     })),
   );
   const needsYou = triage.byOwner.you;
@@ -397,12 +403,7 @@ function ClusterRow({
   const firstAt = formatOffset(Date.parse(cluster.firstAt) - start);
   const lastAt = formatOffset(Date.parse(cluster.lastAt) - start);
   const when = firstAt === lastAt ? firstAt : `${firstAt}–${lastAt}`;
-  // `mcp__<server>__<tool>` reads as the tool with the server beside it
-  const shortTool =
-    cluster.mcpServer !== undefined &&
-    cluster.tool.startsWith(`mcp__${cluster.mcpServer}__`)
-      ? cluster.tool.slice(`mcp__${cluster.mcpServer}__`.length)
-      : cluster.tool;
+  const toolName = clusterToolName(cluster);
   // the lever shows when the person has one, or when an agent slip repeats
   // or was never recovered from; expected feedback only explains itself
   const showActions =
@@ -438,12 +439,23 @@ function ClusterRow({
           ▸
         </span>
         <span
-          className="truncate font-mono text-label text-text"
-          title={cluster.tool}
+          className="flex min-w-0 items-baseline gap-1.5"
+          title={
+            toolName.tag === undefined
+              ? cluster.tool
+              : `${clusterToolText(cluster)}, run through ${toolName.tag}`
+          }
         >
-          {shortTool}
-          {cluster.mcpServer !== undefined && (
-            <span className="text-text-faint"> · {cluster.mcpServer}</span>
+          <span className="truncate font-mono text-label text-text">
+            {toolName.name}
+            {toolName.qualifier !== undefined && (
+              <span className="text-text-faint"> · {toolName.qualifier}</span>
+            )}
+          </span>
+          {toolName.tag !== undefined && (
+            <span className="shrink-0 rounded-control border border-border px-1 font-mono text-[10px] leading-[1.45] text-text-faint">
+              {toolName.tag}
+            </span>
           )}
         </span>
         <span className="truncate text-label text-text-dim max-md:col-span-3 max-md:col-start-2 max-md:whitespace-normal">

@@ -1,6 +1,12 @@
 import type { Run, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
-import { errorPill, formatOffset, runTriage } from './triage';
+import {
+  clusterToolName,
+  clusterToolText,
+  errorPill,
+  formatOffset,
+  runTriage,
+} from './triage';
 
 const T0 = Date.parse('2026-09-03T10:00:00Z');
 const at = (s: number) => new Date(T0 + s * 1000).toISOString();
@@ -159,5 +165,63 @@ describe('formatOffset', () => {
     expect(formatOffset(6 * 60000)).toBe('0h06');
     expect(formatOffset(98 * 60000 + 20000)).toBe('1h38');
     expect(formatOffset(-5)).toBe('0h00');
+  });
+});
+
+describe('clusterToolName', () => {
+  const shell = (key: string, label: string, activity: string, sub?: string) =>
+    clusterToolName({
+      tool: 'Bash',
+      mcpServer: undefined,
+      program: {
+        key,
+        label,
+        activity,
+        ...(sub === undefined ? {} : { sub }),
+      } as never,
+    });
+
+  it('adds the activity only where the name does not say what ran', () => {
+    expect(shell('pnpm', 'pnpm run', 'test', 'run')).toEqual({
+      name: 'pnpm run',
+      qualifier: 'test',
+      tag: 'Bash',
+    });
+    expect(shell('other-command', 'other command', 'build')).toEqual({
+      name: 'other command',
+      qualifier: 'build',
+      tag: 'Bash',
+    });
+    expect(shell('git', 'git push', 'vcs', 'push')).toEqual({
+      name: 'git push',
+      tag: 'Bash',
+    });
+    expect(shell('tsc', 'tsc', 'check')).toEqual({ name: 'tsc', tag: 'Bash' });
+  });
+
+  it('leaves out an activity that adds nothing', () => {
+    expect(shell('python', 'python script', 'run', 'script')).toEqual({
+      name: 'python script',
+      tag: 'Bash',
+    });
+    expect(shell('other-command', 'other command', 'other')).toEqual({
+      name: 'other command',
+      tag: 'Bash',
+    });
+  });
+
+  it('reads an MCP tool without its server prefix, the server beside it', () => {
+    const mcp = {
+      tool: 'mcp__Claude_Browser__browser_batch',
+      mcpServer: 'Claude_Browser',
+    };
+    expect(clusterToolName(mcp)).toEqual({
+      name: 'browser_batch',
+      qualifier: 'Claude_Browser',
+    });
+    expect(clusterToolText(mcp)).toBe('browser_batch · Claude_Browser');
+    expect(clusterToolText({ tool: 'Edit', mcpServer: undefined })).toBe(
+      'Edit',
+    );
   });
 });
