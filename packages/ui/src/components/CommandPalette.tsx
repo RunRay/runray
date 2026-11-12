@@ -131,8 +131,9 @@ function buildCommands(
     cmds.push({
       id: 'view:time',
       group: 'Switch view',
-      label: 'Time view',
-      keywords: 'time wall clock idle model wait breakdown current run',
+      label: 'Time & Tools view',
+      keywords:
+        'time tools wall clock idle model wait breakdown programs current run',
       perform: nav({ view: 'time', runId: activeRunId }),
     });
     cmds.push({

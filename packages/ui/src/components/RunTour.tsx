@@ -30,7 +30,7 @@ export const RUN_STEPS: readonly TourStep[] = [
     id: 'time-tab',
     anchorKeys: ['time-tab'],
     title: 'Where the time went',
-    body: 'The Time tab splits clock time between the model thinking, tools running and the session waiting on you.',
+    body: 'The Time & Tools tab splits clock time between the model thinking, tools running and the session waiting on you.',
   },
   {
     id: 'errors-tab',

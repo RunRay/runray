@@ -386,8 +386,8 @@ Body:   Indentation shows who called whom. Rows in separate lanes ran
 **Step 2 — anchor `time-tab`**
 ```
 Title:  Where the time went
-Body:   The Time tab splits clock time between the model thinking, tools
-        running and the session waiting on you.
+Body:   The Time & Tools tab splits clock time between the model thinking,
+        tools running and the session waiting on you.
 ```
 
 **Step 3 — anchor `errors-tab`**
@@ -415,7 +415,7 @@ Title:  First run checklist (25%)
 Items:
   [x] Found agent logs on disk
   [ ] Inspect subagents and lanes in Timeline
-  [ ] Trace clock time in Time view
+  [ ] Trace clock time in Time & Tools
   [ ] Review tool errors or test What-If repricing
 ```
 

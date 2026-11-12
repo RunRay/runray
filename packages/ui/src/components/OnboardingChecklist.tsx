@@ -253,7 +253,7 @@ export default function OnboardingChecklist() {
     },
     {
       id: 'timeDiagnosed',
-      label: 'Trace clock time in Time view',
+      label: 'Trace clock time in Time & Tools',
       completed: checklist.timeDiagnosed === true,
       onClick: () => {
         const runId = 'runId' in route ? route.runId : visibleRuns[0]?.id;

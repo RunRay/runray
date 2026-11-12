@@ -29,7 +29,7 @@ RunRay works one session at a time and answers a different question: where did t
 | **Dashboard** | Spend by day, project, model and tool across sessions. A savings panel keeps two figures apart: money already burned and savings a different setup would bring. |
 | **Overview** | One session: total cost, the tool spend leaderboard, cost by model over time, and what each subagent subtree cost. |
 | **Timeline Explorer** | The execution tree as a waterfall: delegation nesting, parallel calls on their own lanes, error marks, and a cost gutter you can click to jump to any moment. |
-| **Time** | Where the wall clock went: model wait, tool execution, waiting on you, coordination, idle gaps. Tool time by kind of work and by the program behind each shell call. |
+| **Time & Tools** | Where the wall clock went: model wait, tool execution, waiting on you, coordination, idle gaps. Tool time by kind of work and by the program behind each shell call. |
 | **Waste** | What the session burned and what it could have saved, each burn placed on the session's clock over the context size it happened in. |
 | **Errors** | Failed calls grouped by who can act on them, with the error text and what to do in your tool. |
 | **Report** | `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` makes it safe to hand over. |
