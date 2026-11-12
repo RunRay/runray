@@ -214,8 +214,9 @@ complete without it.
 
 ## Workflow follow-up
 
-- File planning issues (private `RunRay/planning`, project 6) for the work
-  left out of scope: retry-loop identity on the primary tool (D4), the
-  dashboard "By tool" card keyed by tool id, run filtering by tool, span
-  labels in the waterfall, and mapping OTLP `blocked_on_user` spans.
+- The work left out of scope is on the team's planning board, one item
+  each: retry-loop identity on the primary tool (D4), the dashboard "By
+  tool" card keyed by tool id, the tool filter matching sessions by the
+  program they ran, tool names on timeline rows, and OTLP
+  `blocked_on_user` spans counted as waiting.
 - Archive the change after review, then verify the archived specs.
