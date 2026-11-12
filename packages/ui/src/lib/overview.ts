@@ -5,7 +5,8 @@
  */
 
 import { ruleClass } from '@runray/core/insights-meta';
-import type { Insight, Run } from '@runray/schema';
+import { toolIdentity } from '@runray/core/tools';
+import type { Insight, Run, Span } from '@runray/schema';
 import { llmTokens, toolSpendLeaderboard } from './cost-breakdown';
 import { branchKey, NO_BRANCH, projectKey } from './run-keys';
 import { toolDurationStatsAcrossRuns } from './time-breakdown';
@@ -354,32 +355,52 @@ export function wasteByRule(runs: readonly Run[]): RuleGroup[] {
 }
 
 /**
+ * What a failed tool span counts as in the "worst" note: the program a
+ * classified shell call ran (`pnpm`, `git`, `other command`), else the tool
+ * name the harness gave it. The key keeps a registry tool apart from a
+ * harness tool of the same spelling.
+ */
+function failedToolOf(span: Span): { key: string; name: string } {
+  const id = toolIdentity(span);
+  if (id !== undefined && id.family === 'shell' && id.classified) {
+    return { key: `shell:${id.key}`, name: id.label };
+  }
+  const name = span.tool?.name || span.name || 'tool';
+  return { key: `tool:${name}`, name };
+}
+
+/**
  * The tool that failed most across the visible runs (KPI note "worst: …").
- * Tallies error tool spans by tool name; ties break by name for stability.
- * Null when nothing errored.
+ * Tallies error tool spans by the program a shell call ran, or by tool name
+ * for every other call and for a shell call recorded before commands were
+ * classified; ties break by name, then key, for stability. Null when
+ * nothing errored.
  */
 export function worstToolError(
   runs: readonly Run[],
 ): { name: string; count: number } | null {
-  const byTool = new Map<string, number>();
+  const byTool = new Map<string, { name: string; count: number }>();
   for (const run of runs) {
     for (const span of run.spans) {
       if (span.tool?.isError !== true) continue;
-      const name = span.tool.name || span.name || 'tool';
-      byTool.set(name, (byTool.get(name) ?? 0) + 1);
+      const { key, name } = failedToolOf(span);
+      const entry = byTool.get(key);
+      if (entry === undefined) byTool.set(key, { name, count: 1 });
+      else entry.count++;
     }
   }
-  let best: { name: string; count: number } | null = null;
-  for (const [name, count] of byTool) {
+  let best: { key: string; name: string; count: number } | null = null;
+  for (const [key, { name, count }] of byTool) {
     if (
       best === null ||
       count > best.count ||
-      (count === best.count && name < best.name)
+      (count === best.count &&
+        (name < best.name || (name === best.name && key < best.key)))
     ) {
-      best = { name, count };
+      best = { key, name, count };
     }
   }
-  return best;
+  return best === null ? null : { name: best.name, count: best.count };
 }
 
 /**
