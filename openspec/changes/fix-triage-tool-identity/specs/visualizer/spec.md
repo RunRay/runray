@@ -20,7 +20,8 @@ opening the finding), and the class playbook for the run's own source.
 For a cluster that carries a program, the tool SHALL read as the program's
 label, followed by its activity when the label does not name the work (the
 subcommand is `run`, `script` or `inline`, or the program is outside the
-registry), with the harness tool name as a tag; the failure ticks on the time axis SHALL name it the same way. The
+registry) and the activity is neither `run` nor `other`, with the harness
+tool name as a tag; the failure ticks on the time axis SHALL name it the same way. The
 playbook's actions SHALL show for owners you, tooling, model and
 unclassified, and for agent slips only when the cluster repeated or never
 recovered; expected feedback SHALL show only its explanation, and its group

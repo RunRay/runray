@@ -32,9 +32,10 @@ import {
  * through `toolIdentity`: registry tool, subcommand and activity. A failed
  * `pnpm test` is answered by the next `pnpm test`, not by the next `ls`, and
  * a `pnpm test` and a `git push` failure are two clusters. Every part of
- * that key is closed vocabulary that survives redaction, so a redacted and
- * an unredacted parse of a session triage the same; the free-form script or
- * program name is never part of it. A shell call without tool-usage
+ * that key is closed vocabulary that survives redaction, so redaction never
+ * changes which calls are the same tool (it can still change a failure's
+ * class, which is read from the text); the free-form script or program name
+ * is never part of it. A shell call without tool-usage
  * attributes (a trace from before commands were classified) is keyed on the
  * harness tool name, as every other call is.
  */
@@ -158,7 +159,8 @@ export function triageRun(run: Run): RunTriage {
   const spans = chronological(run.spans);
   const llmsByScope = new Map<string, Span[]>();
   const sameKindByScope = new Map<string, Span[]>();
-  const programs = new Map<string, ClusterProgram>();
+  // by span object, not id: an id is not guaranteed unique across a run
+  const programs = new Map<Span, ClusterProgram>();
   let cancelled = 0;
   for (const s of spans) {
     // "calls you declined": a hook the harness cancelled on a timeout is
@@ -176,7 +178,7 @@ export function triageRun(run: Run): RunTriage {
       s.kind === 'llm_call'
     ) {
       const program = programOf(s);
-      if (program !== undefined) programs.set(s.id, program);
+      if (program !== undefined) programs.set(s, program);
       const k = `${scope}|${sameToolKey(s, program)}`;
       const list = sameKindByScope.get(k) ?? [];
       list.push(s);
@@ -225,7 +227,7 @@ export function triageRun(run: Run): RunTriage {
     // recovery: the next call of the same tool — for a classified shell
     // call, the same program doing the same kind of work — or the next
     // model call
-    const program = programs.get(s.id);
+    const program = programs.get(s);
     const peers =
       sameKindByScope.get(`${scope}|${sameToolKey(s, program)}`) ?? [];
     const idx = peers.indexOf(s);

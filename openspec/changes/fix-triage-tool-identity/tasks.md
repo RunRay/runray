@@ -8,7 +8,7 @@ Definition of done: `pnpm lint && pnpm typecheck && pnpm test` green, no schema 
 
 ## 2. Visualizer  [UI → /frontend-design]
 
-- [x] 2.1 One helper in `packages/ui/src/lib/triage.ts` names a cluster's tool (program label, activity where the subcommand does not say it, MCP tool without its server prefix); the Errors tab's cluster row and failure ticks and the Inspector's "What this is" sentence use it, and the row tags the harness tool. Tests for the row and the Inspector sentence.
+- [x] 2.1 One helper in `packages/ui/src/lib/triage.ts` names a cluster's tool (program label, activity where the label does not say what ran and the activity is not `run` or `other`, MCP tool without its server prefix); the Errors tab's cluster row and failure ticks and the Inspector's "What this is" sentence use it, and the row tags the harness tool. Tests for the helper, the row and the Inspector sentence.
 
 ## 3. Docs and checks
 

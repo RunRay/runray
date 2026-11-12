@@ -536,14 +536,14 @@ describe('triageRun — a shell failure is keyed on the program it ran', () => {
     ]);
   });
 
-  it('applies to a shell tool under another harness name', () => {
+  it('keeps two harness shell tools apart even when they ran the same program', () => {
     const t = triageRun(
       run([
         sh('e1', 1, 'pnpm test', 'error', false, 'PowerShell'),
         sh('ok1', 2, 'pnpm test', 'ok', false, 'Bash'),
       ]),
     );
-    // another harness tool is another tool, as before
+    // a PowerShell failure is not answered by a Bash call, as before
     expect(t.clusters[0]?.tool).toBe('PowerShell');
     expect(t.clusters[0]?.outcome).toBe('unrecovered');
   });
