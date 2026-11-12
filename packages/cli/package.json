@@ -23,7 +23,7 @@
     "url": "https://github.com/RunRay/runray/issues"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22"
   },
   "bin": {
     "runray": "bundle/bin.js"
