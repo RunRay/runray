@@ -1,5 +1,6 @@
 import type { Insight, Run, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
+import { toolUsageAttributes } from '../tools/classify.js';
 import { triageRun, triageTone } from './cluster.js';
 
 const T0 = Date.parse('2026-09-03T10:00:00Z');
@@ -404,5 +405,159 @@ describe('triageRun — clusters, reaction cost, recovery', () => {
   it('is deterministic regardless of span input order', () => {
     const shuffled = [...spans].reverse();
     expect(triageRun(run(shuffled))).toEqual(triageRun(run(spans)));
+  });
+});
+
+describe('triageRun — a shell failure is keyed on the program it ran', () => {
+  // stamped the way the adapters stamp a shell call
+  function sh(
+    id: string,
+    s: number,
+    command: string,
+    status: Span['status'],
+    redact = false,
+    name = 'Bash',
+  ): Span {
+    return tool(
+      id,
+      s,
+      name,
+      status,
+      'sess',
+      status === 'error' ? 'Exit code 1' : undefined,
+      {
+        attributes: toolUsageAttributes(command, 'posix', redact),
+        tool: { name, isError: status === 'error', exitCode: 1 },
+      },
+    );
+  }
+
+  it('does not count a failed test run as recovered by an unrelated ls', () => {
+    const t = triageRun(
+      run([sh('e1', 1, 'pnpm test', 'error'), sh('ok1', 2, 'ls', 'ok')]),
+    );
+    const [c] = t.clusters;
+    expect(c?.occurrences[0]?.recovery).toEqual({ kind: 'none' });
+    expect(c?.outcome).toBe('unrecovered');
+    expect(t.recovered).toBe(0);
+  });
+
+  it('counts it recovered when the tests ran again and passed', () => {
+    const t = triageRun(
+      run([
+        sh('e1', 1, 'pnpm test', 'error'),
+        sh('ok1', 2, 'ls', 'ok'),
+        sh('ok2', 4, 'pnpm run test', 'ok'),
+      ]),
+    );
+    const [c] = t.clusters;
+    expect(c?.occurrences[0]?.recovery).toEqual({
+      kind: 'ok',
+      afterMs: 3000,
+      nextSpanId: 'ok2',
+    });
+    expect(c?.outcome).toBe('recovered');
+  });
+
+  it('keeps a build apart from a test run of the same runner', () => {
+    const t = triageRun(
+      run([
+        sh('e1', 1, 'pnpm test', 'error'),
+        sh('ok1', 2, 'pnpm build', 'ok'),
+      ]),
+    );
+    expect(t.clusters[0]?.outcome).toBe('unrecovered');
+  });
+
+  it('makes a failed test run and a failed push of one class two clusters', () => {
+    const t = triageRun(
+      run([
+        sh('e1', 1, 'pnpm test', 'error'),
+        sh('e2', 2, 'git push', 'error'),
+      ]),
+    );
+    expect(t.clusters).toHaveLength(2);
+    expect(t.clusters.map((c) => c.classId)).toEqual([
+      'exit-nonzero',
+      'exit-nonzero',
+    ]);
+    expect(t.clusters.map((c) => [c.tool, c.program])).toEqual([
+      [
+        'Bash',
+        { key: 'pnpm', label: 'pnpm run', sub: 'run', activity: 'test' },
+      ],
+      ['Bash', { key: 'git', label: 'git push', sub: 'push', activity: 'vcs' }],
+    ]);
+    expect(t.clusters.map((c) => c.key)).toEqual([
+      'exit-nonzero|Bash|pnpm|run|test',
+      'exit-nonzero|Bash|git|push|vcs',
+    ]);
+  });
+
+  it('puts programs outside the registry in one cluster, named or not', () => {
+    const t = triageRun(
+      run([
+        sh('e1', 1, 'mytool --x', 'error'),
+        sh('e2', 2, 'othertool', 'error'),
+      ]),
+    );
+    expect(t.clusters).toHaveLength(1);
+    expect(t.clusters[0]?.program).toEqual({
+      key: 'other-command',
+      label: 'other command',
+      activity: 'other',
+    });
+  });
+
+  it('triages a redacted parse the same as an unredacted one', () => {
+    const commands: [string, string, Span['status']][] = [
+      ['e1', 'pnpm run test', 'error'],
+      ['s1', 'pnpm run lint', 'ok'],
+      ['e2', 'pnpm run build', 'error'],
+      ['e3', 'python foo.py', 'error'],
+      ['s2', 'python bar.py', 'ok'],
+      ['e4', 'mytool --x', 'error'],
+      ['s3', 'othertool', 'ok'],
+      ['s4', 'pnpm run build', 'ok'],
+    ];
+    const parse = (redact: boolean) =>
+      triageRun(
+        run(commands.map(([id, c, st], i) => sh(id, i + 1, c, st, redact))),
+      );
+    const plain = parse(false);
+    const redacted = parse(true);
+    expect(redacted).toEqual(plain);
+    // the free-form script name is not what tells the scripts apart
+    expect(plain.clusters.map((c) => c.program?.label)).toEqual([
+      'pnpm run',
+      'pnpm run',
+      'python script',
+      'other command',
+    ]);
+  });
+
+  it('applies to a shell tool under another harness name', () => {
+    const t = triageRun(
+      run([
+        sh('e1', 1, 'pnpm test', 'error', false, 'PowerShell'),
+        sh('ok1', 2, 'pnpm test', 'ok', false, 'Bash'),
+      ]),
+    );
+    // another harness tool is another tool, as before
+    expect(t.clusters[0]?.tool).toBe('PowerShell');
+    expect(t.clusters[0]?.outcome).toBe('unrecovered');
+  });
+
+  it('keys a shell call without tool-usage attributes on the harness name', () => {
+    const t = triageRun(
+      run([
+        tool('e1', 1, 'Bash', 'error', 'sess', 'Exit code 1'),
+        tool('ok1', 2, 'Bash', 'ok', 'sess'),
+      ]),
+    );
+    const [c] = t.clusters;
+    expect(c?.key).toBe(`${c?.classId}|Bash`);
+    expect(c?.program).toBeUndefined();
+    expect(c?.outcome).toBe('recovered');
   });
 });

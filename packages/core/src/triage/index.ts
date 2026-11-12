@@ -7,6 +7,7 @@
 export { classifyError, type ErrorClassification } from './classify.js';
 export {
   type ClusterOutcome,
+  type ClusterProgram,
   type ErrorCluster,
   type ErrorOccurrence,
   type RecoveryKind,
