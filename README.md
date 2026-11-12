@@ -128,6 +128,22 @@ Thresholds for the rules live in `runray.config.json`, read from the current dir
 }
 ```
 
+The same file can describe a subscription's usage limit. The dashboard's period filter then offers the window since your last reset, such as "Since Thu 14:00", and a budget in the unit the figures lead with shows how much of it that window used. Every field is optional. Without the block, the window runs 7 days from Monday 00:00 local time, and no budget is shown:
+
+```json
+{
+  "limitWindow": {
+    "days": 7,
+    "resetDay": "thu",
+    "resetHour": 14,
+    "budgetTokens": 500000000,
+    "budgetUSD": 300
+  }
+}
+```
+
+Anthropic doesn't publish subscription limits in tokens or dollars, so a budget is your own estimate, and the dashboard labels it as one.
+
 ## Compared with usage trackers
 
 ccusage and similar tools answer "how much did I use?" across days and projects. RunRay answers "what happened inside this session, and what should I change?" with evidence you can click through to.

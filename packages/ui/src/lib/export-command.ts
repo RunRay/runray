@@ -60,10 +60,13 @@ export function exportCommand(
     if (filter.source) {
       parts.push('--source', filter.source);
     }
-    if (filter.periodDays !== null) {
-      parts.push('--since', `${filter.periodDays}d`);
+    if (typeof filter.period === 'number') {
+      parts.push('--since', `${filter.period}d`);
     }
+    // the since-reset window (E7) anchors to the newest run; `--since`
+    // counts back from now, so the CLI can't reproduce it
     if (
+      filter.period === 'reset' ||
       filter.project ||
       filter.model ||
       filter.day ||
@@ -85,13 +88,13 @@ export function exportCommand(
 
   let scopeSentence: string;
   if (hasStoreOnlyFilter) {
-    scopeSentence = `Exports all ${allCount} runs matching CLI flags. Note: active in-browser filters (project, model, day, tool, branch) have no CLI equivalent and are not applied.`;
-  } else if (filter?.source && filter?.periodDays) {
-    scopeSentence = `Exports all runs from ${filter.source} in the last ${filter.periodDays} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
+    scopeSentence = `Exports all ${allCount} runs matching CLI flags. Note: active in-browser filters (project, model, day, tool, branch, the since-reset period) have no CLI equivalent and are not applied.`;
+  } else if (filter?.source && typeof filter.period === 'number') {
+    scopeSentence = `Exports all runs from ${filter.source} in the last ${filter.period} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
   } else if (filter?.source) {
     scopeSentence = `Exports all runs from ${filter.source} (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
-  } else if (filter?.periodDays) {
-    scopeSentence = `Exports all runs from the last ${filter.periodDays} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
+  } else if (typeof filter?.period === 'number') {
+    scopeSentence = `Exports all runs from the last ${filter.period} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
   } else {
     scopeSentence = `Exports all ${allCount} discovered run${allCount === 1 ? '' : 's'}.`;
   }

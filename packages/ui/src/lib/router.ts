@@ -78,16 +78,22 @@ export function parseFilterParams(hash: string): RunFilter {
   const query = hash.split('?')[1];
   if (query === undefined || query === '') return EMPTY_FILTER;
   const params = new URLSearchParams(query);
-  const period = Number(params.get('period') ?? '');
   return {
     project: params.get('project'),
     source: params.get('source') as RunFilter['source'],
-    periodDays: Number.isInteger(period) && period > 0 ? period : null,
+    period: parsePeriod(params.get('period')),
     model: params.get('model'),
     day: params.get('day'),
     tool: params.get('tool'),
     branch: params.get('branch'),
   };
+}
+
+/** `period=7` (rolling days) or `period=reset` (E7); anything else is all time. */
+function parsePeriod(raw: string | null): RunFilter['period'] {
+  if (raw === 'reset') return 'reset';
+  const days = Number(raw ?? '');
+  return Number.isInteger(days) && days > 0 ? days : null;
 }
 
 export function toHash(route: Route): string {
@@ -117,12 +123,7 @@ export function formatHash(route: Route, filter?: RunFilter): string {
   if (filter === undefined) return base;
   const parts: string[] = [];
   for (const key of FILTER_PARAMS) {
-    const value =
-      key === 'period'
-        ? filter.periodDays === null
-          ? null
-          : String(filter.periodDays)
-        : filter[key];
+    const value = filter[key];
     if (value === null || value === undefined) continue;
     parts.push(`${key}=${encodeURIComponent(String(value))}`);
   }

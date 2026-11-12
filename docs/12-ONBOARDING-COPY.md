@@ -430,12 +430,13 @@ One line, one dismiss (`✕`, `aria-label="Dismiss hint"`), never more than one 
 | `waste-view` | `Burned spend is already gone to retries. Opportunities show what cleaner settings would have saved.` |
 | `what-if` | `Re-price this session against another model. Calculations stay on this machine.` |
 | `diff` | `Two runs of the same task? Compare them with: runray diff <runA> <runB>` |
-| `limit-mode` | `Shows how much of your reference window this period used, in the unit beside %win. An estimate, not a provider quota.` |
+| `since-reset` | `Counts from the last reset of your usage limit. Set its day and hour under limitWindow in runray.config.json.` |
 | `coverage` | `Unpriced models show token counts without dollar figures. Costs are never guessed.` |
 | `redact` | `Exporting? Use --redact to keep structure and counts while dropping prompt text.` |
 
-`limit-mode` exists for persona B, who is on a flat subscription and for whom a dollar
-figure is the wrong unit entirely (`03-PERSONAS.md §B`). It must never say "cost".
+`since-reset` exists for persona B, who is on a flat subscription and for whom a dollar
+figure is the wrong unit entirely (`03-PERSONAS.md §B`). It must never say "cost" or name
+an amount.
 
 ### §4.6 Export provenance strip
 
