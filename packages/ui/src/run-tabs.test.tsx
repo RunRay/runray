@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import type { Run } from '@runray/schema';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -35,21 +38,21 @@ function stubRun(id: string): Run {
 /** Each tab of the bar: its label, where it leads, whether it is current. */
 function tabs(view: 'cost' | 'time'): Array<{
   label: string;
-  href: string;
+  href: string | null;
   current: boolean;
 }> {
-  const html = renderToStaticMarkup(
-    <RunView run={stubRun('r1')} view={view} />,
+  // read the markup as a document: the label is the link's own text, apart
+  // from the badge element some tabs carry after it
+  const page = new DOMParser().parseFromString(
+    renderToStaticMarkup(<RunView run={stubRun('r1')} view={view} />),
+    'text/html',
   );
-  const nav = /<nav aria-label="Run views"[^>]*>(.*?)<\/nav>/s.exec(html)?.[1];
-  if (nav === undefined) throw new Error('no tab bar');
-  return [...nav.matchAll(/<a ([^>]*)>(.*?)<\/a>/gs)].map((m) => ({
-    label: (m[2] ?? '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g, '&')
-      .trim(),
-    href: /href="([^"]*)"/.exec(m[1] ?? '')?.[1] ?? '',
-    current: (m[1] ?? '').includes('aria-current="page"'),
+  const nav = page.querySelector('nav[aria-label="Run views"]');
+  if (nav === null) throw new Error('no tab bar');
+  return [...nav.querySelectorAll('a')].map((link) => ({
+    label: (link.firstChild?.textContent ?? '').trim(),
+    href: link.getAttribute('href'),
+    current: link.getAttribute('aria-current') === 'page',
   }));
 }
 
