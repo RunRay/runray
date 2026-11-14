@@ -278,9 +278,9 @@ SHALL NOT be stored.
 #### Scenario: PowerShell wrapper
 - GIVEN the command `["pwsh.exe", "-Command", "pnpm test"]`
 - WHEN it is parsed
-- THEN the span carries `runray.tool: "pnpm"`, `runray.toolSub: "test"` and
-  a `runray.targetKey` equal to the one a Claude Code `PowerShell` call with
-  the command `pnpm test` gets
+- THEN the span carries `runray.tool: "pnpm"` and the same
+  `runray.toolSub`, `runray.toolActivity` and `runray.targetKey` a Claude
+  Code `PowerShell` call with the command `pnpm test` gets
 
 #### Scenario: Two commands, two identities
 - GIVEN the commands `["pwsh.exe", "-Command", "git status"]` and

@@ -110,7 +110,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       added to the spec. Figures on the 250 surveyed rollouts: 16,406 tool
       spans in 214 threads, 16,404 under an `llm_call`, no id twice, every
       run valid against the schema.
-- [ ] 3.2 A Shell unwrapping (T8): the wrapper table, the dialect guess for
+- [x] 3.2 A Shell unwrapping (T8): the wrapper table, the dialect guess for
       a script given as a bare string, a `codex` row in `adapters/target.ts`,
       a per-call dialect passed to the tool-usage classification (the
       `adapters/usage.ts` table fixes one dialect per tool name and cannot
@@ -123,6 +123,16 @@ directly and the goldens test does not see `fixtures/codex` yet.
       capture", including target-key equality with a Claude Code
       `PowerShell` call, and the registry invariants and snapshot tests
       updated.
+      Changed while doing it, with the measurements in T8: a script given
+      as a bare string is read as PowerShell when the thread works in a
+      Windows directory, before the text is asked (176 of 336 have no
+      backslash to go by); the scenario "PowerShell wrapper" named
+      `runray.toolSub: "test"`, which the classifier does not give
+      `pnpm test` (it is `run` with the script `test`), and now asks for
+      what a Claude Code `PowerShell` call gets. The id and runner
+      snapshots did not move: harness names are not registry ids. On the
+      250 surveyed rollouts 9,075 of 9,488 command spans resolve to a
+      registry tool and none is left unclassified.
 - [ ] 3.3 A File changes (T9): line counts per change type, header lines
       excluded, single-path target identity, legacy `shell` calls that run
       `apply_patch`. Verify: tests for every scenario of "Codex file

@@ -484,24 +484,50 @@ A command is an argv. The wrapper is recognised by the basename of
 | `bash`, `zsh`, `sh`, `dash` | last element | `posix` |
 | `cmd` | last element | guessed from the text, as hook commands are |
 | anything else | the argv joined with spaces | `posix` |
-| a string, not an argv | the string | guessed from the text |
+| a string, not an argv | the string | `powershell` in a thread whose working directory is a Windows path, else guessed from the text |
 
 The script is the `command` that target identity and tool usage are
 computed from. `adapters/target.ts` gets a `codex` row (`exec_command`,
 `shell`, `shell_command` as command tools; `apply_patch` as a file-write
 tool). `adapters/usage.ts` cannot take a row: its table fixes one dialect
 per tool name, and for Codex the dialect belongs to the call. The adapter
-passes the dialect with the script, through an optional parameter of
-`toolUsageSpanAttributes` or by calling the classifier the way the hook path
-does.
+passes the dialect with the script to `shellScriptAttributes`, which calls
+the classifier the way the hook path does; a guessed dialect also turns on
+the hook path's reading of a quoted program path, since `cmd` may be what
+runs the script. The command comes from the `CommandExecution` item, or,
+for a call to a tool the harness table marks as a shell
+(`shell`, `shell_command`, `exec_command`), from the call's `command` or
+`cmd` argument. A command that cannot be read is still stamped as a
+classified shell call of activity `other`, as an empty command is in the
+other adapters.
 
 Seen: `pwsh.exe -Command` 7,685, `pwsh.exe -NoProfile -Command` 547,
 `cmd.exe /c` 175, and in the legacy era `powershell(.exe)` with
 `-Command`, `-NoProfile -Command` or `-NoLogo -NoProfile -Command` 490 and
 `bash -lc` 17. The script is always the last element. 336 legacy calls carry
 the script as a bare string (`shell_command` 331, `shell` 5) with nothing
-that names the shell; the same guess the hook path makes (a backslash before
-a name character means a Windows shell) picks the dialect.
+that names the shell. The guess the hook path makes (a backslash before a
+name character means a Windows shell) is not enough for them: every one is
+in a thread working in a Windows directory, where Codex runs such a string
+in PowerShell, and 176 have no backslash to go by. Reading those as POSIX
+changes the tool for 8. The thread's directory therefore decides first. An
+argv with no shell in front was not seen apart from the 238 legacy
+`["apply_patch", …]` calls (T9); its program keeps its path unless the path
+holds a space or a backslash and would not read back as one word.
+
+Measured on the 250 rollouts: of 9,488 command spans (8,407 actions, 1,081
+legacy calls) 9,075 resolve to a tool of the registry and 413 are the
+"other command" row, the 238 legacy patches among them; none is left
+unclassified. The tools at the top are `Get-Content`, `git`, `node`, `rg`
+and `npm`.
+
+The harness table gets the Codex names it lacked. `shell_command` is a
+shell tool. `web.search` is `web`, `request_user_input_async` is `human`,
+and `js` / `js_reset` (tools of an MCP server Codex ships, spans under those
+names only when the MCP action was not recorded) are `integration`. `exec`,
+`wait`, `sleep`, `clock.sleep`, `write_stdin`, `imagegen` and
+`image_gen.generation` are none of the kinds "Harness tool classification"
+names and are listed as `other`, which is also what an unlisted name gets.
 
 ### T9 — File changes
 

@@ -11,7 +11,11 @@ import type {
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
 import { isCompressedRollout, readRolloutLines } from '../rollout-lines.js';
+import { HARNESS_TOOLS } from '../tools/registry.js';
+import type { ShellDialect } from '../tools/shell.js';
 import { errorPreview } from './error-preview.js';
+import { toolTargetAttributes } from './target.js';
+import { guessShellDialect, shellScriptAttributes } from './usage.js';
 
 /**
  * Codex adapter (change `add-codex-adapter`). Codex writes one "rollout" per
@@ -34,9 +38,10 @@ import { errorPreview } from './error-preview.js';
  *
  * What `parse()` emits so far: the session span, one `turn` span per turn
  * the rollout brackets (design D3, T6), one `llm_call` span per API
- * response (T4, T5) and one tool span per thing the harness did (D4, T7).
- * What a tool span says about its command or its patch follows in tasks
- * 3.2 to 3.4, child threads in 4.1.
+ * response (T4, T5) and one tool span per thing the harness did (D4, T7),
+ * a command's span with the identity of the program it ran (T8). What a
+ * span says about a patch follows in tasks 3.3 and 3.4, child threads in
+ * 4.1.
  *
  * Tool spans are harness actions, not model calls. Current Codex gives the
  * model one tool, `exec`, whose input is a script; what the script ran is
@@ -321,6 +326,9 @@ interface CallState {
   legacyResponse: ResponseSoFar;
   /** Harness actions attributed to it. */
   actions: number;
+  /** What its span carries if it becomes one: the identity of the command
+   * for a call to a shell tool, nothing for any other. */
+  attributes: Record<string, unknown>;
   /** When it stopped waiting for its output: the output was read, or the
    * next turn began without one. */
   until: string | undefined;
@@ -607,6 +615,126 @@ function outputTextOf(output: unknown): string | undefined {
   return text;
 }
 
+// --- commands: the script inside the shell wrapper (design T8) -------------
+
+/** A command as its shell reads it. */
+interface Script {
+  text: string;
+  dialect: ShellDialect;
+  /** The source does not name the shell; the dialect is read off the text
+   * and the thread. */
+  guessed: boolean;
+}
+
+const POWERSHELL_WRAPPERS: ReadonlySet<string> = new Set([
+  'pwsh',
+  'powershell',
+]);
+const POSIX_WRAPPERS: ReadonlySet<string> = new Set([
+  'bash',
+  'zsh',
+  'sh',
+  'dash',
+]);
+
+/** A program as its argv names it: no directory, no `.exe`, lowercase. */
+function programOf(arg0: string): string {
+  const name = arg0.split(/[\\/]/).at(-1) ?? arg0;
+  return name.toLowerCase().replace(/\.exe$/, '');
+}
+
+/**
+ * The script of a Codex command, taken out of the shell it is handed to.
+ *
+ * A command is an argv that starts with its shell: `pwsh.exe -Command …`
+ * (8,232 of 8,407 actions), `cmd.exe /c …` (175), and in the legacy era
+ * `powershell.exe -NoProfile -Command …` or `bash -lc …`. The script is the
+ * last element in every one of them, and the wrapper names its dialect.
+ * `cmd` has none of the two dialects, so its script is read by how it
+ * looks, as a hook command is.
+ *
+ * An argv with no shell in front is the command itself (`git status`). Its
+ * program is written without its directory when the path would not survive
+ * being read back as one word.
+ *
+ * A legacy `shell_command` gives the script as a bare string with nothing
+ * that names the shell. Codex runs those in PowerShell on Windows, so a
+ * thread working in a Windows directory says more than the text does: all
+ * 331 are in such threads, 172 of them without a backslash to go by.
+ */
+function scriptOf(command: unknown, windows: boolean): Script | undefined {
+  if (typeof command === 'string') {
+    const text = command.trim();
+    if (text === '') return undefined;
+    return {
+      text,
+      dialect: windows ? 'powershell' : guessShellDialect(text),
+      guessed: true,
+    };
+  }
+  if (!Array.isArray(command)) return undefined;
+  const argv = command.filter((a): a is string => typeof a === 'string');
+  const [arg0, ...rest] = argv;
+  if (arg0 === undefined) return undefined;
+  const program = programOf(arg0);
+  const last = rest.at(-1);
+  if (last !== undefined) {
+    if (POWERSHELL_WRAPPERS.has(program)) {
+      return { text: last, dialect: 'powershell', guessed: false };
+    }
+    if (POSIX_WRAPPERS.has(program)) {
+      return { text: last, dialect: 'posix', guessed: false };
+    }
+    if (program === 'cmd') {
+      return { text: last, dialect: guessShellDialect(last), guessed: true };
+    }
+  }
+  const head = /[\s\\]/.test(arg0) ? program : arg0;
+  return { text: [head, ...rest].join(' '), dialect: 'posix', guessed: false };
+}
+
+/**
+ * What a command's span carries: the target identity and the tool usage of
+ * its script (the same attributes a Claude Code `Bash` or `PowerShell` call
+ * gets, so `pnpm test` is one tool in every source). The script itself is
+ * read here and not kept, redacted or not. A command that cannot be read
+ * is still a classified shell call, of an activity nobody could tell.
+ */
+function commandAttributes(
+  name: string,
+  command: unknown,
+  windows: boolean,
+  redact: boolean,
+): Record<string, unknown> {
+  const script = scriptOf(command, windows);
+  if (script === undefined) {
+    return shellScriptAttributes('', 'posix', false, redact);
+  }
+  return {
+    ...toolTargetAttributes('codex', name, { command: script.text }, redact),
+    ...shellScriptAttributes(
+      script.text,
+      script.dialect,
+      script.guessed,
+      redact,
+    ),
+  };
+}
+
+/** The command a call to a shell tool was made with: `command` (an argv or
+ * a string) in the legacy tools, `cmd` in `exec_command`. */
+function commandOfCall(payload: Json): unknown {
+  let args: unknown = payload.arguments;
+  if (typeof args === 'string') {
+    try {
+      args = JSON.parse(args);
+    } catch {
+      return undefined;
+    }
+  }
+  return isObj(args) ? (args.command ?? args.cmd) : undefined;
+}
+
 // The lines the harness puts in front of an output. A script's:
 //   Script completed | Script failed | Script terminated |
 //   Script running with cell ID 12
@@ -781,6 +909,8 @@ async function emitThread(
   let latest: TurnState | undefined;
 
   let provider = 'unknown';
+  /** The thread works in a Windows directory (a drive or a UNC path). */
+  let windows = false;
   /** `turn_context` names the model of a turn, and may do so again. */
   const modelOfTurn = new Map<string, string>();
   let lastModel: string | undefined;
@@ -939,6 +1069,7 @@ async function emitThread(
         llmCalls: 0,
       };
       provider = str(payload.model_provider) ?? 'unknown';
+      windows = /^(?:[A-Za-z]:[\\/]|\\\\)/.test(summary.cwd ?? '');
       session = {
         id: threadId,
         parentId: null,
@@ -1117,7 +1248,15 @@ async function emitThread(
             ...(failed
               ? failureContent(ctx.redact, previewOf(failureTextOf(item)))
               : {}),
-            attributes: {},
+            attributes:
+              item.type === 'CommandExecution'
+                ? commandAttributes(
+                    identity.name,
+                    item.command,
+                    windows,
+                    ctx.redact,
+                  )
+                : {},
             provenance: { file, line },
           },
         });
@@ -1182,15 +1321,28 @@ async function emitThread(
         // record does not). It is open until its output is read.
         const callId = str(payload.call_id);
         if (callId !== undefined && !calls.has(callId)) {
+          const name = str(payload.name) ?? item.slice(0, -'_call'.length);
           const call: CallState = {
             id: callId,
-            name: str(payload.name) ?? item.slice(0, -'_call'.length),
+            name,
             line,
             at: at ?? lastAt,
             turn: current,
             response,
             legacyResponse,
             actions: 0,
+            // A call to a shell tool is the command when no action is
+            // recorded for it (the legacy era). Its script is read now and
+            // only what it classifies as is kept until the file is read.
+            attributes:
+              HARNESS_TOOLS.get(name)?.role === 'shell'
+                ? commandAttributes(
+                    name,
+                    commandOfCall(payload),
+                    windows,
+                    ctx.redact,
+                  )
+                : {},
             until: undefined,
             outcome: undefined,
           };
@@ -1292,7 +1444,7 @@ async function emitThread(
         ...(status === 'error' || status === 'cancelled'
           ? failureContent(ctx.redact, outcome?.preview)
           : {}),
-        attributes: {},
+        attributes: call.attributes,
         provenance: { file, line: call.line },
       },
     });

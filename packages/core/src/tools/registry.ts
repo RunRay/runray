@@ -1863,8 +1863,17 @@ function harness(
 export const HARNESS_TOOLS: ReadonlyMap<string, HarnessTool> = new Map([
   ...harness(
     'other',
-    'Bash PowerShell bash shell run_shell_command exec_command local_shell',
+    `Bash PowerShell bash shell shell_command run_shell_command exec_command
+    local_shell`,
     'shell',
+  ),
+  // Codex tools that are none of the kinds below: the script tool whose
+  // work is recorded as actions of their own, waiting on a process, typing
+  // into one, generating an image. Listed so that the table names every
+  // tool a Codex run can show; an unlisted name is `other` just the same.
+  ...harness(
+    'other',
+    'exec wait sleep clock.sleep write_stdin imagegen image_gen.generation',
   ),
   ...harness(
     'explore',
@@ -1879,7 +1888,8 @@ export const HARNESS_TOOLS: ReadonlyMap<string, HarnessTool> = new Map([
   ),
   ...harness(
     'web',
-    'WebFetch WebSearch webfetch websearch web_fetch google_web_search',
+    `WebFetch WebSearch webfetch websearch web_fetch google_web_search
+    web.search`,
   ),
   ...harness('agent', 'Agent Task task', 'agent'),
   ...harness('agent', 'Skill skill', 'skill'),
@@ -1890,8 +1900,16 @@ export const HARNESS_TOOLS: ReadonlyMap<string, HarnessTool> = new Map([
     SlashCommand Monitor ScheduleWakeup EnterWorktree ExitWorktree
     StructuredOutput SubagentHandback todowrite todoread update_plan`,
   ),
-  ...harness('human', 'AskUserQuestion ExitPlanMode question'),
-  ...harness('integration', 'ListMcpResourcesTool ReadMcpResourceTool'),
+  ...harness(
+    'human',
+    'AskUserQuestion ExitPlanMode question request_user_input_async',
+  ),
+  // `js` and `js_reset` are tools of an MCP server Codex ships; they are
+  // spans under these names only when the MCP action itself was not recorded
+  ...harness(
+    'integration',
+    'ListMcpResourcesTool ReadMcpResourceTool js js_reset',
+  ),
 ]);
 
 /** Activity of a harness tool by name; `other` for a name outside the table. */

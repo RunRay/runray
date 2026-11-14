@@ -16,7 +16,10 @@ import { type Candidate, NoSessionYet, type RawRun } from '../adapter.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
 import { readRolloutLines } from '../rollout-lines.js';
+import { identityContext, toolIdentity } from '../tools/identity.js';
+import { claudeCodeAdapter } from './claude-code.js';
 import { codexAdapter } from './codex.js';
+import { extractToolTarget } from './target.js';
 
 /**
  * Codex adapter tests (change `add-codex-adapter`). Discovery runs against
@@ -1660,6 +1663,10 @@ describe('codex legacy token events', () => {
 
 const toolsOf = (raw: RawRun) =>
   raw.spans.filter((s) => s.kind === 'tool_call' || s.kind === 'mcp_call');
+/** The target key a shell call of any source gets for a command that
+ * starts with `token`. */
+const targetKeyOf = (token: string) =>
+  extractToolTarget('claude-code', 'Bash', { command: token })?.key;
 /** Name, parent and status of every tool span, in file order. */
 const toolRows = (raw: RawRun) =>
   toolsOf(raw).map((s) => `${s.name} < ${s.parentId} ${s.status}`);
@@ -1756,7 +1763,16 @@ describe('codex tool spans', () => {
         exitCode: 0,
         outputBytes: 10,
       },
-      attributes: {},
+      // what `pnpm test --filter invoices` is, not the text of it
+      attributes: {
+        'runray.targetKey': targetKeyOf('pnpm'),
+        'runray.targetKind': 'command',
+        'runray.target': 'pnpm',
+        'runray.toolActivity': 'test',
+        'runray.tool': 'pnpm',
+        'runray.toolSub': 'run',
+        'runray.toolScript': 'test',
+      },
       provenance: { file, line },
     });
     expect(toolsOf(raw)).toEqual([
@@ -1831,11 +1847,12 @@ describe('codex tool spans', () => {
       tool: { isError: true, exitCode: 1 },
       content: { outputPreview: null },
     });
-    for (const text of ['TS2322', 'invoices', 'pwsh', 'pnpm']) {
+    for (const text of ['TS2322', 'invoices', 'pwsh', '--filter']) {
       expect(JSON.stringify(redacted)).not.toContain(text);
     }
-    // the script and the command are never stored, redacted or not
-    for (const text of ['pwsh', 'pnpm', 'exec_command({']) {
+    // the script and the command are never stored, redacted or not: only
+    // the name of the program the script ran
+    for (const text of ['pwsh', '--filter', 'exec_command({']) {
       expect(JSON.stringify(raw.spans)).not.toContain(text);
     }
   });
@@ -2046,7 +2063,13 @@ describe('codex tool spans', () => {
         content: {
           outputPreview: 'ls: cannot access src/invoices: No such file\n',
         },
-        attributes: {},
+        attributes: {
+          'runray.targetKey': targetKeyOf('ls'),
+          'runray.targetKind': 'command',
+          'runray.target': 'ls',
+          'runray.toolActivity': 'explore',
+          'runray.tool': 'ls',
+        },
         provenance: { file, line: 5 },
       },
       {
@@ -2059,7 +2082,13 @@ describe('codex tool spans', () => {
         endedAt: at(9),
         durationMs: 250,
         tool: { name: 'shell', isError: false, exitCode: 0, outputBytes: 6 },
-        attributes: {},
+        attributes: {
+          'runray.targetKey': targetKeyOf('pwd'),
+          'runray.targetKind': 'command',
+          'runray.target': 'pwd',
+          'runray.toolActivity': 'system',
+          'runray.tool': 'pwd',
+        },
         provenance: { file, line: 8 },
       },
     ]);
@@ -2360,6 +2389,369 @@ describe('codex tool spans', () => {
         JSON.stringify(toolsOf(raw).filter((s) => s !== patch)),
       ).not.toContain(text);
     }
+  });
+});
+
+describe('codex commands', () => {
+  const POSIX_HOME = '/home/dev/billing-portal';
+
+  /** The span of one command action with the given `command`. */
+  const commandSpan = async (
+    argv: unknown,
+    { redact = false, cwd }: { redact?: boolean; cwd?: string } = {},
+  ) => {
+    const { raw } = await parseLines(
+      [
+        sessionMeta(0, cwd === undefined ? {} : { cwd }),
+        started(1, TURN_A),
+        toolCall(2, 'call_1'),
+        usageRecord(3, TURN_A, 'resp_1'),
+        action(4, TURN_A, command('exec-1', { command: argv }), 3),
+        toolOutput(5, 'call_1'),
+        completed(6, TURN_A),
+      ],
+      redact,
+    );
+    return toolsOf(raw)[0];
+  };
+  /** The span of one legacy call to a shell tool, the era's command. */
+  const callSpan = async (name: string, args: unknown, cwd?: string) => {
+    const { raw } = await parseLines([
+      sessionMeta(0, cwd === undefined ? {} : { cwd }),
+      started(1, TURN_A),
+      functionCall(2, 'call_1', name, args),
+      tokenCount(3, SMALL, 110),
+      functionOutput(4, 'call_1', '{"output":"","metadata":{"exit_code":0}}'),
+      completed(5, TURN_A),
+    ]);
+    return toolsOf(raw)[0];
+  };
+
+  /** What a Claude Code `PowerShell` call with this command is stamped with. */
+  async function claudePowerShell(commandText: string) {
+    const project = join(tempDir(), 'project');
+    mkdirSync(project, { recursive: true });
+    const lines = [
+      {
+        type: 'user',
+        uuid: 'u1',
+        sessionId: 'sess-ps',
+        timestamp: at(0),
+        cwd: 'C:\\work\\billing-portal',
+        message: { role: 'user', content: 'run the tests' },
+      },
+      {
+        type: 'assistant',
+        uuid: 'a1',
+        parentUuid: 'u1',
+        sessionId: 'sess-ps',
+        timestamp: at(1),
+        cwd: 'C:\\work\\billing-portal',
+        message: {
+          id: 'msg_ps',
+          role: 'assistant',
+          model: 'claude-sonnet-4-6',
+          stop_reason: 'tool_use',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [
+            {
+              type: 'tool_use',
+              id: 'tu_ps',
+              name: 'PowerShell',
+              input: { command: commandText },
+            },
+          ],
+        },
+      },
+    ];
+    writeFileSync(
+      join(project, 'sess-ps.jsonl'),
+      `${lines.map((l) => JSON.stringify(l)).join('\n')}\n`,
+    );
+    const [candidate] = await claudeCodeAdapter.detect([project]);
+    const raw = await claudeCodeAdapter.parse(candidate as Candidate, {
+      redact: false,
+    });
+    return raw.spans.find((s) => s.name === 'PowerShell')?.attributes;
+  }
+
+  it('takes the script out of a PowerShell wrapper: the identity of `pnpm test`, as in a Claude Code PowerShell call', async () => {
+    const span = await commandSpan(['pwsh.exe', '-Command', 'pnpm test']);
+    expect(span?.attributes).toEqual({
+      'runray.targetKey': targetKeyOf('pnpm'),
+      'runray.targetKind': 'command',
+      'runray.target': 'pnpm',
+      'runray.toolActivity': 'test',
+      'runray.tool': 'pnpm',
+      'runray.toolSub': 'run',
+      'runray.toolScript': 'test',
+    });
+    // the same identity, key for key, as the other source's own shell tool
+    expect(span?.attributes).toEqual(await claudePowerShell('pnpm test'));
+    // the wrapper is not the identity, wherever it is installed
+    const installed = await commandSpan([
+      'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+      '-NoProfile',
+      '-Command',
+      'pnpm test',
+    ]);
+    expect(installed?.attributes).toEqual(span?.attributes);
+    expect(span?.attributes['runray.targetKey']).not.toBe(targetKeyOf('pwsh'));
+  });
+
+  it('gives two commands behind the same wrapper two identities', async () => {
+    const status = await commandSpan(['pwsh.exe', '-Command', 'git status']);
+    const build = await commandSpan(['pwsh.exe', '-Command', 'pnpm build']);
+    expect(status?.attributes['runray.targetKey']).toBe(targetKeyOf('git'));
+    expect(build?.attributes['runray.targetKey']).toBe(targetKeyOf('pnpm'));
+    expect(status?.attributes['runray.targetKey']).not.toBe(
+      build?.attributes['runray.targetKey'],
+    );
+    expect(status?.attributes).toMatchObject({
+      'runray.tool': 'git',
+      'runray.toolSub': 'status',
+      'runray.toolActivity': 'vcs',
+    });
+  });
+
+  it('reads the script of a POSIX wrapper in the POSIX dialect', async () => {
+    const cargo = await commandSpan(['bash', '-lc', 'cargo test']);
+    expect(cargo?.attributes).toMatchObject({
+      'runray.tool': 'cargo',
+      'runray.toolSub': 'test',
+      'runray.targetKey': targetKeyOf('cargo'),
+    });
+    // a backslash before a line break continues the line in bash, and is
+    // an argument of its own in PowerShell: the wrapper decides which
+    const continued = 'cargo \\\n  test';
+    for (const shell of ['bash', '/usr/bin/zsh', 'sh', 'dash']) {
+      const span = await commandSpan([shell, '-c', continued]);
+      expect(span?.attributes['runray.toolSub'], shell).toBe('test');
+    }
+    const powershell = await commandSpan(['pwsh', '-Command', continued]);
+    expect(powershell?.attributes['runray.tool']).toBe('cargo');
+    expect(powershell?.attributes).not.toHaveProperty('runray.toolSub');
+  });
+
+  it('reads a script given as a bare string in PowerShell when the text or the thread says Windows', async () => {
+    // the spec's example: a Windows path in the text
+    const listed = await callSpan(
+      'shell_command',
+      { command: 'Get-ChildItem C:\\repo\\src | Select-Object -First 5' },
+      POSIX_HOME,
+    );
+    expect(listed).toMatchObject({
+      name: 'shell_command',
+      attributes: {
+        'runray.tool': 'get-childitem',
+        'runray.toolActivity': 'explore',
+        'runray.targetKey': targetKeyOf('Get-ChildItem'),
+        'runray.targetKind': 'command',
+      },
+    });
+    // a program by its Windows path is one word in PowerShell and several
+    // glued together in POSIX: this tells the dialects apart
+    const byPath = { command: 'C:\\tools\\node.exe build.mjs' };
+    expect(
+      (await callSpan('shell_command', byPath, POSIX_HOME))?.attributes,
+    ).toMatchObject({ 'runray.tool': 'node', 'runray.toolSub': 'script' });
+    // no backslash to go by: the thread's directory decides
+    const quiet = { command: 'cargo \\\n  test', workdir: 'src' };
+    expect(
+      (await callSpan('shell_command', quiet, POSIX_HOME))?.attributes[
+        'runray.toolSub'
+      ],
+    ).toBe('test');
+    for (const windows of ['C:\\work\\billing-portal', '\\\\nas\\work']) {
+      const span = await callSpan('shell_command', quiet, windows);
+      expect(span?.attributes['runray.tool'], windows).toBe('cargo');
+      expect(span?.attributes, windows).not.toHaveProperty('runray.toolSub');
+    }
+  });
+
+  it('reads an argv with no shell in front as the command itself', async () => {
+    expect((await commandSpan(['git', 'status']))?.attributes).toEqual({
+      'runray.targetKey': targetKeyOf('git'),
+      'runray.targetKind': 'command',
+      'runray.target': 'git',
+      'runray.toolActivity': 'vcs',
+      'runray.tool': 'git',
+      'runray.toolSub': 'status',
+    });
+    // a program path that would not read back as one word loses its folder
+    const installed = await commandSpan([
+      'C:\\Program Files\\Git\\bin\\git.exe',
+      'status',
+    ]);
+    expect(installed?.attributes).toMatchObject({
+      'runray.tool': 'git',
+      'runray.toolSub': 'status',
+      'runray.targetKey': targetKeyOf('git'),
+    });
+    // a shell with nothing behind it is a program like any other
+    expect((await commandSpan(['bash']))?.attributes).toMatchObject({
+      'runray.targetKey': targetKeyOf('bash'),
+    });
+  });
+
+  it('keeps the identity and drops every word of the script under redaction', async () => {
+    const argv = ['pwsh.exe', '-Command', 'pnpm test --filter invoices-eu'];
+    const open = await commandSpan(argv);
+    const redacted = await commandSpan(argv, { redact: true });
+    expect(redacted?.attributes).toEqual({
+      'runray.targetKey': open?.attributes['runray.targetKey'],
+      'runray.targetKind': 'command',
+      'runray.toolActivity': 'test',
+      'runray.tool': 'pnpm',
+      'runray.toolSub': 'run',
+    });
+    expect(redacted?.attributes).not.toHaveProperty('runray.target');
+    for (const span of [open, redacted]) {
+      for (const value of Object.values(span?.attributes ?? {})) {
+        expect(String(value)).not.toContain('invoices-eu');
+        expect(String(value)).not.toContain('--filter');
+        expect(String(value)).not.toContain('pwsh');
+      }
+    }
+  });
+
+  it('reads the script handed to cmd by how it looks', async () => {
+    const dir = await commandSpan(['cmd.exe', '/c', 'dir /b src']);
+    expect(dir?.attributes).toMatchObject({
+      'runray.tool': 'ls',
+      'runray.targetKey': targetKeyOf('dir'),
+    });
+    const byPath = await commandSpan([
+      'C:\\Windows\\System32\\cmd.exe',
+      '/c',
+      'C:\\tools\\node.exe build.mjs',
+    ]);
+    expect(byPath?.attributes).toMatchObject({ 'runray.tool': 'node' });
+  });
+
+  it('resolves in the tool-usage view to programs, not to the wrapper or the script tool', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(
+        4,
+        TURN_A,
+        command('exec-1', { command: ['pwsh.exe', '-Command', 'pnpm test'] }),
+        3,
+      ),
+      action(
+        5,
+        TURN_A,
+        command('exec-2', {
+          command: ['pwsh.exe', '-Command', 'acme-deploy --prod'],
+        }),
+        4,
+      ),
+      action(
+        6,
+        TURN_A,
+        { type: 'Extension', kind: 'web.search', id: 'exec-3', query: 'q' },
+        5,
+      ),
+      action(
+        7,
+        TURN_A,
+        {
+          type: 'McpToolCall',
+          id: 'exec-4',
+          server: 'linear',
+          tool: 'list_issues',
+          status: 'completed',
+        },
+        6,
+      ),
+      toolOutput(8, 'call_1'),
+      functionCall(9, 'call_2', 'wait', { cell_id: 1 }),
+      usageRecord(10, TURN_A, 'resp_2'),
+      functionOutput(11, 'call_2', 'Script completed\nOutput:\n'),
+      functionCall(12, 'call_3', 'request_user_input_async', {}),
+      usageRecord(13, TURN_A, 'resp_3'),
+      functionOutput(14, 'call_3', '{"accepted":true}'),
+      toolCall(15, 'call_4'),
+      usageRecord(16, TURN_A, 'resp_4'),
+      toolOutput(17, 'call_4'),
+      completed(18, TURN_A),
+    ]);
+    const run = normalize(priceRun(raw));
+    const context = identityContext(run.spans);
+    const rows = run.spans.flatMap((span) => {
+      const id = toolIdentity(span, context);
+      if (id === undefined) return [];
+      const sub = id.sub === undefined ? '' : ` ${id.sub}`;
+      return [`${id.family}:${id.key}${sub} (${id.activity})`];
+    });
+    expect(rows).toEqual([
+      'shell:pnpm run (test)',
+      'shell:other-command (other)',
+      'harness:web.search (web)',
+      'mcp:linear list_issues (integration)',
+      'harness:wait (other)',
+      'harness:request_user_input_async (human)',
+      'harness:exec (other)',
+    ]);
+  });
+
+  it('classifies a legacy shell call from its argv, wrapper and all', async () => {
+    const span = await callSpan('shell', {
+      command: [
+        'powershell.exe',
+        '-NoLogo',
+        '-NoProfile',
+        '-Command',
+        'npm run build',
+      ],
+      timeout_ms: 120_000,
+    });
+    expect(span).toMatchObject({
+      name: 'shell',
+      attributes: {
+        'runray.tool': 'npm',
+        'runray.toolActivity': 'build',
+        'runray.targetKey': targetKeyOf('npm'),
+      },
+    });
+    const posix = await callSpan('shell', {
+      command: ['bash', '-lc', 'ls src'],
+    });
+    expect(posix?.attributes).toMatchObject({ 'runray.tool': 'ls' });
+  });
+
+  it('marks a command it cannot read as classified, of an activity nobody could tell', async () => {
+    for (const unreadable of [undefined, 42, [], [7], '   ']) {
+      const span = await commandSpan(unreadable);
+      expect(span?.attributes, String(unreadable)).toEqual({
+        'runray.toolActivity': 'other',
+      });
+    }
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      rec(2, 'response_item', {
+        type: 'function_call',
+        call_id: 'call_1',
+        name: 'shell',
+        arguments: '{"command": [',
+      }),
+      functionOutput(3, 'call_1', 'failed to parse function arguments'),
+      completed(4, TURN_A),
+    ]);
+    expect(toolsOf(raw)[0]).toMatchObject({
+      name: 'shell',
+      status: 'error',
+      attributes: { 'runray.toolActivity': 'other' },
+    });
+  });
+
+  it('stamps nothing on a call that is not to a shell tool', async () => {
+    const plan = await callSpan('update_plan', { command: 'pnpm test' });
+    expect(plan).toMatchObject({ name: 'update_plan', attributes: {} });
   });
 });
 
@@ -2694,7 +3086,11 @@ describe('codex parse on the fixtures', () => {
           expect(tool.tool?.isError).toBe(tool.status === 'error');
           expect(tool.endedAt).toBeDefined();
           expect(tool.startedAt <= (tool.endedAt ?? '')).toBe(true);
-          expect(tool.attributes).toEqual({});
+          // a command is classified, whatever its (scrubbed) script; no
+          // other tool carries an attribute yet
+          if (['exec_command', 'shell', 'shell_command'].includes(tool.name)) {
+            expect(tool.attributes['runray.toolActivity']).toBeTypeOf('string');
+          } else expect(tool.attributes).toEqual({});
           expect(tool.provenance.line).toBeGreaterThan(1);
           if (tool.status !== 'ok') {
             expect(
