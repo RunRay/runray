@@ -304,10 +304,15 @@ Count from `traceFile.runs.length`. Singular form: `One session was already on t
 
 **Body:**
 ```
-RunRay read the logs Claude Code and OpenCode already wrote.
+RunRay read the logs Claude Code and Codex already wrote.
 Inspect execution time, stalled tools, and subagent branches.
 It requires no collector or account.
 ```
+The first sentence names the agents the loaded sessions came from, in the order Claude Code,
+OpenCode, Codex: `Codex` alone, `Claude Code and Codex`, `Claude Code, OpenCode, and Codex`.
+It never lists an agent that has no session in the view. When no session came from one of
+these agents (an OTLP import), the sentence is `RunRay read the traces your agents already
+wrote.`
 
 **Privacy line** (own block, quieter type, the mechanism *is* the reassurance):
 ```

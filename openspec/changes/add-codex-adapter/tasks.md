@@ -413,7 +413,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       lists the sources of the loaded runs. Seen in both themes through the
       new `cli-view-sources` preview. Noticed and left: on paper OpenCode
       and OTLP are two greys, and the fallback grey is under 3:1 on white.
-- [ ] 7.2 B [UI → /frontend-design] Per-source hints (and, from the review
+- [x] 7.2 B [UI → /frontend-design] Per-source hints (and, from the review
       of group 5, the unpriced notice in `components/CoverageNotices.tsx`:
       no "Try runray pricing --refresh" when every unpriced model is on
       `MODELS_WITHOUT_PUBLISHED_PRICE`, as the CLI warning already does):
@@ -423,6 +423,28 @@ directly and the goldens test does not see `fixtures/codex` yet.
       `components/WelcomeDialog.tsx` that names the sources read, and a
       review of the source branches in `lib/tool-table.ts`. Verify: tests for every scenario of
       "Per-source hints cover Codex".
+      Done: `lib/sources.ts` is the one place that says which sources are
+      agents RunRay reads (core's playbook list without OTLP); the Waste
+      lead, the cost note and the welcome sentence ask it, so a fourth
+      agent cannot fall into the custom-agent wording in one of them only.
+      Waste lead on Codex: `AGENTS.md`, `codex resume --last`, and the
+      habits the three agents share; the two cache groups cannot occur on a
+      Codex run and are still worded truthfully. The welcome sentence names
+      the agents of the loaded runs, not a fixed list (copy rule in
+      `docs/12-ONBOARDING-COPY.md` §4.1). The unpriced banner follows the
+      CLI warning: no refresh advice when no price is published for any of
+      the models, and it says what the model is, from core's list.
+      `lib/tool-table.ts` needed no change: a rollout has no hook spans, so
+      no hook rows and no note are drawn, and the Codex goldens hold no
+      unclassified shell call, so the "recorded before tool
+      identification" line cannot show. Tests: `codex-hints.test.tsx`, and
+      the hook scenario in `time-view.test.tsx`. Seen in the built UI on
+      `fixtures/codex`: the banner and the cost note on a session with
+      reviewer calls. Not seen live: the welcome dialog (dismissed on this
+      machine, and its state was left alone) and a Codex burned group (no
+      fixture has one); both are held by mounted-component tests. Left as
+      it is: the empty-state screen still gives `claude "explain this
+      repo"` as its one example of running an agent.
 
 ## 8. Integration checks
 

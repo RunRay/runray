@@ -7,6 +7,7 @@ import {
 } from '@runray/core/waste';
 import type { Run } from '@runray/schema';
 import { formatTokensCompact, formatUSD } from './format';
+import { type AgentSource, agentSource } from './sources';
 
 /**
  * UI-side access to the core waste grouping (waste-grouping capability).
@@ -59,9 +60,28 @@ export function wasteBadge(run: Run): WasteBadge | null {
 
 /** Where the person records facts for the next session, per source. */
 export function instructionsFile(source: string): string {
-  if (source === 'claude-code') return 'CLAUDE.md';
-  if (source === 'opencode') return 'AGENTS.md';
-  return 'the system prompt';
+  const agent = agentSource(source);
+  if (agent === undefined) return 'the system prompt';
+  switch (agent) {
+    case 'claude-code':
+      return 'CLAUDE.md';
+    case 'opencode':
+    case 'codex':
+      return 'AGENTS.md';
+  }
+}
+
+/** How the person picks a session of this agent up again after it ended on
+ * a failure. */
+function resumeLever(agent: AgentSource): string {
+  switch (agent) {
+    case 'claude-code':
+      return 'Resume with `claude --continue` and deal with the failing step first.';
+    case 'opencode':
+      return 'Resume with `opencode -c` and deal with the failing step first.';
+    case 'codex':
+      return 'Continue with `codex resume --last` and deal with the failing step first.';
+  }
 }
 
 export const tok = formatTokensCompact;
@@ -99,7 +119,10 @@ function wording(
   source: string,
 ): { what: string; lever: string } {
   const usd = formatUSD(g.usd);
-  const custom = source !== 'claude-code' && source !== 'opencode';
+  // a custom agent is worded for whoever builds it; the agents RunRay reads
+  // share the habits below, which name nothing only one of them has
+  const agent = agentSource(source);
+  const custom = agent === undefined;
   switch (g.ruleId) {
     case 'cache-prefix-break': {
       const shapes = g.shapes ?? {};
@@ -167,11 +190,9 @@ function wording(
       return {
         what: `The session ended on a failure; calls after the last completed change yielded nothing, costing ${usd}.`,
         lever:
-          source === 'claude-code'
-            ? 'Resume with `claude --continue` and deal with the failing step first.'
-            : source === 'opencode'
-              ? 'Resume with `opencode -c` and deal with the failing step first.'
-              : 'Return the error to the caller and make the failed step the first thing the next run sees.',
+          agent === undefined
+            ? 'Return the error to the caller and make the failed step the first thing the next run sees.'
+            : resumeLever(agent),
       };
     case 'duplicate-read':
       return {
