@@ -46,10 +46,10 @@
       "total": 485415
     },
     "costUSD": {
-      "total": 1.093328,
-      "wastedEstimate": 0.227544,
+      "total": 0.75013,
+      "wastedEstimate": 0.236526,
       "byModel": {
-        "claude-fable-5-1": 1.093328
+        "claude-fable-5-1": 0.75013
       }
     },
     "counts": {
@@ -73,8 +73,8 @@
       "spanIds": [
         "ed1bef26-fc12-4296-9dcf-19fc7063111e"
       ],
-      "estimatedWasteUSD": 0.227544,
-      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium, and every further call in this context costs $0.01 in cache reads alone."
+      "estimatedWasteUSD": 0.236526,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium."
     }
   ]
 }
