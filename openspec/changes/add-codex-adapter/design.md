@@ -319,6 +319,17 @@ record's ordinal. 1,443 of 9,037 `token_count` events repeat the previous
 total and are skipped; an event with `info: null` is skipped. When a file has
 usage records, `token_count` events are ignored.
 
+The legacy era writes its records in two orders. CLI 0.47 writes a
+response's token event before the response's items, which it records in one
+batch once the tool has run (`T R C O T R C O … T M`, all 106 turns of that
+version). The later legacy releases (0.77, 0.135, 0.147) write it after them
+(`R C T O … R M T`, 36 turns). No file mixes the two. The order shows at a
+turn's first token event: if the model has written nothing in the turn yet
+(no reasoning, message or call), the items that follow an event belong to
+the response that event counted, and they fill in its preview and
+provenance as they are read. Reading 0.47 the other way hangs each item
+from the response after its own and drops the turn's last message.
+
 An event before the thread's first turn is never a call. Five child threads
 open with a `token_count` that carries the total and the last usage of their
 parent. All five have usage records, so the event is ignored today; in a

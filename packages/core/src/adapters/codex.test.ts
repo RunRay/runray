@@ -1494,6 +1494,94 @@ describe('codex legacy token events', () => {
     expect(run.totals.tokens.total).toBe(3_130);
   });
 
+  it('reads the items after a token event as that response when the event comes first', async () => {
+    // CLI 0.47 writes the token event when the response ends and its items
+    // afterwards, in one batch with the tool output
+    const { raw } = await parseLines([
+      rec(0, 'session_meta', { id: ROOT, model_provider: 'openai' }),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5'),
+      tokenCount(3, usageOf(1_000, 0, 50, 0), 1_050), // line 4
+      assistantMessage(6, 'Listing the invoices folder.'), // line 5
+      rec(6, 'response_item', {
+        type: 'function_call',
+        name: 'shell',
+        call_id: 'call_1',
+        arguments: '{"command":["bash","-lc","ls"]}',
+      }),
+      rec(6, 'response_item', {
+        type: 'function_call_output',
+        call_id: 'call_1',
+        output: '{"output":"a.ts","metadata":{"exit_code":0}}',
+      }),
+      tokenCount(8, usageOf(2_000, 1_000, 80, 0), 3_130), // line 8
+      rec(8, 'response_item', { type: 'reasoning', summary: [] }),
+      assistantMessage(8, 'Two files, both small.'), // line 10
+      completed(9, TURN_A),
+      started(10, TURN_B),
+      tokenCount(12, usageOf(3_000, 2_000, 10, 0), 6_140), // line 13
+      rec(12, 'response_item', {
+        type: 'function_call',
+        name: 'shell',
+        call_id: 'call_2', // line 14
+        arguments: '{"command":["bash","-lc","pwd"]}',
+      }),
+      aborted(13, TURN_B, 'interrupted'),
+    ]);
+    expect(
+      llmCallsOf(raw).map((s) => ({
+        id: s.id,
+        parentId: s.parentId,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt,
+        content: s.content,
+        line: s.provenance.line,
+      })),
+    ).toEqual([
+      {
+        id: `${ROOT}:tokens:3`,
+        parentId: TURN_A,
+        startedAt: at(1),
+        endedAt: at(3),
+        content: { outputPreview: 'Listing the invoices folder.' },
+        line: 5,
+      },
+      {
+        id: `${ROOT}:tokens:8`,
+        parentId: TURN_A,
+        // from the tool output handed back
+        startedAt: at(6),
+        endedAt: at(8),
+        content: { outputPreview: 'Two files, both small.' },
+        line: 10,
+      },
+      {
+        id: `${ROOT}:tokens:12`,
+        parentId: TURN_B,
+        startedAt: at(10),
+        endedAt: at(12),
+        // no text: the record behind the span is the call it made
+        content: undefined,
+        line: 14,
+      },
+    ]);
+    expect(normalize(priceRun(raw)).totals.tokens.total).toBe(6_140);
+
+    const { raw: redacted } = await parseLines(
+      [
+        sessionMeta(0),
+        started(1, TURN_A),
+        tokenCount(3, SMALL, 110),
+        assistantMessage(6, 'Listing the invoices folder.'),
+        completed(7, TURN_A),
+      ],
+      true,
+    );
+    expect(llmCallsOf(redacted).map((s) => s.content)).toEqual([
+      { outputPreview: null },
+    ]);
+  });
+
   it('ignores token events in a rollout that has usage records', async () => {
     const { raw } = await parseLines([
       sessionMeta(0),
@@ -1767,6 +1855,24 @@ describe('codex parse on the fixtures', () => {
       provider: 'openai',
       model: 'gpt-5.5',
     });
+  });
+
+  it('gives the last call of a legacy turn the text the turn ended on, in either record order', async () => {
+    // the first file (CLI 0.47) writes a token event before the items of
+    // its response, the second (CLI 0.147) after them
+    for (const raw of (await parseVariant('legacy')) as RawRun[]) {
+      let turnsWithCalls = 0;
+      for (const turn of turnsOf(raw)) {
+        const last = llmCallsOf(raw)
+          .filter((s) => s.parentId === turn.id)
+          .sort((a, b) => (a.endedAt ?? '').localeCompare(b.endedAt ?? ''))
+          .at(-1);
+        if (last === undefined) continue;
+        turnsWithCalls++;
+        expect(last.content?.outputPreview).toBeTypeOf('string');
+      }
+      expect(turnsWithCalls).toBe(3);
+    }
   });
 
   it('sums the calls of a thread that inherited its total to its own usage, not to that total', async () => {

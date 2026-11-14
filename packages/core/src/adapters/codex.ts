@@ -423,6 +423,10 @@ interface ResponseSoFar {
   /** The earliest its request can have been sent: the end of the response
    * before it, or the tool output handed back since. */
   floor: string | undefined;
+  /** Its `llm_call`, once there is one. Usually that is when the response
+   * is over and nothing more is read into it; in a rollout that writes the
+   * token event first, the call exists before its items do. */
+  span: RawSpan | undefined;
 }
 
 function newResponse(floor: string | undefined): ResponseSoFar {
@@ -431,6 +435,7 @@ function newResponse(floor: string | undefined): ResponseSoFar {
     messageLine: undefined,
     callLine: undefined,
     floor,
+    span: undefined,
   };
 }
 
@@ -477,6 +482,25 @@ async function emitThread(
   let legacyResponse = newResponse(undefined);
   const legacyCalls: RawSpan[] = [];
   let lastThreadTotal: string | undefined;
+  // A legacy rollout writes a response's token event on either side of the
+  // response's items: before them in CLI 0.47, which records the items in
+  // one batch once the tool has run (106 turns surveyed, every one), after
+  // them in the later releases (36 turns). Which it is shows at a turn's
+  // first token event: has the model written anything in the turn yet?
+  let tokenFirst: boolean | undefined;
+  let wroteInTurn = false;
+
+  /** In the token-first order the call is emitted before its items are
+   * read; what they say is filled in as they arrive. */
+  const fillIn = (so: ResponseSoFar): void => {
+    const span = so.span;
+    if (span === undefined) return;
+    const line = so.messageLine ?? so.callLine;
+    if (line !== undefined) span.provenance = { file, line };
+    if (!ctx.redact && so.preview !== undefined) {
+      span.content = { outputPreview: so.preview };
+    }
+  };
 
   const llmCall = (
     id: string,
@@ -614,6 +638,8 @@ async function emitThread(
         // whatever was read before belongs to no response of this turn
         response = newResponse(undefined);
         legacyResponse = newResponse(undefined);
+        tokenFirst = undefined;
+        wroteInTurn = false;
       } else if (event === 'task_complete' || event === 'turn_aborted') {
         const id = str(payload.turn_id);
         const turn = id === undefined ? current : turns.get(id);
@@ -648,19 +674,26 @@ async function emitThread(
         // never a call, or the parent's tokens would be counted twice.
         if (summary.turns === 0) continue;
         const ordinal = num(record.ordinal);
-        legacyCalls.push(
-          llmCall(
-            `${summary.threadId}:tokens:${ordinal ?? `line-${line}`}`,
-            current ?? latest,
-            undefined,
-            info.last_token_usage,
-            legacyResponse,
-            at,
-            line,
-            session,
-          ),
+        tokenFirst ??= !wroteInTurn;
+        // token first: what has been read since the last event belongs to
+        // the response before this one, and only its floor carries over
+        const read = tokenFirst
+          ? newResponse(legacyResponse.floor)
+          : legacyResponse;
+        const span = llmCall(
+          `${summary.threadId}:tokens:${ordinal ?? `line-${line}`}`,
+          current ?? latest,
+          undefined,
+          info.last_token_usage,
+          read,
+          at,
+          line,
+          session,
         );
+        legacyCalls.push(span);
         legacyResponse = newResponse(at ?? lastAt);
+        // token first: the items of this response are still to come
+        if (tokenFirst) legacyResponse.span = span;
       }
     } else if (type === 'turn_context') {
       const model = str(payload.model);
@@ -694,10 +727,12 @@ async function emitThread(
       const item = str(payload.type);
       if (item === 'message') {
         if (payload.role === 'assistant') {
+          wroteInTurn = true;
           for (const so of [response, legacyResponse]) {
             so.messageLine ??= line;
             so.preview ??= assistantTextOf(payload);
           }
+          fillIn(legacyResponse);
         } else if (
           payload.role === 'user' &&
           current !== undefined &&
@@ -709,9 +744,13 @@ async function emitThread(
             if (!ctx.redact) current.span.content = { promptPreview: prompt };
           }
         }
+      } else if (item === 'reasoning') {
+        wroteInTurn = true;
       } else if (item?.endsWith('_call')) {
+        wroteInTurn = true;
         response.callLine ??= line;
         legacyResponse.callLine ??= line;
+        fillIn(legacyResponse);
       } else if (item?.endsWith('_output')) {
         // a tool output is handed back: the next response starts here
         const handedBack = at ?? lastAt;
