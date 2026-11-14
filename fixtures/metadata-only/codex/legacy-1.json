@@ -1,0 +1,71 @@
+{
+  "id": "run_784e137fcba4af72",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2025-10-20T17:08:36.114Z",
+  "endedAt": "2025-10-20T17:22:02.661Z",
+  "durationMs": 806547,
+  "spans": [
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:36.114Z",
+      "endedAt": "2025-10-20T17:22:02.661Z",
+      "durationMs": 806547,
+      "depth": 0,
+      "agent": {
+        "sessionId": "019a0298-17a7-77f2-ae33-e7000f622a61"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 47596,
+      "output": 3665,
+      "cacheRead": 506880,
+      "cacheWrite": 0,
+      "reasoning": 14080,
+      "total": 572221
+    },
+    "costUSD": {
+      "total": 0.300309,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5": 0.300309
+      }
+    },
+    "counts": {
+      "llmCalls": 28,
+      "toolCalls": 25,
+      "toolErrors": 4,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.9142
+    },
+    "codeChanges": {
+      "linesAdded": 35,
+      "linesRemoved": 10
+    }
+  },
+  "insights": []
+}

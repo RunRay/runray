@@ -1,0 +1,118 @@
+{
+  "id": "run_9a6e411a4c7e89f4",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1",
+      "transcript-2",
+      "transcript-3"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-30T06:14:49.698Z",
+  "endedAt": "2026-10-01T16:42:01.518Z",
+  "durationMs": 124031820,
+  "spans": [
+    {
+      "id": "01a0f0f3-2c66-7151-960c-cf5b962ab51c",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:14:49.698Z",
+      "endedAt": "2026-10-01T16:42:01.518Z",
+      "durationMs": 124031820,
+      "depth": 0,
+      "agent": {
+        "sessionId": "01a0f0f3-2c66-7151-960c-cf5b962ab51c"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "parentId": "01a0f0f3-2c66-7151-960c-cf5b962ab51c",
+      "kind": "subagent",
+      "name": "subagent:guardian",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:10.002Z",
+      "endedAt": "2026-09-30T07:04:36.413Z",
+      "durationMs": 2786411,
+      "depth": 2,
+      "agent": {
+        "name": "guardian",
+        "sessionId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-2",
+        "line": 2
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 350270,
+      "output": 33856,
+      "cacheRead": 13200896,
+      "cacheWrite": 0,
+      "reasoning": 17660,
+      "total": 13602682
+    },
+    "costUSD": {
+      "total": 16.99071,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-6-astra": 16.99071
+      }
+    },
+    "counts": {
+      "llmCalls": 93,
+      "toolCalls": 97,
+      "toolErrors": 7,
+      "subagents": 1,
+      "maxDepth": 4
+    },
+    "cache": {
+      "hitRate": 0.9742
+    },
+    "codeChanges": {
+      "linesAdded": 383,
+      "linesRemoved": 41
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 32.7k to 232.8k tokens",
+      "detail": "The median context of the last three model calls (232.8k) is over 2× the median of the first three (32.7k); ~9.9M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "01a0f0f3-2c66-7151-960c-cf5b962ab51c"
+      ],
+      "estimatedWasteUSD": 11.270071,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~9.9M tokens in total."
+    },
+    {
+      "id": "i2",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 29.2k-token context footprint",
+      "detail": "The first model call already carried 29.2k input-class tokens (tool definitions, project instructions, attachments); 9.2k tokens above the 20.0k floor were written once and re-read on each of the 72 later calls.",
+      "spanIds": [
+        "01a0f0f3-2c66-7151-960c-cf5b962ab51c"
+      ],
+      "estimatedWasteUSD": 0.779428,
+      "suggestion": "Trim the fixed part of every request: system prompt, tool definitions, attachments — 9.2k tokens above the floor were re-read 72 times."
+    }
+  ]
+}

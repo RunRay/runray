@@ -1,0 +1,1520 @@
+{
+  "id": "run_89d1f49d814dcc16",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst"
+    ]
+  },
+  "project": {
+    "name": "adipis",
+    "path": "/home/user/project/mag/adipis",
+    "gitBranch": "adip"
+  },
+  "startedAt": "2026-09-17T17:11:18.124Z",
+  "endedAt": "2026-10-05T17:18:35.293Z",
+  "durationMs": 1555637169,
+  "spans": [
+    {
+      "id": "01a0b059-e3b9-7a20-87cc-da1f5e28e984",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:18.124Z",
+      "endedAt": "2026-10-05T17:18:35.293Z",
+      "durationMs": 1555637169,
+      "depth": 0,
+      "agent": {
+        "sessionId": "01a0b059-e3b9-7a20-87cc-da1f5e28e984"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "parentId": "01a0b059-e3b9-7a20-87cc-da1f5e28e984",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:18.124Z",
+      "endedAt": "2026-09-17T17:24:53.243Z",
+      "durationMs": 815119,
+      "depth": 1,
+      "content": {
+        "promptPreview": "amet labore labore no\ndolor adipiscing quis aliqua aliqua dolor ipsum nostrud sed ven\n\nlabore incididunt amet consectetur aliquip \ntempor ipsum adipiscing amet sed incidi\nadipiscing aliquip aliqua eni"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 3
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f2d4f1487d2a687d681f55bb6f4",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:18.124Z",
+      "endedAt": "2026-09-17T17:11:28.934Z",
+      "durationMs": 10810,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 7969,
+          "output": 202,
+          "cacheRead": 19584,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.109374
+      },
+      "content": {
+        "outputPreview": "tempor magna labore dolor dolor amet adipiscing quis ipsum lorem lorem lorem ipsum dolor adipiscing magna consectetur quis tempor nostrud aliquip consectetur aliqua sit enim lorem amet tempor dolor qu"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 13
+      }
+    },
+    {
+      "id": "exec-12101589-c0cb-4d09-b70a-5b342774274e",
+      "parentId": "resp_04b7ec0000fc3190016aac1f2d4f1487d2a687d681f55bb6f4",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:34.619Z",
+      "endedAt": "2026-09-17T17:11:35.905Z",
+      "durationMs": 1286,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 16867
+      },
+      "attributes": {
+        "runray.targetKey": "0e3f84d5b5622bbc",
+        "runray.targetKind": "command",
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 16
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f3e3cc887d2b183251d0b7d8f41",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:35.922Z",
+      "endedAt": "2026-09-17T17:11:45.353Z",
+      "durationMs": 9431,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 6722,
+          "output": 178,
+          "cacheRead": 27392,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.103512
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 19
+      }
+    },
+    {
+      "id": "exec-486d6799-d97a-4916-a236-ebb91e3d3da4",
+      "parentId": "resp_04b7ec0000fc3190016aac1f3e3cc887d2b183251d0b7d8f41",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:45.447Z",
+      "endedAt": "2026-09-17T17:11:47.084Z",
+      "durationMs": 1637,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 21
+      }
+    },
+    {
+      "id": "exec-093da1dd-80b1-422c-955d-b56c31122cc8",
+      "parentId": "resp_04b7ec0000fc3190016aac1f3e3cc887d2b183251d0b7d8f41",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:48.906Z",
+      "endedAt": "2026-09-17T17:11:49.717Z",
+      "durationMs": 811,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 13242
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 22
+      }
+    },
+    {
+      "id": "exec-5c401320-f81a-4b6e-aced-b6b9024f3fb4",
+      "parentId": "resp_04b7ec0000fc3190016aac1f3e3cc887d2b183251d0b7d8f41",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:48.906Z",
+      "endedAt": "2026-09-17T17:11:49.802Z",
+      "durationMs": 896,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 38894
+      },
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 23
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f4c5f7487d2b32808927d75ced7",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:49.825Z",
+      "endedAt": "2026-09-17T17:11:58.645Z",
+      "durationMs": 8820,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 11280,
+          "output": 193,
+          "cacheRead": 33920,
+          "cacheWrite": 0,
+          "reasoning": 40
+        },
+        "costSource": "computed",
+        "costUSD": 0.15837
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 28
+      }
+    },
+    {
+      "id": "exec-8bb73a13-702a-489d-a3cd-019af0013897",
+      "parentId": "resp_04b7ec0000fc3190016aac1f4c5f7487d2b32808927d75ced7",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:01.894Z",
+      "endedAt": "2026-09-17T17:12:02.396Z",
+      "durationMs": 502,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 15603
+      },
+      "attributes": {
+        "runray.targetKey": "b1aaca441475334b",
+        "runray.targetKind": "command",
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 30
+      }
+    },
+    {
+      "id": "exec-05f0aa64-eefe-4d79-b650-cdab7d8144dd",
+      "parentId": "resp_04b7ec0000fc3190016aac1f4c5f7487d2b32808927d75ced7",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:02.413Z",
+      "endedAt": "2026-09-17T17:12:04.146Z",
+      "durationMs": 1733,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 31
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f5a7ff487d283388674eb4b4336",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:04.167Z",
+      "endedAt": "2026-09-17T17:12:09.327Z",
+      "durationMs": 5160,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 10660,
+          "output": 76,
+          "cacheRead": 45056,
+          "cacheWrite": 0,
+          "reasoning": 32
+        },
+        "costSource": "computed",
+        "costUSD": 0.157056
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 36
+      }
+    },
+    {
+      "id": "exec-ee15fe2e-9af6-472c-910c-e3168e467463",
+      "parentId": "resp_04b7ec0000fc3190016aac1f5a7ff487d283388674eb4b4336",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:12.771Z",
+      "endedAt": "2026-09-17T17:12:13.606Z",
+      "durationMs": 835,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 38900
+      },
+      "attributes": {
+        "runray.targetKey": "dd908e402f0ed076",
+        "runray.targetKind": "command",
+        "runray.target": "aliqua",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliqua"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 38
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f63fbf487d28c63fb838a29ae7c",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:13.625Z",
+      "endedAt": "2026-09-17T17:12:26.964Z",
+      "durationMs": 13339,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 12613,
+          "output": 352,
+          "cacheRead": 55552,
+          "cacheWrite": 0,
+          "reasoning": 12
+        },
+        "costSource": "computed",
+        "costUSD": 0.199882
+      },
+      "content": {
+        "outputPreview": "amet enim aliquip labore minim adipiscing lorem lorem dolor lorem labore amet incididunt minim amet labore magna sed magna amet veniam ipsum sit amet tempor lorem sit nostrud amet amet labore tempor l"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 44
+      }
+    },
+    {
+      "id": "exec-4aa69570-c7b8-4855-a6b2-7bc4e737320d",
+      "parentId": "resp_04b7ec0000fc3190016aac1f63fbf487d28c63fb838a29ae7c",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:27.077Z",
+      "endedAt": "2026-09-17T17:12:29.766Z",
+      "durationMs": 2689,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 47
+      }
+    },
+    {
+      "id": "exec-db8e6897-f62c-43e5-905c-18b16f6bb604",
+      "parentId": "resp_04b7ec0000fc3190016aac1f63fbf487d28c63fb838a29ae7c",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:33.079Z",
+      "endedAt": "2026-09-17T17:12:35.754Z",
+      "durationMs": 2675,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 27730
+      },
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command",
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 48
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f7a38dc87d2af9aeb02bc4ccbee",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:35.804Z",
+      "endedAt": "2026-09-17T17:12:43.296Z",
+      "durationMs": 7492,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 10262,
+          "output": 81,
+          "cacheRead": 67968,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.174638
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 51
+      }
+    },
+    {
+      "id": "exec-f9f470a3-2c32-494b-bee4-ac91d0a6c99b",
+      "parentId": "resp_04b7ec0000fc3190016aac1f7a38dc87d2af9aeb02bc4ccbee",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:43.209Z",
+      "endedAt": "2026-09-17T17:12:44.982Z",
+      "durationMs": 1773,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 53
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f8384f887d29850dd755d37a893",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:45.044Z",
+      "endedAt": "2026-09-17T17:12:56.789Z",
+      "durationMs": 11745,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8340,
+          "output": 295,
+          "cacheRead": 78080,
+          "cacheWrite": 0,
+          "reasoning": 16
+        },
+        "costSource": "computed",
+        "costUSD": 0.17703
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 58
+      }
+    },
+    {
+      "id": "exec-406dc4ad-c28a-4fd0-a12f-7573c1f09cb4",
+      "parentId": "resp_04b7ec0000fc3190016aac1f8384f887d29850dd755d37a893",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:56.895Z",
+      "endedAt": "2026-09-17T17:12:59.729Z",
+      "durationMs": 2834,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 61
+      }
+    },
+    {
+      "id": "exec-ef64e5c8-58af-4fbb-9ad5-48b7363ad6ef",
+      "parentId": "resp_04b7ec0000fc3190016aac1f8384f887d29850dd755d37a893",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:56.895Z",
+      "endedAt": "2026-09-17T17:12:59.519Z",
+      "durationMs": 2624,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 60
+      }
+    },
+    {
+      "id": "exec-ca287480-73b3-4f7e-b848-8f5bb1488740",
+      "parentId": "resp_04b7ec0000fc3190016aac1f8384f887d29850dd755d37a893",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:12:59.998Z",
+      "endedAt": "2026-09-17T17:13:00.754Z",
+      "durationMs": 756,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 33760
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 62
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1f93d2cc87d29df205c419b3b6d6",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:00.773Z",
+      "endedAt": "2026-09-17T17:13:13.155Z",
+      "durationMs": 12382,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 11583,
+          "output": 268,
+          "cacheRead": 86272,
+          "cacheWrite": 0,
+          "reasoning": 26
+        },
+        "costSource": "computed",
+        "costUSD": 0.216802
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 67
+      }
+    },
+    {
+      "id": "exec-8e20397c-08a0-40be-a726-7c7299f26d32",
+      "parentId": "resp_04b7ec0000fc3190016aac1f93d2cc87d29df205c419b3b6d6",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:16.404Z",
+      "endedAt": "2026-09-17T17:13:17.410Z",
+      "durationMs": 1006,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 19703
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 69
+      }
+    },
+    {
+      "id": "exec-56cdca6c-9187-4cbc-8ee8-767b934e629a",
+      "parentId": "resp_04b7ec0000fc3190016aac1f93d2cc87d29df205c419b3b6d6",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:17.456Z",
+      "endedAt": "2026-09-17T17:13:19.226Z",
+      "durationMs": 1770,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 70
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1fa5aae487d284d9294c8aa2cba6",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:19.283Z",
+      "endedAt": "2026-09-17T17:13:36.670Z",
+      "durationMs": 17387,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 12044,
+          "output": 414,
+          "cacheRead": 97664,
+          "cacheWrite": 0,
+          "reasoning": 52
+        },
+        "costSource": "computed",
+        "costUSD": 0.241404
+      },
+      "content": {
+        "outputPreview": "elit sit consectetur sed veniam labore tempor sit incididunt nostrud ipsum labore quis enim quis ipsum tempor labore dolor dolor tempor incididunt minim lorem sed aliqua quis labore aliqua sed consect"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 76
+      }
+    },
+    {
+      "id": "exec-ba5ee6fd-9688-4b0c-8524-7bf3d349b642",
+      "parentId": "resp_04b7ec0000fc3190016aac1fa5aae487d284d9294c8aa2cba6",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:36.785Z",
+      "endedAt": "2026-09-17T17:13:39.680Z",
+      "durationMs": 2895,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 79
+      }
+    },
+    {
+      "id": "exec-4711f863-8da4-4af2-a660-fc2691286ec8",
+      "parentId": "resp_04b7ec0000fc3190016aac1fa5aae487d284d9294c8aa2cba6",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:42.955Z",
+      "endedAt": "2026-09-17T17:13:43.927Z",
+      "durationMs": 972,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 28189
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 80
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1fbedea487d28aee69de0148f6e7",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:43.980Z",
+      "endedAt": "2026-09-17T17:13:57.976Z",
+      "durationMs": 13996,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 10461,
+          "output": 189,
+          "cacheRead": 109568,
+          "cacheWrite": 0,
+          "reasoning": 48
+        },
+        "costSource": "computed",
+        "costUSD": 0.226028
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 85
+      }
+    },
+    {
+      "id": "exec-1a2afb0b-3a98-4468-b04a-df076c1e8187",
+      "parentId": "resp_04b7ec0000fc3190016aac1fbedea487d28aee69de0148f6e7",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:57.951Z",
+      "endedAt": "2026-09-17T17:13:59.663Z",
+      "durationMs": 1712,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 87
+      }
+    },
+    {
+      "id": "exec-805f8ead-926d-4aaa-85a2-f93097441034",
+      "parentId": "resp_04b7ec0000fc3190016aac1fbedea487d28aee69de0148f6e7",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:13:59.732Z",
+      "endedAt": "2026-09-17T17:14:01.650Z",
+      "durationMs": 1918,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 88
+      }
+    },
+    {
+      "id": "exec-518f3018-35cd-4b49-bb0a-6fbe4d77a6b1",
+      "parentId": "resp_04b7ec0000fc3190016aac1fbedea487d28aee69de0148f6e7",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:01.714Z",
+      "endedAt": "2026-09-17T17:14:03.300Z",
+      "durationMs": 1586,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 89
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1fd1d82c87d285c8a44090d78fab",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:03.362Z",
+      "endedAt": "2026-09-17T17:14:17.535Z",
+      "durationMs": 14173,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8662,
+          "output": 278,
+          "cacheRead": 119808,
+          "cacheWrite": 0,
+          "reasoning": 51
+        },
+        "costSource": "computed",
+        "costUSD": 0.222878
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 94
+      }
+    },
+    {
+      "id": "exec-11a7be00-4382-4376-89b3-f96e6f2ef970",
+      "parentId": "resp_04b7ec0000fc3190016aac1fd1d82c87d285c8a44090d78fab",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:17.650Z",
+      "endedAt": "2026-09-17T17:14:19.418Z",
+      "durationMs": 1768,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 96
+      }
+    },
+    {
+      "id": "exec-983d1cfa-2de6-40cb-9230-46cc103e3b8d",
+      "parentId": "resp_04b7ec0000fc3190016aac1fd1d82c87d285c8a44090d78fab",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:22.696Z",
+      "endedAt": "2026-09-17T17:14:23.397Z",
+      "durationMs": 701,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 23924
+      },
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 97
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1fe5c28c87d2bcd4968d1bb921ab",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:23.414Z",
+      "endedAt": "2026-09-17T17:14:36.846Z",
+      "durationMs": 13432,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 10781,
+          "output": 166,
+          "cacheRead": 128256,
+          "cacheWrite": 0,
+          "reasoning": 144
+        },
+        "costSource": "computed",
+        "costUSD": 0.251566
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 102
+      }
+    },
+    {
+      "id": "exec-08ec9a45-9a83-4c86-a6d2-c66d06a7e265",
+      "parentId": "resp_04b7ec0000fc3190016aac1fe5c28c87d2bcd4968d1bb921ab",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:36.769Z",
+      "endedAt": "2026-09-17T17:14:38.399Z",
+      "durationMs": 1630,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 104
+      }
+    },
+    {
+      "id": "exec-e2e1edb5-7db1-4c8b-888a-4815585d47f6",
+      "parentId": "resp_04b7ec0000fc3190016aac1fe5c28c87d2bcd4968d1bb921ab",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:38.459Z",
+      "endedAt": "2026-09-17T17:14:40.163Z",
+      "durationMs": 1704,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 105
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac1ff70d0487d28a6f04fa0bfcaf90",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:40.336Z",
+      "endedAt": "2026-09-17T17:14:55.673Z",
+      "durationMs": 15337,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 9082,
+          "output": 297,
+          "cacheRead": 138880,
+          "cacheWrite": 0,
+          "reasoning": 29
+        },
+        "costSource": "computed",
+        "costUSD": 0.246
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 110
+      }
+    },
+    {
+      "id": "exec-99a07b65-602e-457a-862d-8e40926e90d5",
+      "parentId": "resp_04b7ec0000fc3190016aac1ff70d0487d28a6f04fa0bfcaf90",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:55.790Z",
+      "endedAt": "2026-09-17T17:14:58.379Z",
+      "durationMs": 2589,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 112
+      }
+    },
+    {
+      "id": "exec-1c98edb3-1973-449d-8da5-2e17d799df6d",
+      "parentId": "resp_04b7ec0000fc3190016aac1ff70d0487d28a6f04fa0bfcaf90",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:14:58.435Z",
+      "endedAt": "2026-09-17T17:15:00.912Z",
+      "durationMs": 2477,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 113
+      }
+    },
+    {
+      "id": "exec-395ff2c0-ac59-4460-ac2d-3b2e350c7922",
+      "parentId": "resp_04b7ec0000fc3190016aac1ff70d0487d28a6f04fa0bfcaf90",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:04.103Z",
+      "endedAt": "2026-09-17T17:15:04.765Z",
+      "durationMs": 662,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 15737
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 114
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac200f195087d2a12349a9cb0a098d",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:04.782Z",
+      "endedAt": "2026-09-17T17:15:23.875Z",
+      "durationMs": 19093,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 9726,
+          "output": 244,
+          "cacheRead": 147840,
+          "cacheWrite": 0,
+          "reasoning": 297
+        },
+        "costSource": "computed",
+        "costUSD": 0.27215
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 119
+      }
+    },
+    {
+      "id": "exec-c50dba8f-08cd-4bcd-81f9-98f9905c6f88",
+      "parentId": "resp_04b7ec0000fc3190016aac200f195087d2a12349a9cb0a098d",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:27.108Z",
+      "endedAt": "2026-09-17T17:15:27.919Z",
+      "durationMs": 811,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 8373
+      },
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 121
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac2026682087d2aae2d5fbd9740206",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:27.973Z",
+      "endedAt": "2026-09-17T17:15:42.486Z",
+      "durationMs": 14513,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3371,
+          "output": 308,
+          "cacheRead": 157440,
+          "cacheWrite": 0,
+          "reasoning": 89
+        },
+        "costSource": "computed",
+        "costUSD": 0.211
+      },
+      "content": {
+        "outputPreview": "consectetur ipsum enim dolor enim amet enim incididunt sit nostrud magna magna aliqua incididunt magna amet aliqua lorem incididunt sed sed elit quis incididunt aliquip magna quis quis adipiscing lore"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 127
+      }
+    },
+    {
+      "id": "exec-08bb537f-b2f4-42d1-9099-f2a052ced9e2",
+      "parentId": "resp_04b7ec0000fc3190016aac2026682087d2aae2d5fbd9740206",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:42.608Z",
+      "endedAt": "2026-09-17T17:15:44.327Z",
+      "durationMs": 1719,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 130
+      }
+    },
+    {
+      "id": "exec-93dae4aa-fd07-4316-86b5-af8c90c97b5d",
+      "parentId": "resp_04b7ec0000fc3190016aac2026682087d2aae2d5fbd9740206",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:47.600Z",
+      "endedAt": "2026-09-17T17:15:48.233Z",
+      "durationMs": 633,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 10308
+      },
+      "attributes": {
+        "runray.targetKey": "0aa376785bf36b65",
+        "runray.targetKind": "command",
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 131
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac203a97e087d290e792cbfc583769",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:15:48.250Z",
+      "endedAt": "2026-09-17T17:19:59.988Z",
+      "durationMs": 251738,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 5669,
+          "output": 8153,
+          "cacheRead": 160640,
+          "cacheWrite": 0,
+          "reasoning": 141
+        },
+        "costSource": "computed",
+        "costUSD": 0.63203
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 136
+      }
+    },
+    {
+      "id": "exec-e39776e5-bb4d-48a8-a684-d57928b1e2e8",
+      "parentId": "resp_04b7ec0000fc3190016aac203a97e087d290e792cbfc583769",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:19:59.988Z",
+      "endedAt": "2026-09-17T17:20:05.152Z",
+      "durationMs": 5164,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 223,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "31da24016cd6419b",
+        "runray.targetKind": "file-write",
+        "runray.target": "aliquaxaliquaxquisxtemporxsitxaliquaxsedx.md"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 138
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac213b824c87d28d3361aaef092f6c",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:20:05.166Z",
+      "endedAt": "2026-09-17T17:22:26.445Z",
+      "durationMs": 141279,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 155043,
+          "output": 4515,
+          "cacheRead": 19584,
+          "cacheWrite": 0,
+          "reasoning": 59
+        },
+        "costSource": "computed",
+        "costUSD": 1.798714
+      },
+      "content": {
+        "outputPreview": "tempor minim ipsum tempor sit amet labore aliqua elit enim labore veniam ipsum ipsum enim ipsum aliquip incididunt sed ipsum enim ipsum incididunt veniam dolor adipiscing veniam aliquip labore enim se"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 144
+      }
+    },
+    {
+      "id": "exec-0c09e8c1-655b-4676-8094-9286f1858a69",
+      "parentId": "resp_04b7ec0000fc3190016aac213b824c87d28d3361aaef092f6c",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:27.759Z",
+      "endedAt": "2026-09-17T17:22:31.756Z",
+      "durationMs": 3997,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 87,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "31da24016cd6419b",
+        "runray.targetKind": "file-write",
+        "runray.target": "aliquaxaliquaxquisxtemporxsitxaliquaxsedx.md"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 147
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac21ce1eec87d28cab82f90d0aa5eb",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:31.770Z",
+      "endedAt": "2026-09-17T17:22:50.748Z",
+      "durationMs": 18978,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 4761,
+          "output": 241,
+          "cacheRead": 174464,
+          "cacheWrite": 0,
+          "reasoning": 331
+        },
+        "costSource": "computed",
+        "costUSD": 0.250674
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 152
+      }
+    },
+    {
+      "id": "exec-784b16c7-a103-4e80-8331-764b60e8215a",
+      "parentId": "resp_04b7ec0000fc3190016aac21ce1eec87d28cab82f90d0aa5eb",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:54.015Z",
+      "endedAt": "2026-09-17T17:22:54.952Z",
+      "durationMs": 937,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1603
+      },
+      "attributes": {
+        "runray.targetKey": "c630015fb12b8ae9",
+        "runray.targetKind": "command",
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 154
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac21e54ca087d2a6ef4b13434dfa4f",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:54.966Z",
+      "endedAt": "2026-09-17T17:22:58.886Z",
+      "durationMs": 3920,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1365,
+          "output": 64,
+          "cacheRead": 179072,
+          "cacheWrite": 0,
+          "reasoning": 18
+        },
+        "costSource": "computed",
+        "costUSD": 0.196822
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 159
+      }
+    },
+    {
+      "id": "exec-c839f2fb-b252-43a0-aa3f-2772b865cb8d",
+      "parentId": "resp_04b7ec0000fc3190016aac21e54ca087d2a6ef4b13434dfa4f",
+      "kind": "mcp_call",
+      "name": "open_in_codex",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:58.863Z",
+      "endedAt": "2026-09-17T17:22:58.951Z",
+      "durationMs": 88,
+      "depth": 3,
+      "tool": {
+        "name": "open_in_codex",
+        "mcpServer": "codex_app",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 161
+      }
+    },
+    {
+      "id": "resp_04b7ec0000fc3190016aac21e95c3887d2bf60841e51a888a1",
+      "parentId": "01a0b059-e9f6-7081-b355-a2481e980956",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:22:58.968Z",
+      "endedAt": "2026-09-17T17:24:53.191Z",
+      "durationMs": 114223,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 369,
+          "output": 3427,
+          "cacheRead": 180224,
+          "cacheWrite": 0,
+          "reasoning": 322
+        },
+        "costSource": "computed",
+        "costUSD": 0.371364
+      },
+      "content": {
+        "outputPreview": "veniam ipsum veniam magna tempor veniam consectetur veniam dolor dolor tempor dolor sit amet quis dolor sit elit adipiscing minim sit nostrud quis sit tempor aliqua magna amet enim aliqua enim nostrud"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/zstd/rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst",
+        "line": 167
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 310763,
+      "output": 19941,
+      "cacheRead": 2027264,
+      "cacheWrite": 0,
+      "reasoning": 1707,
+      "total": 2359675
+    },
+    "costUSD": {
+      "total": 6.217294,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-6-astra": 6.217294
+      }
+    },
+    "counts": {
+      "llmCalls": 20,
+      "toolCalls": 34,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8671
+    },
+    "codeChanges": {
+      "linesAdded": 310,
+      "linesRemoved": 0
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 34.1k to 180.4k tokens",
+      "detail": "The median context of the last three model calls (180.4k) is over 2× the median of the first three (34.1k); ~1.7M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "resp_04b7ec0000fc3190016aac21ce1eec87d28cab82f90d0aa5eb",
+        "resp_04b7ec0000fc3190016aac21e54ca087d2a6ef4b13434dfa4f",
+        "resp_04b7ec0000fc3190016aac21e95c3887d2bf60841e51a888a1",
+        "exec-ee15fe2e-9af6-472c-910c-e3168e467463",
+        "exec-5c401320-f81a-4b6e-aced-b6b9024f3fb4",
+        "exec-ca287480-73b3-4f7e-b848-8f5bb1488740"
+      ],
+      "estimatedWasteUSD": 3.549179,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~1.7M tokens in total."
+    },
+    {
+      "id": "i2",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 27.6k-token context footprint",
+      "detail": "The first model call already carried 27.6k input-class tokens (tool definitions, project instructions, attachments); 7.6k tokens above the 20.0k floor were written once and re-read on each of the 19 later calls.",
+      "spanIds": [
+        "resp_04b7ec0000fc3190016aac1f2d4f1487d2a687d681f55bb6f4"
+      ],
+      "estimatedWasteUSD": 0.23792,
+      "suggestion": "Trim the fixed part of every request: system prompt, tool definitions, attachments — 7.6k tokens above the floor were re-read 19 times."
+    }
+  ]
+}

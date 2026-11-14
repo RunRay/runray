@@ -116,6 +116,6 @@ describe('generated schema validates instances', () => {
         }
       }
     }
-    expect(validated).toBe(33);
+    expect(validated).toBe(57);
   });
 });
