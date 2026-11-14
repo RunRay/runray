@@ -410,8 +410,9 @@ directly and the goldens test does not see `fixtures/codex` yet.
       from the waste strip in three visions, and 3:1 on the card ground for
       every named source. `overview-sources.test.tsx` covers the chart, the
       ranking row and the URL. The source filter needed no change: it
-      lists the sources of the loaded runs. Seen in both themes through the
-      new `cli-view-sources` preview. Noticed and left: on paper OpenCode
+      lists the sources of the loaded runs. Seen in both themes on the
+      fixtures root, which loads no Claude Code run (see the review of
+      group 7). Noticed and left: on paper OpenCode
       and OTLP are two greys, and the fallback grey is under 3:1 on white.
 - [x] 7.2 B [UI → /frontend-design] Per-source hints (and, from the review
       of group 5, the unpriced notice in `components/CoverageNotices.tsx`:
@@ -427,17 +428,18 @@ directly and the goldens test does not see `fixtures/codex` yet.
       agents RunRay reads (core's playbook list without OTLP); the Waste
       lead, the cost note and the welcome sentence ask it, so a fourth
       agent cannot fall into the custom-agent wording in one of them only.
-      Waste lead on Codex: `AGENTS.md`, `codex resume --last`, and the
-      habits the three agents share; the two cache groups cannot occur on a
-      Codex run and are still worded truthfully. The welcome sentence names
+      Waste lead on Codex: `AGENTS.md` and `codex resume --last`. The two
+      cache groups cannot occur on a Codex run; see the review of group 7
+      for what the lead says should one appear. The welcome sentence names
       the agents of the loaded runs, not a fixed list (copy rule in
       `docs/12-ONBOARDING-COPY.md` §4.1). The unpriced banner follows the
       CLI warning: no refresh advice when no price is published for any of
       the models, and it says what the model is, from core's list.
       `lib/tool-table.ts` needed no change: a rollout has no hook spans, so
-      no hook rows and no note are drawn, and the Codex goldens hold no
-      unclassified shell call, so the "recorded before tool
-      identification" line cannot show. Tests: `codex-hints.test.tsx`, and
+      no hook rows and no note are drawn, and the adapter stamps every
+      command with tool usage, one it cannot read included
+      (`commandAttributes`), so the "recorded before tool identification"
+      line cannot show. Tests: `codex-hints.test.tsx`, and
       the hook scenario in `time-view.test.tsx`. Seen in the built UI on
       `fixtures/codex`: the banner and the cost note on a session with
       reviewer calls. Not seen live: the welcome dialog (dismissed on this
@@ -445,6 +447,26 @@ directly and the goldens test does not see `fixtures/codex` yet.
       fixture has one); both are held by mounted-component tests. Left as
       it is: the empty-state screen still gives `claude "explain this
       repo"` as its one example of running an agent.
+- Review of group 7 (`be5ea60..a289307`): eight findings, all fixed.
+  The transcript cost note names what is missing from the log (utility
+  calls, unlogged retries, web-search fees) only for Claude Code and
+  OpenCode: nobody checked that list against a rollout, so a Codex run
+  gets the lower bound and the reason that holds whatever a rollout
+  leaves out. A lever that names a command of one agent is read from
+  core's playbook and no longer copied into `lib/waste.ts`: the dead-end
+  lever for every source, and on Codex the lead of the two cache groups,
+  which had taken the shared `/compact` before ~200k wording (a
+  threshold nobody measured for Codex) above a playbook that says the
+  finding is not reported on Codex. That branch stays unreachable while
+  Codex records no cache writes. The unpriced banner says `1 llm call
+  carries`, and a model recorded under two spellings is explained as the
+  one model it is. The colour maths of the three palette tests moved to
+  `test-support/palette.ts`. `overview-sources.test.tsx` mounts the
+  filter bar and reads the `codex` option. The `cli-view-sources` preview
+  is gone: the Claude Code adapter scans a root and one level below it,
+  the fixtures sit two levels down, so no single path shows every source
+  and the orchid beside the Claude Code violet is held by
+  `source-palette.test.ts` alone.
 
 ## 8. Integration checks
 

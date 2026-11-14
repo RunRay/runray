@@ -57,7 +57,8 @@ export interface UnpricedAdvice {
    * publishes a price for any of them, so a refresh changes nothing.
    */
   refresh: 'refresh' | 'refresh-others' | 'none';
-  /** With `none` and one model: what that model is, in core's words. */
+  /** With `none` and one model (under any spelling): what that model is,
+   * in core's words. */
   what?: string;
 }
 
@@ -82,11 +83,12 @@ export function unpricedAdvice(models: readonly string[]): UnpricedAdvice {
       refresh: 'refresh-others',
     };
   }
-  const only = never.length === 1 ? never[0] : undefined;
+  // one model may be recorded under two spellings (with and without its
+  // provider prefix): it is still one model, and still explained
+  const ids = new Set(never.map(canonicalModelName));
+  const [only] = ids.size === 1 ? ids : [];
   const what =
-    only === undefined
-      ? undefined
-      : MODELS_WITHOUT_PUBLISHED_PRICE[canonicalModelName(only)];
+    only === undefined ? undefined : MODELS_WITHOUT_PUBLISHED_PRICE[only];
   return {
     listed: models.join(', '),
     refresh: 'none',

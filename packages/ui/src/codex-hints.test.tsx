@@ -10,6 +10,7 @@
  * mounted, not rendered to a string: a static render reads the store's
  * initial state and would never see the loaded runs or prices.
  */
+import { playbookActions } from '@runray/core/insights-meta';
 import type { RunWaste, WasteGroup } from '@runray/core/waste';
 import type { Run, Span } from '@runray/schema';
 import { act, type ReactNode } from 'react';
@@ -151,6 +152,8 @@ describe('Waste lead on a Codex run', () => {
     const text = lever(burned({ ruleId: 'dead-end-run' }), 'codex');
     expect(text).toContain('`codex resume --last`');
     expect(text).not.toMatch(/caller/i);
+    // the command lives in core's playbook, and the lead repeats it
+    expect(text).toBe(playbookActions('dead-end-run', 'codex')[0]);
     // the other agents keep their own command
     expect(lever(burned({ ruleId: 'dead-end-run' }), 'claude-code')).toContain(
       '`claude --continue`',
@@ -176,10 +179,24 @@ describe('Waste lead on a Codex run', () => {
     expect(codex).not.toMatch(/claude|opencode|CLAUDE\.md/i);
   });
 
-  it.each(WORDED.filter(([name]) => name !== 'cache-prefix-break, compaction'))(
+  it.each(WORDED)(
     '%s: an import still gets the custom-agent wording',
     (_, w) => {
       expect(lever(w, 'otlp')).not.toBe(lever(w, 'codex'));
+    },
+  );
+
+  // Codex records no cache writes, so these groups cannot occur on a Codex
+  // run. A lead for one would still have to agree with the playbook under
+  // it, and not advise a threshold nobody measured for Codex.
+  it.each(WORDED.filter(([name]) => /cache/.test(name)))(
+    '%s: the lead repeats the Codex playbook',
+    (_, w) => {
+      const ruleId = w.burned[0]?.ruleId ?? '';
+      expect(lever(w, 'codex')).toBe(playbookActions(ruleId, 'codex')[0]);
+      expect(lever(w, 'codex')).not.toContain('200k');
+      // the other agents keep the habit worded for them
+      expect(lever(w, 'claude-code')).not.toBe(lever(w, 'codex'));
     },
   );
 });
@@ -199,7 +216,18 @@ describe('transcript cost note', () => {
     expect(note('codex')).toContain(
       'Computed from the recorded transcript — a lower bound.',
     );
-    expect(note('claude-code')).toBe(note('codex'));
+    expect(note('claude-code')).toContain('a lower bound.');
+  });
+
+  it('names what is missing from the log only where that was checked', () => {
+    withPricing();
+    const listed = /Utility calls, unlogged retries, and web-search fees/;
+    expect(note('claude-code')).toMatch(listed);
+    expect(note('opencode')).toMatch(listed);
+    expect(note('codex')).not.toMatch(listed);
+    expect(note('codex')).toContain(
+      'Whatever never reaches the log is not counted, so provider billing can read higher.',
+    );
   });
 
   it('stays off an imported trace and off a page without prices', () => {
@@ -274,7 +302,7 @@ describe('unpriced banner', () => {
       refresh: 'refresh',
     });
     expect(banner('gpt-9-nova')).toContain(
-      '1 llm call carry no price (gpt-9-nova), so totals are understated. Try runray pricing --refresh.',
+      '1 llm call carries no price (gpt-9-nova), so totals are understated. Try runray pricing --refresh.',
     );
   });
 
@@ -289,6 +317,16 @@ describe('unpriced banner', () => {
       '2 llm calls carry no price (codex-auto-review), so totals are understated. This is the model of the Codex approval reviewer; no price is published for it, so refreshing prices changes nothing.',
     );
     expect(text).not.toContain('pricing --refresh');
+  });
+
+  it('explains a model recorded under two spellings as the one model it is', () => {
+    expect(
+      unpricedAdvice(['codex-auto-review', 'openai/codex-auto-review']),
+    ).toEqual({
+      listed: 'codex-auto-review, openai/codex-auto-review',
+      refresh: 'none',
+      what: 'the model of the Codex approval reviewer',
+    });
   });
 
   it('marks the model a refresh cannot price when another one may be', () => {

@@ -40,8 +40,8 @@ export function CoverageBanner({ runs }: { runs: readonly Run[] }) {
         <span className="micro-label shrink-0 text-heat-2">unpriced</span>
         <span className="text-label text-text-dim">
           {c.unpricedLlmCalls} llm call{c.unpricedLlmCalls === 1 ? '' : 's'}
-          {runsNote} carry no price ({advice.listed}), so totals are
-          understated.{' '}
+          {runsNote} {c.unpricedLlmCalls === 1 ? 'carries' : 'carry'} no price (
+          {advice.listed}), so totals are understated.{' '}
           {advice.refresh === 'refresh' && <>Try {refreshCommand}.</>}
           {advice.refresh === 'refresh-others' && (
             <>Try {refreshCommand} for the others.</>
@@ -49,7 +49,7 @@ export function CoverageBanner({ runs }: { runs: readonly Run[] }) {
           {advice.refresh === 'none' &&
             (advice.what !== undefined
               ? `This is ${advice.what}; no price is published for it, so refreshing prices changes nothing.`
-              : `No price is published for ${c.models.length === 1 ? 'this model' : 'these models'}, so refreshing prices changes nothing.`)}
+              : 'No price is published for these models, so refreshing prices changes nothing.')}
         </span>
       </div>
     </div>

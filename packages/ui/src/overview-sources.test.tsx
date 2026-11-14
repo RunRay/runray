@@ -11,6 +11,7 @@ import type { Run } from '@runray/schema';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { FilterBar } from './components/FilterBar';
 import { Overview } from './components/Overview';
 import { EMPTY_FILTER, filterRuns } from './lib/filter-runs';
 import { formatHash, parseFilterParams } from './lib/router';
@@ -136,6 +137,48 @@ describe('Codex in the By source chart', () => {
 });
 
 describe('Codex in the source filter', () => {
+  it('the Source dropdown offers codex when Codex runs are loaded', () => {
+    const initial = useAppStore.getInitialState();
+    useAppStore.getState().dataLoaded(
+      {
+        schemaVersion: '0.2.0',
+        generator: { name: 'test', version: '0.0.0' },
+        generatedAt: '2026-08-10T12:00:00.000Z',
+        runs,
+      },
+      true,
+    );
+    const bar = document.createElement('div');
+    document.body.append(bar);
+    const barRoot = createRoot(bar);
+    act(() => barRoot.render(<FilterBar />));
+    try {
+      const trigger = [
+        ...bar.querySelectorAll<HTMLButtonElement>(
+          'button[aria-haspopup="listbox"]',
+        ),
+      ].find((b) => b.textContent?.includes('Source'));
+      expect(trigger, 'the Source dropdown').toBeDefined();
+      act(() => trigger?.click());
+      const options = [...bar.querySelectorAll<HTMLElement>('[role="option"]')];
+      // the option in force carries a check mark
+      const label = (o: HTMLElement) =>
+        (o.textContent ?? '').replace('✓', '').trim();
+      expect(options.map(label)).toEqual([
+        'All',
+        'claude-code',
+        'codex',
+        'opencode',
+      ]);
+      act(() => options.find((o) => label(o) === 'codex')?.click());
+      expect(useAppStore.getState().filter.source).toBe('codex');
+    } finally {
+      act(() => barRoot.unmount());
+      bar.remove();
+      useAppStore.setState(initial, true);
+    }
+  });
+
   it('the By source ranking has a codex row that filters to Codex runs', () => {
     const row = container.querySelector<HTMLButtonElement>(
       'button[aria-label="Filter to source codex"]',

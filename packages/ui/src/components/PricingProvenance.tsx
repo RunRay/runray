@@ -33,6 +33,11 @@ export function PricingProvenance({ className = '' }: { className?: string }) {
  * OTLP-ingested runs are not "recorded transcripts" and may carry
  * provider-reported costs the claim would be wrong about, and without the
  * payload the note would float alone with no provenance line above it.
+ *
+ * The list of what is missing from the log predates the Codex adapter and
+ * was never checked against a rollout, so a Codex run gets the bound
+ * without the list: whatever a rollout leaves out is not counted, which
+ * holds whatever that is.
  */
 export function TranscriptCostNote({
   run,
@@ -43,12 +48,14 @@ export function TranscriptCostNote({
 }) {
   const pricing = useAppStore((s) => s.pricing);
   if (pricing === undefined) return null;
-  if (agentSource(run.source.tool) === undefined) return null;
+  const agent = agentSource(run.source.tool);
+  if (agent === undefined) return null;
   return (
     <span className={`text-label text-text-faint ${className}`}>
-      Computed from the recorded transcript — a lower bound. Utility calls,
-      unlogged retries, and web-search fees never reach the log, so provider
-      billing can read higher.
+      Computed from the recorded transcript — a lower bound.{' '}
+      {agent === 'codex'
+        ? 'Whatever never reaches the log is not counted, so provider billing can read higher.'
+        : 'Utility calls, unlogged retries, and web-search fees never reach the log, so provider billing can read higher.'}
     </span>
   );
 }
