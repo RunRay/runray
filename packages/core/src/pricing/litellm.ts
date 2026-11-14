@@ -20,6 +20,15 @@ export const DEFAULT_PRICING_PROVIDERS: readonly string[] = [
   'mistral',
 ];
 
+/**
+ * Modes of the list that hold models a coding agent talks to. `responses`
+ * is where the list files the OpenAI models served only by the Responses
+ * API: the Codex family, the `-pro` models and deep research. Left out,
+ * each of them is priced by the prefix rule as the shorter id it starts
+ * with (`gpt-5.1-codex-mini` as `gpt-5.1`, five times its published rates).
+ */
+const PRICED_MODES: ReadonlySet<string> = new Set(['chat', 'responses']);
+
 const RATE_FIELDS = [
   'input_cost_per_token',
   'output_cost_per_token',
@@ -71,8 +80,9 @@ function perMTok(perToken: unknown, fallback: number): number {
 export interface ConvertOptions {
   snapshotDate: string;
   providers?: readonly string[];
-  /** Called for each chat model of a known provider that is left out
-   * because a published rate is unusable (negative, absurd, not a number). */
+  /** Called for each chat or responses model of a known provider that is
+   * left out because a published rate is unusable (negative, absurd, not a
+   * number). */
   onInvalid?: (key: string, problem: string) => void;
 }
 
@@ -87,7 +97,8 @@ export function convertLitellmPricing(
   >();
   for (const [key, value] of Object.entries(raw)) {
     if (!isEntry(value)) continue;
-    if (value.mode !== 'chat') continue;
+    if (typeof value.mode !== 'string' || !PRICED_MODES.has(value.mode))
+      continue;
     if (
       typeof value.litellm_provider !== 'string' ||
       !providers.has(value.litellm_provider)

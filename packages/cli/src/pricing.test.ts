@@ -9,7 +9,7 @@ import { createServer, type RequestListener } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bundledPricing } from '@runray/core';
+import { bundledPricing, matchModel } from '@runray/core';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   effectivePricing,
@@ -89,6 +89,30 @@ describe('refreshPricing', () => {
     expect(loaded?.entries[0]?.modelPattern).toBe('claude-test-0000');
     expect(loaded?.entries[0]?.inputPerMTok).toBe(5);
     expect(readdirSync(join(dir, 'nested'))).toEqual(['pricing.json']);
+  });
+
+  it('keeps responses-mode models, so a Codex id resolves to its own entry', async () => {
+    const openai = (mode: string, input: number, output: number) => ({
+      litellm_provider: 'openai',
+      mode,
+      input_cost_per_token: input,
+      output_cost_per_token: output,
+    });
+    const list = priceList();
+    list['gpt-5.1'] = openai('chat', 1.25e-6, 10e-6);
+    list['gpt-5.1-codex-mini'] = openai('responses', 0.25e-6, 2e-6);
+    const path = join(freshDir(), 'pricing.json');
+    const { fetchImpl } = replyWith(JSON.stringify(list));
+
+    await refreshPricing({ path, fetchImpl });
+    const loaded = loadUserPricing(path);
+    if (loaded === undefined) throw new Error('the override was not written');
+    expect(matchModel(loaded, 'gpt-5.1-codex-mini')).toMatchObject({
+      modelPattern: 'gpt-5.1-codex-mini',
+      inputPerMTok: 0.25,
+      outputPerMTok: 2,
+    });
+    expect(matchModel(loaded, 'gpt-5.1')?.inputPerMTok).toBe(1.25);
   });
 
   it('throws on a failing fetch', async () => {
