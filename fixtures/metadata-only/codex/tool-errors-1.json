@@ -90,7 +90,7 @@
         "01a0ed29-84cf-7423-b55c-14f0c5c3c9c4"
       ],
       "estimatedWasteUSD": 1.364892,
-      "suggestion": "Trim the fixed part of every request: system prompt, tool definitions, attachments — 8.5k tokens above the floor were re-read 148 times."
+      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (only codex_app was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 8.5k tokens above the floor were re-read 148 times."
     }
   ]
 }
