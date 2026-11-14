@@ -293,11 +293,21 @@ response's own.
 - The span belongs to the turn its usage record names in `turn_id`, or to
   the latest started turn when that id names no turn in the file (T6).
 - The response's items are the `response_item` records since the previous
-  usage record in the same turn. The span starts at the later of the turn
-  start and the previous tool output, and ends at the usage record. That
-  includes time to first token, which is model time.
+  usage record in the same turn. The span starts at the latest of the turn
+  start, the previous tool output and the end of the response before it
+  (107 responses follow another with no tool between them, compactions
+  among them), and ends at the usage record. That includes time to first
+  token, which is model time.
+- The model is the one the latest `turn_context` of the record's turn
+  names, else the last one named in the file: 2 usage records of 13,535
+  have neither and are `unknown`. A `turn_context` can precede the
+  `task_started` of the turn it names (39 files), so models are kept by
+  turn id, not by position.
 - `outputPreview` is the first assistant `output_text` of the response;
   `promptPreview` is set on the turn (T6), not repeated on each call.
+- Provenance is the line a reader wants behind the span: the response's
+  first assistant message, else its first tool call, else the usage record.
+- No `response_id` repeats within or across the 250 files.
 - Response items with no usage record before the turn ends (an aborted
   response) produce no `llm_call`; their tool spans hang from the turn.
 

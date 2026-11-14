@@ -77,7 +77,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       warnings for broken lines. Verify: tests for every scenario of "Codex
       session and turn spans" and "Codex parsing tolerates unknown records",
       including the byte-identical double parse.
-- [ ] 2.3 A LLM calls and token conversion (T4, T5): one `llm_call` per
+- [x] 2.3 A LLM calls and token conversion (T4, T5): one `llm_call` per
       usage record with the response's items attributed to it, span bounds,
       `outputPreview`, the conversion with clamps, and the legacy path from
       running token events. Verify: tests for every scenario of "Codex LLM

@@ -15,6 +15,7 @@ import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { type Candidate, NoSessionYet, type RawRun } from '../adapter.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
+import { readRolloutLines } from '../rollout-lines.js';
 import { codexAdapter } from './codex.js';
 
 /**
@@ -966,6 +967,539 @@ describe('codex parsing tolerates what it does not know', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// parse(): model calls and tokens
+// ---------------------------------------------------------------------------
+
+const llmCallsOf = (raw: RawRun) =>
+  raw.spans.filter((s) => s.kind === 'llm_call');
+
+/** Counters the way Codex writes them: cached inside input, reasoning
+ * inside output, and a total of input plus output. */
+const usageOf = (
+  input: number,
+  cached: number,
+  output: number,
+  reasoning: number,
+  cacheWrite = 0,
+) => ({
+  input_tokens: input,
+  cached_input_tokens: cached,
+  cache_write_input_tokens: cacheWrite,
+  output_tokens: output,
+  reasoning_output_tokens: reasoning,
+  total_tokens: input + output,
+});
+const SMALL = usageOf(100, 0, 10, 0);
+
+const turnContext = (sec: number, model: string, turn?: string) =>
+  rec(sec, 'turn_context', {
+    ...(turn === undefined ? {} : { turn_id: turn }),
+    model,
+    cwd: 'C:\\work\\billing-portal',
+  });
+const usageRecord = (
+  sec: number,
+  turn: string | undefined,
+  responseId: string,
+  usage: unknown = SMALL,
+  threadTotal?: number,
+) =>
+  rec(sec, 'token_usage_record', {
+    response_id: responseId,
+    ...(turn === undefined ? {} : { turn_id: turn }),
+    usage,
+    ...(threadTotal === undefined
+      ? {}
+      : { thread_token_usage: { total_tokens: threadTotal } }),
+  });
+const assistantMessage = (sec: number, ...texts: string[]) =>
+  rec(sec, 'response_item', {
+    type: 'message',
+    role: 'assistant',
+    content: texts.map((text) => ({ type: 'output_text', text })),
+  });
+const toolCall = (sec: number, callId: string) =>
+  rec(sec, 'response_item', {
+    type: 'custom_tool_call',
+    call_id: callId,
+    name: 'exec',
+    input: 'text(await tools.exec_command({cmd: "pnpm test"}))',
+  });
+const toolOutput = (sec: number, callId: string) =>
+  rec(sec, 'response_item', {
+    type: 'custom_tool_call_output',
+    call_id: callId,
+    output: 'Script completed\nOutput:\n12 passed',
+  });
+/** A running token event; `total` is the thread total after it. */
+const tokenCount = (sec: number, last: unknown, total: number) =>
+  rec(sec, 'event_msg', {
+    type: 'token_count',
+    info: {
+      last_token_usage: last,
+      total_token_usage: { total_tokens: total },
+    },
+  });
+
+describe('codex llm calls', () => {
+  it('emits one call per usage record, under its turn, named after the turn model', async () => {
+    const { raw, file } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A), // line 2
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      userMessage(1, 'Round the VAT to two places'),
+      rec(3, 'response_item', { type: 'reasoning', encrypted_content: 'x' }),
+      assistantMessage(4, '  ', '\nI will run the tests first.\n'), // line 6
+      toolCall(4, 'call_1'),
+      usageRecord(5, TURN_A, 'resp_1'), // line 8
+      toolOutput(9, 'call_1'),
+      toolCall(12, 'call_2'), // line 10
+      usageRecord(13, TURN_A, 'resp_2'),
+      toolOutput(14, 'call_2'),
+      assistantMessage(18, `Done. ${'All green. '.repeat(40)}`), // line 13
+      usageRecord(20, TURN_A, 'resp_3'),
+      completed(21, TURN_A),
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(llmCallsOf(raw)).toEqual([
+      {
+        id: 'resp_1',
+        parentId: TURN_A,
+        kind: 'llm_call',
+        name: 'gpt-5.2-codex',
+        status: 'ok',
+        // from the start of the turn to the usage record
+        startedAt: at(1),
+        endedAt: at(5),
+        durationMs: 4000,
+        llm: {
+          provider: 'openai',
+          model: 'gpt-5.2-codex',
+          tokens: { input: 100, output: 10, cacheRead: 0, cacheWrite: 0 },
+          costSource: 'unknown',
+        },
+        content: { outputPreview: 'I will run the tests first.' },
+        attributes: {},
+        provenance: { file, line: 6 },
+      },
+      {
+        id: 'resp_2',
+        parentId: TURN_A,
+        kind: 'llm_call',
+        name: 'gpt-5.2-codex',
+        status: 'ok',
+        // from the tool output handed back to the usage record
+        startedAt: at(9),
+        endedAt: at(13),
+        durationMs: 4000,
+        llm: {
+          provider: 'openai',
+          model: 'gpt-5.2-codex',
+          tokens: { input: 100, output: 10, cacheRead: 0, cacheWrite: 0 },
+          costSource: 'unknown',
+        },
+        attributes: {},
+        // no text in this response: the call it made stands for it
+        provenance: { file, line: 10 },
+      },
+      {
+        id: 'resp_3',
+        parentId: TURN_A,
+        kind: 'llm_call',
+        name: 'gpt-5.2-codex',
+        status: 'ok',
+        startedAt: at(14),
+        endedAt: at(20),
+        durationMs: 6000,
+        llm: {
+          provider: 'openai',
+          model: 'gpt-5.2-codex',
+          tokens: { input: 100, output: 10, cacheRead: 0, cacheWrite: 0 },
+          costSource: 'unknown',
+        },
+        content: {
+          outputPreview: `Done. ${'All green. '.repeat(40)}`.slice(0, 200),
+        },
+        attributes: {},
+        provenance: { file, line: 13 },
+      },
+    ]);
+  });
+
+  it('starts a call where the one before it ended when no tool ran between them', async () => {
+    const { raw, file } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      usageRecord(4, TURN_A, 'resp_1'), // line 4: nothing before it
+      usageRecord(9, TURN_A, 'resp_2'),
+    ]);
+    expect(llmCallsOf(raw)).toMatchObject([
+      {
+        id: 'resp_1',
+        startedAt: at(1),
+        endedAt: at(4),
+        provenance: { file, line: 4 },
+      },
+      { id: 'resp_2', startedAt: at(4), endedAt: at(9) },
+    ]);
+    expect(llmCallsOf(raw)[0]).not.toHaveProperty('content');
+  });
+
+  it('takes the model from the turn, following a change within it', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0, { model_provider: 'azure' }),
+      // a context written before the turn it names has started
+      turnContext(0, 'gpt-5.2-codex', TURN_A),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, 'resp_1'),
+      turnContext(3, 'gpt-5.5', TURN_A),
+      usageRecord(4, TURN_A, 'resp_2'),
+      completed(5, TURN_A),
+      started(6, TURN_B),
+      // no context for this turn: the last model named stands
+      usageRecord(7, TURN_B, 'resp_3'),
+    ]);
+    expect(llmCallsOf(raw).map((s) => [s.name, s.llm?.provider])).toEqual([
+      ['gpt-5.2-codex', 'azure'],
+      ['gpt-5.5', 'azure'],
+      ['gpt-5.5', 'azure'],
+    ]);
+  });
+
+  it('says unknown where the file names no model and no provider', async () => {
+    const { raw } = await parseLines([
+      rec(0, 'session_meta', { id: ROOT, model_provider: null }),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, 'resp_1'),
+    ]);
+    expect(llmCallsOf(raw)[0]).toMatchObject({
+      name: 'unknown',
+      llm: { provider: 'unknown', model: 'unknown' },
+    });
+  });
+
+  it('puts a call whose turn the file never started under the turn started last', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_B),
+      turnContext(1, 'codex-auto-review', TURN_B),
+      turnContext(1, 'gpt-5.2-codex', TURN_STRAY),
+      usageRecord(3, TURN_STRAY, 'resp_stray'),
+      usageRecord(4, undefined, 'resp_unnamed'),
+      completed(5, TURN_B),
+      // after the turn ended: still the turn started last
+      usageRecord(6, TURN_STRAY, 'resp_late'),
+    ]);
+    expect(
+      llmCallsOf(raw).map((s) => [s.id, s.parentId, s.name, s.startedAt]),
+    ).toEqual([
+      // the context written for the named turn still gives the model
+      ['resp_stray', TURN_B, 'gpt-5.2-codex', at(1)],
+      ['resp_unnamed', TURN_B, 'codex-auto-review', at(3)],
+      ['resp_late', TURN_B, 'gpt-5.2-codex', at(4)],
+    ]);
+    expect(raw.warnings).toEqual([]);
+  });
+
+  it('puts a call made before any turn under the session, and still makes a run of it', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      turnContext(1, 'gpt-5.2-codex'),
+      usageRecord(2, undefined, 'resp_1'),
+    ]);
+    expect(raw.spans.map((s) => s.kind)).toEqual(['session', 'llm_call']);
+    expect(llmCallsOf(raw)[0]).toMatchObject({
+      parentId: ROOT,
+      name: 'gpt-5.2-codex',
+      startedAt: at(2),
+      endedAt: at(2),
+      durationMs: 0,
+    });
+  });
+
+  it('emits no call for a response with no usage record before its turn was aborted', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      assistantMessage(2, 'First answer.'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      // the second response: a message and a call, then the abort
+      assistantMessage(5, 'Let me check one more thing.'),
+      toolCall(5, 'call_9'),
+      aborted(6, TURN_A, 'interrupted'),
+      started(7, TURN_B),
+      turnContext(7, 'gpt-5.2-codex', TURN_B),
+      usageRecord(9, TURN_B, 'resp_2'),
+    ]);
+    expect(llmCallsOf(raw)).toHaveLength(2);
+    expect(llmCallsOf(raw)[0]?.content).toEqual({
+      outputPreview: 'First answer.',
+    });
+    // what the aborted response wrote is not the next turn's output
+    expect(llmCallsOf(raw)[1]).toMatchObject({
+      id: 'resp_2',
+      parentId: TURN_B,
+      startedAt: at(7),
+    });
+    expect(llmCallsOf(raw)[1]).not.toHaveProperty('content');
+  });
+
+  it('keeps span ids unique when a record has no response id or repeats one', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, 'resp_1'),
+      usageRecord(3, TURN_A, 'resp_1'), // line 4
+      rec(4, 'token_usage_record', { turn_id: TURN_A, usage: SMALL }), // line 5
+      rec(5, 'token_usage_record', { turn_id: TURN_A }), // no usage: no call
+    ]);
+    expect(llmCallsOf(raw).map((s) => s.id)).toEqual([
+      'resp_1',
+      'resp_1:4',
+      `${ROOT}:response:5`,
+    ]);
+  });
+
+  it('emits null output previews under redaction and no text of the response', async () => {
+    const { raw } = await parseLines(
+      [
+        sessionMeta(0),
+        started(1, TURN_A),
+        assistantMessage(2, 'The VAT bug is in the invoice totals'),
+        usageRecord(3, TURN_A, 'resp_1'),
+        usageRecord(4, TURN_A, 'resp_2'),
+      ],
+      true,
+    );
+    for (const call of llmCallsOf(raw)) {
+      expect(call.content).toEqual({ outputPreview: null });
+    }
+    expect(JSON.stringify(raw)).not.toContain('invoice');
+  });
+});
+
+describe('codex token conversion', () => {
+  const tokensFor = async (usage: unknown) => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      usageRecord(2, TURN_A, 'resp_1', usage),
+      completed(3, TURN_A),
+    ]);
+    return { raw, tokens: llmCallsOf(raw)[0]?.llm?.tokens };
+  };
+
+  it('takes cached input out of input and reasoning out of output', async () => {
+    const usage = usageOf(10_000, 8_000, 500, 300);
+    expect(usage.total_tokens).toBe(10_500);
+    const { raw, tokens } = await tokensFor(usage);
+    expect(tokens).toEqual({
+      input: 2_000,
+      cacheRead: 8_000,
+      cacheWrite: 0,
+      output: 200,
+      reasoning: 300,
+    });
+
+    // the five parts are Codex's total, and the hit rate is the cache's
+    const run = normalize(priceRun(raw));
+    expect(run.totals.tokens.total).toBe(10_500);
+    expect(run.totals.cache.hitRate).toBe(0.8);
+    expect(RunSchema.safeParse(run).error).toBeUndefined();
+  });
+
+  it('takes cache writes out of input as well', async () => {
+    const { tokens } = await tokensFor(usageOf(10_000, 6_000, 500, 0, 1_500));
+    expect(tokens).toEqual({
+      input: 2_500,
+      cacheRead: 6_000,
+      cacheWrite: 1_500,
+      output: 500,
+    });
+  });
+
+  it('leaves reasoning out when there was none', async () => {
+    const { tokens } = await tokensFor(usageOf(100, 0, 10, 0));
+    expect(tokens).not.toHaveProperty('reasoning');
+  });
+
+  it.each([
+    [
+      'cached input above input',
+      usageOf(1_000, 1_400, 50, 0),
+      { input: 0, cacheRead: 1_400, cacheWrite: 0, output: 50 },
+    ],
+    [
+      'reasoning above output',
+      usageOf(1_000, 0, 50, 80),
+      { input: 1_000, cacheRead: 0, cacheWrite: 0, output: 0, reasoning: 80 },
+    ],
+    [
+      'counters that are missing, negative, fractional or not numbers',
+      {
+        input_tokens: 99.6,
+        cached_input_tokens: -5,
+        output_tokens: '12',
+        reasoning_output_tokens: null,
+      },
+      { input: 100, cacheRead: 0, cacheWrite: 0, output: 0 },
+    ],
+    [
+      'no counters at all',
+      {},
+      { input: 0, cacheRead: 0, cacheWrite: 0, output: 0 },
+    ],
+  ])('never goes below zero: %s', async (_label, usage, expected) => {
+    const { raw, tokens } = await tokensFor(usage);
+    expect(tokens).toEqual(expected);
+    expect(RunSchema.safeParse(normalize(priceRun(raw))).error).toBeUndefined();
+  });
+
+  it('reads the per-response usage, not the difference of the thread total', async () => {
+    // a child thread: its first record already shows what the parent used
+    const { raw } = await parseLines([
+      sessionMeta(0, { parent_thread_id: ABSENT }),
+      started(1, TURN_A),
+      turnContext(1, 'codex-auto-review', TURN_A),
+      usageRecord(2, TURN_A, 'resp_1', usageOf(1_000, 0, 100, 0), 4_196_105),
+      usageRecord(
+        3,
+        TURN_A,
+        'resp_2',
+        usageOf(2_000, 1_000, 200, 0),
+        4_198_305,
+      ),
+      completed(4, TURN_A),
+    ]);
+    const run = normalize(priceRun(raw));
+    expect(run.totals.tokens.total).toBe(1_100 + 2_200);
+    expect(llmCallsOf(raw).map((s) => s.llm?.tokens.input)).toEqual([
+      1_000, 1_000,
+    ]);
+  });
+});
+
+describe('codex legacy token events', () => {
+  it('emits one call per token event whose thread total moved', async () => {
+    const { raw, file } = await parseLines([
+      rec(0, 'session_meta', { id: ROOT, model_provider: null }),
+      started(1, TURN_A),
+      // a legacy context names no turn
+      turnContext(1, 'gpt-5'),
+      rec(1, 'event_msg', { type: 'token_count', info: null }),
+      assistantMessage(3, 'Looking at the rounding code.'), // line 5
+      rec(3, 'response_item', {
+        type: 'function_call',
+        name: 'shell',
+        call_id: 'call_1',
+        arguments: '{"command":["bash","-lc","ls"]}',
+      }),
+      tokenCount(4, usageOf(1_000, 400, 50, 20), 1_050), // line 7
+      tokenCount(4, usageOf(1_000, 400, 50, 20), 1_050), // the same total again
+      rec(6, 'response_item', {
+        type: 'function_call_output',
+        call_id: 'call_1',
+        output: '{"output":"a.ts","metadata":{"exit_code":0}}',
+      }),
+      tokenCount(6, usageOf(1_000, 400, 50, 20), 1_050), // and again
+      tokenCount(9, usageOf(2_000, 1_000, 80, 0), 3_130), // line 11
+      completed(10, TURN_A),
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(llmCallsOf(raw)).toEqual([
+      {
+        id: `${ROOT}:tokens:4`,
+        parentId: TURN_A,
+        kind: 'llm_call',
+        name: 'gpt-5',
+        status: 'ok',
+        startedAt: at(1),
+        endedAt: at(4),
+        durationMs: 3000,
+        llm: {
+          provider: 'unknown',
+          model: 'gpt-5',
+          tokens: {
+            input: 600,
+            output: 30,
+            cacheRead: 400,
+            cacheWrite: 0,
+            reasoning: 20,
+          },
+          costSource: 'unknown',
+        },
+        content: { outputPreview: 'Looking at the rounding code.' },
+        attributes: {},
+        provenance: { file, line: 5 },
+      },
+      {
+        id: `${ROOT}:tokens:9`,
+        parentId: TURN_A,
+        kind: 'llm_call',
+        name: 'gpt-5',
+        status: 'ok',
+        // from the tool output handed back
+        startedAt: at(6),
+        endedAt: at(9),
+        durationMs: 3000,
+        llm: {
+          provider: 'unknown',
+          model: 'gpt-5',
+          tokens: { input: 1_000, output: 80, cacheRead: 1_000, cacheWrite: 0 },
+          costSource: 'unknown',
+        },
+        attributes: {},
+        provenance: { file, line: 11 },
+      },
+    ]);
+    const run = normalize(priceRun(raw));
+    expect(run.totals.tokens.total).toBe(3_130);
+  });
+
+  it('ignores token events in a rollout that has usage records', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      // a token event before the first usage record, as a child thread has
+      tokenCount(0, usageOf(9_000, 0, 900, 0), 9_900),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      usageRecord(2, TURN_A, 'resp_1'),
+      tokenCount(2, SMALL, 10_010),
+      usageRecord(4, TURN_A, 'resp_2'),
+      tokenCount(4, SMALL, 10_120),
+      tokenCount(5, SMALL, 10_230),
+      completed(6, TURN_A),
+    ]);
+    expect(llmCallsOf(raw).map((s) => s.id)).toEqual(['resp_1', 'resp_2']);
+    expect(normalize(priceRun(raw)).totals.tokens.total).toBe(220);
+  });
+
+  it('skips a token event with no counters and names a call by its line when the record has no ordinal', async () => {
+    const event = (info: unknown) =>
+      JSON.stringify({
+        timestamp: at(2),
+        type: 'event_msg',
+        payload: { type: 'token_count', info },
+      });
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      event(null),
+      event({ total_token_usage: { total_tokens: 5 } }), // no last usage
+      event('not an object'),
+      event({
+        last_token_usage: SMALL,
+        total_token_usage: { total_tokens: 110 },
+      }),
+    ]);
+    expect(llmCallsOf(raw).map((s) => s.id)).toEqual([`${ROOT}:tokens:line-6`]);
+  });
+});
+
 describe('codex parse on the fixtures', () => {
   const candidatesIn = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -1064,10 +1598,9 @@ describe('codex parse on the fixtures', () => {
       'compaction',
     ]) {
       for (const raw of await parseVariant(variant)) {
-        const [session, ...turns] = raw.spans;
+        const [session] = raw.spans;
         expect(new Set(raw.spans.map((s) => s.id)).size).toBe(raw.spans.length);
-        for (const turn of turns) {
-          expect(turn.kind).toBe('turn');
+        for (const turn of turnsOf(raw)) {
           expect(turn.parentId).toBe(session?.id);
           expect(turn.provenance.file).toBe(raw.source.files[0]);
           expect(turn.provenance.line).toBeGreaterThan(1);
@@ -1081,7 +1614,7 @@ describe('codex parse on the fixtures', () => {
     }
   });
 
-  it('emits a null prompt preview on every turn of every fixture under redaction', async () => {
+  it('emits null previews and nothing else as content on every fixture under redaction', async () => {
     for (const variant of [
       'simple',
       'guardian',
@@ -1094,10 +1627,132 @@ describe('codex parse on the fixtures', () => {
         for (const span of raw.spans) {
           if (span.kind === 'turn') {
             expect(span.content).toEqual({ promptPreview: null });
+          } else if (span.kind === 'llm_call') {
+            expect(span.content).toEqual({ outputPreview: null });
           } else expect(span).not.toHaveProperty('content');
         }
       }
     }
+  });
+
+  /** Tokens of every model call of a run, the five parts added up. */
+  const tokenSum = (raw: RawRun) =>
+    llmCallsOf(raw).reduce((sum, s) => {
+      const t = s.llm?.tokens;
+      return t === undefined
+        ? sum
+        : sum +
+            t.input +
+            t.output +
+            t.cacheRead +
+            t.cacheWrite +
+            (t.reasoning ?? 0);
+    }, 0);
+
+  /** What the file itself says, read apart from the adapter: the number of
+   * usage records, the thread total in the last of them, and the running
+   * total in the last token event. */
+  async function countersOf(file: string) {
+    let usageRecords = 0;
+    let threadTotal: number | undefined;
+    let runningTotal: number | undefined;
+    for await (const { text } of readRolloutLines(file)) {
+      if (text === '') continue;
+      const record = JSON.parse(text);
+      const payload = record.payload ?? {};
+      if (record.type === 'token_usage_record') {
+        usageRecords++;
+        threadTotal = payload.thread_token_usage?.total_tokens;
+      } else if (record.type === 'event_msg' && payload.info) {
+        runningTotal = payload.info.total_token_usage?.total_tokens;
+      }
+    }
+    return { usageRecords, threadTotal, runningTotal };
+  }
+
+  it('sums the calls of a root thread to the thread total its last usage record shows', async () => {
+    for (const variant of ['simple', 'zstd', 'guardian', 'tool-errors']) {
+      for (const raw of await parseVariant(variant)) {
+        const file = raw.source.files[0] ?? '';
+        const counters = await countersOf(file);
+        expect(counters.usageRecords, variant).toBeGreaterThan(0);
+        expect(llmCallsOf(raw), variant).toHaveLength(counters.usageRecords);
+        expect(tokenSum(raw), variant).toBe(counters.threadTotal);
+      }
+    }
+  });
+
+  it('sums the calls of a legacy rollout to the last running total of its token events', async () => {
+    const [old, newer] = await parseVariant('legacy');
+    for (const raw of [old, newer] as RawRun[]) {
+      const counters = await countersOf(raw.source.files[0] ?? '');
+      expect(counters.usageRecords).toBe(0);
+      expect(tokenSum(raw)).toBe(counters.runningTotal);
+    }
+    // 56 token events in the first file: one has no counters and 27 repeat
+    // the total before them; none of the 12 in the second repeats
+    expect(llmCallsOf(old as RawRun)).toHaveLength(28);
+    expect(llmCallsOf(newer as RawRun)).toHaveLength(12);
+    expect(llmCallsOf(old as RawRun)[0]?.llm).toMatchObject({
+      provider: 'unknown',
+      model: 'gpt-5',
+    });
+    expect(llmCallsOf(newer as RawRun)[0]?.llm).toMatchObject({
+      provider: 'openai',
+      model: 'gpt-5.5',
+    });
+  });
+
+  it('sums the calls of a thread that inherited its total to its own usage, not to that total', async () => {
+    const [raw] = await parseVariant('compaction');
+    const counters = await countersOf(raw?.source.files[0] ?? '');
+    expect(llmCallsOf(raw as RawRun)).toHaveLength(6);
+    expect(tokenSum(raw as RawRun)).toBe(705_676);
+    expect(counters.threadTotal).toBe(4_900_681);
+  });
+
+  it('gives every call a model, a turn of its file as parent and times inside the session', async () => {
+    for (const variant of [
+      'simple',
+      'guardian',
+      'tool-errors',
+      'legacy',
+      'compaction',
+    ]) {
+      for (const raw of await parseVariant(variant)) {
+        const [session] = raw.spans;
+        const turnIds = new Set(turnsOf(raw).map((t) => t.id));
+        for (const call of llmCallsOf(raw)) {
+          expect(call.llm?.model).not.toBe('unknown');
+          expect(call.name).toBe(call.llm?.model);
+          expect(call.llm?.costSource).toBe('unknown');
+          expect(turnIds.has(call.parentId ?? '')).toBe(true);
+          expect(call.endedAt).toBeDefined();
+          expect(call.startedAt <= (call.endedAt ?? '')).toBe(true);
+          expect(call.startedAt >= (session?.startedAt ?? '')).toBe(true);
+          expect((call.endedAt ?? '') <= (session?.endedAt ?? '')).toBe(true);
+          expect(call.provenance.line).toBeGreaterThan(1);
+        }
+      }
+    }
+  });
+
+  it('carries the calls into the run totals and leaves the reviewer model unpriced', async () => {
+    const [simple] = await parseVariant('simple');
+    const run = normalize(priceRun(simple as RawRun), { baseDir: repoRoot });
+    expect(run.totals.counts.llmCalls).toBe(20);
+    expect(run.totals.tokens.total).toBe(2_359_675);
+
+    const [review] = await parseVariant('compaction');
+    const reviewRun = normalize(priceRun(review as RawRun), {
+      baseDir: repoRoot,
+    });
+    expect(reviewRun.totals.costUSD.total).toBe(0);
+    expect(
+      reviewRun.spans
+        .filter((s) => s.kind === 'llm_call')
+        .every((s) => s.llm?.costSource === 'unknown'),
+    ).toBe(true);
   });
 
   it('parses every fixture to the same bytes twice, into a run the schema accepts', async () => {

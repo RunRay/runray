@@ -31,10 +31,16 @@ import { isCompressedRollout, readRolloutLines } from '../rollout-lines.js';
  * (on every machine surveyed: the approval reviewer). It is not a run of its
  * own: its file joins the candidate of its root thread (design D2).
  *
- * What `parse()` emits so far: the session span and one `turn` span per
- * turn the rollout brackets (design D3, T6). Model calls, tools and child
- * threads follow in tasks 2.3 to 4.1; the records they read are skipped
- * here like any record the adapter has no rule for.
+ * What `parse()` emits so far: the session span, one `turn` span per turn
+ * the rollout brackets (design D3, T6) and one `llm_call` span per API
+ * response (T4, T5). Tools and child threads follow in tasks 3.1 to 4.1;
+ * the records they read are skipped here like any record the adapter has
+ * no rule for.
+ *
+ * Two token eras. A current rollout has a `token_usage_record` per
+ * response, and that is the only thing tokens are read from. A rollout from
+ * before those records existed has only the running `token_count` event;
+ * there a call is emitted each time the event's thread total moves.
  *
  * Every field of every record is optional to this code. A record type it
  * does not know is skipped without a word, a line that is not JSON is a run
@@ -71,6 +77,14 @@ function isObj(v: unknown): v is Json {
 }
 function str(v: unknown): string | undefined {
   return typeof v === 'string' && v !== '' ? v : undefined;
+}
+function num(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+}
+/** A token counter: a whole number, never below zero. */
+function count(v: unknown): number {
+  const n = num(v);
+  return n === undefined ? 0 : Math.max(0, Math.round(n));
 }
 
 // ---------------------------------------------------------------------------
@@ -259,6 +273,8 @@ interface ThreadSummary {
   gitBranch: string | undefined;
   /** Turns the file started. */
   turns: number;
+  /** Model calls the file recorded. */
+  llmCalls: number;
 }
 
 interface TurnState {
@@ -357,9 +373,73 @@ function errorCodeOf(error: Json): string | undefined {
   return str(info);
 }
 
+/** The start of the first text the model wrote in an assistant message. */
+function assistantTextOf(message: Json): string | undefined {
+  if (!Array.isArray(message.content)) return undefined;
+  for (const part of message.content) {
+    if (!isObj(part) || part.type !== 'output_text') continue;
+    const text = str(part.text)?.trim();
+    if (text !== undefined && text !== '') return text.slice(0, PREVIEW_CHARS);
+  }
+  return undefined;
+}
+
+type TokenCounts = NonNullable<RawSpan['llm']>['tokens'];
+
 /**
- * Reads one rollout and emits its spans: the thread's own span, then a
- * `turn` span per turn in file order.
+ * Codex's counters to the schema's disjoint ones (design T5). Codex counts
+ * cached input inside `input_tokens` and reasoning inside `output_tokens`;
+ * the schema keeps each apart, so the five parts sum to Codex's
+ * `total_tokens`. A record whose parts exceed their whole clamps to zero
+ * instead of going negative. `reasoning` is left out when zero, as in the
+ * OpenCode adapter.
+ */
+function tokensOf(usage: Json): TokenCounts {
+  const cacheRead = count(usage.cached_input_tokens);
+  const cacheWrite = count(usage.cache_write_input_tokens);
+  const reasoning = count(usage.reasoning_output_tokens);
+  return {
+    input: Math.max(0, count(usage.input_tokens) - cacheRead - cacheWrite),
+    output: Math.max(0, count(usage.output_tokens) - reasoning),
+    cacheRead,
+    cacheWrite,
+    ...(reasoning === 0 ? {} : { reasoning }),
+  };
+}
+
+/** What has been read of the response being written: everything since the
+ * last point at which a response is known to have ended. */
+interface ResponseSoFar {
+  /** The start of its first assistant text. */
+  preview: string | undefined;
+  /** Line of its first assistant message. */
+  messageLine: number | undefined;
+  /** Line of its first tool call. */
+  callLine: number | undefined;
+  /** The earliest its request can have been sent: the end of the response
+   * before it, or the tool output handed back since. */
+  floor: string | undefined;
+}
+
+function newResponse(floor: string | undefined): ResponseSoFar {
+  return {
+    preview: undefined,
+    messageLine: undefined,
+    callLine: undefined,
+    floor,
+  };
+}
+
+/**
+ * Reads one rollout and emits its spans: the thread's own span, a `turn`
+ * span per turn and an `llm_call` span per response.
+ *
+ * An `llm_call` is one `token_usage_record` (design T4): its tokens are the
+ * record's own `usage`, never a difference of the running thread total,
+ * which in a child thread starts from what the parent had used. It belongs
+ * to the turn the record names, or to the turn started last when the file
+ * never started that one. Response items with no usage record after them
+ * (an aborted response) give no call.
  *
  * Turns are matched by id, never by position (design T6): a completion or
  * an abort for an id the file never started is ignored, which five reviewer
@@ -378,6 +458,77 @@ async function emitThread(
   const turns = new Map<string, TurnState>();
   /** The turn records belong to: the one started last and not yet ended. */
   let current: TurnState | undefined;
+  /** The turn started last, ended or not. */
+  let latest: TurnState | undefined;
+
+  let provider = 'unknown';
+  /** `turn_context` names the model of a turn, and may do so again. */
+  const modelOfTurn = new Map<string, string>();
+  let lastModel: string | undefined;
+  const spanIds = new Set<string>();
+
+  // Both eras are followed while reading, because which one a file is in is
+  // known only at its end: a file with usage records ignores token events.
+  let response = newResponse(undefined);
+  let legacyResponse = newResponse(undefined);
+  const legacyCalls: RawSpan[] = [];
+  let lastThreadTotal: string | undefined;
+
+  const llmCall = (
+    id: string,
+    turn: TurnState | undefined,
+    namedTurnId: string | undefined,
+    usage: Json,
+    so: ResponseSoFar,
+    at: string | undefined,
+    line: number,
+    sessionSpan: RawSpan,
+  ): RawSpan => {
+    const endedAt = at ?? lastAt ?? sessionSpan.startedAt;
+    // The response began when its request was sent: at the turn's start, or
+    // when the last tool output was handed back, or when the response before
+    // it ended, whichever is latest. That includes the wait for the first
+    // token, which is model time.
+    let startedAt = turn?.span.startedAt ?? so.floor ?? endedAt;
+    if (so.floor !== undefined && so.floor > startedAt) startedAt = so.floor;
+    if (startedAt > endedAt) startedAt = endedAt;
+    const model =
+      (namedTurnId === undefined ? undefined : modelOfTurn.get(namedTurnId)) ??
+      (turn === undefined ? undefined : modelOfTurn.get(turn.span.id)) ??
+      lastModel ??
+      'unknown';
+    // no response id repeats in 13,535 records; if one ever does, both
+    // records are calls and the second takes its line into its id
+    const spanId = spanIds.has(id) ? `${id}:${line}` : id;
+    spanIds.add(spanId);
+    const durationMs = durationBetween(startedAt, endedAt);
+    return {
+      id: spanId,
+      parentId: turn?.span.id ?? sessionSpan.id,
+      kind: 'llm_call',
+      name: model,
+      status: 'ok',
+      startedAt,
+      endedAt,
+      ...(durationMs === undefined ? {} : { durationMs }),
+      llm: {
+        provider,
+        model,
+        tokens: tokensOf(usage),
+        // Codex records no cost; the cost engine prices the tokens
+        costSource: 'unknown',
+      },
+      ...(ctx.redact
+        ? { content: { outputPreview: null } }
+        : so.preview === undefined
+          ? {}
+          : { content: { outputPreview: so.preview } }),
+      attributes: {},
+      // the record a reader wants behind this span: what the model said,
+      // else the call it made, else the usage record itself
+      provenance: { file, line: so.messageLine ?? so.callLine ?? line },
+    };
+  };
 
   for await (const { line, text } of readRolloutLines(file)) {
     if (text.trim() === '') continue;
@@ -416,7 +567,9 @@ async function emitThread(
         cwd: str(payload.cwd),
         gitBranch: git === undefined ? undefined : str(git.branch),
         turns: 0,
+        llmCalls: 0,
       };
+      provider = str(payload.model_provider) ?? 'unknown';
       session = {
         id: threadId,
         parentId: null,
@@ -450,9 +603,13 @@ async function emitThread(
           provenance: { file, line },
         };
         current = { span, open: true, prompted: false };
+        latest = current;
         turns.set(id, current);
         summary.turns++;
         ctx.spans.push(span);
+        // whatever was read before belongs to no response of this turn
+        response = newResponse(undefined);
+        legacyResponse = newResponse(undefined);
       } else if (event === 'task_complete' || event === 'turn_aborted') {
         const id = str(payload.turn_id);
         const turn = id === undefined ? current : turns.get(id);
@@ -474,19 +631,83 @@ async function emitThread(
         } else {
           span.status = 'ok';
         }
+      } else if (event === 'token_count') {
+        // the running counter: the only token source of a legacy rollout
+        const info = isObj(payload.info) ? payload.info : undefined;
+        if (info === undefined || !isObj(info.last_token_usage)) continue;
+        const total = JSON.stringify(info.total_token_usage);
+        if (total === lastThreadTotal) continue; // repeated: no new response
+        lastThreadTotal = total;
+        const ordinal = num(record.ordinal);
+        legacyCalls.push(
+          llmCall(
+            `${summary.threadId}:tokens:${ordinal ?? `line-${line}`}`,
+            current ?? latest,
+            undefined,
+            info.last_token_usage,
+            legacyResponse,
+            at,
+            line,
+            session,
+          ),
+        );
+        legacyResponse = newResponse(at ?? lastAt);
       }
+    } else if (type === 'turn_context') {
+      const model = str(payload.model);
+      if (model === undefined) continue;
+      lastModel = model;
+      // a legacy turn_context names no turn: it speaks for the open one
+      const turnId = str(payload.turn_id) ?? current?.span.id;
+      if (turnId !== undefined) modelOfTurn.set(turnId, model);
+    } else if (type === 'token_usage_record') {
+      // one per API response, written after the response's items
+      if (!isObj(payload.usage)) continue;
+      const namedTurnId = str(payload.turn_id);
+      const turn =
+        (namedTurnId === undefined ? undefined : turns.get(namedTurnId)) ??
+        latest;
+      summary.llmCalls++;
+      ctx.spans.push(
+        llmCall(
+          str(payload.response_id) ?? `${summary.threadId}:response:${line}`,
+          turn,
+          namedTurnId,
+          payload.usage,
+          response,
+          at,
+          line,
+          session,
+        ),
+      );
+      response = newResponse(at ?? lastAt);
     } else if (type === 'response_item') {
-      if (
-        payload.type === 'message' &&
-        payload.role === 'user' &&
-        current !== undefined &&
-        !current.prompted
-      ) {
-        const prompt = promptOf(payload);
-        if (prompt !== undefined) {
-          current.prompted = true;
-          if (!ctx.redact) current.span.content = { promptPreview: prompt };
+      const item = str(payload.type);
+      if (item === 'message') {
+        if (payload.role === 'assistant') {
+          for (const so of [response, legacyResponse]) {
+            so.messageLine ??= line;
+            so.preview ??= assistantTextOf(payload);
+          }
+        } else if (
+          payload.role === 'user' &&
+          current !== undefined &&
+          !current.prompted
+        ) {
+          const prompt = promptOf(payload);
+          if (prompt !== undefined) {
+            current.prompted = true;
+            if (!ctx.redact) current.span.content = { promptPreview: prompt };
+          }
         }
+      } else if (item?.endsWith('_call')) {
+        response.callLine ??= line;
+        legacyResponse.callLine ??= line;
+      } else if (item?.endsWith('_output')) {
+        // a tool output is handed back: the next response starts here
+        const handedBack = at ?? lastAt;
+        response.floor = handedBack;
+        legacyResponse.floor = handedBack;
       }
     }
   }
@@ -503,6 +724,11 @@ async function emitThread(
     const durationMs = durationBetween(firstAt, lastAt);
     if (durationMs !== undefined) session.durationMs = durationMs;
   }
+  if (summary.llmCalls === 0) {
+    // no usage record in the file: a legacy rollout, read from its counter
+    summary.llmCalls = legacyCalls.length;
+    ctx.spans.push(...legacyCalls);
+  }
   return summary;
 }
 
@@ -514,7 +740,7 @@ async function parse(
   const thread = await emitThread(candidate.runRef, ctx);
   // A rollout that holds its first record and no turn is a session nobody
   // has prompted yet: nothing is wrong and there is nothing to show.
-  if (thread.turns === 0) {
+  if (thread.turns === 0 && thread.llmCalls === 0) {
     throw new NoSessionYet('Codex rollout with no turn yet');
   }
   return {
