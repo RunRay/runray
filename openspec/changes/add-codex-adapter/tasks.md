@@ -312,12 +312,21 @@ directly and the goldens test does not see `fixtures/codex` yet.
       at a peak RSS of 191 MB. Tests that scan the whole fixture folder
       now leave `large` out, in core by listing the committed variants
       and in the CLI through a hermetic copy (`codexFixtures()`).
-- [ ] 5.6 A User-facing docs for the new source: README, `docs/01-FEATURES.md`
+- [x] 5.6 A User-facing docs for the new source: README, `docs/01-FEATURES.md`
       (Codex moves from V3 to supported), `docs/07-DATA-SOURCES.md`, the
       source lists in `CLAUDE.md` and `openspec/project.md`, and a changeset.
       Verify: `rg -n "Claude Code, OpenCode"` over the repo finds no list
       that should now name Codex, and `pnpm changeset status` shows the
       entry.
+      Done, and beyond the list: the Codex mapping in
+      `docs/02-DATA-MODEL.md`, the npm description of the CLI package and
+      the feature-request template. Four lists still name two sources and
+      are left to their tasks or are not lists of sources: the welcome
+      sentence in `WelcomeDialog.tsx` and its copy in
+      `docs/12-ONBOARDING-COPY.md` (7.2), a comment in
+      `insights/rules.ts` (6.1), and a persona's setup in
+      `docs/03-PERSONAS.md`. The changeset is `codex-sessions.md`
+      (minor), next to `codex-model-prices.md` from 5.1.
 
 ## 6. Insights
 

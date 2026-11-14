@@ -188,6 +188,18 @@ The same refresh brought in the other `responses` ids (`gpt-5-pro`, `gpt-5.2-pro
 | Subagent | CC ≥ 2.1: `Agent` tool_use (`input: {subagent_type, description, prompt}`); child transcript is a **separate** `agent-<agentId>.jsonl` under `<session-uuid>/subagents/` (workflow agents under `subagents/workflows/wf_*/`). Joins, in precedence order (CC ≥ 2.2): (1) `toolUseResult.agentId` on ANY tool's result — sync `Agent` calls and forked skills (`Skill` result with `status:'forked'`, name from `commandName`); (2) the `agent-<agentId>.meta.json` sidecar (`{agentType, name?, description?, toolUseId?, parentAgentId?, spawnDepth}`) — background agents leave no agentId on any result, `toolUseId` names the spawning tool_use, `parentAgentId` the enclosing agent for nested spawns. Mapping: `subagent_type`/`commandName`/sidecar `name`→`agentType` → `agent.name`, `description` → `content.delegationReason`. Legacy: inline records with `isSidechain: true` in the MAIN transcript linked to a `Task` tool_use (agent transcripts carry `isSidechain: true` routinely in CC ≥ 2.2 — NOT a legacy marker) | child session with `parentID` | spans nested under parent's tool span |
 | Provenance | file + line offset | file path or `(db, table, rowid)` | span id |
 
+Codex, kept apart so the table above stays readable (details: `docs/05-ARCHITECTURE.md` §2.1 and `openspec/changes/add-codex-adapter/design.md`):
+
+| Concept | Codex rollout (`rollout-*.jsonl`, `.jsonl.zst`) |
+|---|---|
+| Run | the root thread's rollout plus the rollouts of its child threads (`session_meta.parent_thread_id`), found among the scanned files |
+| Turn | `event_msg` `task_started` … `task_complete` / `turn_aborted`, a `turn` span |
+| LLM call | one `token_usage_record` per API response; in rollouts older than that record, one per change of the running `token_count` |
+| Tool call | `event_msg` `item_completed` (a command, a file change, an MCP call, an extension), else the model's `function_call` / `custom_tool_call` paired with its `*_output` by `call_id` |
+| Hook | no hook spans |
+| Subagent | a child thread, one `subagent` span under the parent turn it names (`turn_attribution.parent_turn_id`, else `root_turn_id`) |
+| Provenance | file + line of the record |
+
 Adapter interface (Track A): `SourceAdapter { id; detect(paths): Candidate[]; parse(candidate): RawRun; }` → shared `normalize(RawRun): Run`. Golden tests: every fixture in `fixtures/<source>/<variant>` must produce a byte-stable normalized output in `fixtures/normalized/`.
 
 ## Open questions (resolve during week 1–2)

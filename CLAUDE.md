@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-RunRay — zero-config, local-first observability & token audit for local coding agents (Claude Code, OpenCode; OTLP import for others). Planning is complete; implementation follows spec-driven development.
+RunRay — zero-config, local-first observability & token audit for local coding agents (Claude Code, OpenCode, Codex; OTLP import for others). Planning is complete; implementation follows spec-driven development.
 
 ## Read first, in this order
 

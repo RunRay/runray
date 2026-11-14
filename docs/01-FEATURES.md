@@ -8,7 +8,7 @@ Scope legend: **MVP** = 30-day PoC · **v0.2** = post-validation iteration · **
 
 | # | Feature | Notes |
 |---|---------|-------|
-| M1 | `runray view [path]` — auto-detect & open dashboard | Discovers `~/.claude/projects` and OpenCode data dir with no flags; `path` overrides. Opens local server on a free port. |
+| M1 | `runray view [path]` — auto-detect & open dashboard | Discovers `~/.claude/projects`, the OpenCode data dir and `~/.codex/sessions` with no flags; `path` overrides. Opens local server on a free port. |
 | M2 | Claude Code JSONL adapter | Parses per-message `usage` (input/output/cacheRead/cacheWrite), reconstructs span tree from `uuid`/`parentUuid`, maps `isSidechain` → subagent spans, tool_use/tool_result pairing. |
 | M3 | OpenCode adapter | Handles both storage eras: legacy file storage (`storage/session|message|part`) and SQLite (`opencode.db`); also accepts `opencode export` JSON files. |
 | M4 | Normalization to RunRay schema | Single `TraceFile` output; provenance (file/line) kept per span for drill-down. |
@@ -39,7 +39,7 @@ Databases (ClickHouse/InfluxDB), collectors, SDKs, cloud accounts, alerting/SLOs
 |---|---------|-----------|
 | V1 | **Run diff** (`runray diff <runA> <runB>`) | Compare two runs of the same task: cost delta, new/removed tool calls, depth changes. Direct foundation for CI regression gate. |
 | V2 | Delegation graph view (@xyflow/react) | Agent A → Agent B topology; complements the waterfall. |
-| V3 | More adapters | Codex (`~/.codex/sessions`), Gemini CLI, Amp — prioritized by beta-user demand. |
+| V3 | More adapters | **Codex is supported** (change `add-codex-adapter`): rollouts under `~/.codex/sessions`, plain and zstd-compressed, read with no setup; approval-reviewer threads nest as subagents; commands are unwrapped from their shell so the Time & Tools tab names programs; every call is priced from tokens. Still planned: Gemini CLI, Amp — prioritized by beta-user demand. |
 | V4 | Incremental index | Cache parsed results; re-scan only changed files (large-dir performance). |
 | V5 | Insight rules v1 | Redundant skill reloads, oversized tool outputs feeding context, model-mix suggestions ("this subtree ran on Opus but never edited files"), low-output-ratio (high session cost with minimal code changes — low changed-lines-to-cost ratio). |
 

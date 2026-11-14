@@ -1,6 +1,6 @@
 # RunRay
 
-RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
+RunRay reads the session logs that Claude Code, OpenCode and Codex already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
 
 ```bash
 npx runray demo   # a scrubbed sample session, no agent data needed
@@ -83,12 +83,13 @@ RunRay does not instrument anything and runs no collector. It reads what the age
 |---|---|---|
 | Claude Code | `~/.claude/projects/**/*.jsonl` | Subagent sidechains included. Records a desktop bridge session re-appends are deduplicated. |
 | OpenCode | file storage, `opencode.db` (opened read-only), `opencode export` JSON | OpenCode stores `cost: 0`, so the cost engine prices every call from token counts. |
+| Codex | `~/.codex/sessions/**/rollout-*.jsonl`, also once Codex has compressed them to `.jsonl.zst` | Approval-reviewer threads show as subagents of the turn that consulted them. Codex records no cost, so every call is priced from token counts. Compressed rollouts need Node 22.15 or newer. |
 | OTLP/JSON | exported OpenTelemetry traces | For custom agents and Claude Code's native traces. Import only, best effort. |
 
 How prices work:
 
 - Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network.
-- A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated.
+- A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated. Codex's approval reviewer runs on such a model (`codex-auto-review`): no price is published for it.
 - Costs are computed from the transcript, which makes them a lower bound. Utility calls, unlogged retries and web-search fees never reach the log.
 
 ## Privacy
@@ -108,7 +109,7 @@ All of it happens in core before serialization, never as a UI-side filter. `runr
 
 | Command | What it does |
 |---|---|
-| `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
+| `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|codex\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
 | `runray list [path] --json` | The same discovery as a machine-readable list. |
 | `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
 | `runray demo` | The dashboard on a bundled, scrubbed sample. |
