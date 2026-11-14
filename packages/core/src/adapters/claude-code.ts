@@ -1,8 +1,7 @@
-import { createReadStream, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
-import { createInterface } from 'node:readline';
 import type {
   Candidate,
   ParseOptions,
@@ -12,6 +11,7 @@ import type {
   SourceAdapter,
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
+import { readLines } from '../lines.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
@@ -222,13 +222,10 @@ async function collectTranscript(
   const byKey = new Map<string, LlmGroup>();
   const seenUuids = new Set<string>();
   const seenToolUses = new Set<string>();
-  const rl = createInterface({
-    input: createReadStream(file),
-    crlfDelay: Infinity,
-  });
-  let line = 0;
-  for await (const raw of rl) {
-    line++;
+  // readLines ends a line at LF only: a record whose text holds a raw
+  // U+2028 or U+2029 (legal in JSON, written unescaped by JSON.stringify)
+  // stays one line. The numbering is what transcript.ts looks up later.
+  for await (const { line, text: raw } of readLines(file)) {
     if (raw.trim() === '') continue;
     let rec: unknown;
     try {
