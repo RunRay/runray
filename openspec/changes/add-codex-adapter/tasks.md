@@ -274,10 +274,18 @@ directly and the goldens test does not see `fixtures/codex` yet.
       for later tasks: the unpriced warning still suggests
       `runray pricing --refresh` for `codex-auto-review`, which no
       refresh can price.
-- [ ] 5.3 A Generate the Codex goldens in the three profiles with
+- [x] 5.3 A Generate the Codex goldens in the three profiles with
       `pnpm goldens`, in one dedicated commit. Verify: `goldens.test.ts`
       passes with `fixtures/codex` included, the existing goldens are
       byte-identical, and a second `pnpm goldens` leaves the tree clean.
+      Done: 24 files, eight runs in each profile (`simple` and `zstd`
+      are one thread and get a golden each, since goldens are generated per
+      variant folder). No golden holds a user name, a host name, a home
+      path, a repository URL or an account id. Two tests that count or
+      re-derive over all goldens needed a line each: the number of goldens
+      the schema test validates (33 to 57), and the golden usage test's own
+      list of tools that wait on the person, which lacked Codex's
+      `request_user_input_async`.
 - [ ] 5.4 A Transcript slices (`transcript.ts`): a Codex branch that reads
       the provenance line through the rollout reader and labels segments per
       record type. Verify: tests for every scenario of "Transcript slices
