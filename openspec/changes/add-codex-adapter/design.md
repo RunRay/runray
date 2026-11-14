@@ -881,6 +881,54 @@ statuses, exit codes, argv shapes, diff line counts and output frames equal
 before and after; no unknown key and no guarded value. What survives as a
 string is ids, timestamps and about 140 enum, tool, model and version values.
 
+### T15 — Transcript slices
+
+The slice behind a span is read from its provenance line with the rollout
+reader, so a compressed file is read like a plain one (`transcript-codex.ts`,
+called from `readTranscriptSlice` after the redaction refusal).
+
+**One record is not always the answer.** An action (`item_completed`) holds
+what was asked and what came of it. Two records do not, and the reader goes
+on from the provenance line to the record that completes them:
+
+- a call the model made (`function_call`, `custom_tool_call`): the first
+  `*_output` record with the same call id. Only a line that contains the id
+  is parsed. A call nothing answered is shown alone;
+- a turn (`task_started`): the first user message of the turn with text of
+  the person, read as the prompt preview reads it (T6), with the text of
+  every part and not its first 200 characters. A turn that ends or is
+  followed by another before such a message shows its own record.
+
+*Rejected:* the record at the line and nothing else, as for Claude Code. A
+command of the era before actions would show its arguments without its
+output, and a turn would show a turn id.
+
+**What is shown is chosen per record type, never a dump.** A
+`session_meta` record also holds `creator_account_id`, `creator_user_id`,
+the repository URL and a commit; a token event holds the account's rate
+limits. T11 keeps these out of a run, and a slice is not a way around it: a
+session shows ten named keys and its instructions, a usage record its
+counts. A record of a type no span is read from (`turn_context`,
+`world_state`, `compacted`) is `unavailable`: the file is not what it was
+when the run was built.
+
+**Binary data is named, not shown.** A message part that is not text, and
+any segment that is one run of 512 or more base64 characters (bare or as a
+data URL), reads `(not text)`. Measured on the surveyed sessions: the result
+of every image generation is its image in base64, about a megabyte, which
+filled the size cap with letters. An empty text reads `(empty)`.
+
+**A rollout compressed since the build is `unavailable`**, with a reason
+that says so. The compressed file has the same lines, but the run names the
+plain one and a rebuilt view names the right one. Reasons carry an error
+code, never the message: the message holds the path.
+
+Measured: all 1,183 spans of the fixtures give an `ok` slice (5.1 s in all,
+the slowest 17 ms). A sample of 714 spans over the surveyed sessions, one of
+each kind and name per run, gives 714 `ok`, the slowest 1.1 s in a rollout
+of several hundred megabytes: a slice reads its file from the start, as the
+other sources do.
+
 ## Risks / Trade-offs
 
 - **[One machine, one OS, two clients]** → The parser is tolerant by

@@ -51,14 +51,46 @@ command that produces a session.
 ### Requirement: Transcript slices for Codex spans
 The transcript slice endpoint SHALL return the source record behind a Codex
 span from its provenance line, for plain and compressed rollouts, as
-role-labelled segments under the existing size cap. With redaction on it
-SHALL return `redacted` without opening the file.
+role-labelled segments under the existing size cap. Where that record is
+completed by a later one, the slice SHALL include it: the output handed back
+for a call the model made, and the person's prompt for a turn. With
+redaction on it SHALL return `redacted` without opening the file.
+
+A slice SHALL NOT show the account id, user id, repository URL or commit of
+a session record, nor an account's rate limits, and SHALL name binary data
+(an image, a generated file) instead of showing it.
 
 #### Scenario: Command span
 - GIVEN an unredacted Codex run and a command span
 - WHEN its transcript slice is requested
 - THEN the response is `ok` with the command and its output as labelled
   segments
+
+#### Scenario: Call answered in a later record
+- GIVEN a span read from a call the model made, whose output is a later
+  record with the same call id
+- WHEN its transcript slice is requested
+- THEN the response holds the call's arguments and that output, and no other
+  call's output
+
+#### Scenario: Turn span
+- GIVEN a turn whose first user message opens with a harness block followed
+  by what the person typed
+- WHEN the turn's transcript slice is requested
+- THEN the response is one segment labelled `user` with the person's text in
+  full and none of the harness block
+
+#### Scenario: Session span
+- GIVEN a session record that holds an account id, a user id, a repository
+  URL and a commit
+- WHEN the session span's transcript slice is requested
+- THEN the response shows the session's instructions and what it was run
+  with, and none of those four values
+
+#### Scenario: Generated image
+- GIVEN an action whose result is an image in base64
+- WHEN its transcript slice is requested
+- THEN the result segment reads `(not text)` and holds none of the data
 
 #### Scenario: Compressed rollout
 - GIVEN a span whose provenance file is a `.jsonl.zst` rollout

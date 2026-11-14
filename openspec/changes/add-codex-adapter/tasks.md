@@ -286,10 +286,17 @@ directly and the goldens test does not see `fixtures/codex` yet.
       the schema test validates (33 to 57), and the golden usage test's own
       list of tools that wait on the person, which lacked Codex's
       `request_user_input_async`.
-- [ ] 5.4 A Transcript slices (`transcript.ts`): a Codex branch that reads
+- [x] 5.4 A Transcript slices (`transcript.ts`): a Codex branch that reads
       the provenance line through the rollout reader and labels segments per
       record type. Verify: tests for every scenario of "Transcript slices
       for Codex spans" and the redaction short-circuit.
+      Done (design T15): a call's slice goes on to its output record and a
+      turn's to the person's prompt; a session record shows no account id,
+      user id, repository URL or commit; base64 of 512 characters or more
+      reads `(not text)`. The spec gained four scenarios for these. All
+      1,183 spans of the fixtures give an `ok` slice, and so does a sample
+      of 714 spans of the surveyed sessions (slowest 1.1 s); the endpoint
+      was checked through the live server on `fixtures/codex`.
 - [ ] 5.5 A Bench and budget: a `pnpm bench` row for parsing a large Codex
       rollout (machine-local `fixtures/codex/large`, git-ignored like the
       Claude Code one, with its README). Verify: the row prints and the

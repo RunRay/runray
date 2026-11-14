@@ -449,7 +449,7 @@ function agentNameOf(source: unknown): string {
  */
 const HARNESS_BLOCK = /^<\/?([a-z]+(?:[_-][a-z]+)+|image)[\s>]/;
 
-function personText(part: string): string | undefined {
+export function personText(part: string): string | undefined {
   let rest = part.trim();
   for (;;) {
     if (rest === '') return undefined;
@@ -674,7 +674,7 @@ function previewOf(text: string | undefined): string | undefined {
 
 /** The text of an output record: a string, or the text parts of a list
  * (an image part has none). */
-function outputTextOf(output: unknown): string | undefined {
+export function outputTextOf(output: unknown): string | undefined {
   if (typeof output === 'string') return output;
   if (!Array.isArray(output)) return undefined;
   let text: string | undefined;
