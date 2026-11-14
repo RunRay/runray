@@ -297,11 +297,21 @@ directly and the goldens test does not see `fixtures/codex` yet.
       1,183 spans of the fixtures give an `ok` slice, and so does a sample
       of 714 spans of the surveyed sessions (slowest 1.1 s); the endpoint
       was checked through the live server on `fixtures/codex`.
-- [ ] 5.5 A Bench and budget: a `pnpm bench` row for parsing a large Codex
+- [x] 5.5 A Bench and budget: a `pnpm bench` row for parsing a large Codex
       rollout (machine-local `fixtures/codex/large`, git-ignored like the
       Claude Code one, with its README). Verify: the row prints and the
       number is recorded in `docs/05-ARCHITECTURE.md` next to the other
       budgets.
+      Done: the row reads 0.29 s for 38 MB of text (130 MB/s) against the
+      budget of 20 MB/s. With no rollout in `fixtures/codex/large` the
+      bench makes one from `tool-errors` (`synthesizeCodex`: each copy
+      gets its own ids, later times and ordinals, and reads as new turns
+      and calls). A synthetic file has no large records, so the largest
+      real rollout of the surveyed machine was timed too: 150 MB on disk,
+      245 MB of text, a longest line of 9.3 MB, parsed in 2.2 s (111 MB/s)
+      at a peak RSS of 191 MB. Tests that scan the whole fixture folder
+      now leave `large` out, in core by listing the committed variants
+      and in the CLI through a hermetic copy (`codexFixtures()`).
 - [ ] 5.6 A User-facing docs for the new source: README, `docs/01-FEATURES.md`
       (Codex moves from V3 to supported), `docs/07-DATA-SOURCES.md`, the
       source lists in `CLAUDE.md` and `openspec/project.md`, and a changeset.

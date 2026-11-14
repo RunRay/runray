@@ -87,7 +87,10 @@ function rollouts(dir: string): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name !== 'raw') out.push(...rollouts(path)); // git-ignored input
+      // git-ignored: the unscrubbed input, and the machine-local perf
+      // fixture (fixtures/codex/large/README.md)
+      if (entry.name !== 'raw' && entry.name !== 'large')
+        out.push(...rollouts(path));
     } else if (ROLLOUT_FILE.test(entry.name)) out.push(path);
   }
   return out.sort();

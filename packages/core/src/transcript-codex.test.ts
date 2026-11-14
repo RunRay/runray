@@ -1,6 +1,7 @@
 import {
   copyFileSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   unlinkSync,
@@ -35,9 +36,15 @@ const SIMPLE = join(
 const tmp = mkdtempSync(join(tmpdir(), 'runray-codex-slice-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
-async function parseAll(root: string): Promise<RawRun[]> {
+/** The committed variant folders: `large` is a machine-local perf fixture. */
+const committedVariants = (): string[] =>
+  readdirSync(fixtures, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== 'large')
+    .map((entry) => join(fixtures, entry.name));
+
+async function parseAll(...roots: string[]): Promise<RawRun[]> {
   const runs: RawRun[] = [];
-  for (const candidate of await codexAdapter.detect([root]))
+  for (const candidate of await codexAdapter.detect(roots))
     runs.push(await codexAdapter.parse(candidate, { redact: false }));
   return runs;
 }
@@ -82,7 +89,7 @@ describe('transcript slices of Codex spans, on the fixtures', () => {
 
   it('serves every kind of span of every fixture, each segment labelled and none empty', async () => {
     const seen = new Set<string>();
-    for (const run of await parseAll(fixtures)) {
+    for (const run of await parseAll(...committedVariants())) {
       // one span of each kind and name per run: every shape, a short test
       const perRun = new Set<string>();
       for (const span of run.spans) {

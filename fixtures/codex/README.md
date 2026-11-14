@@ -32,6 +32,10 @@ of the machine it runs on, which is the machine that captured it.
 
 About 18 MB together.
 
+A seventh folder, `large`, holds no committed rollout: it is where the bench
+keeps its machine-local perf fixture (`large/README.md`). Tests, goldens and
+the checker of this folder skip it.
+
 ## What the compaction records showed
 
 Design question: does a compaction request have its own usage record, or

@@ -5,26 +5,42 @@ import { fileURLToPath } from 'node:url';
 import type { TestProject } from 'vitest/node';
 
 /**
- * Hermetic copy of the committed claude-code fixtures for tests that scan the
- * whole directory (the CLI e2e suites). Only files git tracks are copied, so
- * nothing machine-local leaks in: not the perf fixture in `large/` (tens of
- * MB, git-ignored, see its README; scanning it doubled the CLI e2e time on
- * machines that have it, never in CI), not the raw sessions under a `raw/`
- * folder, not a freshly scrubbed fixture that isn't committed yet. Any of
- * those adds a run that differs per machine. Copied once per vitest run
- * (~24 MB, well under a second) under node_modules/.cache, so paths keep the
- * same shape as in the repo, and removed on teardown. Tests read it with
- * `claudeCodeFixtures()` from packages/cli/src/test-fixtures.ts.
+ * Hermetic copies of the committed claude-code and codex fixtures for tests
+ * that scan a whole source directory (the CLI e2e suites). Only files git
+ * tracks are copied, so nothing machine-local leaks in: not the perf fixture
+ * in `large/` (tens of MB, git-ignored, see its README; scanning it doubled
+ * the CLI e2e time on machines that have it, never in CI), not the raw
+ * sessions under a `raw/` folder, not a freshly scrubbed fixture that isn't
+ * committed yet. Any of those adds a run that differs per machine. Copied
+ * once per vitest run (~40 MB, well under a second) under
+ * node_modules/.cache, so paths keep the same shape as in the repo, and
+ * removed on teardown. Tests read them with `claudeCodeFixtures()` and
+ * `codexFixtures()` from packages/cli/src/test-fixtures.ts.
  */
 export default function setup(project: TestProject): () => void {
   const repoRoot = fileURLToPath(new URL('.', import.meta.url));
-  const source = join(repoRoot, 'fixtures', 'claude-code');
   const cacheDir = join(repoRoot, 'node_modules', '.cache');
   mkdirSync(cacheDir, { recursive: true });
   // unique per run: two vitest processes in one checkout must not collide
   const runDir = mkdtempSync(join(cacheDir, 'runray-fixtures-'));
-  const target = join(runDir, 'claude-code');
-  const files = trackedFixtures(repoRoot, 'fixtures/claude-code');
+  project.provide(
+    'claudeCodeFixtures',
+    copyCommitted(repoRoot, runDir, 'claude-code'),
+  );
+  project.provide('codexFixtures', copyCommitted(repoRoot, runDir, 'codex'));
+  return () => rmSync(runDir, { recursive: true, force: true });
+}
+
+/** Copies the committed fixtures of one source into `runDir` and returns
+ * the copy's path. */
+function copyCommitted(
+  repoRoot: string,
+  runDir: string,
+  sourceId: string,
+): string {
+  const source = join(repoRoot, 'fixtures', sourceId);
+  const target = join(runDir, sourceId);
+  const files = trackedFixtures(repoRoot, `fixtures/${sourceId}`);
   if (files === undefined) {
     // no git (a source archive): copy the tree minus the git-ignored parts
     cpSync(source, target, {
@@ -41,8 +57,7 @@ export default function setup(project: TestProject): () => void {
       cpSync(join(source, file), to);
     }
   }
-  project.provide('claudeCodeFixtures', target);
-  return () => rmSync(runDir, { recursive: true, force: true });
+  return target;
 }
 
 /**

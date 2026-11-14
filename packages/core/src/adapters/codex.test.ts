@@ -351,6 +351,14 @@ describe('codex detect', () => {
   });
 });
 
+/** The committed variant folders. `large` is the machine-local perf fixture
+ * (see its README): a rollout of any thread, or none, depending on the
+ * machine, so no test may scan it. */
+const committedVariants = (): string[] =>
+  readdirSync(fixtures, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== 'large')
+    .map((entry) => join(fixtures, entry.name));
+
 describe('codex detect on the fixtures', () => {
   const inVariant = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -404,16 +412,14 @@ describe('codex detect on the fixtures', () => {
   it('leaves no rollout for the Claude Code adapter, in the set or in any variant folder', async () => {
     // Claude Code scans a root and the folders right under it for `.jsonl`
     // files, which is where `compaction`, `simple` and `legacy` keep theirs
-    const variants = readdirSync(fixtures, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => join(fixtures, entry.name));
+    const variants = committedVariants();
     expect(variants.length).toBeGreaterThan(4);
     for (const root of [fixtures, ...variants])
       expect(await claudeCodeAdapter.detect([root]), root).toEqual([]);
   });
 
   it('over the whole set: seven candidates, simple and zstd counted once, from the plain file', async () => {
-    const candidates = (await detect(fixtures)).filter(
+    const candidates = (await detect(...committedVariants())).filter(
       (c) => !c.runRef.includes(`${sep}raw${sep}`),
     );
     expect(candidates).toHaveLength(7);

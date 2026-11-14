@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { codexAdapter } from '../adapters/codex.js';
@@ -23,7 +25,11 @@ const fixtures = fileURLToPath(
 
 async function modelsOfCodexFixtures(): Promise<string[]> {
   const models = new Set<string>();
-  for (const candidate of await codexAdapter.detect([fixtures])) {
+  // the committed variants: `large` is a machine-local perf fixture
+  const variants = readdirSync(fixtures, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name !== 'large')
+    .map((entry) => join(fixtures, entry.name));
+  for (const candidate of await codexAdapter.detect(variants)) {
     const run = await codexAdapter.parse(candidate, { redact: true });
     for (const span of run.spans)
       if (span.llm !== undefined) models.add(span.llm.model);

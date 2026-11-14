@@ -23,7 +23,7 @@ import {
 } from './discover.js';
 import { SETUP_GUIDES_TEXT } from './onboarding.js';
 import { createProgram } from './program.js';
-import { claudeCodeFixtures } from './test-fixtures.js';
+import { claudeCodeFixtures, codexFixtures } from './test-fixtures.js';
 
 /**
  * Codex as a source of the CLI (add-codex-adapter 5.2): registered after
@@ -31,11 +31,10 @@ import { claudeCodeFixtures } from './test-fixtures.js';
  * zero-config roots, and named in the setup guides.
  */
 
-const codexFixtures = fileURLToPath(
-  new URL('../../../fixtures/codex', import.meta.url),
-);
+// one committed file, read where it lies; whole-folder scans go through
+// codexFixtures(), which leaves the machine-local perf fixture out
 const SIMPLE = join(
-  codexFixtures,
+  fileURLToPath(new URL('../../../fixtures/codex', import.meta.url)),
   'simple',
   'rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl',
 );
@@ -76,7 +75,7 @@ describe('the adapter registry', () => {
 describe('a folder of Codex rollouts, no source filter', () => {
   it('lists each session once as a Codex run, with nothing skipped', async () => {
     const { traceFile, errors, candidatesScanned } = await build([
-      codexFixtures,
+      codexFixtures(),
     ]);
     // simple and zstd are one thread stored twice: one candidate, one run
     expect(candidatesScanned).toBe(7);
@@ -133,7 +132,7 @@ describe('a folder of Codex rollouts, no source filter', () => {
 
 describe('--source codex', () => {
   it('limits discovery to Codex among sessions of two agents', async () => {
-    const paths = [claudeCodeFixtures(), codexFixtures];
+    const paths = [claudeCodeFixtures(), codexFixtures()];
     const both = await build(paths);
     const tools = new Set(both.traceFile.runs.map((r) => r.source.tool));
     expect(tools).toEqual(new Set(['claude-code', 'codex']));
@@ -190,7 +189,7 @@ describe('--source codex', () => {
         'node',
         'runray',
         'list',
-        codexFixtures,
+        codexFixtures(),
         '--source',
         'codex',
         '--json',
