@@ -118,6 +118,12 @@ SHALL be `in_progress`.
 - WHEN it is parsed without redaction
 - THEN the turn's `promptPreview` is the start of the person's prompt
 
+#### Scenario: Reviewer turn has no prompt
+- GIVEN a turn of an approval-reviewer thread, whose user message is the
+  review request the harness wrote
+- WHEN it is parsed without redaction
+- THEN the turn has no `promptPreview`
+
 #### Scenario: Rollout with no turn
 - GIVEN a root rollout that holds only its first record
 - WHEN discovery reaches it
@@ -357,8 +363,9 @@ parent is among the scanned files. It SHALL appear in the parent's run as one
 turn its first turn names: in its turn attribution, or else, for a child of
 the root thread, as its root turn. A child whose first turn names no turn
 SHALL be attached to the one parent turn that was running when that turn
-began. A child for which no parent turn is found SHALL be attached to the
-session span with a run warning. The approval reviewer SHALL be named
+began. A child for which no parent turn is found SHALL be attached to its
+parent thread's own span, which for a child of the root thread is the
+session span, with a run warning. The approval reviewer SHALL be named
 `subagent:guardian`.
 
 #### Scenario: Reviewer thread
@@ -414,6 +421,19 @@ session span with a run warning. The approval reviewer SHALL be named
 - WHEN the parent is parsed
 - THEN the subagent span hangs from the session span and the run carries a
   warning naming the child
+
+#### Scenario: Child of a child with no turn found
+- GIVEN a child of a reviewer thread whose first turn names no turn and
+  began while no turn of the reviewer was running
+- WHEN the root is parsed
+- THEN its subagent span hangs from the reviewer's subagent span and the run
+  carries a warning naming it
+
+#### Scenario: Parent turn left open
+- GIVEN a parent that started turn A, never closed it and started turn B,
+  and a child whose first turn names no turn and began during B
+- WHEN the parent is parsed
+- THEN the subagent span hangs from B and the run carries no warning
 
 ### Requirement: Codex content and identifiers stay in the parser
 With redaction on, prompt, output and error previews of a Codex run SHALL be

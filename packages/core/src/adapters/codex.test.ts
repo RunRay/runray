@@ -4163,15 +4163,19 @@ describe('codex child threads', () => {
     expect(normalize(priceRun(raw)).totals.tokens.total).toBe(220 + 1_050);
   });
 
+  /** A child thread asked one thing, which it answered. */
+  const askedChild = (source: unknown) => [
+    childMeta(0, CHILD, { source }),
+    startedFrom(35, TURN_R, { root: TURN_B }),
+    userMessage(35, 'May the agent run rm -rf build?'),
+    assistantMessage(36, 'Yes: build is generated output.'),
+    usageRecord(37, TURN_R, 'resp_review_1'),
+    completed(38, TURN_R),
+  ];
+  const WORKER = { subagent: { thread_spawn: { depth: 1 } } };
+
   it('redacts a child thread as it does its parent', async () => {
-    const lines = [
-      childMeta(0),
-      startedFrom(35, TURN_R, { root: TURN_B }),
-      userMessage(35, 'May the agent run rm -rf build?'),
-      assistantMessage(36, 'Yes: build is generated output.'),
-      usageRecord(37, TURN_R, 'resp_review_1'),
-      completed(38, TURN_R),
-    ];
+    const lines = askedChild(WORKER);
     const open = await parseThreads(twoTurnRoot(), [[CHILD, lines]]);
     const openById = new Map(open.raw.spans.map((s) => [s.id, s]));
     expect(openById.get(TURN_R)?.content?.promptPreview).toBe(
@@ -4187,6 +4191,114 @@ describe('codex child threads', () => {
     expect(byId.get('resp_review_1')?.content).toEqual({ outputPreview: null });
     expect(byId.get(CHILD)).not.toHaveProperty('content');
     expect(JSON.stringify(raw)).not.toContain('rm -rf');
+  });
+
+  it('gives a turn of the reviewer no prompt preview: the harness wrote what it was asked', async () => {
+    const lines = askedChild(GUARDIAN);
+    const { raw } = await parseThreads(twoTurnRoot(), [[CHILD, lines]]);
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    expect(byId.get(TURN_R)).not.toHaveProperty('content');
+    expect(JSON.stringify(raw.spans)).not.toContain('rm -rf');
+    // what the reviewer answered is the model's, and stays
+    expect(byId.get('resp_review_1')?.content?.outputPreview).toBe(
+      'Yes: build is generated output.',
+    );
+    // a redacted parse still writes null on every turn
+    const redacted = await parseThreads(twoTurnRoot(), [[CHILD, lines]], true);
+    expect(redacted.raw.spans.find((s) => s.id === TURN_R)?.content).toEqual({
+      promptPreview: null,
+    });
+
+    // the same thread read as a run of its own, its parent not scanned
+    const alone = rollout(tempDir(), CHILD, { text: `${lines.join('\n')}\n` });
+    const own = await codexAdapter.parse(candidateOf(alone), {
+      redact: false,
+    });
+    expect(turnsOf(own)[0]).not.toHaveProperty('content');
+  });
+
+  it('moves the start of a subagent span back over a call its file records before its first turn', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          usageRecord(33, undefined, 'resp_early'),
+          startedFrom(35, TURN_R, { root: TURN_B }),
+          completed(38, TURN_R),
+        ],
+      ],
+    ]);
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    const early = byId.get('resp_early');
+    expect(early).toMatchObject({ kind: 'llm_call', parentId: CHILD });
+    expect(byId.get(CHILD)).toMatchObject({
+      startedAt: early?.startedAt,
+      endedAt: at(38),
+    });
+    expect(byId.get(CHILD)?.durationMs).toBe(
+      Date.parse(at(38)) - Date.parse(early?.startedAt ?? ''),
+    );
+    // the session starts with its file, whatever is under it
+    expect(raw.spans[0]).toMatchObject({ kind: 'session', startedAt: at(0) });
+  });
+
+  it('counts a turn its parent never closed as over once the next one started', async () => {
+    const { raw } = await parseThreads(
+      [
+        sessionMeta(0),
+        started(1, TURN_A),
+        started(30, TURN_B),
+        completed(50, TURN_B),
+      ],
+      [[CHILD, reviewer(35)]],
+    );
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(TURN_B);
+  });
+
+  it('attaches a child of a child with no turn to hang on to its parent thread, with a warning', async () => {
+    const { raw, files } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { root: TURN_B })],
+      [
+        GRANDCHILD,
+        [
+          childMeta(0, GRANDCHILD, { parent_thread_id: CHILD }),
+          // the reviewer's one turn ran from second 35 to 38
+          startedFrom(45, TURN_Q),
+          completed(46, TURN_Q),
+        ],
+      ],
+    ]);
+    expect(raw.spans.find((s) => s.id === GRANDCHILD)).toMatchObject({
+      kind: 'subagent',
+      parentId: CHILD,
+    });
+    expect(raw.warnings).toEqual([
+      {
+        message: `child thread ${GRANDCHILD} attached to thread ${CHILD}: it names no turn, and no single turn of its parent was running when it began`,
+        file: files[2],
+      },
+    ]);
+    // its parent's span covers it
+    expect(raw.spans.find((s) => s.id === CHILD)?.endedAt).toBe(at(46));
+  });
+
+  it('reports a child path that is a folder by the error code', async () => {
+    const dir = tempDir();
+    const rootFile = rollout(dir, ROOT, {
+      text: `${twoTurnRoot().join('\n')}\n`,
+    });
+    const folder = join(dir, `rollout-2026-10-13T09-00-01-${CHILD}.jsonl`);
+    mkdirSync(folder);
+    const raw = await codexAdapter.parse(
+      candidateOf(rootFile, [rootFile, folder]),
+      { redact: false },
+    );
+    expect(raw.warnings).toEqual([
+      { message: 'child thread not read: EISDIR', file: folder },
+    ]);
+    expect(turnsOf(raw)).toHaveLength(2);
   });
 
   it('reads a child given on its own as a run of its own, under a session span', async () => {
@@ -4235,6 +4347,8 @@ describe('codex content and identifiers', () => {
     'MCP-RESULT-SENTINEL',
     'SEARCH-SENTINEL',
     'REVIEW-INSTRUCTIONS-SENTINEL',
+    // what the reviewer is asked is the harness's text, not a prompt
+    'REVIEW-PROMPT-SENTINEL',
   ];
   /** In an open run and in no redacted one: the previews, and the file a
    * change was made to. */
@@ -4243,7 +4357,6 @@ describe('codex content and identifiers', () => {
     'ANSWER-SENTINEL',
     'FAILURE-SENTINEL',
     'target-sentinel.ts',
-    'REVIEW-PROMPT-SENTINEL',
     'REVIEW-ANSWER-SENTINEL',
   ];
   const TARGET = 'C:\\work\\billing-portal\\src\\target-sentinel.ts';

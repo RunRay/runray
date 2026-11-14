@@ -10,10 +10,15 @@ import type {
   SourceAdapter,
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
-import { isCompressedRollout, readRolloutLines } from '../rollout-lines.js';
+import {
+  isCompressedRollout,
+  isZstdUnavailable,
+  readRolloutLines,
+} from '../rollout-lines.js';
 import { HARNESS_TOOLS } from '../tools/registry.js';
 import type { ShellDialect } from '../tools/shell.js';
 import { errorPreview } from './error-preview.js';
+import { durationBetween, extendContainers } from './span-time.js';
 import { toolTargetAttributes } from './target.js';
 import { guessShellDialect, shellScriptAttributes } from './usage.js';
 
@@ -289,6 +294,14 @@ async function detect(roots: string[]): Promise<Candidate[]> {
 // parse()
 // ---------------------------------------------------------------------------
 
+/** The file is not a rollout. `parse()` refuses a root for it; for a
+ * child's file it is a run warning. */
+class NotARollout extends Error {
+  constructor(why: string) {
+    super(`not a Codex rollout: ${why}`);
+  }
+}
+
 interface ParseContext {
   spans: RawSpan[];
   warnings: RunWarning[];
@@ -388,15 +401,6 @@ function timeOf(record: Json): string | undefined {
   if (ISO_UTC_MS.test(raw)) return raw;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;
-}
-
-function durationBetween(
-  startedAt: string,
-  endedAt: string | undefined,
-): number | undefined {
-  if (endedAt === undefined) return undefined;
-  const ms = Date.parse(endedAt) - Date.parse(startedAt);
-  return Number.isFinite(ms) ? Math.max(0, ms) : undefined;
 }
 
 /** The last segment of a working directory, whichever separator it uses:
@@ -1234,6 +1238,10 @@ async function emitThread(
   let latest: TurnState | undefined;
 
   let provider = 'unknown';
+  /** The approval reviewer's thread: what its turns are asked is written by
+   * the harness, never by a person (4 fixed texts over 1,764 turns), so no
+   * turn of it has a prompt to preview. */
+  let reviewer = false;
   /** The thread works in a Windows directory (a drive or a UNC path). */
   let windows = false;
   /** `turn_context` names the model of a turn, and may do so again. */
@@ -1377,16 +1385,18 @@ async function emitThread(
 
     if (session === undefined || summary === undefined) {
       if (type !== 'session_meta' || payload === undefined) {
-        throw new Error(
-          'not a Codex rollout: its first record is not a session_meta record',
-        );
+        throw new NotARollout('its first record is not a session_meta record');
       }
       // the id comes from the record; the name is a fallback for a record
       // without one, so the run still has a stable identity
       const threadId =
         str(payload.id) ?? basename(file).replace(/\.jsonl(\.zst)?$/i, '');
       const git = isObj(payload.git) ? payload.git : undefined;
-      const agent = child ? agentNameOf(payload.source) : undefined;
+      // what the thread is holds whether it is read as a child or, with its
+      // parent not scanned, as a run of its own
+      const kind = agentNameOf(payload.source);
+      reviewer = kind === 'guardian';
+      const agent = child ? kind : undefined;
       session = {
         id: threadId,
         parentId: null, // a child's is set once its parent thread is known
@@ -1660,7 +1670,8 @@ async function emitThread(
         } else if (
           payload.role === 'user' &&
           current !== undefined &&
-          !current.prompted
+          !current.prompted &&
+          !reviewer
         ) {
           const prompt = promptOf(payload);
           if (prompt !== undefined) {
@@ -1777,7 +1788,7 @@ async function emitThread(
     // an empty file is Codex's own, created and not yet written to; a file
     // with text and no record in it is something else under a rollout name
     if (!sawText) throw new NoSessionYet('empty Codex rollout');
-    throw new Error('not a Codex rollout: no line of it is a JSON record');
+    throw new NotARollout('no line of it is a JSON record');
   }
   // A child's span starts with its first turn, not with its file: the
   // reviewer's thread is opened long before it is first consulted, and
@@ -1918,14 +1929,18 @@ function anchorOf(
     return { why: 'the turn it names is not in its parent thread' };
   }
   const began = first?.startedAt;
+  // in the order they were started; a turn the file never closed stopped
+  // running, at the latest, when the next one started
+  const turns = [...parent.turnSpans.values()];
   const running =
     began === undefined
       ? []
-      : [...parent.turnSpans.values()].filter(
-          (turn) =>
-            turn.startedAt <= began &&
-            (turn.endedAt === undefined || began <= turn.endedAt),
-        );
+      : turns.filter((turn, index) => {
+          if (turn.startedAt > began) return false;
+          if (turn.endedAt !== undefined) return began <= turn.endedAt;
+          const next = turns[index + 1];
+          return next === undefined || began < next.startedAt;
+        });
   const [turn] = running;
   return turn !== undefined && running.length === 1
     ? { turn }
@@ -1935,15 +1950,20 @@ function anchorOf(
 }
 
 /**
- * Why a file could not be read, in words that are safe in a run. A system
- * error's message names the path it failed on, and a warning's message is
- * kept as written by redaction and by the sanitizer, which replace only its
- * `file`. So a system error gives its code (`ENOENT`), and only an error
- * raised by this reader gives its message.
+ * Why a file could not be read, in words that are safe in a run; nothing
+ * when the error is not about the file at all. A system error's message
+ * names the path it failed on, and a warning's message is kept as written
+ * by redaction and by the sanitizer, which replace only its `file`. So a
+ * system error (`ENOENT`, a zlib code) gives its code, and only the two
+ * refusals of this reader give their message. A Node error whose code
+ * begins with `ERR_` reports a wrong call, which is a defect here.
  */
-function unreadableBecause(err: unknown): string {
-  if (isObj(err) && typeof err.code === 'string') return err.code;
-  return err instanceof Error ? err.message : 'unreadable';
+function unreadableBecause(err: unknown): string | undefined {
+  if (err instanceof NotARollout || isZstdUnavailable(err)) return err.message;
+  const code = isObj(err) ? err.code : undefined;
+  return typeof code === 'string' && !code.startsWith('ERR_')
+    ? code
+    : undefined;
 }
 
 /**
@@ -1977,13 +1997,14 @@ async function emitChildren(
     try {
       child = await emitThread(file, own, true);
     } catch (err) {
-      // the root's file failing is the run failing; a child's is a gap in it
-      if (!(err instanceof NoSessionYet)) {
-        ctx.warnings.push({
-          message: `child thread not read: ${unreadableBecause(err)}`,
-          file,
-        });
-      }
+      if (err instanceof NoSessionYet) continue;
+      // The root's file failing is the run failing; a child's file that
+      // cannot be read is a gap in it. Any other error is a defect of this
+      // reader and fails the run, as it would in the root's file: a warning
+      // would hide it behind missing tokens.
+      const reason = unreadableBecause(err);
+      if (reason === undefined) throw err;
+      ctx.warnings.push({ message: `child thread not read: ${reason}`, file });
       continue;
     }
     // the same thread twice (a copy of a file) is read once
@@ -2050,34 +2071,6 @@ async function emitChildren(
   }
 }
 
-/**
- * A session and a subagent end no earlier than what happened under them,
- * as in the Claude Code adapter. A child thread can outlast the last record
- * of its parent's file, and an action's own end time can fall after the
- * record that reports it. Turns are left as the rollout brackets them.
- */
-function extendContainers(spans: RawSpan[]): void {
-  const byId = new Map(spans.map((s) => [s.id, s]));
-  for (const span of spans) {
-    const end = span.endedAt ?? span.startedAt;
-    // rollouts cannot build a cycle; the bound is for a tree that did
-    let parentId = span.parentId;
-    for (let depth = 0; parentId !== null && depth < 64; depth++) {
-      const parent = byId.get(parentId);
-      if (parent === undefined) break;
-      if (
-        (parent.kind === 'subagent' || parent.kind === 'session') &&
-        (parent.endedAt ?? parent.startedAt) < end
-      ) {
-        parent.endedAt = end;
-        const durationMs = durationBetween(parent.startedAt, end);
-        if (durationMs !== undefined) parent.durationMs = durationMs;
-      }
-      parentId = parent.parentId;
-    }
-  }
-}
-
 async function parse(
   candidate: Candidate,
   opts: ParseOptions,
@@ -2090,7 +2083,16 @@ async function parse(
     throw new NoSessionYet('Codex rollout with no turn yet');
   }
   await emitChildren(candidate, thread, ctx);
-  extendContainers(ctx.spans);
+  // A session and a subagent end no earlier than what happened under them:
+  // a child thread can outlast the last record of its parent's file, and an
+  // action's own end time can fall after the record that reports it. A
+  // subagent also starts no later: its span opens with the thread's first
+  // turn, and a file may hold a call recorded before that. The session
+  // starts with its file, and turns stay as the rollout brackets them.
+  extendContainers(
+    ctx.spans,
+    (_span, container) => container.kind === 'subagent',
+  );
   return {
     source: {
       tool: 'codex',

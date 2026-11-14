@@ -184,7 +184,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       (a design and spec change the maintainer signs off).
       Done with `root_turn_id` as the second source (signed off), and with
       two things the survey of all 183 child threads added, both in the
-      spec delta and both still the maintainer's to confirm. A third
+      spec delta and both accepted by the maintainer. A third
       source: 28 of the 147 threads that ran name no turn at all, and each
       of their 249 turns began while exactly one turn of its parent was
       running, so such a thread goes under that turn; a thread that names a
@@ -216,6 +216,16 @@ directly and the goldens test does not see `fixtures/codex` yet.
       or project name is in a sanitized run. A commit hash is in two open
       previews, because the model and `git` printed it; nothing reads it
       from `session_meta`.
+      Review of group 4, fixed in one commit after 4.2: a turn of the
+      reviewer's thread has no prompt preview (1,764 of 1,765 had the
+      harness's request as one, 4 fixed texts); a subagent span starts no
+      later than what is under it; the clock anchor treats a turn the parent
+      never closed as over once the next one started; only a child file
+      that cannot be read is a warning, and a defect of the reader fails the
+      run; the container walk is shared with the Claude Code adapter
+      (`adapters/span-time.ts`); and the spec says a child with no turn
+      found hangs on its parent thread's span. Left as it is: child files
+      are read one after another (250 files parse in 13 s).
 
 ## 5. Pipeline integration (Codex goldens missing between 5.2 and 5.3)
 

@@ -399,6 +399,15 @@ person's. Measured over the 639 turns of the 67 root threads: 627 get a
 preview, and the 12 without one hold only a `<send_user_message_question_reply>`
 block. Records outside any turn attach to the session span.
 
+A turn of the approval reviewer's thread has no `promptPreview`. Its user
+message is the review request, which the harness assembles from the parent's
+transcript and opens with plain text, so the tag test lets it through: 1,764
+of the 1,765 reviewer turns got a preview, and the previews are 4 fixed
+texts. No person wrote any of them. The thread is known by its source
+(T10), whether it is read as a child or, with its parent not scanned, as a
+run of its own; a child of any other kind keeps its prompt, which there is
+the task its parent gave it.
+
 ### T7 — Attributing actions to calls
 
 A model-level call is any `response_item` whose type ends in `_call` and
@@ -663,7 +672,8 @@ this order.
    id is a turn of the root, so it says nothing about a parent that is itself
    a child.
 3. When the first turn names neither: the one turn of the parent that was
-   running as it began.
+   running as it began. A turn the parent's file never closed counts as
+   over once the parent started its next one.
 
 Releases differ in what they write. Of the 147 child threads with a turn, 22
 carry both ids (they agree on all 318 turns), 97 only `root_turn_id`, and 28
@@ -678,7 +688,10 @@ names none and began while no turn or several were running, and a parent
 thread that is not in the run. A child that names a turn its parent lacks is
 not placed by the clock: what it says is wrong, and that is worth a warning,
 not a guess. A child file that cannot be read is a warning too, and the rest
-of the run stands.
+of the run stands: a file the system cannot open, a compressed one on a
+runtime without zstd, or one that is not a rollout. Any other error while
+reading a child is a defect of the reader and fails the run, as it would in
+the root's file; a warning would hide it behind missing tokens.
 
 Ids are unique within a rollout and, in what was surveyed, across a parent
 and its children (no turn, response, call or item id of a child is also its
@@ -686,8 +699,13 @@ parent's). A child's span whose id the run already holds takes the child's
 thread id in front.
 
 Session and subagent spans are extended to end no earlier than what is under
-them, as in the Claude Code adapter. Turns are left as the rollout brackets
-them, so a reviewer's span can end after the turn it hangs on (D2).
+them, by the walk the Claude Code adapter uses (`adapters/span-time.ts`,
+shared by the two). A subagent span is also moved back to start no later
+than what is under it: it opens with the thread's first turn, and a file may
+record a call before that turn (none of the 147 does). The session starts
+with its file, since a start computed from a duration must not move it.
+Turns are left as the rollout brackets them, so a reviewer's span can end
+after the turn it hangs on (D2).
 
 ### T11 — What never leaves the parser
 
@@ -703,6 +721,8 @@ bodies, or outputs. `project.path` is `cwd` and `project.gitBranch` is
 start of what a person, the model or a failed tool wrote, and can hold
 anything they wrote: a commit hash is in two open previews of the 67 runs
 surveyed, printed by the model and by `git`. That is what redaction nulls.
+Text the harness wrote is not a preview: its context blocks are skipped, and
+the reviewer's request is never taken (T6).
 
 A redacted parse writes `promptPreview: null` on every turn and
 `outputPreview: null` on every model call, and an open parse writes a
