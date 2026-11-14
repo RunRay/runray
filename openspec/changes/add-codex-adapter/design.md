@@ -574,10 +574,14 @@ string is ids, timestamps and about 140 enum, tool, model and version values.
 - **[zstd is experimental in Node]** → It is read-only use of a stable
   format behind feature detection; a removal would surface as the D5 error,
   not as wrong data.
-- **[Context compaction]** → 26 of 33 `compacted` records directly follow a
-  usage record, which suggests the compaction request is counted like any
-  response. Confirmed or refuted on the compaction fixture (task 1.4); if
-  refuted, its usage is read from `latest_token_usage_record`.
+- **[Context compaction]** → Settled in task 1.4. Of 111 `compacted`
+  records that name a `compaction_response_id`, 106 have a
+  `token_usage_record` with that `response_id` directly before them, in the
+  running turn: a compaction is one more response and one more `llm_call`.
+  The other 5 open a reviewer thread with history the parent compacted;
+  their usage record is in the parent's file, so
+  `latest_token_usage_record` is never read (it would count those tokens
+  twice). Both kinds are in the fixtures.
 - **[Reviewer cost is invisible]** → `codex-auto-review` is unpriced, so a
   run's dollar total excludes it while its tokens are shown. The coverage
   warning names the model.

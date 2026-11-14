@@ -46,7 +46,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       asserting no input path, account id or repository URL survives, that
       line counts of a diff are equal before and after, and that a scrubbed
       file carries the `SCRUBBED` marker as its first line in both forms.
-- [ ] 1.4 A Capture fixtures under `fixtures/codex/` from real rollouts:
+- [x] 1.4 A Capture fixtures under `fixtures/codex/` from real rollouts:
       `simple` (plain), `zstd` (compressed), `guardian` (root plus reviewer
       children), `tool-errors` (failed command, failed change, failed script,
       interrupted turn, turn ended by an API error), `legacy` (CLI 0.47
