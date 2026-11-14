@@ -520,6 +520,24 @@ function verifyBlock(secrets: Secrets, outPath: string): void {
   console.log(`  - the ${MARKER} marker is present in every file`);
 }
 
+/** The Codex form of the block above. A rollout may be written compressed,
+ * and `grep` on a `.jsonl.zst` finds nothing whatever is inside it, so the
+ * check to run is the test that reads the files through the rollout reader. */
+function verifyCodexBlock(secrets: Secrets, outPath: string): void {
+  console.log('\nVERIFY BEFORE COMMITTING (docs/04-SAMPLE-LOGS.md §5):');
+  console.log('  pnpm vitest run scripts/codex-fixtures   # must pass');
+  console.log(
+    '  - it reads every rollout under fixtures/codex, compressed ones too, and',
+  );
+  console.log(
+    `    searches the new or changed ones for "${secrets.username}" and the host name`,
+  );
+  console.log(
+    `  - grep cannot see inside a .jsonl.zst; on a plain file: grep -ri "${secrets.username}" ${outPath}`,
+  );
+  console.log('  - read the scrubbed file yourself before committing it');
+}
+
 function walkFiles(dir: string): string[] {
   const out: string[] = [];
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -759,7 +777,7 @@ async function scrubCodex(
     const result = await scrubCodexFile(opts.input, outPath, secrets);
     console.log(`scrubbed ${basename(opts.input)} -> ${outPath}`);
     logCodexStats(result);
-    verifyBlock(secrets, outPath);
+    verifyCodexBlock(secrets, outPath);
     return;
   }
   const inRoot = resolve(opts.input);
@@ -787,7 +805,7 @@ async function scrubCodex(
     console.log('SKIPPED (not a rollout; never lands in git):');
     for (const s of skipped) console.log(`  - ${s.replace(/\\/g, '/')}`);
   }
-  verifyBlock(secrets, outRoot);
+  verifyCodexBlock(secrets, outRoot);
 }
 
 async function main(): Promise<void> {

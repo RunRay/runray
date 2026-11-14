@@ -14,7 +14,10 @@ holds only the start time and the thread id, both of which are also inside
 the file. `scripts/codex-fixtures.test.ts` reads these files on every test run
 and fails if any string in them is something other than lorem, an id, a
 timestamp, a canonical path, a harness line, the blob placeholder or an
-identifier under a structural key.
+identifier under a structural key, or if an object key is anything but an
+identifier or a canonical path. While a file here is new or changed against
+git, the same test also searches it for the OS user name and the host name
+of the machine it runs on, which is the machine that captured it.
 
 ## The set
 

@@ -319,6 +319,14 @@ record's ordinal. 1,443 of 9,037 `token_count` events repeat the previous
 total and are skipped; an event with `info: null` is skipped. When a file has
 usage records, `token_count` events are ignored.
 
+An event before the thread's first turn is never a call. Five child threads
+open with a `token_count` that carries the total and the last usage of their
+parent. All five have usage records, so the event is ignored today; in a
+child with none (its only turn aborted before a response) it would be read
+as a legacy call and count the parent's tokens twice. It sets the baseline
+the next event is compared with. No legacy rollout has an event there, so
+the 13 legacy files reconcile as before.
+
 ### T5 — Token conversion
 
 ```
@@ -532,8 +540,10 @@ would keep it.
   counts are the same before and after scrubbing.
 - **Wrappers.** Behind a known wrapper the program name, the flags before
   the script and the drive are kept, the directories of `argv[0]` are lorem
-  and the script is scrubbed. A legacy `apply_patch` argv keeps its name and
-  its patch keeps its shape. Any other argv is scrubbed element by element.
+  and the script is scrubbed. A flag is a dash and letters; a slash switch
+  (`/c`) is one only behind `cmd`, since under every other shell `/word` is
+  a path. A legacy `apply_patch` argv keeps its name and its patch keeps its
+  shape. Any other argv is scrubbed element by element.
 - **Call arguments.** A `function_call`'s JSON-encoded `arguments` is
   parsed, scrubbed and re-encoded: `command` as an argv or a script,
   `workdir` as a path, the parameter names of the built-in tools kept, any

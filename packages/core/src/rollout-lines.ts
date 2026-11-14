@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { pipeline } from 'node:stream';
 import * as zlib from 'node:zlib';
 import { type NumberedLine, splitLines } from './lines.js';
+import { stripBom } from './text.js';
 
 /**
  * Numbered lines of a Codex rollout, plain (`.jsonl`) or zstd-compressed
@@ -33,7 +34,6 @@ import { type NumberedLine, splitLines } from './lines.js';
  */
 
 const ZSTD_SUFFIX = '.zst';
-const BOM = '﻿';
 
 /** True when the file name says the rollout is zstd-compressed. */
 export function isCompressedRollout(file: string): boolean {
@@ -96,7 +96,7 @@ export async function* readRolloutLines(
   if (!isCompressedRollout(file)) {
     const source = createReadStream(file);
     try {
-      yield* stripBom(splitLines(source));
+      yield* withoutBom(splitLines(source));
     } finally {
       source.destroy();
     }
@@ -106,7 +106,7 @@ export async function* readRolloutLines(
   const createDecompress = zstdFactory();
   if (createDecompress === undefined) throw new ZstdUnavailableError();
   // one splitter over all frames: a line may begin in one and end in the next
-  yield* stripBom(splitLines(decompressFrames(file, createDecompress)));
+  yield* withoutBom(splitLines(decompressFrames(file, createDecompress)));
 }
 
 /** The decompressed bytes of every zstd frame in the file, in order. */
@@ -136,12 +136,11 @@ async function* decompressFrames(
   }
 }
 
-async function* stripBom(
+/** Line one without a leading byte-order mark (`text.ts` owns the rule). */
+async function* withoutBom(
   lines: AsyncIterable<NumberedLine>,
 ): AsyncGenerator<NumberedLine, void, undefined> {
   for await (const entry of lines) {
-    yield entry.line === 1 && entry.text.startsWith(BOM)
-      ? { line: 1, text: entry.text.slice(BOM.length) }
-      : entry;
+    yield entry.line === 1 ? { line: 1, text: stripBom(entry.text) } : entry;
   }
 }

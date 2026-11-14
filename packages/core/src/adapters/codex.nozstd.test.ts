@@ -14,6 +14,7 @@ vi.mock('node:zlib', async (importOriginal) => {
 });
 
 const { codexAdapter } = await import('./codex.js');
+const { isZstdUnavailable } = await import('../rollout-lines.js');
 
 const ROOT = '0199f3a0-0000-7000-8000-000000000001';
 const CHILD = '0199f3a0-0000-7000-8000-000000000002';
@@ -42,6 +43,20 @@ it('keeps a compressed rollout it cannot read as a candidate, and still groups t
     expect(candidates.map((c) => c.runRef)).toEqual([root, packed]);
     expect(candidates[0]?.files).toEqual([root, child]);
     expect(candidates[1]?.files).toEqual([packed]);
+
+    // parse() gives the reason discovery reports for the skipped file: one
+    // message naming the Node version that reads it, not a corrupt-file one
+    const [, compressed] = candidates;
+    if (compressed === undefined) throw new Error('unreachable');
+    const failure = await codexAdapter
+      .parse(compressed, { redact: false })
+      .then(
+        () => undefined,
+        (err: unknown) => err,
+      );
+    expect(isZstdUnavailable(failure)).toBe(true);
+    expect((failure as Error).message).toContain('needs Node 22.15 or later');
+    expect((failure as Error).message).toContain(process.versions.node);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

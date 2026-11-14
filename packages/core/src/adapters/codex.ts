@@ -284,15 +284,19 @@ interface TurnState {
   prompted: boolean;
 }
 
-const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+const ISO_UTC_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-/** A record's own time as the schema wants it. Codex writes ISO-8601 in UTC
- * with milliseconds; anything else that still parses is converted, and
- * anything that does not is no time at all. */
+/**
+ * A record's own time in the one form this file works with: ISO-8601, UTC,
+ * milliseconds. Codex writes exactly that (all 121,445 surveyed records).
+ * Anything else that still parses is converted to it, and anything that
+ * does not is no time at all. One form matters because times are compared
+ * as strings below: `…00Z` sorts after `…00.500Z`.
+ */
 function timeOf(record: Json): string | undefined {
   const raw = str(record.timestamp);
   if (raw === undefined) return undefined;
-  if (ISO_UTC.test(raw)) return raw;
+  if (ISO_UTC_MS.test(raw)) return raw;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;
 }
@@ -638,6 +642,11 @@ async function emitThread(
         const total = JSON.stringify(info.total_token_usage);
         if (total === lastThreadTotal) continue; // repeated: no new response
         lastThreadTotal = total;
+        // Before the first turn the counter is not this thread's work: a
+        // child thread opens with the total and the last usage its parent
+        // had reached. It is the baseline the next event is compared with,
+        // never a call, or the parent's tokens would be counted twice.
+        if (summary.turns === 0) continue;
         const ordinal = num(record.ordinal);
         legacyCalls.push(
           llmCall(

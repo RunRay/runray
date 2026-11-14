@@ -859,6 +859,40 @@ describe('codex parsing tolerates what it does not know', () => {
     });
   });
 
+  it('brings times of any precision to one form, so they order as times do', async () => {
+    const stamped = (timestamp: string, type: string, payload: unknown) =>
+      JSON.stringify({ timestamp, type, payload });
+    const { raw } = await parseLines([
+      stamped('2026-10-13T09:00:00Z', 'session_meta', { id: ROOT }),
+      // whole seconds, then microseconds half a second later: as strings
+      // `…05.500000Z` sorts before `…05Z`
+      stamped('2026-10-13T09:00:05Z', 'event_msg', {
+        type: 'task_started',
+        turn_id: TURN_A,
+      }),
+      stamped('2026-10-13T09:00:05.500000Z', 'response_item', {
+        type: 'function_call_output',
+        call_id: 'call_1',
+        output: 'ok',
+      }),
+      stamped('2026-10-13T09:00:06Z', 'token_usage_record', {
+        response_id: 'resp_1',
+        turn_id: TURN_A,
+        usage: { input_tokens: 1, output_tokens: 1 },
+      }),
+    ]);
+    const call = raw.spans.find((s) => s.kind === 'llm_call');
+    expect(call).toMatchObject({
+      startedAt: '2026-10-13T09:00:05.500Z',
+      endedAt: '2026-10-13T09:00:06.000Z',
+      durationMs: 500,
+    });
+    expect(raw.spans[0]).toMatchObject({
+      startedAt: '2026-10-13T09:00:00.000Z',
+      endedAt: '2026-10-13T09:00:06.000Z',
+    });
+  });
+
   it('reports a line that is not JSON as a warning with its line number, and keeps the run', async () => {
     const filler = Array.from({ length: 37 }, (_, i) =>
       rec(2, 'event_msg', { type: 'token_count', n: i }),
@@ -1476,6 +1510,38 @@ describe('codex legacy token events', () => {
     ]);
     expect(llmCallsOf(raw).map((s) => s.id)).toEqual(['resp_1', 'resp_2']);
     expect(normalize(priceRun(raw)).totals.tokens.total).toBe(220);
+  });
+
+  it('does not take the counter a child thread inherited for a call of its own', async () => {
+    // A reviewer thread opens with the total and the last usage its parent
+    // had reached. Here its only turn was aborted before any usage record
+    // was written, so the file has no usage records and reads as legacy.
+    const inherited = tokenCount(0, usageOf(90_000, 80_000, 900, 0), 4_195_005);
+    const { raw } = await parseLines([
+      sessionMeta(0, { parent_thread_id: ABSENT }),
+      inherited,
+      started(1, TURN_A),
+      turnContext(1, 'codex-auto-review', TURN_A),
+      inherited, // written again inside the turn: still no new response
+      aborted(3, TURN_A, 'interrupted'),
+    ]);
+    expect(llmCallsOf(raw)).toEqual([]);
+    expect(turnsOf(raw)).toHaveLength(1);
+    expect(normalize(priceRun(raw)).totals.tokens.total).toBe(0);
+  });
+
+  it('counts from the inherited total on: the first event that moves it is a call', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0, { parent_thread_id: ABSENT }),
+      tokenCount(0, usageOf(90_000, 80_000, 900, 0), 4_195_005),
+      started(1, TURN_A),
+      turnContext(1, 'codex-auto-review', TURN_A),
+      tokenCount(3, usageOf(1_000, 0, 100, 0), 4_196_105),
+      completed(4, TURN_A),
+    ]);
+    expect(llmCallsOf(raw).map((s) => s.llm?.tokens)).toEqual([
+      { input: 1_000, output: 100, cacheRead: 0, cacheWrite: 0 },
+    ]);
   });
 
   it('skips a token event with no counters and names a call by its line when the record has no ordinal', async () => {

@@ -184,8 +184,10 @@ output, none below zero. The five SHALL sum to the record's total.
 For a rollout that has no per-response usage records, the adapter SHALL emit
 one `llm_call` per running token event whose thread total differs from the
 previous event's, using that event's last-response counters. Repeated events
-and events with no counters SHALL be skipped. In a rollout that has usage
-records, running token events SHALL be ignored.
+and events with no counters SHALL be skipped. A token event before the
+rollout's first turn SHALL NOT become a call: it is the total the thread
+started from. In a rollout that has usage records, running token events
+SHALL be ignored.
 
 #### Scenario: Repeated event
 - GIVEN a legacy rollout with two consecutive token events showing the same
@@ -197,6 +199,13 @@ records, running token events SHALL be ignored.
 - GIVEN a rollout with usage records and running token events
 - WHEN it is parsed
 - THEN the number of `llm_call` spans equals the number of usage records
+
+#### Scenario: Inherited counter
+- GIVEN a child rollout with no usage records whose first token event comes
+  before its first turn and shows the total its parent had reached
+- WHEN it is parsed
+- THEN no `llm_call` is emitted for that event, and the next event whose
+  total differs from it is one
 
 ### Requirement: Codex tool spans are harness actions
 The adapter SHALL emit a tool span for each action the harness records as

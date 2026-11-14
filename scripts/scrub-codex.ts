@@ -215,6 +215,10 @@ const WRAPPERS = new Set<string>([
   'cmd',
 ]);
 
+/** A wrapper's own flag, as opposed to an argument that is user data. */
+const WRAPPER_FLAG = /^-[A-Za-z]{1,24}$/;
+const WRAPPER_FLAG_CMD = /^(?:-[A-Za-z]{1,24}|\/[A-Za-z]{1,2})$/;
+
 /** Lines the harness writes around a tool's output. They carry the outcome
  * the adapter reads (`Script failed`, `Exit code: 1`), not user content. */
 const OUTPUT_FRAMES: RegExp[] = [
@@ -390,7 +394,9 @@ export function scrubDiffText(value: string, secrets: Secrets): string {
     }
     if (line === '@@') return raw;
     if (line.startsWith('@@ ')) return `@@ ${rest(3)}${cr}`;
-    if (line.startsWith('\\ ')) return raw; // "\ No newline at end of file"
+    // the one line a diff writes after a backslash; any other line that
+    // starts that way is file text and is scrubbed like the rest
+    if (line === '\\ No newline at end of file') return raw;
     // a change line whose own text begins with `++` or `--` reads as a
     // header to a line counter; keep it reading that way
     if (line.startsWith('+++') || line.startsWith('---'))
@@ -462,10 +468,14 @@ export function scrubArgv(argv: unknown[], ctx: Ctx): unknown[] {
   if (WRAPPERS.has(program) && args.length >= 2) {
     ctx.stats.strings += args.length - 1;
     const last = args.length - 1;
+    // A flag between the wrapper and its script is structure: `-Command`,
+    // `-NoProfile`, `-lc`. Only `cmd` writes its switches with a slash
+    // (`/c`, `/d`); under any other shell `/word` is a path and is scrubbed.
+    const flag = program === 'cmd' ? WRAPPER_FLAG_CMD : WRAPPER_FLAG;
     return args.map((arg, i) => {
       if (i === 0) return scrubProgramPath(arg, ctx.secrets);
       if (i === last) return text(arg, ctx);
-      return /^[-/][A-Za-z]{1,24}$/.test(arg) ? arg : text(arg, ctx);
+      return flag.test(arg) ? arg : text(arg, ctx);
     });
   }
   return args.map((arg) => text(arg, ctx));
@@ -679,8 +689,10 @@ function structural(value: unknown, key: string | null, ctx: Ctx): unknown {
     else if (k === 'arguments')
       out[k] =
         typeof v === 'string' ? scrubArgumentsJson(v, ctx) : content(v, ctx);
-    else if (k === 'input' && typeof v === 'string')
-      out[k] = patchOrText(v, ctx);
+    // a tool's input is the model's text whatever its shape: a string is a
+    // script or a patch, anything else is a payload Codex does not define
+    else if (k === 'input')
+      out[k] = typeof v === 'string' ? patchOrText(v, ctx) : content(v, ctx);
     else if (k === 'output') out[k] = scrubOutput(v, ctx);
     else if (OPAQUE_KEYS.has(k)) out[k] = content(v, ctx);
     else out[k] = structural(v, k, ctx);
@@ -716,7 +728,9 @@ export interface CodexScrubResult {
 /**
  * Scrub the lines of one rollout. Blank lines are dropped; so is a line
  * that is not JSON (the cut-off last line of a session still being
- * written), and its number is returned so the caller can say so.
+ * written), and its number is returned so the caller can say so. A marker
+ * record already in the input is dropped too: scrubbing a scrubbed file
+ * again (to pick up a rule that changed) gives one marker, on line one.
  */
 export function scrubCodexLines(
   lines: Iterable<{ line: number; text: string }>,
@@ -734,16 +748,20 @@ export function scrubCodexLines(
       dropped.push(line);
       continue;
     }
+    if (isScrubMarker(record)) continue;
     out.push(JSON.stringify(scrubCodexRecord(record, secrets, stats)));
   }
   return { output: `${out.join('\n')}\n`, stats, dropped };
 }
 
+function isScrubMarker(record: unknown): boolean {
+  return isObject(record) && record.marker === MARKER;
+}
+
 /** True for the marker record this script writes as line one. */
 export function isScrubMarkerLine(line: string): boolean {
   try {
-    const parsed: unknown = JSON.parse(line);
-    return isObject(parsed) && parsed.marker === MARKER;
+    return isScrubMarker(JSON.parse(line));
   } catch {
     return false;
   }

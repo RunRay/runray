@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { hostname, userInfo } from 'node:os';
 import { join, relative } from 'node:path';
@@ -17,11 +18,60 @@ import { LOREM, MARKER } from './scrub-lib.js';
  * one of a short list of structural keys. Anything else fails the test and
  * names the key, never the value.
  *
+ * Object keys are held to the same standard: a key is an identifier (one of
+ * Codex's own, or lorem), or a canonical path, never text.
+ *
  * It is the standing form of the checks docs/04-SAMPLE-LOGS.md §5 asks for
- * before a fixture is committed.
+ * before a fixture is committed. One of them cannot stand: the search for
+ * the OS user name and the host name. It means something only on the
+ * machine a fixture was captured on, where those names are what could have
+ * leaked. Anywhere else it searches for an unrelated name, and common ones
+ * are Codex's own words (`root_turn_id`, `"source":"vscode"`, the canonical
+ * `/home/user/project`), so a container running as root would fail with
+ * nothing wrong. It is therefore run on the fixtures that are new or
+ * changed against git, which is when someone is capturing one.
  */
 
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const fixtures = fileURLToPath(new URL('../fixtures/codex', import.meta.url));
+
+/** Repo-relative paths named by `git status --porcelain`, forward slashes. */
+function pathsOfPorcelain(text: string): Set<string> {
+  const out = new Set<string>();
+  for (const line of text.split('\n')) {
+    if (line.length < 4) continue;
+    // `XY path`, or `XY old -> new` for a rename: the new path is the file
+    const path = line.slice(3).split(' -> ').pop() ?? '';
+    out.add(path.replace(/^"|"$/g, '').replace(/\\/g, '/'));
+  }
+  return out;
+}
+
+/** Fixtures that are untracked or differ from HEAD. Empty when git cannot
+ * say (no git, not a checkout): there is then nobody capturing anything. */
+function fixturesBeingCaptured(): Set<string> {
+  try {
+    return pathsOfPorcelain(
+      execFileSync(
+        'git',
+        [
+          'status',
+          '--porcelain',
+          '--untracked-files=all',
+          '--',
+          'fixtures/codex',
+        ],
+        {
+          cwd: repoRoot,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        },
+      ),
+    );
+  } catch {
+    return new Set();
+  }
+}
 const VARIANTS = [
   'compaction',
   'guardian',
@@ -67,7 +117,12 @@ const STRUCTURAL_KEYS = new Set([
   'id',
 ]);
 const STRUCTURAL_VALUE = /^[A-Za-z0-9 _.:+-]{1,80}$/;
-const ARGV_FLAG = /^[-/][A-Za-z]{1,24}$/;
+/** A shell wrapper's own flag. Only `cmd` writes a switch with a slash;
+ * under any other program `/word` is a path. */
+const ARGV_FLAG = /^-[A-Za-z]{1,24}$/;
+const ARGV_FLAG_CMD = /^(?:-[A-Za-z]{1,24}|\/[A-Za-z]{1,2})$/;
+/** A key of Codex's schema or a lorem key: one identifier, no separators. */
+const IDENTIFIER_KEY = /^[A-Za-z_][A-Za-z0-9_]{0,47}$/;
 
 const ID =
   /^([a-z]+[_-])?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^[a-z]+_[A-Za-z0-9]{10,}$|^(item|rollout|auto-compact)-\d+$|^anon_[0-9a-f]{8}$|^0{40}$|^[A-Za-z0-9_-]{50,60}$/i;
@@ -133,12 +188,36 @@ function isClean(value: string): boolean {
   );
 }
 
-/** Keys under which a string that is not clean was found. */
-function offendingKeys(value: unknown, key: string, found: Set<string>): void {
+/** The flag shape an argv allows, by the program it starts with. */
+function flagOf(argv: unknown[]): RegExp {
+  const first = typeof argv[0] === 'string' ? argv[0] : '';
+  const program = (first.split(/[\\/]/).pop() ?? '')
+    .toLowerCase()
+    .replace(/\.exe$/, '');
+  return program === 'cmd' ? ARGV_FLAG_CMD : ARGV_FLAG;
+}
+
+function isCleanKey(key: string): boolean {
+  return IDENTIFIER_KEY.test(key) || isCanonicalPath(key) || isLorem(key);
+}
+
+/**
+ * Keys under which something that is not clean was found: a string value,
+ * or a key of the object beneath (reported as `a key under <parent>`, since
+ * the key itself may be what leaked). `flag` is set inside a `command`
+ * argv, where the wrapper's flags are structure.
+ */
+function offendingKeys(
+  value: unknown,
+  key: string,
+  found: Set<string>,
+  flag?: RegExp,
+): void {
+  const label = key === '' ? '(top level)' : key;
   if (typeof value === 'string') {
     if (isClean(value)) return;
     if (STRUCTURAL_KEYS.has(key) && STRUCTURAL_VALUE.test(value)) return;
-    if (key === 'command' && ARGV_FLAG.test(value)) return;
+    if (flag?.test(value)) return;
     if (value.startsWith('{') || value.startsWith('[')) {
       try {
         // call arguments and legacy outputs are JSON inside a string
@@ -148,15 +227,19 @@ function offendingKeys(value: unknown, key: string, found: Set<string>): void {
         // not JSON: an offending string like any other
       }
     }
-    found.add(key === '' ? '(top level)' : key);
+    found.add(label);
     return;
   }
   if (Array.isArray(value)) {
-    for (const item of value) offendingKeys(item, key, found);
+    const inArgv = key === 'command' ? flagOf(value) : undefined;
+    for (const item of value) offendingKeys(item, key, found, inArgv);
     return;
   }
   if (value !== null && typeof value === 'object') {
-    for (const [k, v] of Object.entries(value)) offendingKeys(v, k, found);
+    for (const [k, v] of Object.entries(value)) {
+      if (!isCleanKey(k)) found.add(`a key under ${label}`);
+      offendingKeys(v, k, found);
+    }
   }
 }
 
@@ -168,6 +251,7 @@ async function linesOf(file: string): Promise<string[]> {
 
 const files = rollouts(fixtures);
 const label = (file: string) => relative(fixtures, file).replace(/\\/g, '/');
+const capturing = fixturesBeingCaptured();
 
 describe('the checker', () => {
   const keysOf = (record: unknown): string[] => {
@@ -208,6 +292,79 @@ describe('the checker', () => {
       }),
     ).toEqual(['command', 'cwd', 'name', 'text', 'unified_diff', 'workdir']);
   });
+
+  it('accepts a canonical path, a lorem key and a schema key as an object key', () => {
+    expect(
+      keysOf({
+        payload: {
+          changes: {
+            '/home/user/project/loremxip/dolor.cs': { type: 'update' },
+            '/home/user/project/loremxip/dolor.cs.2': { type: 'add' },
+            'sit/amet.ts': { type: 'delete' },
+          },
+          result: { lorem: 1, ipsum_2: 2, dol: { sit: 'amet' } },
+          thread_token_usage: { total_tokens: 3 },
+        },
+      }),
+    ).toEqual([]);
+  });
+
+  it('rejects a real path, a sentence or an address as an object key, without naming it', () => {
+    expect(
+      keysOf({
+        payload: {
+          changes: { 'D:/work/acme-billing/Invoice.cs': { type: 'update' } },
+          result: { 'Total for Acme Corp': 12 },
+          arguments: '{"https://acme.example/roadmap":true}',
+        },
+      }),
+    ).toEqual([
+      'a key under arguments',
+      'a key under changes',
+      'a key under result',
+    ]);
+  });
+
+  it('takes a slash switch for a flag only behind cmd', () => {
+    expect(
+      keysOf({
+        payload: {
+          command: ['C:\\loremxipsu\\cmd.exe', '/c', 'magna aliqua'],
+          arguments: '{"command":["bash","-lc","lorem ipsum"]}',
+        },
+      }),
+    ).toEqual([]);
+    expect(
+      keysOf({ payload: { command: ['bash', '/acme', '-lc', 'lorem'] } }),
+    ).toEqual(['command']);
+    expect(
+      keysOf({ payload: { command: ['cmd.exe', '/ClientName', 'lorem'] } }),
+    ).toEqual(['command']);
+    // a flag is one only inside an argv
+    expect(keysOf({ payload: { command: '-Command' } })).toEqual(['command']);
+  });
+
+  it('reads the paths git names as new or changed, renames included', () => {
+    expect(
+      pathsOfPorcelain(
+        [
+          '?? fixtures/codex/simple/rollout-a.jsonl',
+          ' M fixtures/codex/zstd/rollout-b.jsonl.zst',
+          'R  fixtures/codex/old/rollout-c.jsonl -> fixtures/codex/new/rollout-c.jsonl',
+          'A  "fixtures/codex/with space/rollout-d.jsonl"',
+          '',
+        ].join('\n'),
+      ),
+    ).toEqual(
+      new Set([
+        'fixtures/codex/simple/rollout-a.jsonl',
+        'fixtures/codex/zstd/rollout-b.jsonl.zst',
+        'fixtures/codex/new/rollout-c.jsonl',
+        'fixtures/codex/with space/rollout-d.jsonl',
+      ]),
+    );
+    expect(pathsOfPorcelain('')).toEqual(new Set());
+  });
 });
 
 describe('fixtures/codex', () => {
@@ -230,6 +387,10 @@ describe('fixtures/codex', () => {
       const first = JSON.parse(lines[1] ?? '{}') as Record<string, unknown>;
       expect(first.type).toBe('session_meta');
 
+      // only where the names can be what leaked: see the note at the top
+      const captured = capturing.has(
+        relative(repoRoot, file).replace(/\\/g, '/'),
+      );
       const username = userInfo().username.toLowerCase();
       const host = hostname().toLowerCase();
       const offending = new Set<string>();
@@ -237,9 +398,10 @@ describe('fixtures/codex', () => {
       for (const [i, text] of lines.entries()) {
         if (i === 0 || text === '') continue;
         const lower = text.toLowerCase();
-        if (username.length >= 3 && lower.includes(username))
+        if (captured && username.length >= 3 && lower.includes(username))
           hits.add('OS user name');
-        if (host.length >= 3 && lower.includes(host)) hits.add('host name');
+        if (captured && host.length >= 3 && lower.includes(host))
+          hits.add('host name');
         if (/sk-[A-Za-z0-9_-]{8,}/.test(text)) hits.add('sk- key');
         if (/\b[0-9a-fA-F]{32,}\b/.test(text.replace(/0{40}/g, '')))
           hits.add('32+ hex');

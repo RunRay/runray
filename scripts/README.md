@@ -143,7 +143,8 @@ as native JSON next to Codex's own fields:
   markers are canonicalised.
 - **Shell wrappers stay, scripts do not.** In a command argv the program
   (`pwsh.exe`, with lorem directories), and its flags are kept; the script is
-  lorem.
+  lorem. A flag starts with a dash (`-Command`, `-lc`); only behind `cmd` is
+  a slash switch (`/c`) one too, anywhere else `/word` is a path.
 - **Harness lines around an output stay** (`Script failed`, `Exit code: 1`,
   `Wall time 1.4 seconds`, `Output:`), since they carry the outcome.
 - **Blobs become a placeholder**, not megabytes of lorem: `encrypted_content`,
@@ -153,10 +154,14 @@ as native JSON next to Codex's own fields:
 - **Compression follows the output name.** A `.jsonl.zst` input is read
   compressed; the output is written compressed when its own name ends in
   `.zst`, which a derived path does. The marker record is the first line of
-  the decompressed content, so `grep SCRUBBED` works on the plain form only.
+  the decompressed content, so `grep` works on the plain form only: it finds
+  nothing in a `.jsonl.zst`, whatever is inside. The check to run is
+  `pnpm vitest run scripts/codex-fixtures`, which reads both forms.
 
 A line that is not JSON (the cut-off last line of a session still being
-written) is dropped and its number printed.
+written) is dropped and its number printed. A marker record already in the
+input is dropped as well, so scrubbing a scrubbed file again leaves one
+marker on line one (its lorem is drawn again; the bytes are not the same).
 
 ## otlp-sink.mjs — capture Claude Code beta OTLP traces (task 1.3)
 

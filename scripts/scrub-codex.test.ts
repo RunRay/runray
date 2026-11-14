@@ -755,6 +755,61 @@ describe('scrubCodexRecord', () => {
     ) as Loose;
     expect(out.payload.call_id).toBe('call_user_host');
   });
+
+  it('keeps a slash switch as a flag only behind cmd', () => {
+    const argvOf = (command: string[]) =>
+      (
+        scrubCodexRecord(
+          base('event_msg', 4, {
+            type: 'item_completed',
+            item: { type: 'CommandExecution', id: 'item-1', command },
+          }),
+          secrets,
+          newCodexStats(),
+        ) as Loose
+      ).payload.item.command as string[];
+
+    const cmd = argvOf(['C:\\Windows\\System32\\cmd.exe', '/d', '/c', 'dir']);
+    expect(cmd.slice(1, 3)).toEqual(['/d', '/c']);
+    // under cmd a longer word is not a switch either
+    expect(argvOf(['cmd.exe', '/prolite', '/c', 'dir'])[1]).not.toBe(
+      '/prolite',
+    );
+
+    for (const shell of ['bash', 'zsh', 'pwsh.exe', 'powershell.exe']) {
+      const argv = argvOf([shell, '/prolite', '-NoProfile', '-c', 'ls']);
+      expect(argv[1], shell).not.toBe('/prolite');
+      expect(argv[1], shell).toHaveLength('/prolite'.length);
+      expect(argv.slice(2, 4), shell).toEqual(['-NoProfile', '-c']);
+    }
+  });
+
+  it('scrubs a tool input that is not a string as content, keys included', () => {
+    const stats = newCodexStats();
+    const out = scrubCodexRecord(
+      base('response_item', 5, {
+        type: 'custom_tool_call',
+        call_id: 'call_obj',
+        name: 'exec',
+        input: {
+          name: 'acme-internal',
+          id: 'client-name',
+          type: 'prolite',
+          rows: [{ status: 'secret-roadmap', count: 2 }],
+        },
+      }),
+      secrets,
+      stats,
+    ) as Loose;
+    const text = JSON.stringify(out);
+    for (const needle of NEEDLES) expect(text, needle).not.toContain(needle);
+    expect(Object.keys(out.payload.input)).not.toContain('name');
+    expect(text).toContain(':2'); // numbers survive
+    expect(out.payload.call_id).toBe('call_obj');
+    expect(out.payload.name).toBe('exec');
+    // content, not an unknown key of Codex's schema: nothing to report
+    expect([...stats.unknownKeys]).toEqual([]);
+  });
 });
 
 describe('scrubCodexPath', () => {
@@ -796,6 +851,28 @@ describe('scrubDiffText', () => {
     expect(out[1]?.startsWith('---')).toBe(false);
     expect(out[1]).toHaveLength('--counter;'.length);
     expect(out[2]?.startsWith('---')).toBe(true);
+  });
+
+  it('keeps the no-newline marker and scrubs any other line that starts with a backslash', () => {
+    const marker = '\\ No newline at end of file';
+    const out = scrubDiffText(
+      [
+        '+var vat = 0.23m;',
+        marker,
+        '\\ secret-roadmap for acme-corp',
+        '\\ No newline at end of file, says jan.kowalski',
+        `${marker}\r`,
+      ].join('\n'),
+      secrets,
+    ).split('\n');
+    expect(out[1]).toBe(marker);
+    expect(out[4]).toBe(`${marker}\r`);
+    for (const i of [2, 3]) {
+      expect(out[i]?.startsWith('\\')).toBe(false);
+      for (const needle of NEEDLES)
+        expect(out[i], needle).not.toContain(needle);
+    }
+    expect(out[2]).toHaveLength('\\ secret-roadmap for acme-corp'.length);
   });
 });
 
@@ -846,6 +923,30 @@ describe('scrubCodexLines and scrubCodexFile', () => {
     expect(result.stats.records).toBe(CASES.length);
     for (const needle of NEEDLES)
       expect(result.output, needle).not.toContain(needle);
+  });
+
+  it('keeps one marker, on line one, when a scrubbed rollout is scrubbed again', () => {
+    const once = scrubCodexLines(lines, secrets);
+    const again = scrubCodexLines(
+      once.output.split('\n').map((text, i) => ({ line: i + 1, text })),
+      secrets,
+    );
+    // the old marker is not carried along as a record: the same records
+    // come out, in the same order, behind a single marker (their lorem is
+    // drawn again, so the bytes differ)
+    const typesOf = (output: string) =>
+      output
+        .split('\n')
+        .filter((l) => l !== '')
+        .map((l) => (JSON.parse(l) as { type: string }).type);
+    expect(typesOf(again.output)).toEqual(typesOf(once.output));
+    expect(
+      again.output.split('\n').filter((l) => isScrubMarkerLine(l)),
+    ).toHaveLength(1);
+    expect(isScrubMarkerLine(again.output.split('\n')[0] ?? '')).toBe(true);
+    expect(again.stats.records).toBe(CASES.length);
+    expect([...again.stats.unknownKeys]).toEqual([]);
+    expect(again.dropped).toEqual([]);
   });
 
   it('writes the marker as the first line of a plain and of a compressed file, with the same content', async () => {
