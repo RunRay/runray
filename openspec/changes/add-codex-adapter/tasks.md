@@ -61,7 +61,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 2. Adapter: discovery and run skeleton
 
-- [ ] 2.1 A `adapters/codex.ts` discovery (T1, T2): `defaultRoots()` with
+- [x] 2.1 A `adapters/codex.ts` discovery (T1, T2): `defaultRoots()` with
       `CODEX_HOME`, the name pattern at any depth, first-record read,
       children grouped under their root thread, one candidate for a thread in
       both forms, orphan children as their own candidates, sorted output,
