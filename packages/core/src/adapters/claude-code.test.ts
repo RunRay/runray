@@ -8,6 +8,7 @@ import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
 import { priceRun } from '../pricing/index.js';
+import { readTranscriptSlice } from '../transcript.js';
 import { claudeCodeAdapter } from './claude-code.js';
 
 const fixtureDir = fileURLToPath(
@@ -1279,5 +1280,199 @@ describe('claude-code files that are not sessions', () => {
     ]);
     expect(raw.spans[0]?.kind).toBe('session');
     expect(raw.spans[0]?.startedAt).toBe('2026-07-02T13:00:00Z');
+  });
+});
+
+describe('claude-code adapter — line endings', () => {
+  // JSON allows U+2028 and U+2029 unescaped inside a string and
+  // JSON.stringify writes them raw; a reader that ends a line there loses
+  // the whole record. Only LF (optionally preceded by CR) ends a record.
+  type Slice = Awaited<ReturnType<typeof readTranscriptSlice>>;
+  const prompt = {
+    type: 'user',
+    uuid: 'u1',
+    sessionId: 'sess-1',
+    timestamp: '2026-11-14T10:00:00Z',
+    cwd: '/home/user/project/x',
+    message: { role: 'user', content: 'run the tests' },
+  };
+  const bash = {
+    type: 'tool_use',
+    id: 't1',
+    name: 'Bash',
+    input: { command: 'pnpm test' },
+  };
+  /** Four records: prompt, a call with text and a tool_use, the tool's
+   * result, a closing call. `text` lands in the call and in the result. */
+  const session = (text: string) => [
+    prompt,
+    assistant('a1', 'u1', 'm1', '2026-11-14T10:00:02Z', [
+      { type: 'text', text },
+      bash,
+    ]),
+    {
+      ...toolResult('r1', '2026-11-14T10:00:05Z', 't1'),
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: 't1',
+            content: [{ type: 'text', text }],
+          },
+        ],
+      },
+    },
+    assistant('a2', 'r1', 'm2', '2026-11-14T10:00:08Z', [
+      { type: 'text', text: 'done' },
+    ]),
+  ];
+  const jsonl = (records: readonly unknown[], eol = '\n') =>
+    records.map((r) => JSON.stringify(r)).join(eol) + eol;
+
+  /** Write `content` as one session, parse it, and read the transcript
+   * slice behind each requested span while the file still exists. */
+  async function parseSession(
+    content: string,
+    sliceSpanIds: readonly string[] = [],
+  ): Promise<{
+    run: RawRun;
+    unparseable: Array<number | undefined>;
+    slices: Map<string, Slice>;
+  }> {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-cc-lines-'));
+    try {
+      writeFileSync(join(dir, 'sess-lines.jsonl'), content);
+      const [candidate] = await claudeCodeAdapter.detect([dir]);
+      if (candidate === undefined) throw new Error('not detected');
+      const run = await claudeCodeAdapter.parse(candidate, { redact: false });
+      const slices = new Map<string, Slice>();
+      for (const id of sliceSpanIds) {
+        const span = run.spans.find((s) => s.id === id);
+        if (span === undefined) throw new Error(`no span ${id}`);
+        slices.set(
+          id,
+          await readTranscriptSlice(span.provenance, 'claude-code', {
+            redact: false,
+          }),
+        );
+      }
+      const unparseable = run.warnings
+        .filter((w) => w.message === 'unparseable JSONL line')
+        .map((w) => w.line);
+      return { run, unparseable, slices };
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+  /** Segment texts of an `ok` slice; the status string of any other. */
+  const sliceText = (slice: Slice | undefined): string[] | string =>
+    slice?.status === 'ok'
+      ? slice.segments.map((s) => s.text)
+      : (slice?.status ?? 'missing');
+
+  it.each([
+    ['U+2028 LINE SEPARATOR', ' '],
+    ['U+2029 PARAGRAPH SEPARATOR', ' '],
+  ])('keeps a record whose text holds a raw %s', async (_name, sep) => {
+    const text = `first${sep}second`;
+    const content = jsonl(session(text));
+    // the premise: the separator is on disk raw, not as a \u escape, and
+    // the file has four LF-terminated lines
+    expect(content).toContain(sep);
+    expect(content.split('\n')).toHaveLength(5);
+
+    const { run, unparseable, slices } = await parseSession(content, [
+      'm1',
+      'm2',
+    ]);
+    expect(unparseable).toEqual([]);
+
+    // the assistant record survives with its usage and its text
+    const m1 = run.spans.find((s) => s.id === 'm1');
+    expect(m1?.llm?.tokens).toEqual({
+      input: 100,
+      output: 5,
+      cacheRead: 10,
+      cacheWrite: 20,
+    });
+    expect(m1?.content?.outputPreview).toBe(text);
+    expect(m1?.provenance.line).toBe(2);
+
+    // the tool result survives, so its span is closed
+    const t1 = run.spans.find((s) => s.id === 't1');
+    expect(t1?.status).toBe('ok');
+    expect(t1?.endedAt).toBe('2026-11-14T10:00:05Z');
+    expect(t1?.tool?.outputBytes).toBe(Buffer.byteLength(text, 'utf8'));
+
+    // line numbers agree between the adapter and the slice reader: the
+    // record AFTER the separator lines is found on the line the adapter
+    // wrote, and the record holding the separator reads back whole
+    const m2 = run.spans.find((s) => s.id === 'm2');
+    expect(m2?.provenance.line).toBe(4);
+    expect(sliceText(slices.get('m2'))).toEqual(['done']);
+    expect(sliceText(slices.get('m1'))[0]).toBe(text);
+  });
+
+  it('reads a CRLF transcript with the line numbers of its LF twin', async () => {
+    const records = session('plain');
+    const lf = await parseSession(jsonl(records), ['m2']);
+    const crlf = await parseSession(jsonl(records, '\r\n'), ['m2']);
+    expect(crlf.unparseable).toEqual([]);
+    const lines = (run: RawRun) =>
+      run.spans.map((s) => [s.id, s.provenance.line]);
+    expect(lines(crlf.run)).toEqual(lines(lf.run));
+    expect(crlf.run.spans.find((s) => s.id === 'm2')?.provenance.line).toBe(4);
+    expect(crlf.run.spans.find((s) => s.id === 't1')?.status).toBe('ok');
+    expect(sliceText(crlf.slices.get('m2'))).toEqual(['done']);
+  });
+
+  it('counts blank lines and reports a malformed line by its number', async () => {
+    const [first, ...rest] = session('plain').map((r) => JSON.stringify(r));
+    // line 1 record, line 2 blank, line 3 malformed, then lines 4–6
+    const content = `${[first, '', '{not json', ...rest].join('\n')}\n`;
+    const { run, unparseable, slices } = await parseSession(content, ['m2']);
+    expect(unparseable).toEqual([3]);
+    expect(run.spans.find((s) => s.id === 'm2')?.provenance.line).toBe(6);
+    expect(sliceText(slices.get('m2'))).toEqual(['done']);
+  });
+
+  it('keeps a multi-byte character that straddles a read chunk boundary', async () => {
+    // fs read streams deliver 64 KiB chunks; pad the record so the 4-byte
+    // emoji starts two bytes before the boundary and ends two bytes after
+    const BOUNDARY = 64 * 1024;
+    const emoji = '\u{1F600}';
+    const text = `${emoji} straddles`;
+    const record = (pad: string) =>
+      JSON.stringify({
+        type: 'assistant',
+        pad,
+        uuid: 'a1',
+        parentUuid: 'u1',
+        sessionId: 'sess-1',
+        timestamp: '2026-11-14T10:00:02Z',
+        message: {
+          id: 'm1',
+          role: 'assistant',
+          model: 'claude-sonnet-4-6',
+          usage: { input_tokens: 7, output_tokens: 3 },
+          content: [{ type: 'text', text }],
+        },
+      });
+    const head = `${JSON.stringify(prompt)}\n`;
+    const offsetOf = (line: string) =>
+      Buffer.byteLength(head + line.slice(0, line.indexOf(emoji)));
+    const line = record('x'.repeat(BOUNDARY - 2 - offsetOf(record(''))));
+    expect(offsetOf(line)).toBe(BOUNDARY - 2);
+
+    const { run, unparseable, slices } = await parseSession(
+      `${head}${line}\n`,
+      ['m1'],
+    );
+    expect(unparseable).toEqual([]);
+    const m1 = run.spans.find((s) => s.id === 'm1');
+    expect(m1?.content?.outputPreview).toBe(text);
+    expect(m1?.llm?.tokens.input).toBe(7);
+    expect(sliceText(slices.get('m1'))).toEqual([text]);
   });
 });
