@@ -2755,6 +2755,308 @@ describe('codex commands', () => {
   });
 });
 
+describe('codex MCP calls and extensions', () => {
+  const mcp = (id: string, extra: Record<string, unknown> = {}) => ({
+    type: 'McpToolCall',
+    id,
+    server: 'linear',
+    tool: 'list_issues',
+    arguments: { team: 'billing-secret' },
+    pluginId: 'linear@acme',
+    status: 'completed',
+    result: {
+      content: [
+        { type: 'text', text: '[{"id":"BIL-1"}]' },
+        { type: 'image', data: 'AAAAAAAAAAAAAAAA', mimeType: 'image/png' },
+        { type: 'text', text: 'more' },
+      ],
+      isError: false,
+    },
+    duration: { secs: 0, nanos: 500_000_000 },
+    ...extra,
+  });
+  /** A tool the model called directly: the call, the harness action that
+   * carries the call's id, and the output handed back. */
+  const direct = (
+    name: string,
+    item: Record<string, unknown>,
+    output: unknown,
+  ) => [
+    sessionMeta(0),
+    started(1, TURN_A),
+    functionCall(2, 'call_1', name, { any: 'argument-text' }),
+    usageRecord(3, TURN_A, 'resp_1'),
+    action(5, TURN_A, { ...item, id: 'call_1' }, 3),
+    functionOutput(5, 'call_1', output),
+    completed(6, TURN_A),
+  ];
+  /** The same action run from inside an `exec` script. */
+  const scripted = (item: Record<string, unknown>) => [
+    sessionMeta(0),
+    started(1, TURN_A),
+    toolCall(2, 'call_1'),
+    usageRecord(3, TURN_A, 'resp_1'),
+    action(5, TURN_A, { ...item, id: 'exec-1' }, 3),
+    toolOutput(6, 'call_1'),
+    completed(7, TURN_A),
+  ];
+  const only = async (lines: string[], redact = false) => {
+    const { raw } = await parseLines(lines, redact);
+    expect(toolsOf(raw)).toHaveLength(1);
+    return { span: toolsOf(raw)[0], raw };
+  };
+
+  it('reads an MCP tool run from a script: its server, its tool, and the size of the text it returned', async () => {
+    const { span, raw } = await only(scripted(mcp('exec-1')));
+    expect(span).toEqual({
+      id: 'exec-1',
+      parentId: 'resp_1',
+      kind: 'mcp_call',
+      name: 'list_issues',
+      status: 'ok',
+      startedAt: at(3),
+      endedAt: at(5),
+      durationMs: 2000,
+      tool: {
+        name: 'list_issues',
+        mcpServer: 'linear',
+        isError: false,
+        // the two text parts; the image is not text
+        outputBytes: '[{"id":"BIL-1"}]'.length + 'more'.length,
+      },
+      attributes: {},
+      provenance: { file: span?.provenance.file, line: 5 },
+    });
+    // arguments, results and the plugin id stay in the file
+    for (const text of ['billing-secret', 'BIL-1', 'AAAA', 'linear@acme']) {
+      expect(JSON.stringify(raw.spans)).not.toContain(text);
+    }
+    const identity = toolIdentity(
+      normalize(priceRun(raw)).spans.find(
+        (s) => s.kind === 'mcp_call',
+      ) as never,
+    );
+    expect(identity).toMatchObject({
+      family: 'mcp',
+      key: 'linear',
+      sub: 'list_issues',
+      activity: 'integration',
+    });
+  });
+
+  it('gives an MCP tool the model called directly the size of what it was handed back', async () => {
+    const handed = [
+      {
+        type: 'input_text',
+        text: '[{"id":"BIL-1"}] and a note the harness added',
+      },
+      { type: 'input_image', image_url: 'data:image/png;base64,AAAA' },
+    ];
+    const { span } = await only(direct('list_issues', mcp('call_1'), handed));
+    expect(span).toMatchObject({
+      id: 'call_1',
+      kind: 'mcp_call',
+      name: 'list_issues',
+      status: 'ok',
+      tool: {
+        mcpServer: 'linear',
+        outputBytes: '[{"id":"BIL-1"}] and a note the harness added'.length,
+      },
+    });
+  });
+
+  it('previews a failed MCP call from its result, or from the output of its call when the result has no text', async () => {
+    const failing = {
+      status: 'failed',
+      result: {
+        content: [{ type: 'text', text: 'Error: team not found' }],
+        isError: true,
+      },
+    };
+    const fromResult = await only(scripted(mcp('exec-1', failing)));
+    expect(fromResult.span).toMatchObject({
+      status: 'error',
+      tool: { isError: true, outputBytes: 21 },
+      content: { outputPreview: 'Error: team not found' },
+    });
+    const noText = { status: 'failed', result: { content: [], isError: true } };
+    const fromOutput = await only(
+      direct('list_issues', mcp('call_1', noText), [
+        { type: 'input_text', text: 'tool call failed: connection reset' },
+      ]),
+    );
+    expect(fromOutput.span).toMatchObject({
+      status: 'error',
+      content: { outputPreview: 'tool call failed: connection reset' },
+    });
+    // an `error` field instead of a result
+    const errored = await only(
+      scripted(
+        mcp('exec-1', {
+          status: 'failed',
+          result: null,
+          error: { message: 'timed out after 60s' },
+        }),
+      ),
+    );
+    expect(errored.span?.content).toEqual({
+      outputPreview: 'timed out after 60s',
+    });
+    expect(errored.span?.tool).not.toHaveProperty('outputBytes');
+    // under redaction a failure has a null preview, wherever its text is
+    for (const lines of [
+      scripted(mcp('exec-1', failing)),
+      direct('list_issues', mcp('call_1', noText), 'tool call failed'),
+    ]) {
+      const { span, raw } = await only(lines, true);
+      expect(span?.content).toEqual({ outputPreview: null });
+      expect(JSON.stringify(raw.spans)).not.toContain('team not found');
+      expect(JSON.stringify(raw.spans)).not.toContain('tool call failed');
+    }
+  });
+
+  it('reads a web search as a span named web.search and keeps the query out', async () => {
+    const { span, raw } = await only(
+      scripted({
+        type: 'Extension',
+        kind: 'web.search',
+        query: 'vat rounding rules poland',
+        action: { type: 'search', query: 'vat rounding rules poland' },
+        results: [{ title: 'Ministry page', url: 'https://example.test/vat' }],
+      }),
+    );
+    expect(span).toMatchObject({
+      id: 'exec-1',
+      parentId: 'resp_1',
+      kind: 'tool_call',
+      name: 'web.search',
+      status: 'ok',
+      startedAt: at(3),
+      endedAt: at(5),
+      tool: { name: 'web.search', isError: false },
+      attributes: {},
+    });
+    expect(span?.tool).not.toHaveProperty('outputBytes');
+    for (const text of ['rounding', 'Ministry', 'example.test']) {
+      expect(JSON.stringify(raw.spans)).not.toContain(text);
+    }
+    expect(toolIdentity(span as never)).toMatchObject({
+      family: 'harness',
+      key: 'web.search',
+      activity: 'web',
+    });
+  });
+
+  it('reads a sleep as a span named clock.sleep, not as the call that asked for it', async () => {
+    const { span } = await only(
+      direct(
+        'sleep',
+        { type: 'Extension', kind: 'clock.sleep', durationMs: 2000 },
+        'Slept for 2000 ms',
+      ),
+    );
+    expect(span).toMatchObject({
+      id: 'call_1',
+      parentId: 'resp_1',
+      kind: 'tool_call',
+      name: 'clock.sleep',
+      status: 'ok',
+      startedAt: at(3),
+      endedAt: at(5),
+      durationMs: 2000,
+      tool: { name: 'clock.sleep', isError: false, outputBytes: 17 },
+    });
+  });
+
+  it('reads an image generation as a span named image_gen.generation, failed or not', async () => {
+    const generation = (extra: Record<string, unknown>) => ({
+      type: 'Extension',
+      kind: 'image_gen.generation',
+      revisedPrompt: 'a lighthouse at dusk, watercolour',
+      transparentBackground: null,
+      failure: null,
+      ...extra,
+    });
+    const done = await only(
+      direct(
+        'imagegen',
+        generation({
+          status: 'completed',
+          result: 'iVBORw0KGgoAAAANSUhEUg',
+          savedPath: 'C:\\Users\\dev\\Pictures\\lighthouse.png',
+        }),
+        [
+          { type: 'input_text', text: 'Image saved.' },
+          { type: 'input_image', image_url: 'data:image/png;base64,iVBORw0K' },
+        ],
+      ),
+    );
+    expect(done.span).toMatchObject({
+      id: 'call_1',
+      kind: 'tool_call',
+      name: 'image_gen.generation',
+      status: 'ok',
+      tool: { name: 'image_gen.generation', isError: false, outputBytes: 12 },
+    });
+    for (const text of ['lighthouse', 'iVBOR', 'Pictures']) {
+      expect(JSON.stringify(done.raw.spans)).not.toContain(text);
+    }
+    // a failed generation says nothing itself; its call's output does
+    const failed = await only(
+      direct(
+        'imagegen',
+        generation({ status: 'failed', result: '' }),
+        'Image generation failed: the request was rejected',
+      ),
+    );
+    expect(failed.span).toMatchObject({
+      status: 'error',
+      tool: { isError: true },
+      content: {
+        outputPreview: 'Image generation failed: the request was rejected',
+      },
+    });
+    // its own reason, when it gives one
+    const reasoned = await only(
+      scripted(generation({ status: 'failed', failure: 'quota exceeded' })),
+    );
+    expect(reasoned.span?.content).toEqual({ outputPreview: 'quota exceeded' });
+  });
+
+  it('reads an image view as a span named view_image and keeps the path out', async () => {
+    const { span, raw } = await only(
+      scripted({ type: 'ImageView', path: 'C:\\shots\\checkout-page.png' }),
+    );
+    expect(span).toMatchObject({
+      id: 'exec-1',
+      kind: 'tool_call',
+      name: 'view_image',
+      status: 'ok',
+      tool: { name: 'view_image', isError: false },
+      attributes: {},
+    });
+    expect(JSON.stringify(raw.spans)).not.toContain('checkout');
+    expect(toolIdentity(span as never)).toMatchObject({ activity: 'explore' });
+  });
+
+  it('names an extension of a kind it has not seen by that kind', async () => {
+    const { span } = await only(
+      scripted({
+        type: 'Extension',
+        kind: 'calendar.lookup',
+        status: 'failed',
+      }),
+    );
+    expect(span).toMatchObject({
+      name: 'calendar.lookup',
+      status: 'error',
+      tool: { name: 'calendar.lookup', isError: true },
+    });
+    const nameless = await only(scripted({ type: 'Extension' }));
+    expect(nameless.span?.name).toBe('extension');
+  });
+});
+
 describe('codex file changes', () => {
   const TOTALS = 'C:\\work\\billing-portal\\src\\totals.ts';
   const README = 'C:\\work\\billing-portal\\README.md';
@@ -3453,6 +3755,91 @@ describe('codex parse on the fixtures', () => {
     }
     return { added, removed, changes, singlePath };
   }
+
+  it('reads the MCP calls and every extension kind of the fixtures', async () => {
+    /** MCP spans as `server/tool`, the others by name; failures apart. */
+    const kinds = (raw: RawRun | undefined) => {
+      const out: Record<string, number> = {};
+      for (const s of toolsOf(raw as RawRun)) {
+        const isMcp = s.kind === 'mcp_call';
+        if (!isMcp && !/[.]|^view_image$/.test(s.name)) continue;
+        const name = isMcp ? `${s.tool?.mcpServer}/${s.name}` : s.name;
+        const key = s.status === 'ok' ? name : `${name} ${s.status}`;
+        out[key] = (out[key] ?? 0) + 1;
+      }
+      return out;
+    };
+    const [simple] = await parseVariant('simple');
+    expect(kinds(simple)).toEqual({
+      'codex_app/open_in_codex': 1,
+      'web.search': 17,
+    });
+
+    const [guardian] = await parseVariant('guardian');
+    expect(kinds(guardian)).toEqual({
+      'codex_app/list_threads': 1,
+      'codex_app/open_in_codex': 1,
+      'codex_app/read_thread': 1,
+      'clock.sleep': 6,
+      'web.search': 2,
+    });
+    // each sleep is the `sleep` call the model made, which is no span
+    const sleeps = toolsOf(guardian as RawRun).filter(
+      (s) => s.name === 'clock.sleep',
+    );
+    expect(sleeps.every((s) => s.id.startsWith('call_'))).toBe(true);
+    expect(sleeps.every((s) => (s.durationMs ?? 0) >= 1000)).toBe(true);
+    expect(toolsOf(guardian as RawRun).some((s) => s.name === 'sleep')).toBe(
+      false,
+    );
+
+    // the second tool-errors thread drives a browser through an MCP
+    // server: 54 calls the model made directly, 4 of them failed
+    const [, second] = await parseVariant('tool-errors');
+    expect(kinds(second)).toEqual({
+      'codex_app/load_workspace_dependencies': 1,
+      'codex_app/open_in_codex': 2,
+      'cua_repl/js': 50,
+      'cua_repl/js error': 4,
+      view_image: 1,
+    });
+    const js = toolsOf(second as RawRun).filter((s) => s.name === 'js');
+    expect(js).toHaveLength(54);
+    for (const span of js) {
+      expect(span.kind).toBe('mcp_call');
+      // what the model was handed back for the call
+      expect(span.tool?.outputBytes).toBeGreaterThan(0);
+      expect(span.attributes).toEqual({});
+      if (span.status === 'error') {
+        expect(span.content?.outputPreview).toBeTypeOf('string');
+      } else expect(span).not.toHaveProperty('content');
+    }
+
+    // image generations of the legacy thread that has them
+    const [, newer] = await parseVariant('legacy');
+    const generations = toolsOf(newer as RawRun).filter(
+      (s) => s.name === 'image_gen.generation',
+    );
+    expect(generations).toHaveLength(2);
+    expect(generations.every((s) => s.status === 'ok')).toBe(true);
+    expect(toolsOf(newer as RawRun).some((s) => s.name === 'imagegen')).toBe(
+      false,
+    );
+
+    // in the tool-usage view: MCP by server, the rest by their kind
+    const run = normalize(priceRun(second as RawRun));
+    const context = identityContext(run.spans);
+    const families = new Set(
+      run.spans.flatMap((s) => {
+        const id = toolIdentity(s, context);
+        return id?.family === 'mcp' ? [`${id.key} (${id.activity})`] : [];
+      }),
+    );
+    expect([...families].sort()).toEqual([
+      'codex_app (integration)',
+      'cua_repl (integration)',
+    ]);
+  });
 
   it('counts the lines the file changes of a rollout added and removed', async () => {
     for (const variant of ['simple', 'guardian', 'tool-errors']) {

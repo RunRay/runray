@@ -332,6 +332,8 @@ interface CallState {
   attributes: Record<string, unknown>;
   /** The patch it applied, when it is a legacy patch call. */
   change: ChangeSummary | undefined;
+  /** The span of the harness action that carries this call's id. */
+  own: RawSpan | undefined;
   /** When it stopped waiting for its output: the output was read, or the
    * next turn began without one. */
   until: string | undefined;
@@ -586,6 +588,20 @@ function failureTextOf(item: Json): string | undefined {
     messageOf(item.failure),
     messageOf(item.error),
   );
+}
+
+/** The size of the text an MCP tool returned: the text parts of
+ * `result.content` (an image part is not text and is not counted). */
+function mcpTextBytes(item: Json): number | undefined {
+  const content = isObj(item.result) ? item.result.content : undefined;
+  if (!Array.isArray(content)) return undefined;
+  let bytes = 0;
+  for (const part of content) {
+    if (isObj(part) && typeof part.text === 'string') {
+      bytes += Buffer.byteLength(part.text, 'utf8');
+    }
+  }
+  return bytes;
 }
 
 /** The one tool output a run keeps is the start of a failure's text, as
@@ -1375,8 +1391,9 @@ async function emitThread(
         // ended while a later call was waiting, or just after one.
         const itemId = str(item.id);
         const began = isoOfMs(num(payload.started_at_ms));
+        const named = itemId === undefined ? undefined : calls.get(itemId);
         const call =
-          (itemId === undefined ? undefined : calls.get(itemId)) ??
+          named ??
           (began === undefined ? undefined : callOpenAt(began)) ??
           openCalls.at(-1) ??
           turn?.lastClosed;
@@ -1398,14 +1415,14 @@ async function emitThread(
         const durationMs = durationBetween(startedAt, endedAt);
         const failed = item.status === 'failed';
         const exitCode = int(item.exit_code);
-        // what the model was shown of a command's output; the older item
-        // has only the whole of it
+        // what the model was shown: of a command's output (the older item
+        // has only the whole of it), or the text an MCP tool returned
         const shown =
           typeof item.formatted_output === 'string'
-            ? item.formatted_output
+            ? Buffer.byteLength(item.formatted_output, 'utf8')
             : typeof item.aggregated_output === 'string'
-              ? item.aggregated_output
-              : undefined;
+              ? Buffer.byteLength(item.aggregated_output, 'utf8')
+              : mcpTextBytes(item);
         const change =
           item.type === 'FileChange' ? changesOf(item.changes) : undefined;
         toolSpans.push({
@@ -1427,9 +1444,7 @@ async function emitThread(
                 : { mcpServer: identity.mcpServer }),
               isError: failed,
               ...(exitCode === undefined ? {} : { exitCode }),
-              ...(shown === undefined
-                ? {}
-                : { outputBytes: Buffer.byteLength(shown, 'utf8') }),
+              ...(shown === undefined ? {} : { outputBytes: shown }),
               // a change that failed changed no line
               ...(change === undefined || failed
                 ? {}
@@ -1450,6 +1465,8 @@ async function emitThread(
             provenance: { file, line },
           },
         });
+        // an action that carries its call's id is that call, done
+        if (named !== undefined) named.own = toolSpans.at(-1)?.span;
       }
     } else if (type === 'turn_context') {
       const model = str(payload.model);
@@ -1540,6 +1557,7 @@ async function emitThread(
                     )
                   : {},
             change,
+            own: undefined,
             until: undefined,
             outcome: undefined,
           };
@@ -1572,6 +1590,26 @@ async function emitThread(
           call.until = handedBack;
           call.outcome = outcomeOf(call.name, payload.output);
           if (call.turn !== undefined) call.turn.lastClosed = call;
+          // A tool the model called directly (an MCP tool, a sleep, an
+          // image generation) is recorded as an action with the call's id.
+          // This output is then exactly what the model was handed for it:
+          // its size is the span's, and when the action failed without a
+          // text of its own, the failure is named here.
+          const own = call.own;
+          if (own?.tool !== undefined) {
+            if (call.outcome.outputBytes !== undefined) {
+              own.tool.outputBytes = call.outcome.outputBytes;
+            }
+            if (own.status === 'error' && own.content === undefined) {
+              Object.assign(
+                own,
+                failureContent(
+                  ctx.redact,
+                  previewOf(outputTextOf(payload.output)),
+                ),
+              );
+            }
+          }
         }
       }
     }

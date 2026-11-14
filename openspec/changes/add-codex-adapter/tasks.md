@@ -144,9 +144,17 @@ directly and the goldens test does not see `fixtures/codex` yet.
       rollouts: 2,626 `apply_patch` spans, and in each of the 54 threads
       with `FileChange` items the counted lines equal a plain count of
       `+` and `-` lines.
-- [ ] 3.4 A MCP calls and extensions: `mcp_call` spans with their server,
+- [x] 3.4 A MCP calls and extensions: `mcp_call` spans with their server,
       extension kinds as tool names, image views. Verify: tests for the
       "MCP call" scenario and one per extension kind seen in the fixtures.
+      The spans themselves came with 3.1. Added here: `tool.outputBytes`
+      for MCP calls (the insight rules on tool output read it) and, for a
+      tool the model called directly, the size and the failure text of the
+      call's own output. On the 250 rollouts all 2,011 MCP spans have a
+      server and a size, all 148 failed ones a preview. Open: the scrubber
+      replaces the keys inside an MCP `result`, so the fixtures show MCP
+      results only through the call's output record (design T7); keeping
+      the protocol's own keys there would mean re-scrubbing the fixtures.
 
 ## 4. Adapter: child threads and privacy
 

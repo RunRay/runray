@@ -473,6 +473,27 @@ through `error-preview.ts` and is taken from the command's output, a file
 change's stderr, the first text part of an MCP result, or the call's output
 after its head; 112 of 1,462 failures have no text to preview.
 
+**MCP calls and extensions.** An MCP action's size is the text parts of
+`result.content`; an image part is not counted. An action that carries its
+call's id (rule 1) is a tool the model called directly: an MCP tool (1,728
+of 2,011), a `sleep`, an `imagegen`. The call's output record is then
+exactly what the model was handed for it, so its text size replaces the
+item's, and it names the failure when the item gives no text. The item is
+always written before that output. Every one of the 2,011 MCP spans in the
+survey has a server and a size, and all 148 failed ones a preview.
+Extensions carry no size of their own: a web search's `results` are not
+what the model read, and the 9 failed image generations give no reason
+(`failure: null`). An `ImageView` is a `view_image` span with no file
+identity, since Codex has no read tool to pair it with (T9). An extension
+of a kind not seen is named by that kind. Arguments, results, queries,
+prompts, saved paths and plugin ids are never stored.
+
+The scrubbed fixtures cannot show the first of these paths. The scrubber
+replaces every key inside an MCP `result`, `content` and `text` included,
+so there the size and the failure text of a call come from its output
+record, or are absent for a call made from a script (9 of 63). Tests on
+inline records cover the real shape.
+
 ### T8 — Unwrapping the shell
 
 A command is an argv. The wrapper is recognised by the basename of
