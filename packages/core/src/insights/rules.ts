@@ -1,4 +1,5 @@
 import type { Run, Span } from '@runray/schema';
+import { CODEX_REVIEWER_AGENT } from '../adapters/codex-names.js';
 import {
   cacheWrite1hTokens,
   matchModel,
@@ -7,6 +8,8 @@ import {
   round6,
   suggestedDowngrade,
 } from '../pricing/engine.js';
+import { HARNESS_TOOLS } from '../tools/registry.js';
+import { classifyError } from '../triage/classify.js';
 import { breakShape, contextTokens } from './cache-shape.js';
 import {
   contextExcess,
@@ -46,10 +49,13 @@ import type { Finding, InsightRule, RuleContext, Thresholds } from './index.js';
  * different place in Claude Code, OpenCode, Codex and a custom OTLP agent.
  * Static how-to detail lives in the rule playbooks (`meta.ts`), not here.
  *
- * The source picks the WORDS, never the detection (add-codex-adapter T12):
- * a rule fires on a Codex run by the same thresholds as on any other. Codex
- * records no cache writes, so the two rules that need one on the second
- * call (cache-prefix-break, idle-cache-expiry) stay silent there.
+ * The source picks the WORDS, not whether a rule fires (add-codex-adapter
+ * T12): a rule fires on a Codex run by the same thresholds as on any other.
+ * Codex records no cache writes, so the two rules that need one on the
+ * second call (cache-prefix-break, idle-cache-expiry) stay silent there.
+ * One exception changes a figure: the approval reviewer of a Codex run is
+ * not an agent the person configures, so no cheaper-model saving is
+ * estimated for it, by expensive-subagent or by model-mismatch.
  */
 
 function usd(x: number): string {
@@ -77,11 +83,6 @@ function instructionsFile(run: Run): string {
   }
 }
 
-/** The name the Codex adapter gives the approval reviewer's subagent span
- * (`approvals_reviewer = "auto_review"`). Nobody defines that agent in a
- * file, so the levers for a custom agent do not apply to it. */
-const CODEX_REVIEWER = 'guardian';
-
 /** "A", "A and B", "A, B and C". */
 function listNames(names: readonly string[]): string {
   if (names.length <= 1) return names[0] ?? '';
@@ -104,33 +105,17 @@ function claudeModelAlias(target: string): string | undefined {
 }
 
 type ToolClass = 'shell' | 'edit' | 'mcp' | 'other';
-const SHELL_TOOLS = new Set([
-  'Bash',
-  'PowerShell',
-  'bash',
-  // Codex: the current command tool and the two legacy ones
-  'exec_command',
-  'shell',
-  'shell_command',
-]);
-const EDIT_TOOLS = new Set([
-  'Edit',
-  'MultiEdit',
-  'Write',
-  'NotebookEdit',
-  'edit',
-  'write',
-  'patch',
-  'apply_patch',
-]);
 
 /** What kind of lever a failing tool points at: the environment (shell),
- * the file under the agent (edit), a server (mcp), or the agent itself. */
+ * the file under the agent (edit), a server (mcp), or the agent itself.
+ * Which names are shell and edit tools is read from the harness-tool table
+ * of the tools registry, the one list every source's names are kept in. */
 function toolClassOf(span: Span): ToolClass {
   if (span.kind === 'mcp_call' || span.tool?.mcpServer !== undefined)
     return 'mcp';
-  if (SHELL_TOOLS.has(span.name)) return 'shell';
-  if (EDIT_TOOLS.has(span.name)) return 'edit';
+  const harness = HARNESS_TOOLS.get(span.name);
+  if (harness?.role === 'shell') return 'shell';
+  if (harness?.activity === 'edit') return 'edit';
   return 'other';
 }
 
@@ -446,8 +431,13 @@ function expensiveSubagentSubtrees(
   );
 }
 
+/** The approval reviewer of a Codex run (`approvals_reviewer =
+ * "auto_review"`). Nobody defines that agent in a file, so the levers of a
+ * custom agent do not apply to it. */
 function isCodexReviewer(run: Run, subagent: Span): boolean {
-  return run.source.tool === 'codex' && subagent.agent?.name === CODEX_REVIEWER;
+  return (
+    run.source.tool === 'codex' && subagent.agent?.name === CODEX_REVIEWER_AGENT
+  );
 }
 
 const expensiveSubagent: InsightRule = {
@@ -503,9 +493,9 @@ const expensiveSubagent: InsightRule = {
           case 'codex':
             // the span is named by the kind of subagent, not by the custom
             // agent's own name, so the file is "its", never `<name>.toml`
-            return target === undefined
-              ? 'model in its agent file under ~/.codex/agents, or agents.default_subagent_model in config.toml'
-              : `model = "${target}" in its agent file under ~/.codex/agents, or agents.default_subagent_model in config.toml`;
+            // nor can the span say where that file is, or whether the
+            // child has one: a built-in role has none
+            return `${target === undefined ? 'model' : `model = "${target}"`} in its agent file (~/.codex/agents, or .codex/agents in the project); agents.default_subagent_model in config.toml when it has no file`;
           default:
             return target === undefined
               ? `a cheaper model for ${name}`
@@ -550,6 +540,16 @@ const deadEndRun: InsightRule = {
     const terminal =
       sessionError ?? (last?.status === 'error' ? last : undefined);
     if (terminal === undefined) return [];
+    // a turn the harness stopped at a usage limit is where the session
+    // paused, not a step that failed: what came before it stands, and the
+    // same session goes on after the reset. Codex records a refused request
+    // on the turn, so without this a session that merely ran out of quota
+    // read as burned in full
+    if (
+      terminal.kind === 'turn' &&
+      classifyError(terminal).classId === 'model-limit'
+    )
+      return [];
     const total = run.totals.costUSD.total;
 
     // failed-tail attribution (B3): the productive marker is the last
@@ -624,14 +624,29 @@ const modelMismatch: InsightRule = {
     const excludedRoots = new Set(
       expensiveSubagentSubtrees(run, ctx.thresholds).map((i) => i.root.id),
     );
-    const withinExcluded = (rootId: string | null): boolean => {
+    // the approval reviewer of a Codex run is left out whatever it cost: it
+    // is not an agent the person configures, so its calls are no saving of
+    // this finding (the same reason expensive-subagent estimates none)
+    const reviewerRoots = new Set(
+      run.spans
+        .filter((s) => s.kind === 'subagent' && isCodexReviewer(run, s))
+        .map((s) => s.id),
+    );
+    const within = (
+      roots: ReadonlySet<string>,
+      rootId: string | null,
+    ): boolean => {
       let cur: string | null = rootId;
       while (cur !== null) {
-        if (excludedRoots.has(cur)) return true;
+        if (roots.has(cur)) return true;
         cur = byId.get(cur)?.parentId ?? null;
       }
       return false;
     };
+    const withinReviewer = (rootId: string | null): boolean =>
+      within(reviewerRoots, rootId);
+    const withinExcluded = (rootId: string | null): boolean =>
+      within(excludedRoots, rootId) || withinReviewer(rootId);
 
     const models = [
       ...new Set(
@@ -684,7 +699,13 @@ const modelMismatch: InsightRule = {
           c.flags.length > 0 && !withinExcluded(c.rootId) && c.deltaUSD !== 0,
       ).length;
       const delegated = result.subtrees.filter(
-        (c) => withinExcluded(c.rootId) && c.llmCalls > 0,
+        (c) =>
+          withinExcluded(c.rootId) &&
+          !withinReviewer(c.rootId) &&
+          c.llmCalls > 0,
+      ).length;
+      const reviewed = result.subtrees.filter(
+        (c) => withinReviewer(c.rootId) && c.llmCalls > 0 && c.deltaUSD !== 0,
       ).length;
       const evidence = [...safeSpans]
         .sort(
@@ -701,6 +722,9 @@ const modelMismatch: InsightRule = {
           : []),
         ...(delegated > 0
           ? [`${delegated} subtree(s) covered by the delegation finding`]
+          : []),
+        ...(reviewed > 0
+          ? ['the approval reviewer left out (not an agent you configure)']
           : []),
       ];
       // where the person switches model in this source

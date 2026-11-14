@@ -147,10 +147,56 @@ generic custom-agent wording.
   to give the reviewer a cheaper model, and the finding carries no
   `estimatedWasteUSD`
 
+#### Scenario: The approval reviewer in the model-tier finding
+- GIVEN a Codex run whose reviewer subagent ran on a model a cheaper tier
+  exists for, at any share of the run's cost
+- WHEN `model-mismatch` fires for that model
+- THEN the reviewer's calls are no part of the estimate, and the detail says
+  the approval reviewer was left out
+
 #### Scenario: Playbooks have a Codex section
 - GIVEN the generated rule playbooks
 - WHEN they are rendered
 - THEN every rule has a section for Codex
+
+### Requirement: A turn stopped at a usage limit is not a dead end
+Codex records a refused request on the turn, with a code, and leaves the
+model calls beneath it `ok`. `dead-end-run` SHALL NOT fire when the step a
+run ended on is a turn whose code is a usage limit, and SHALL NOT fire on a
+turn the person interrupted. A turn that failed for any other reason is a
+dead end as any other failed last step is.
+
+#### Scenario: Session ends at the usage limit
+- GIVEN a Codex run whose last span is a turn with status `error` and the
+  code `usage_limit_exceeded`
+- WHEN rules are evaluated
+- THEN `dead-end-run` does not fire and nothing of the run is counted as
+  burned on its account
+
+#### Scenario: Session ends on another failure of the turn
+- GIVEN the same run with the code `internal_server_error`
+- WHEN rules are evaluated
+- THEN `dead-end-run` fires and its detail names the code
+
+### Requirement: A failed turn is triaged as a failed model call
+Error triage SHALL count a turn with status `error` as a failed model call
+when no model call beneath it failed, class it by the code in
+`statusReason`, name it by the model its thread was running on, and take the
+next model call of the thread after the turn as its recovery. A turn above a
+failed model call SHALL NOT be counted a second time. A cancelled turn is
+not a failure.
+
+#### Scenario: Usage limit on a Codex turn
+- GIVEN a Codex run with a turn of status `error` and the code
+  `usage_limit_exceeded`, followed later by a model call that succeeded
+- WHEN the run is triaged
+- THEN there is one model error of the class `model-limit`, owned by the
+  person, whose text is the code and whose recovery is that later call
+
+#### Scenario: Turn above a failed call
+- GIVEN a turn of status `error` whose model call also has status `error`
+- WHEN the run is triaged
+- THEN one model error is counted, for the call
 
 ### Requirement: Cache-write rules are silent on Codex runs
 Codex records no cache writes. Rules whose trigger requires re-written cache

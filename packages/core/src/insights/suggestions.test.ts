@@ -1,11 +1,15 @@
+import { readFileSync } from 'node:fs';
+import type { Run } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import type { RawRun, RawSpan } from '../adapter.js';
+import { CODEX_REVIEWER_AGENT } from '../adapters/codex-names.js';
 import { normalize } from '../normalize.js';
 import {
   bundledPricing,
   CACHE_WRITE_1H_ATTR,
   matchModel,
 } from '../pricing/index.js';
+import { HARNESS_TOOLS } from '../tools/registry.js';
 import { applyInsights } from './index.js';
 
 /**
@@ -188,10 +192,25 @@ describe('retry-loop suggestion picks the lever by tool class', () => {
       'system prompt',
     );
     // Codex names its command tool differently in every generation
-    for (const name of ['exec_command', 'shell', 'shell_command']) {
+    for (const name of [
+      'exec_command',
+      'shell',
+      'shell_command',
+      'local_shell',
+    ]) {
       expect(suggestionOf(loop(name), 'retry-loop', 'codex')).toContain(
         'in AGENTS.md',
       );
+    }
+  });
+
+  it('shell and edit tools are the ones the tools registry lists', () => {
+    for (const [name, harness] of HARNESS_TOOLS) {
+      const s = suggestionOf(loop(name), 'retry-loop');
+      if (harness.role === 'shell') expect(s, name).toContain('in CLAUDE.md');
+      else if (harness.activity === 'edit')
+        expect(s, name).toMatch(/changed the file under the agent/);
+      else expect(s, name).toMatch(/^Interrupt the agent/);
     }
   });
 
@@ -393,9 +412,11 @@ describe('model and subagent suggestions say where the switch lives', () => {
       'codex',
     );
     expect(s).toContain(
-      'model = "gpt-5.4-mini" in its agent file under ~/.codex/agents',
+      'model = "gpt-5.4-mini" in its agent file (~/.codex/agents, or .codex/agents in the project)',
     );
-    expect(s).toContain('agents.default_subagent_model in config.toml');
+    expect(s).toContain(
+      'agents.default_subagent_model in config.toml when it has no file',
+    );
     expect(s).not.toContain('frontmatter');
   });
 
@@ -876,6 +897,41 @@ describe('Codex runs', () => {
     });
   });
 
+  describe('a session that ends on a failed turn', () => {
+    const ending = (reason?: string, status: RawSpan['status'] = 'error') => [
+      root(),
+      turn('t1', 0),
+      call('l1', 1, { cost: 12 }),
+      call('l2', 2, { cost: 8 }),
+      base('t2', {
+        kind: 'turn',
+        name: 'turn',
+        startedAt: ts(600),
+        status,
+        ...(reason === undefined ? {} : { statusReason: reason }),
+      }),
+    ];
+
+    it('stopped at the usage limit: not a dead end, and nothing counted as burned', () => {
+      expect(ruleIds(ending('usage_limit_exceeded'))).not.toContain(
+        'dead-end-run',
+      );
+    });
+
+    it('interrupted by the person: not a dead end', () => {
+      expect(ruleIds(ending('interrupted', 'cancelled'))).not.toContain(
+        'dead-end-run',
+      );
+    });
+
+    it('any other failure of the turn is still one, with its code', () => {
+      const f = codex(ending('internal_server_error')).find(
+        (i) => i.ruleId === 'dead-end-run',
+      );
+      expect(f?.detail).toContain('failing turn (internal_server_error)');
+    });
+  });
+
   describe('the approval reviewer as the expensive subagent', () => {
     const run = (name: string, model: string, cost?: number) => [
       root(),
@@ -925,6 +981,74 @@ describe('Codex runs', () => {
       );
       expect(other?.estimatedWasteUSD).toBeGreaterThan(0);
       expect(other?.suggestion).toMatch(/^Give thread_spawn a cheaper model/);
+    });
+
+    it('model-mismatch leaves a cheap reviewer out too, and says so', () => {
+      const spans = [
+        root(),
+        turn('t1', 0),
+        call('l1', 1, { cost: 8, input: 10_000 }),
+        thread('child', 2, 'guardian'),
+        turn('ct', 2, 'child'),
+        call('c1', 3, { parentId: 'ct', cost: 2, input: 10_000 }),
+      ];
+      const reviewer = codex(spans).find((i) => i.ruleId === 'model-mismatch');
+      expect(reviewer?.detail).toContain(
+        'the approval reviewer left out (not an agent you configure)',
+      );
+      expect(reviewer?.detail).not.toContain('delegation finding');
+      // the same child under another name is part of the estimate
+      const other = codex(
+        spans.map((s) =>
+          s.id === 'child' ? thread('child', 2, 'thread_spawn') : s,
+        ),
+      ).find((i) => i.ruleId === 'model-mismatch');
+      expect(other?.detail).not.toContain('approval reviewer');
+      expect(other?.estimatedWasteUSD ?? 0).toBeGreaterThan(
+        reviewer?.estimatedWasteUSD ?? 0,
+      );
+    });
+
+    it('the reviewer of a real rollout is recognised by the name the adapter gives it', () => {
+      const golden = JSON.parse(
+        readFileSync(
+          new URL(
+            '../../../../fixtures/normalized/codex/guardian.json',
+            import.meta.url,
+          ),
+          'utf8',
+        ),
+      ) as Run;
+      const reviewer = golden.spans.find((s) => s.kind === 'subagent');
+      expect(reviewer?.agent?.name).toBe(CODEX_REVIEWER_AGENT);
+      // its model has no price, so the thread costs nothing in the golden;
+      // give its calls one and the rule must still read it as the reviewer
+      const under = new Set<string>([reviewer?.id ?? '']);
+      let added = 0;
+      const spans = golden.spans.map((s) => {
+        if (s.parentId !== null && under.has(s.parentId)) under.add(s.id);
+        if (!under.has(s.id) || s.llm === undefined) return s;
+        added += 2;
+        return { ...s, llm: { ...s.llm, costUSD: 2 } };
+      });
+      const priced: Run = {
+        ...golden,
+        spans,
+        insights: [],
+        totals: {
+          ...golden.totals,
+          costUSD: {
+            ...golden.totals.costUSD,
+            total: golden.totals.costUSD.total + added,
+          },
+        },
+      };
+      const f = applyInsights(priced).insights.find(
+        (i) => i.ruleId === 'expensive-subagent',
+      );
+      expect(f?.suggestion).toMatch(
+        /^guardian is Codex's automatic approval reviewer/,
+      );
     });
 
     it('a subagent called guardian in another source is an ordinary agent', () => {

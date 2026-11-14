@@ -18,6 +18,7 @@ import {
 } from '../rollout-lines.js';
 import { HARNESS_TOOLS } from '../tools/registry.js';
 import type { ShellDialect } from '../tools/shell.js';
+import { CODEX_REVIEWER_AGENT } from './codex-names.js';
 import { errorPreview } from './error-preview.js';
 import { durationBetween, extendContainers } from './span-time.js';
 import { toolTargetAttributes } from './target.js';
@@ -424,7 +425,7 @@ function projectName(cwd: string): string {
 function agentNameOf(source: unknown): string {
   const subagent = isObj(source) ? source.subagent : undefined;
   if (!isObj(subagent)) return word(subagent) ?? 'unknown';
-  if (subagent.other === 'guardian') return 'guardian';
+  if (subagent.other === 'guardian') return CODEX_REVIEWER_AGENT;
   return word(Object.keys(subagent)[0]) ?? 'unknown';
 }
 
@@ -1392,7 +1393,7 @@ async function emitThread(
       // what the thread is holds whether it is read as a child or, with its
       // parent not scanned, as a run of its own
       const kind = agentNameOf(payload.source);
-      reviewer = kind === 'guardian';
+      reviewer = kind === CODEX_REVIEWER_AGENT;
       const agent = child ? kind : undefined;
       session = {
         id: threadId,

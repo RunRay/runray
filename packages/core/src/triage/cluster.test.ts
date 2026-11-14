@@ -406,3 +406,97 @@ describe('triageRun — clusters, reaction cost, recovery', () => {
     expect(triageRun(run(shuffled))).toEqual(triageRun(run(spans)));
   });
 });
+
+/**
+ * Codex records a refused or broken request on the turn, with a code in
+ * `statusReason`; the model calls under it stay ok (add-codex-adapter).
+ */
+describe('triageRun — a failed turn is a failed model call', () => {
+  const turn = (
+    id: string,
+    s: number,
+    status: Span['status'],
+    reason?: string,
+    endsAt = s + 5,
+  ): Span =>
+    base({
+      id,
+      kind: 'turn',
+      name: 'turn',
+      status,
+      startedAt: at(s),
+      endedAt: at(endsAt),
+      ...(reason === undefined ? {} : { statusReason: reason }),
+    });
+
+  it('a turn stopped at the usage limit is a model-limit failure, named by the model', () => {
+    const t = triageRun(
+      run([
+        turn('t1', 0, 'ok'),
+        llm('l1', 1, 0.2, 't1'),
+        turn('t2', 10, 'error', 'usage_limit_exceeded'),
+        turn('t3', 600, 'ok'),
+        llm('l2', 601, 0.3, 't3'),
+      ]),
+    );
+    expect(t.modelErrors).toBe(1);
+    expect(t.toolErrors).toBe(0);
+    const c = t.clusters[0];
+    expect(c?.classId).toBe('model-limit');
+    expect(c?.owner).toBe('you');
+    expect(c?.kind).toBe('llm_call');
+    expect(c?.tool).toBe('claude-fable-5-1');
+    expect(c?.occurrences[0]?.spanId).toBe('t2');
+    // the code is what the harness said, so it stands where the text would
+    expect(c?.occurrences[0]?.preview).toBe('usage_limit_exceeded');
+    expect(t.redacted).toBe(false);
+    // the session went on after the reset: the next model call is the recovery
+    expect(c?.occurrences[0]?.recovery).toMatchObject({
+      kind: 'ok',
+      nextSpanId: 'l2',
+    });
+    expect(c?.outcome).toBe('recovered');
+    expect(t.needsAttention).toBe(true);
+  });
+
+  it('a session that ends on the failed turn has no later call', () => {
+    const t = triageRun(
+      run([
+        turn('t1', 0, 'ok'),
+        llm('l1', 1, 0.2, 't1'),
+        turn('t2', 10, 'error', 'usage_limit_exceeded'),
+      ]),
+    );
+    expect(t.clusters[0]?.occurrences[0]?.recovery).toEqual({ kind: 'none' });
+    expect(t.clusters[0]?.outcome).toBe('unrecovered');
+    expect(t.clusters[0]?.tool).toBe('claude-fable-5-1');
+  });
+
+  it('a turn above a failed model call is not counted a second time', () => {
+    const t = triageRun(
+      run([
+        turn('t1', 0, 'error', 'internal_server_error'),
+        llm('l1', 1, 0.1, 't1', 'error', 'API Error: 500'),
+      ]),
+    );
+    expect(t.modelErrors).toBe(1);
+    expect(t.clusters).toHaveLength(1);
+    expect(t.clusters[0]?.occurrences[0]?.spanId).toBe('l1');
+  });
+
+  it('a turn the person interrupted is not a failure', () => {
+    const t = triageRun(
+      run([turn('t1', 0, 'cancelled', 'interrupted'), llm('l1', 1, 0.1, 't1')]),
+    );
+    expect(t.modelErrors).toBe(0);
+    expect(t.clusters).toHaveLength(0);
+    expect(t.cancelled).toBe(1);
+  });
+
+  it('a failed turn with no code is a model error of no known class, and reads as redacted', () => {
+    const t = triageRun(run([turn('t1', 0, 'error')]));
+    expect(t.clusters[0]?.classId).toBe('model-error');
+    expect(t.clusters[0]?.tool).toBe('turn');
+    expect(t.redacted).toBe(true);
+  });
+});

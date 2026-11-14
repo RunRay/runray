@@ -624,7 +624,7 @@ The agent reached for a tool, skill or launch configuration that does not exist 
 
 **Why it happens**
 
-- A skill or plugin is not installed, a tool is disabled in this context, or `.claude/launch.json` is missing.
+- A skill or plugin is not installed, a tool is disabled in this context, or the launch configuration the agent looked for is missing.
 
 **What you can do**
 

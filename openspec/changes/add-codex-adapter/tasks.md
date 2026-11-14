@@ -375,6 +375,22 @@ directly and the goldens test does not see `fixtures/codex` yet.
       it. Seen in the built UI: the Waste tab of a Codex session reads
       "What you can do · Codex". The levers checked are listed in design
       T12.
+- Review of group 6 (`ebaa0da..HEAD`): seven of eight findings fixed. A
+  session that ends on a turn stopped at the usage limit is no longer a
+  dead end (it was burned in full), and a failed turn is triaged as a
+  failed model call, so the Codex sections of the `model-*` error classes
+  can be reached; both are in `insights/rules.ts` and `triage/`, outside
+  the two tasks. Shell and edit tools are read from `HARNESS_TOOLS`, the
+  reviewer's name is one constant shared with the adapter and checked on
+  the `guardian` fixture, `model-mismatch` leaves the reviewer out, the
+  agent-file copy names both folders, and the shared cause line of
+  `tool-unavailable` names no Claude Code file. Left, to be filed in
+  planning: the downgrade ladder maps every `gpt-5*` id, Codex-family ones
+  included, to `gpt-5.4-mini` and knows no family after `gpt-5` (design
+  T12). Seen while fixing and left as it is: a failed turn that still has
+  model calls after its start is not the last span, so `dead-end-run`
+  does not see it; and a Claude Code session that ends on a model call
+  refused at the usage limit is still a dead end.
 
 ## 7. Visualizer
 

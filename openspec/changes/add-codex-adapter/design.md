@@ -865,7 +865,26 @@ as experimental, and the playbook says so). Left out because the
 documentation did not confirm them word for word: the key that interrupts
 a turn, and how a hook blocks a call.
 
-Not done here: the downgrade ladder for `model-mismatch` and
+What the review of group 6 changed. Task 6.1 audited `parentId`; it did
+not audit the rules that pick a span by kind, and Codex puts a failed
+request on the `turn`, with a code in `statusReason`, while the calls
+beneath stay `ok`. Two things followed. `dead-end-run` took such a turn as
+the failed last step, so a session that ran out of quota was burned in
+full: a turn whose code is a usage limit is now not a dead end. And error
+triage read only calls, so the failure showed nowhere: a failed turn with
+no failed model call beneath it is now a failed model call, classed by its
+code. Both are read from the span, not from the source, so an OTLP turn
+with the same shape is treated the same way. The reviewer is left out of
+`model-mismatch` as well as of the `expensive-subagent` estimate, which
+makes the exception one rule: no cheaper-model saving is claimed for an
+agent the person does not configure. Shell and edit tools come from
+`HARNESS_TOOLS`, which closed the second list the first version of 6.1
+had opened.
+
+Not done here: the ladder maps every `gpt-5*` id, the Codex family
+included, to `gpt-5.4-mini`, so a session on `gpt-5.3-codex` is told to
+switch to a model outside its family while the cheaper
+`gpt-5.1-codex-mini` is in the same table. Also not done: the downgrade ladder for `model-mismatch` and
 `expensive-subagent` knows the `gpt-5` family only, so a Codex session on a
 newer family (`gpt-6-astra` in the fixtures) gets no cheaper-model finding.
 That is the ladder in the pricing engine, not source-specific copy.
