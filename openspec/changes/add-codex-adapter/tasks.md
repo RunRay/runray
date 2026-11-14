@@ -27,7 +27,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       clean, the generated diff holds only the two enum values and the
       version, and a test validates a 0.1.0 run against the new run schema
       ("Codex is a named source").
-- [ ] 1.2 A Rollout line reader in `packages/core` (T3, D5): streaming lines
+- [x] 1.2 A Rollout line reader in `packages/core` (T3, D5): streaming lines
       from a plain or zstd-compressed file, split on LF only (not
       `node:readline`), UTF-8 decoded across chunk boundaries, with 1-based
       line numbers, BOM stripping, early stop for a first-record read, and a

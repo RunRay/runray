@@ -255,6 +255,21 @@ boundaries. The Claude Code adapter and `transcript.ts` read through
 `readline` and have the same defect (22 records in 12 of 2,787 local
 transcripts); fixing them is a separate change.
 
+**The zstd decoder stops at the first frame.** `zlib.createZstdDecompress()`
+ends its output at the end of the first frame and drops the rest of the
+input with no error (Node 24.14; a file of two frames decodes as the first
+one). A zstd file may be several frames back to back, so the reader starts a
+new decoder at the offset where the last one stopped (`bytesWritten` is the
+input consumed) until nothing is left. Bytes after a frame that are not a
+frame reject the read. All 250 surveyed files are one complete frame, so
+this is a guard, not a measured case.
+
+The same decoder reports no error for a frame that is cut short. A
+compressed rollout that ends early reads as the lines before the cut, the
+last one possibly incomplete, which the parser reports as an unparseable
+line. That is what a plain rollout still being written gives, and it is
+accepted for the same reason.
+
 Measured: the largest file is 157 MB compressed, 257 MB of text, 6,537
 lines with a longest line of 9.7 MB, read and `JSON.parse`d in 2.2 s. All
 250 files take 57 s, nearly all of it in the 21 root threads over 3 MB. That
