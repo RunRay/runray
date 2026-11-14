@@ -69,6 +69,7 @@ fixtures/
   claude-code/<variant>/raw/*.jsonl   # git-ignored raw input
   claude-code/<variant>/*.jsonl       # committed, scrubbed
   opencode/<variant>/…
+  codex/<variant>/rollout-*.jsonl[.zst]
   otlp/<variant>/…
   normalized/…                        # goldens, added at task 2.6
 ```
@@ -108,6 +109,54 @@ corrupt. `pnpm scrub … --source otlp` (auto-detected from the `resourceSpans`
 envelope) keeps `traceId`/`spanId`/`parentSpanId`, `*UnixNano`, `gen_ai.*`
 attribute keys and numeric values byte-identical, anonymizes user/account/org
 identity attributes, and lorem's only free-text values.
+
+### Codex rollouts (`--source codex`)
+
+A Codex rollout (`rollout-<time>-<thread>.jsonl`, or `.jsonl.zst` once Codex
+has compressed it) has its own rules, in `scrub-codex.ts`. The flag is implied
+by the file name; a directory needs it spelled out.
+
+```sh
+pnpm scrub fixtures/codex/simple/raw/rollout-….jsonl
+pnpm scrub fixtures/codex/guardian/raw --source codex   # a root and its reviewer threads
+```
+
+The default-scrub is stricter here than for the other sources, because a
+rollout stores arbitrary payloads (MCP arguments and results, tool schemas)
+as native JSON next to Codex's own fields:
+
+- **Keys are scrubbed too.** A key is kept only when it belongs to Codex's
+  record schema. Inside a payload Codex does not define, every key and every
+  string becomes lorem, so a `name` or an `id` in an MCP result is never kept
+  for being called `name`.
+- **Unknown fields are reported, not kept.** A key the script does not know
+  is replaced by lorem together with everything under it, and its name is
+  printed on your terminal as `UNKNOWN keys`. That is a new Codex field: add
+  it to `KNOWN_KEYS` if the adapter needs it. `GUARDED values` lists
+  structural keys whose value did not look like an id or an enum and was
+  scrubbed.
+- **Paths used as keys** (`FileChange.changes`) are canonicalised like path
+  values.
+- **Diffs and patches keep their shape.** Marker lines (`*** Update File:`,
+  `@@`) and the first character of each change line stay, so the number of
+  added and removed lines is the same before and after. File paths in patch
+  markers are canonicalised.
+- **Shell wrappers stay, scripts do not.** In a command argv the program
+  (`pwsh.exe`, with lorem directories), and its flags are kept; the script is
+  lorem.
+- **Harness lines around an output stay** (`Script failed`, `Exit code: 1`,
+  `Wall time 1.4 seconds`, `Output:`), since they carry the outcome.
+- **Blobs become a placeholder**, not megabytes of lorem: `encrypted_content`,
+  `base_instructions`, `image_url`, and any long base64 string.
+- **Identity is replaced**: account and user ids, the repository URL, the
+  commit hash and the branch name.
+- **Compression follows the output name.** A `.jsonl.zst` input is read
+  compressed; the output is written compressed when its own name ends in
+  `.zst`, which a derived path does. The marker record is the first line of
+  the decompressed content, so `grep SCRUBBED` works on the plain form only.
+
+A line that is not JSON (the cut-off last line of a session still being
+written) is dropped and its number printed.
 
 ## otlp-sink.mjs — capture Claude Code beta OTLP traces (task 1.3)
 

@@ -477,27 +477,77 @@ run has no `title`; the UI already has a fallback for that.
 
 ### T14 — Scrubbing Codex fixtures
 
-`scripts/scrub-fixture.ts --source codex`, default-scrub as for the others,
-with these Codex rules:
+`scripts/scrub-fixture.ts --source codex`, with the rules in
+`scripts/scrub-codex.ts`. The posture is default-scrub as for the other
+sources, and stricter in one respect: it applies to keys as well as values.
+A rollout stores arbitrary payloads as native JSON (MCP arguments and
+results, tool schemas, the world state), so a key such as `name`, `id` or
+`status` that is structure in Codex's own records is user data two levels
+further down. Preserving by key name alone, as the generic walker does,
+would keep it.
 
+- **Two modes.** In Codex's own structure a key is kept only when it is on
+  the list of known schema keys (207 names, from a key-path survey of the
+  250 rollouts), and its string value is kept only when the key is on the
+  preserve list and the value is identifier-shaped. In a payload Codex does
+  not define (`result`, object `arguments`, `parsed_cmd`, `dynamic_tools`,
+  the world state, compaction history, search results) every key and every
+  string is lorem; numbers, booleans and the nesting survive.
+- **Unknown keys are scrubbed and reported.** A key outside the known list
+  is replaced by lorem with its whole subtree, and its name is printed to
+  the person running the script. A new Codex field is a visible gap in the
+  fixture, never an unreviewed value in git.
 - **Paths as keys.** `FileChange.changes` is an object keyed by absolute
-  path. The scrubber canonicalises those keys the way it canonicalises path
-  values; the default leaves keys alone.
-- **Diff shape.** In `unified_diff`, patch envelopes and `content`, the first
-  character of each line and the `*** … File:` / `@@` marker lines keep their
-  shape, so T9's line counts are the same before and after scrubbing.
-- **Wrappers.** `argv[0]` and the flags before the script are structural and
-  kept; the script is scrubbed.
-- **Blobs.** `encrypted_content` and `base_instructions` are replaced by a
-  short fixed placeholder, not length-preserved lorem; they are megabytes of
-  text the adapter never reads.
-- **Compression.** A `.jsonl.zst` input is decompressed, scrubbed and written
-  back compressed; the marker record is the first line either way.
-- Preserved keys beyond the existing list: `ordinal`, `call_id`, `turn_id`,
-  `root_turn_id`, `parent_turn_id`, `response_id`, `thread_id`,
-  `parent_thread_id`, `thread_source`, `model`, `model_provider`,
-  `cli_version`, `originator`, `status`, `exit_code`, `phase`, `role`,
-  `namespace`, item and record `type`, tool `name`, MCP `server` and `tool`.
+  path; those keys are canonicalised the way path values are.
+- **Paths, strictly.** The shared `scrubPath` keeps whatever follows the
+  last dot of a segment, so a dot-directory or a dotted name survives whole
+  (`.codex` did, 51,142 times, in the first audit). Codex paths go through
+  a variant that keeps an extension only after a non-empty stem and only
+  when it is up to eight letters or digits. The shared function is left
+  alone so the other sources re-scrub to the same bytes; fixing it there is
+  a follow-up.
+- **Diff shape.** In `unified_diff` and patch envelopes the marker lines
+  (`*** … File:`, `@@`) and the first character of each change line keep
+  their shape, a change line that reads as a `+++` / `---` header keeps
+  reading as one, and `content` keeps its newline positions, so T9's line
+  counts are the same before and after scrubbing.
+- **Wrappers.** Behind a known wrapper the program name, the flags before
+  the script and the drive are kept, the directories of `argv[0]` are lorem
+  and the script is scrubbed. A legacy `apply_patch` argv keeps its name and
+  its patch keeps its shape. Any other argv is scrubbed element by element.
+- **Call arguments.** A `function_call`'s JSON-encoded `arguments` is
+  parsed, scrubbed and re-encoded: `command` as an argv or a script,
+  `workdir` as a path, the parameter names of the built-in tools kept, any
+  other parameter name lorem.
+- **Output frames.** The lines the harness writes around an output
+  (`Script completed`, `Script failed`, `Script error:`, `Script
+  terminated`, `Script running with cell ID n`, `Wall time n seconds`,
+  `Exit code: n`, `Output:`, and three more) are kept, since they carry the
+  outcome the adapter reads; every other line is same-length lorem. A legacy
+  output's `metadata.exit_code` and `duration_seconds` are kept.
+- **Blobs.** `encrypted_content`, `base_instructions`, `image_url` and any
+  long base64 string are replaced by a short fixed placeholder, not
+  length-preserved lorem; they are megabytes the adapter never reads.
+- **Identity.** `creator_account_id` and `creator_user_id` become anonymous
+  stand-ins; `git.repository_url`, `commit_hash` and `branch` are replaced.
+- **Compression.** A `.jsonl.zst` input is read compressed; the output is
+  compressed when its own name ends in `.zst`. The marker record is the
+  first line of the content either way.
+- Preserved keys: the ids (`id`, `call_id`, `turn_id`, `root_turn_id`,
+  `parent_turn_id`, `response_id`, `thread_id`, `parent_thread_id`,
+  `session_id`, the window ids), `type`, `kind`, `role`, `phase`,
+  `status`, `reason`, `codex_error_info`, `thread_source`,
+  `turn_trigger`, tool `name`, `namespace`, MCP `server` and `tool`,
+  `model`, `model_provider`, `timestamp`, `cli_version`, `originator`,
+  and in `session_meta.source` the client name, the key under `subagent`
+  and the value of `other`. Numbers are always kept.
+
+Audited in memory against all 250 rollouts (121,445 records, 1,257 MB in,
+465 MB out): no path segment, user or host name, repository value or
+account id of a session found in its scrubbed output; ids, token counters,
+statuses, exit codes, argv shapes, diff line counts and output frames equal
+before and after; no unknown key and no guarded value. What survives as a
+string is ids, timestamps and about 140 enum, tool, model and version values.
 
 ## Risks / Trade-offs
 

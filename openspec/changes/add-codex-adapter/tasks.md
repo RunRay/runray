@@ -38,7 +38,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       record, read back as one line ("Line separator inside a string"); a
       test that stops after line one without reading the rest; and a test
       with zstd support stubbed out asserting the error text.
-- [ ] 1.3 A `scripts/scrub-fixture.ts --source codex` (T14): path keys of
+- [x] 1.3 A `scripts/scrub-fixture.ts --source codex` (T14): path keys of
       `changes`, diff and patch shape, shell wrappers kept and scripts
       scrubbed, placeholder for `encrypted_content` and `base_instructions`,
       compressed in and out, the extra preserved keys. Document the flag in
@@ -234,5 +234,9 @@ directly and the goldens test does not see `fixtures/codex` yet.
 - File the `node:readline` defect in the Claude Code adapter and
   `transcript.ts` (design T3) as its own fix: a record holding a raw U+2028
   or U+2029 is split and lost.
+- File the `scrubPath` weakness found in 1.3 as its own fix: the shared
+  path canonicalisation keeps a dot-directory or a dotted name whole
+  (design T14). The Codex path is not affected; the committed Claude Code
+  and OpenCode fixtures should be checked for such segments.
 - Rebase onto `develop` once `add-tool-usage-breakdown` has merged.
 - Archive the change after the project's review requirements are satisfied.
