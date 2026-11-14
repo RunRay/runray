@@ -1654,6 +1654,715 @@ describe('codex legacy token events', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// parse(): tools
+// ---------------------------------------------------------------------------
+
+const toolsOf = (raw: RawRun) =>
+  raw.spans.filter((s) => s.kind === 'tool_call' || s.kind === 'mcp_call');
+/** Name, parent and status of every tool span, in file order. */
+const toolRows = (raw: RawRun) =>
+  toolsOf(raw).map((s) => `${s.name} < ${s.parentId} ${s.status}`);
+
+const functionCall = (
+  sec: number,
+  callId: string,
+  name: string,
+  args: unknown = {},
+) =>
+  rec(sec, 'response_item', {
+    type: 'function_call',
+    call_id: callId,
+    name,
+    arguments: JSON.stringify(args),
+  });
+const functionOutput = (sec: number, callId: string, output: unknown) =>
+  rec(sec, 'response_item', {
+    type: 'function_call_output',
+    call_id: callId,
+    output,
+  });
+/** A script's output the way current Codex writes it: a head part, then
+ * what the script printed. */
+const scriptOutput = (
+  sec: number,
+  callId: string,
+  head = 'Script completed',
+  body = '12 passed',
+) =>
+  rec(sec, 'response_item', {
+    type: 'custom_tool_call_output',
+    call_id: callId,
+    output: [
+      { type: 'input_text', text: `${head}\nWall time 1.4 seconds\nOutput:\n` },
+      { type: 'input_text', text: body },
+    ],
+  });
+/** Something the harness did, recorded when it ended at second `sec`. It
+ * started at second `from`; with no `from` the record has no start time. */
+const action = (
+  sec: number,
+  turn: string | undefined,
+  item: Record<string, unknown>,
+  from?: number,
+) =>
+  rec(sec, 'event_msg', {
+    type: 'item_completed',
+    thread_id: ROOT,
+    ...(turn === undefined ? {} : { turn_id: turn }),
+    item,
+    ...(from === undefined ? {} : { started_at_ms: Date.parse(at(from)) }),
+    completed_at_ms: Date.parse(at(sec)),
+  });
+const command = (id: string, extra: Record<string, unknown> = {}) => ({
+  type: 'CommandExecution',
+  id,
+  command: ['pwsh.exe', '-Command', 'pnpm test --filter invoices'],
+  cwd: 'C:\\work\\billing-portal',
+  status: 'completed',
+  exit_code: 0,
+  aggregated_output: '12 passed\n',
+  formatted_output: '12 passed\n',
+  duration: { secs: 1, nanos: 0 },
+  ...extra,
+});
+
+describe('codex tool spans', () => {
+  it('emits a span per command a script ran, under the call of the response that made it, and none for the script', async () => {
+    const { raw, file } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.2-codex', TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(4, TURN_A, command('exec-1'), 3), // line 6
+      action(6, TURN_A, command('exec-2'), 5), // line 7
+      toolOutput(7, 'call_1'),
+      usageRecord(9, TURN_A, 'resp_2'),
+      completed(10, TURN_A),
+    ]);
+    const span = (id: string, from: number, to: number, line: number) => ({
+      id,
+      parentId: 'resp_1',
+      kind: 'tool_call',
+      name: 'exec_command',
+      status: 'ok',
+      startedAt: at(from),
+      endedAt: at(to),
+      durationMs: 1000,
+      tool: {
+        name: 'exec_command',
+        isError: false,
+        exitCode: 0,
+        outputBytes: 10,
+      },
+      attributes: {},
+      provenance: { file, line },
+    });
+    expect(toolsOf(raw)).toEqual([
+      span('exec-1', 3, 4, 6),
+      span('exec-2', 5, 6, 7),
+    ]);
+  });
+
+  it('emits a span for a call nothing came of, from the call to its output', async () => {
+    const { raw, file } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'), // line 3
+      usageRecord(3, TURN_A, 'resp_1'),
+      toolOutput(5, 'call_1'),
+      completed(6, TURN_A),
+    ]);
+    expect(toolsOf(raw)).toEqual([
+      {
+        id: 'call_1',
+        parentId: 'resp_1',
+        kind: 'tool_call',
+        name: 'exec',
+        status: 'ok',
+        startedAt: at(2),
+        endedAt: at(5),
+        durationMs: 3000,
+        tool: {
+          name: 'exec',
+          isError: false,
+          outputBytes: 'Script completed\nOutput:\n12 passed'.length,
+        },
+        attributes: {},
+        provenance: { file, line: 3 },
+      },
+    ]);
+  });
+
+  it('reads a failed command as an error with its exit code and the line that names the failure', async () => {
+    const lines = [
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(
+        5,
+        TURN_A,
+        command('exec-1', {
+          status: 'failed',
+          exit_code: 1,
+          aggregated_output:
+            'compiling invoices\nerror TS2322: totals do not match\n',
+          formatted_output: 'error TS2322: totals do not match\n',
+        }),
+        3,
+      ),
+      scriptOutput(6, 'call_1', 'Script failed', 'Script error:\nExit code: 1'),
+      completed(7, TURN_A),
+    ];
+    const { raw } = await parseLines(lines);
+    expect(toolsOf(raw)).toHaveLength(1);
+    expect(toolsOf(raw)[0]).toMatchObject({
+      name: 'exec_command',
+      status: 'error',
+      tool: { isError: true, exitCode: 1 },
+      content: { outputPreview: 'error TS2322: totals do not match\n' },
+    });
+
+    const { raw: redacted } = await parseLines(lines, true);
+    expect(toolsOf(redacted)[0]).toMatchObject({
+      status: 'error',
+      tool: { isError: true, exitCode: 1 },
+      content: { outputPreview: null },
+    });
+    for (const text of ['TS2322', 'invoices', 'pwsh', 'pnpm']) {
+      expect(JSON.stringify(redacted)).not.toContain(text);
+    }
+    // the script and the command are never stored, redacted or not
+    for (const text of ['pwsh', 'pnpm', 'exec_command({']) {
+      expect(JSON.stringify(raw.spans)).not.toContain(text);
+    }
+  });
+
+  it('reads an MCP action as an mcp_call named after the tool, with its server', async () => {
+    const mcp = (id: string, extra: Record<string, unknown> = {}) => ({
+      type: 'McpToolCall',
+      id,
+      server: 'linear',
+      tool: 'list_issues',
+      arguments: { team: 'billing-secret' },
+      status: 'completed',
+      result: { content: [{ type: 'text', text: '[]' }], isError: false },
+      duration: { secs: 0, nanos: 250_000_000 },
+      ...extra,
+    });
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      // called directly: the action carries the call's id
+      functionCall(2, 'call_m', 'list_issues', { team: 'billing-secret' }),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(4, TURN_A, mcp('call_m'), 3),
+      functionOutput(4, 'call_m', [{ type: 'input_text', text: '[]' }]),
+      // called from a script: the action has an id of its own
+      toolCall(5, 'call_2'),
+      usageRecord(6, TURN_A, 'resp_2'),
+      action(
+        8,
+        TURN_A,
+        mcp('exec-9', {
+          status: 'failed',
+          result: {
+            content: [
+              { type: 'image', data: 'AAAA' },
+              { type: 'text', text: 'Error: team not found' },
+            ],
+            isError: true,
+          },
+        }),
+      ),
+      toolOutput(9, 'call_2'),
+      completed(10, TURN_A),
+    ]);
+    expect(toolsOf(raw)).toMatchObject([
+      {
+        id: 'call_m',
+        parentId: 'resp_1',
+        kind: 'mcp_call',
+        name: 'list_issues',
+        status: 'ok',
+        startedAt: at(3),
+        endedAt: at(4),
+        tool: { name: 'list_issues', mcpServer: 'linear', isError: false },
+      },
+      {
+        id: 'exec-9',
+        parentId: 'resp_2',
+        kind: 'mcp_call',
+        name: 'list_issues',
+        status: 'error',
+        // no start time: the end less how long the call took
+        startedAt: '2026-10-13T09:00:07.750Z',
+        endedAt: at(8),
+        durationMs: 250,
+        tool: { mcpServer: 'linear', isError: true },
+        content: { outputPreview: 'Error: team not found' },
+      },
+    ]);
+    expect(JSON.stringify(raw.spans)).not.toContain('billing-secret');
+  });
+
+  it('gives an action written after its call output to that call, which is then no span', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      toolOutput(4, 'call_1'),
+      // no call is open, and the record has no start time
+      action(5, TURN_A, command('exec-1')),
+      completed(6, TURN_A),
+    ]);
+    expect(toolRows(raw)).toEqual(['exec_command < resp_1 ok']);
+    // without a start time: the end less the second the command took
+    expect(toolsOf(raw)[0]).toMatchObject({
+      startedAt: at(4),
+      endedAt: at(5),
+    });
+  });
+
+  it('gives a command that outlived its call to the call that launched it, not to the one waiting when it ended', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      scriptOutput(4, 'call_1', 'Script running with cell ID 7', ''),
+      functionCall(6, 'call_2', 'wait', { cell_id: 7 }),
+      usageRecord(7, TURN_A, 'resp_2'),
+      // started while call_1 was waiting, ended while call_2 is
+      action(9, TURN_A, command('exec-1'), 3),
+      functionOutput(10, 'call_2', [
+        {
+          type: 'input_text',
+          text: 'Script completed\nWall time 4.0 seconds\nOutput:\n',
+        },
+      ]),
+      completed(11, TURN_A),
+    ]);
+    expect(toolRows(raw)).toEqual([
+      'exec_command < resp_1 ok',
+      'wait < resp_2 ok',
+    ]);
+  });
+
+  it('hangs an action no call explains from its turn, and from the session outside any turn', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      action(1, undefined, command('exec-0'), 0),
+      started(2, TURN_A),
+      action(4, TURN_A, command('exec-1'), 3),
+      completed(5, TURN_A),
+      started(6, TURN_B),
+      toolCall(7, 'call_1'),
+      usageRecord(8, TURN_B, 'resp_1'),
+      toolOutput(9, 'call_1'),
+      // written after its turn ended and naming it: not turn B's call
+      action(10, TURN_A, command('exec-2')),
+      completed(11, TURN_B),
+    ]);
+    expect(toolRows(raw)).toEqual([
+      `exec_command < ${ROOT} ok`,
+      `exec_command < ${TURN_A} ok`,
+      `exec_command < ${TURN_A} ok`,
+      'exec < resp_1 ok',
+    ]);
+  });
+
+  it('leaves the tools of a response with no usage record on the turn', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      action(4, TURN_A, command('exec-1'), 3),
+      toolOutput(5, 'call_1'),
+      toolCall(6, 'call_2'),
+      rec(7, 'response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call_2',
+        output: 'aborted by user after 1.2s',
+      }),
+      aborted(7, TURN_A, 'interrupted'),
+    ]);
+    expect(llmCallsOf(raw)).toEqual([]);
+    expect(toolsOf(raw)).toMatchObject([
+      { name: 'exec_command', parentId: TURN_A, status: 'ok' },
+      {
+        name: 'exec',
+        parentId: TURN_A,
+        // stopping a call is the person's decision, not a tool failure
+        status: 'cancelled',
+        statusReason: 'user-rejected',
+        tool: { name: 'exec', isError: false },
+        content: { outputPreview: 'aborted by user after 1.2s' },
+      },
+    ]);
+  });
+
+  it('reads a legacy shell call as the command: exit code and duration from the output', async () => {
+    const shellOutput = (exitCode: number, seconds: number, output: string) =>
+      JSON.stringify({
+        output,
+        metadata: { exit_code: exitCode, duration_seconds: seconds },
+      });
+    const { raw, file } = await parseLines([
+      rec(0, 'session_meta', { id: ROOT, model_provider: 'openai' }),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5'),
+      // CLI 0.47: the token event, then the response's items in one batch
+      tokenCount(3, usageOf(1_000, 0, 50, 0), 1_050),
+      functionCall(6, 'call_1', 'shell', {
+        command: ['bash', '-lc', 'ls src/invoices'],
+      }), // line 5
+      functionOutput(
+        6,
+        'call_1',
+        shellOutput(2, 1.5, 'ls: cannot access src/invoices: No such file\n'),
+      ),
+      tokenCount(8, usageOf(2_000, 0, 80, 0), 3_130),
+      functionCall(9, 'call_2', 'shell', { command: ['bash', '-lc', 'pwd'] }),
+      functionOutput(9, 'call_2', shellOutput(0, 0.25, '/work\n')),
+      tokenCount(10, usageOf(3_000, 0, 10, 0), 6_140),
+      completed(11, TURN_A),
+    ]);
+    expect(toolsOf(raw)).toEqual([
+      {
+        id: 'call_1',
+        parentId: `${ROOT}:tokens:3`,
+        kind: 'tool_call',
+        name: 'shell',
+        status: 'error',
+        // the two records carry one time: the duration is the output's
+        startedAt: '2026-10-13T09:00:04.500Z',
+        endedAt: at(6),
+        durationMs: 1500,
+        tool: { name: 'shell', isError: true, exitCode: 2, outputBytes: 45 },
+        content: {
+          outputPreview: 'ls: cannot access src/invoices: No such file\n',
+        },
+        attributes: {},
+        provenance: { file, line: 5 },
+      },
+      {
+        id: 'call_2',
+        parentId: `${ROOT}:tokens:8`,
+        kind: 'tool_call',
+        name: 'shell',
+        status: 'ok',
+        startedAt: '2026-10-13T09:00:08.750Z',
+        endedAt: at(9),
+        durationMs: 250,
+        tool: { name: 'shell', isError: false, exitCode: 0, outputBytes: 6 },
+        attributes: {},
+        provenance: { file, line: 8 },
+      },
+    ]);
+  });
+
+  it('hangs a legacy call from its own response when the token event is written after the items', async () => {
+    const { raw } = await parseLines([
+      rec(0, 'session_meta', { id: ROOT }),
+      started(1, TURN_A),
+      turnContext(1, 'gpt-5.5'),
+      // CLI 0.77 and later: the items, then the token event; the output
+      // is read before the event here
+      functionCall(2, 'call_1', 'shell_command', { command: 'git status' }),
+      functionOutput(
+        4,
+        'call_1',
+        'Exit code: 128\nWall time: 1 seconds\nOutput:\nfatal: not a git repository\n',
+      ),
+      tokenCount(5, usageOf(1_000, 0, 50, 0), 1_050),
+      assistantMessage(7, 'Not a repository.'),
+      tokenCount(8, usageOf(2_000, 0, 80, 0), 3_130),
+      completed(9, TURN_A),
+    ]);
+    expect(toolsOf(raw)).toMatchObject([
+      {
+        name: 'shell_command',
+        parentId: `${ROOT}:tokens:5`,
+        status: 'error',
+        startedAt: at(3),
+        endedAt: at(4),
+        tool: { isError: true, exitCode: 128 },
+        content: { outputPreview: 'fatal: not a git repository\n' },
+      },
+    ]);
+    // a response does not begin when its own tool has finished
+    expect(llmCallsOf(raw).map((s) => [s.id, s.startedAt, s.endedAt])).toEqual([
+      [`${ROOT}:tokens:5`, at(1), at(5)],
+      [`${ROOT}:tokens:8`, at(5), at(8)],
+    ]);
+  });
+
+  it('counts harness actions, not model calls, as tool calls', async () => {
+    const lines = [sessionMeta(0), started(1, TURN_A)];
+    let actions = 0;
+    for (let i = 0; i < 10; i++) {
+      const sec = 2 + i * 4;
+      lines.push(toolCall(sec, `call_${i}`));
+      lines.push(usageRecord(sec + 1, TURN_A, `resp_${i}`));
+      // ten calls, twelve actions: the first two ran two commands each
+      for (let n = 0; n < (i < 2 ? 2 : 1); n++) {
+        lines.push(
+          action(sec + 2, TURN_A, command(`exec-${actions++}`), sec + 1),
+        );
+      }
+      lines.push(toolOutput(sec + 3, `call_${i}`));
+    }
+    lines.push(completed(50, TURN_A));
+    const { raw } = await parseLines(lines);
+    expect(actions).toBe(12);
+    expect(normalize(priceRun(raw)).totals.counts.toolCalls).toBe(12);
+  });
+
+  it('reads how a call ended from the head of its output', async () => {
+    const outcome = async (name: string, output: unknown, redact = false) => {
+      const { raw } = await parseLines(
+        [
+          sessionMeta(0),
+          started(1, TURN_A),
+          functionCall(2, 'call_1', name),
+          usageRecord(3, TURN_A, 'resp_1'),
+          functionOutput(6, 'call_1', output),
+          completed(7, TURN_A),
+        ],
+        redact,
+      );
+      const [span] = toolsOf(raw);
+      return {
+        status: span?.status,
+        tool: span?.tool,
+        startedAt: span?.startedAt,
+        preview: span?.content?.outputPreview,
+      };
+    };
+    const failed = [
+      {
+        type: 'input_text',
+        text: 'Script failed\nWall time 0.1 seconds\nOutput:\n',
+      },
+      {
+        type: 'input_text',
+        text: 'Script error:\nReferenceError: total is not defined',
+      },
+    ];
+    expect(await outcome('exec', failed)).toEqual({
+      status: 'error',
+      // both text parts, head lines included: what the model was handed
+      tool: { name: 'exec', isError: true, outputBytes: 43 + 51 },
+      // a script's wall time is not taken: the two records bracket it
+      startedAt: at(2),
+      preview: 'Script error:\nReferenceError: total is not defined',
+    });
+    expect((await outcome('exec', failed, true)).preview).toBeNull();
+
+    expect(
+      await outcome(
+        'wait',
+        'Script running with cell ID 3\nWall time 30.0 seconds\nOutput:\n',
+      ),
+    ).toMatchObject({ status: 'ok', tool: { isError: false } });
+    expect(
+      await outcome(
+        'wait',
+        'Script terminated\nWall time 0.0 seconds\nOutput:\n',
+      ),
+    ).toMatchObject({ status: 'ok' });
+
+    // a legacy command reports its exit code and its own duration
+    const clean =
+      'Exit code: 0\nWall time: 2.5 seconds\nOutput:\nOn branch main\n';
+    expect(await outcome('shell_command', clean)).toEqual({
+      status: 'ok',
+      tool: {
+        name: 'shell_command',
+        isError: false,
+        exitCode: 0,
+        outputBytes: clean.length,
+      },
+      startedAt: '2026-10-13T09:00:03.500Z',
+      preview: undefined,
+    });
+    // one that reports neither was never run
+    expect(
+      await outcome(
+        'shell',
+        'failed to parse function arguments: missing field',
+      ),
+    ).toMatchObject({
+      status: 'error',
+      tool: { name: 'shell', isError: true },
+      preview: 'failed to parse function arguments: missing field',
+    });
+    // any other call has no outcome to read
+    expect(await outcome('update_plan', 'Plan updated')).toEqual({
+      status: 'ok',
+      tool: { name: 'update_plan', isError: false, outputBytes: 12 },
+      startedAt: at(2),
+      preview: undefined,
+    });
+    expect(
+      await outcome('view_image', [
+        { type: 'input_image', image_url: 'data:x' },
+      ]),
+    ).toEqual({
+      status: 'ok',
+      tool: { name: 'view_image', isError: false },
+      startedAt: at(2),
+      preview: undefined,
+    });
+    // text that only looks like the JSON form is text
+    expect(await outcome('update_plan', '{"ok": true}')).toMatchObject({
+      status: 'ok',
+      tool: { outputBytes: 12 },
+    });
+  });
+
+  it('keeps a call with no output in progress, and closes a call on its first output only', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      scriptOutput(4, 'call_1', 'Script running with cell ID 2', ''),
+      // written when the script left running ended
+      rec(6, 'response_item', {
+        type: 'custom_tool_call_output',
+        call_id: 'call_1',
+        output: 'Script failed\nOutput:\nlate',
+      }),
+      toolCall(7, 'call_2'), // line 7
+      usageRecord(8, TURN_A, 'resp_2'),
+    ]);
+    expect(toolsOf(raw)).toMatchObject([
+      { id: 'call_1', status: 'ok', startedAt: at(2), endedAt: at(4) },
+      {
+        id: 'call_2',
+        parentId: 'resp_2',
+        status: 'in_progress',
+        startedAt: at(7),
+      },
+    ]);
+    expect(toolsOf(raw)[1]).not.toHaveProperty('endedAt');
+    expect(toolsOf(raw)[1]).not.toHaveProperty('durationMs');
+  });
+
+  it('does not give the actions of a new turn to a call the turn before left unanswered', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      aborted(3, TURN_A, 'interrupted'),
+      started(4, TURN_B),
+      action(6, TURN_B, command('exec-1')),
+      action(8, TURN_B, command('exec-2'), 7),
+      completed(9, TURN_B),
+    ]);
+    expect(toolRows(raw)).toEqual([
+      `exec_command < ${TURN_B} ok`,
+      `exec_command < ${TURN_B} ok`,
+      `exec < ${TURN_A} in_progress`,
+    ]);
+  });
+
+  it('names file changes, image views and extensions after the harness tool, and skips items that are no action', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(4, TURN_A, { type: 'Reasoning', id: 'rs_1', summary_text: [] }),
+      action(4, TURN_A, { type: 'AgentMessage', id: 'msg_1', content: [] }),
+      action(4, TURN_A, { type: 'TodoList', id: 'exec-0', items: [] }),
+      action(
+        5,
+        TURN_A,
+        {
+          type: 'FileChange',
+          id: 'exec-1',
+          changes: {
+            'C:\\work\\billing-portal\\src\\totals.ts': {
+              type: 'add',
+              content: 'x\n',
+            },
+          },
+          status: 'failed',
+          stdout: '',
+          stderr: 'Failed to find expected lines in totals.ts\n',
+        },
+        4,
+      ),
+      action(
+        6,
+        TURN_A,
+        { type: 'ImageView', id: 'exec-2', path: 'C:\\shots\\a.png' },
+        6,
+      ),
+      action(
+        7,
+        TURN_A,
+        {
+          type: 'Extension',
+          kind: 'web.search',
+          id: 'exec-3',
+          query: 'vat rounding rules',
+        },
+        6,
+      ),
+      toolOutput(8, 'call_1'),
+      // called directly: the extension item carries the call id
+      functionCall(9, 'call_s', 'sleep', { duration_ms: 2000 }),
+      usageRecord(10, TURN_A, 'resp_2'),
+      action(12, TURN_A, {
+        type: 'Extension',
+        kind: 'clock.sleep',
+        id: 'call_s',
+        durationMs: 2000,
+      }),
+      functionOutput(12, 'call_s', 'Slept'),
+      // the same id twice: both are spans
+      toolCall(13, 'call_3'),
+      usageRecord(14, TURN_A, 'resp_3'),
+      action(15, TURN_A, command('exec-1'), 14), // line 18
+      toolOutput(16, 'call_3'),
+      completed(17, TURN_A),
+    ]);
+    expect(
+      toolsOf(raw).map((s) => [s.id, s.kind, s.name, s.parentId, s.status]),
+    ).toEqual([
+      ['exec-1', 'tool_call', 'apply_patch', 'resp_1', 'error'],
+      ['exec-2', 'tool_call', 'view_image', 'resp_1', 'ok'],
+      ['exec-3', 'tool_call', 'web.search', 'resp_1', 'ok'],
+      ['call_s', 'tool_call', 'clock.sleep', 'resp_2', 'ok'],
+      ['exec-1:18', 'tool_call', 'exec_command', 'resp_3', 'ok'],
+    ]);
+    const [patch, , , sleep] = toolsOf(raw);
+    expect(patch?.content).toEqual({
+      outputPreview: 'Failed to find expected lines in totals.ts\n',
+    });
+    expect(patch?.tool).toEqual({ name: 'apply_patch', isError: true });
+    // no start time: the end less the time slept
+    expect(sleep).toMatchObject({ startedAt: at(10), endedAt: at(12) });
+    for (const text of [
+      'totals.ts',
+      'a.png',
+      'vat rounding',
+      'billing-portal',
+    ]) {
+      expect(
+        JSON.stringify(toolsOf(raw).filter((s) => s !== patch)),
+      ).not.toContain(text);
+    }
+  });
+});
+
 describe('codex parse on the fixtures', () => {
   const candidatesIn = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -1783,7 +2492,215 @@ describe('codex parse on the fixtures', () => {
             expect(span.content).toEqual({ promptPreview: null });
           } else if (span.kind === 'llm_call') {
             expect(span.content).toEqual({ outputPreview: null });
+          } else if (span.status === 'error' || span.status === 'cancelled') {
+            // a tool that failed: its preview is the one output kept
+            expect(span.content).toEqual({ outputPreview: null });
           } else expect(span).not.toHaveProperty('content');
+        }
+      }
+    }
+  });
+
+  /** Tool spans of a run counted by name (an MCP call as `mcp`), failures
+   * apart. */
+  const toolTally = (raw: RawRun) => {
+    const out: Record<string, number> = {};
+    for (const s of toolsOf(raw)) {
+      const name = s.kind === 'mcp_call' ? 'mcp' : s.name;
+      const key = s.status === 'ok' ? name : `${name} ${s.status}`;
+      out[key] = (out[key] ?? 0) + 1;
+    }
+    return out;
+  };
+
+  const ACTION_TYPES = new Set([
+    'CommandExecution',
+    'FileChange',
+    'McpToolCall',
+    'Extension',
+    'ImageView',
+  ]);
+
+  /** Harness actions and the calls nothing came of, counted from the file
+   * apart from the adapter: calls as time windows, the action's owner
+   * looked up among them. */
+  async function toolCountsOf(file: string) {
+    interface Call {
+      from: number;
+      to: number;
+      turn: string | undefined;
+      answered: boolean;
+      actions: number;
+    }
+    const calls = new Map<string, Call>();
+    const lastAnswered = new Map<string, Call>();
+    const turnIds = new Set<string>();
+    let waiting: Call[] = [];
+    let current: string | undefined;
+    let actions = 0;
+    for await (const { text } of readRolloutLines(file)) {
+      if (text === '') continue;
+      const record = JSON.parse(text);
+      const payload = record.payload ?? {};
+      const now = Date.parse(record.timestamp);
+      if (record.type === 'event_msg') {
+        if (payload.type === 'task_started') {
+          current = payload.turn_id;
+          turnIds.add(payload.turn_id);
+          for (const call of waiting) call.to = now;
+          waiting = [];
+        } else if (
+          payload.type === 'task_complete' ||
+          payload.type === 'turn_aborted'
+        ) {
+          if (payload.turn_id === current) current = undefined;
+        } else if (
+          payload.type === 'item_completed' &&
+          ACTION_TYPES.has(payload.item?.type)
+        ) {
+          actions++;
+          const turn = turnIds.has(payload.turn_id) ? payload.turn_id : current;
+          const began: number | undefined = payload.started_at_ms;
+          const owner =
+            calls.get(payload.item.id) ??
+            (began === undefined
+              ? undefined
+              : [...calls.values()]
+                  .reverse()
+                  .find((c) => c.from <= began && began <= c.to)) ??
+            waiting.at(-1) ??
+            (turn === undefined ? undefined : lastAnswered.get(turn));
+          if (owner !== undefined) owner.actions++;
+        }
+      } else if (
+        record.type === 'response_item' &&
+        typeof payload.call_id === 'string'
+      ) {
+        if (payload.type.endsWith('_call')) {
+          const call: Call = {
+            from: now,
+            to: Number.POSITIVE_INFINITY,
+            turn: current,
+            answered: false,
+            actions: 0,
+          };
+          calls.set(payload.call_id, call);
+          waiting.push(call);
+        } else if (payload.type.endsWith('_output')) {
+          const call = calls.get(payload.call_id);
+          if (call === undefined || call.answered) continue;
+          call.answered = true;
+          call.to = now;
+          waiting = waiting.filter((c) => c !== call);
+          if (call.turn !== undefined) lastAnswered.set(call.turn, call);
+        }
+      }
+    }
+    const bare = [...calls.values()].filter((c) => c.actions === 0).length;
+    return { actions, calls: calls.size, bare };
+  }
+
+  it('emits as many tool spans as the file has actions and calls nothing came of', async () => {
+    for (const variant of [
+      'simple',
+      'guardian',
+      'tool-errors',
+      'legacy',
+      'compaction',
+    ]) {
+      for (const raw of await parseVariant(variant)) {
+        const counts = await toolCountsOf(raw.source.files[0] ?? '');
+        expect(toolsOf(raw), variant).toHaveLength(
+          counts.actions + counts.bare,
+        );
+        if (variant === 'tool-errors') {
+          // both kinds are there to be counted, and most calls are no span
+          expect(counts.actions).toBeGreaterThan(100);
+          expect(counts.bare).toBeGreaterThan(10);
+          expect(counts.bare).toBeLessThan(counts.calls / 2);
+        }
+      }
+    }
+  });
+
+  it('reads the tools the fixtures README lists', async () => {
+    // simple: 14 commands, 2 file changes, 1 MCP call, 17 extension items,
+    // every one of them run by an `exec` script that is no span itself
+    const [simple] = await parseVariant('simple');
+    expect(toolTally(simple as RawRun)).toEqual({
+      exec_command: 14,
+      apply_patch: 2,
+      mcp: 1,
+      'web.search': 17,
+    });
+
+    // guardian: 69 commands of which 7 failed, 15 file changes, 3 MCP calls
+    const [guardian] = await parseVariant('guardian');
+    expect(toolTally(guardian as RawRun)).toMatchObject({
+      exec_command: 62,
+      'exec_command error': 7,
+      apply_patch: 15,
+      mcp: 3,
+    });
+
+    // tool-errors: 17 failed commands and 1 failed file change in the
+    // first thread; 10 failed commands, 4 failed MCP calls and 3 failed
+    // scripts in the second. A failed script is a span only when no
+    // command of it was recorded, which leaves 2 of the first thread's 3.
+    const [first, second] = await parseVariant('tool-errors');
+    expect(toolTally(first as RawRun)).toMatchObject({
+      'exec_command error': 17,
+      'apply_patch error': 1,
+      'exec error': 2,
+    });
+    expect(toolTally(second as RawRun)).toMatchObject({
+      'exec_command error': 10,
+      'mcp error': 4,
+      'exec error': 3,
+    });
+
+    // legacy: the call is the command. 23 `shell` calls, 2 of them with a
+    // non-zero exit and 2 the harness refused to run; 5 `shell_command`
+    const [old, newer] = await parseVariant('legacy');
+    expect(toolTally(old as RawRun)).toEqual({
+      shell: 19,
+      'shell error': 4,
+      update_plan: 2,
+    });
+    expect(
+      toolsOf(old as RawRun).filter((s) => (s.tool?.exitCode ?? 0) !== 0),
+    ).toHaveLength(2);
+    expect(toolTally(newer as RawRun)).toEqual({
+      shell_command: 4,
+      'shell_command error': 1,
+      view_image: 3,
+      'image_gen.generation': 2,
+      load_workspace_dependencies: 1,
+    });
+
+    // compaction: a reviewer thread, which runs no tools
+    const [review] = await parseVariant('compaction');
+    expect(toolsOf(review as RawRun)).toEqual([]);
+  });
+
+  it('hangs every tool span from a call or a turn of its file, with times in order', async () => {
+    for (const variant of ['simple', 'guardian', 'tool-errors', 'legacy']) {
+      for (const raw of await parseVariant(variant)) {
+        const byId = new Map(raw.spans.map((s) => [s.id, s]));
+        for (const tool of toolsOf(raw)) {
+          const parent = byId.get(tool.parentId ?? '');
+          expect(['llm_call', 'turn']).toContain(parent?.kind);
+          expect(tool.tool?.name).toBe(tool.name);
+          expect(tool.tool?.isError).toBe(tool.status === 'error');
+          expect(tool.endedAt).toBeDefined();
+          expect(tool.startedAt <= (tool.endedAt ?? '')).toBe(true);
+          expect(tool.attributes).toEqual({});
+          expect(tool.provenance.line).toBeGreaterThan(1);
+          if (tool.status !== 'ok') {
+            expect(
+              tool.content?.outputPreview?.length ?? 0,
+            ).toBeLessThanOrEqual(200);
+          }
         }
       }
     }

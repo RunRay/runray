@@ -11,6 +11,7 @@ import type {
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
 import { isCompressedRollout, readRolloutLines } from '../rollout-lines.js';
+import { errorPreview } from './error-preview.js';
 
 /**
  * Codex adapter (change `add-codex-adapter`). Codex writes one "rollout" per
@@ -32,10 +33,16 @@ import { isCompressedRollout, readRolloutLines } from '../rollout-lines.js';
  * own: its file joins the candidate of its root thread (design D2).
  *
  * What `parse()` emits so far: the session span, one `turn` span per turn
- * the rollout brackets (design D3, T6) and one `llm_call` span per API
- * response (T4, T5). Tools and child threads follow in tasks 3.1 to 4.1;
- * the records they read are skipped here like any record the adapter has
- * no rule for.
+ * the rollout brackets (design D3, T6), one `llm_call` span per API
+ * response (T4, T5) and one tool span per thing the harness did (D4, T7).
+ * What a tool span says about its command or its patch follows in tasks
+ * 3.2 to 3.4, child threads in 4.1.
+ *
+ * Tool spans are harness actions, not model calls. Current Codex gives the
+ * model one tool, `exec`, whose input is a script; what the script ran is
+ * recorded as `item_completed` events (a command, a file change, an MCP
+ * call, a web search). Each of those is a span. The model's own call is a
+ * span only when no action came of it.
  *
  * Two token eras. A current rollout has a `token_usage_record` per
  * response, and that is the only thing tokens are read from. A rollout from
@@ -80,6 +87,9 @@ function str(v: unknown): string | undefined {
 }
 function num(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+}
+function int(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isInteger(v) ? v : undefined;
 }
 /** A token counter: a whole number, never below zero. */
 function count(v: unknown): number {
@@ -282,6 +292,40 @@ interface TurnState {
   open: boolean;
   /** The turn already has its prompt; later user messages are not it. */
   prompted: boolean;
+  /** The call of this turn whose output was read last. */
+  lastClosed: CallState | undefined;
+}
+
+/** How a model-level call ended, read from its output record. */
+interface CallOutcome {
+  status: 'ok' | 'error' | 'cancelled';
+  statusReason?: string;
+  exitCode?: number;
+  outputBytes?: number;
+  /** How long the output says the command ran. */
+  durationMs?: number;
+  /** The start of what a failure said. */
+  preview?: string;
+}
+
+/** A model-level tool call: a `…_call` record and, once read, its output. */
+interface CallState {
+  id: string;
+  name: string;
+  line: number;
+  at: string | undefined;
+  /** The turn it was made in. */
+  turn: TurnState | undefined;
+  /** The response being read when it was made, in each token era. */
+  response: ResponseSoFar;
+  legacyResponse: ResponseSoFar;
+  /** Harness actions attributed to it. */
+  actions: number;
+  /** When it stopped waiting for its output: the output was read, or the
+   * next turn began without one. */
+  until: string | undefined;
+  /** What its output said; none read yet when absent. */
+  outcome: CallOutcome | undefined;
 }
 
 const ISO_UTC_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -439,6 +483,272 @@ function newResponse(floor: string | undefined): ResponseSoFar {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Tools: harness actions and the calls that led to them (design D4, T7)
+// ---------------------------------------------------------------------------
+
+/** A time the harness gives as milliseconds since the epoch. */
+function isoOfMs(ms: number | undefined): string | undefined {
+  if (ms === undefined) return undefined;
+  const date = new Date(ms);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+/** `{secs, nanos}`, the way the harness writes how long something took. */
+function durationMsOf(v: unknown): number | undefined {
+  if (!isObj(v)) return undefined;
+  const secs = num(v.secs);
+  const nanos = num(v.nanos);
+  if (secs === undefined && nanos === undefined) return undefined;
+  return Math.max(0, (secs ?? 0) * 1000 + (nanos ?? 0) / 1e6);
+}
+
+/** The first of the values that is text with something in it. */
+function firstText(...values: unknown[]): string | undefined {
+  for (const v of values) {
+    if (typeof v === 'string' && v.trim() !== '') return v;
+  }
+  return undefined;
+}
+
+interface ActionIdentity {
+  name: string;
+  kind: 'tool_call' | 'mcp_call';
+  mcpServer?: string;
+}
+
+/**
+ * What an `item_completed` item is as a tool, or nothing when the item is
+ * not something the harness did (reasoning, a message, a compaction, a type
+ * a later Codex adds). The names are the harness's own, the ones the
+ * tool-usage registry lists: `exec_command` for a command, `apply_patch`
+ * for a file change, an extension's kind verbatim (`web.search`,
+ * `clock.sleep`, `image_gen.generation`), and for an MCP call the tool's
+ * name with its server next to it.
+ */
+function actionIdentity(item: Json): ActionIdentity | undefined {
+  switch (item.type) {
+    case 'CommandExecution':
+      return { name: 'exec_command', kind: 'tool_call' };
+    case 'FileChange':
+      return { name: 'apply_patch', kind: 'tool_call' };
+    case 'ImageView':
+      return { name: 'view_image', kind: 'tool_call' };
+    case 'Extension':
+      return { name: str(item.kind) ?? 'extension', kind: 'tool_call' };
+    case 'McpToolCall': {
+      const mcpServer = str(item.server);
+      return {
+        name: str(item.tool) ?? 'mcp_tool',
+        kind: 'mcp_call',
+        ...(mcpServer === undefined ? {} : { mcpServer }),
+      };
+    }
+    default:
+      return undefined;
+  }
+}
+
+/** A failure given as its text or as `{message}`. */
+function messageOf(v: unknown): string | undefined {
+  return typeof v === 'string' ? v : isObj(v) ? str(v.message) : undefined;
+}
+
+/** What a failed action said: the command's output, the patch tool's
+ * stderr, the text parts of an MCP result. */
+function failureTextOf(item: Json): string | undefined {
+  if (item.type === 'McpToolCall') {
+    const content = isObj(item.result) ? item.result.content : undefined;
+    if (Array.isArray(content)) {
+      for (const part of content) {
+        const text = isObj(part) ? firstText(part.text) : undefined;
+        if (text !== undefined) return text;
+      }
+    }
+    return firstText(messageOf(item.error));
+  }
+  return firstText(
+    item.aggregated_output,
+    item.formatted_output,
+    item.stderr,
+    item.stdout,
+    messageOf(item.failure),
+    messageOf(item.error),
+  );
+}
+
+/** The one tool output a run keeps is the start of a failure's text, as
+ * in the other adapters; under redaction it is null. */
+function failureContent(
+  redact: boolean,
+  preview: string | undefined,
+): Pick<RawSpan, 'content'> {
+  if (redact) return { content: { outputPreview: null } };
+  return preview === undefined ? {} : { content: { outputPreview: preview } };
+}
+
+function previewOf(text: string | undefined): string | undefined {
+  return text === undefined || text.trim() === ''
+    ? undefined
+    : errorPreview(text, PREVIEW_CHARS);
+}
+
+/** The text of an output record: a string, or the text parts of a list
+ * (an image part has none). */
+function outputTextOf(output: unknown): string | undefined {
+  if (typeof output === 'string') return output;
+  if (!Array.isArray(output)) return undefined;
+  let text: string | undefined;
+  for (const part of output) {
+    if (isObj(part) && typeof part.text === 'string') {
+      text = (text ?? '') + part.text;
+    }
+  }
+  return text;
+}
+
+// The lines the harness puts in front of an output. A script's:
+//   Script completed | Script failed | Script terminated |
+//   Script running with cell ID 12
+//   Wall time 1.4 seconds
+//   Output:
+// and a legacy command's:
+//   Exit code: 1
+//   Wall time: 1.4 seconds
+//   Output:
+const SCRIPT_HEAD =
+  /^Script (completed|failed|terminated|running with cell ID \d+)$/;
+const EXIT_HEAD = /^Exit code: (-?\d+)$/;
+const WALL_HEAD = /^Wall time:? (\d+(?:\.\d+)?) seconds$/;
+/** What the harness answers a call the person stopped. */
+const ABORTED_BY_USER = /^aborted by user/i;
+/** Calls of the era before harness actions were recorded: there the call
+ * is the command, and a successful one always reports an exit code. */
+const COMMAND_CALLS: ReadonlySet<string> = new Set([
+  'shell',
+  'shell_command',
+  'apply_patch',
+]);
+
+interface OutputHead {
+  /** `completed`, `failed`, … for a script; absent for a command. */
+  script?: string;
+  exitCode?: number;
+  wallMs?: number;
+  /** The text after the head. */
+  body: string;
+}
+
+function headOf(text: string): OutputHead | undefined {
+  let pos = 0;
+  const nextLine = (): { text: string; after: number } => {
+    const nl = text.indexOf('\n', pos);
+    const end = nl < 0 ? text.length : nl;
+    return {
+      text: text.slice(pos, end).replace(/\r$/, ''),
+      after: nl < 0 ? text.length : nl + 1,
+    };
+  };
+  const first = nextLine();
+  const script = SCRIPT_HEAD.exec(first.text)?.[1];
+  const exit = EXIT_HEAD.exec(first.text)?.[1];
+  if (script === undefined && exit === undefined) return undefined;
+  pos = first.after;
+  const second = nextLine();
+  const wall = WALL_HEAD.exec(second.text)?.[1];
+  if (wall !== undefined) pos = second.after;
+  const third = nextLine();
+  if (third.text === 'Output:') pos = third.after;
+  return {
+    ...(script === undefined ? {} : { script }),
+    ...(exit === undefined ? {} : { exitCode: Number(exit) }),
+    ...(wall === undefined ? {} : { wallMs: Number(wall) * 1000 }),
+    body: text.slice(pos),
+  };
+}
+
+/**
+ * How a call ended, from its output record. Four shapes were seen:
+ *
+ * - a script's output with its head lines: `Script failed` is the failure;
+ * - a legacy command's output as JSON, `{output, metadata: {exit_code,
+ *   duration_seconds}}`, or as text under an `Exit code:` head: a non-zero
+ *   exit code is the failure, and the duration is the command's own (the
+ *   records around it are written in one batch, so their times are not);
+ * - plain text from a legacy command call, with neither: the harness could
+ *   not run it (arguments it could not parse, a patch it refused), since a
+ *   command that ran always reports an exit code (71 of 71 in the survey);
+ * - plain text from any other call (`update_plan`, `view_image`): no
+ *   outcome to read, so the call went through.
+ *
+ * `outputBytes` is the size of the text the model was handed, or of the
+ * `output` field inside the JSON form.
+ */
+function outcomeOf(name: string, output: unknown): CallOutcome {
+  const text = outputTextOf(output);
+  if (text === undefined) return { status: 'ok' };
+  const bytes = (shown: string) => Buffer.byteLength(shown, 'utf8');
+
+  if (typeof output === 'string' && output.startsWith('{')) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(output);
+    } catch {
+      // not JSON after all: read as text below
+    }
+    if (isObj(parsed) && isObj(parsed.metadata)) {
+      const body = typeof parsed.output === 'string' ? parsed.output : '';
+      const exitCode = int(parsed.metadata.exit_code);
+      const seconds = num(parsed.metadata.duration_seconds);
+      const failed = exitCode !== undefined && exitCode !== 0;
+      const preview = failed ? previewOf(body) : undefined;
+      return {
+        status: failed ? 'error' : 'ok',
+        ...(exitCode === undefined ? {} : { exitCode }),
+        outputBytes: bytes(body),
+        ...(seconds === undefined
+          ? {}
+          : { durationMs: Math.max(0, seconds * 1000) }),
+        ...(preview === undefined ? {} : { preview }),
+      };
+    }
+  }
+
+  const head = headOf(text);
+  if (head !== undefined) {
+    const failed =
+      head.script === 'failed' ||
+      (head.exitCode !== undefined && head.exitCode !== 0);
+    const preview = failed ? previewOf(head.body) : undefined;
+    return {
+      status: failed ? 'error' : 'ok',
+      ...(head.exitCode === undefined ? {} : { exitCode: head.exitCode }),
+      outputBytes: bytes(text),
+      // a script's wall time includes its waits; the call's two records
+      // already bracket it, so only a command's own duration is taken
+      ...(head.script === undefined && head.wallMs !== undefined
+        ? { durationMs: head.wallMs }
+        : {}),
+      ...(preview === undefined ? {} : { preview }),
+    };
+  }
+
+  const stopped = ABORTED_BY_USER.test(text);
+  if (!stopped && !COMMAND_CALLS.has(name)) {
+    return { status: 'ok', outputBytes: bytes(text) };
+  }
+  const preview = previewOf(text);
+  return {
+    // stopping a call is the person's decision, not the tool failing: the
+    // same status and reason the other adapters give a declined call
+    ...(stopped
+      ? { status: 'cancelled', statusReason: 'user-rejected' }
+      : { status: 'error' }),
+    outputBytes: bytes(text),
+    ...(preview === undefined ? {} : { preview }),
+  };
+}
+
 /**
  * Reads one rollout and emits its spans: the thread's own span, a `turn`
  * span per turn and an `llm_call` span per response.
@@ -475,6 +785,39 @@ async function emitThread(
   const modelOfTurn = new Map<string, string>();
   let lastModel: string | undefined;
   const spanIds = new Set<string>();
+  /** An id no other span of the file has: the second record to claim one
+   * takes its line into its id. */
+  const uniqueId = (id: string, line: number): string => {
+    const spanId = spanIds.has(id) ? `${id}:${line}` : id;
+    spanIds.add(spanId);
+    return spanId;
+  };
+
+  // Model-level calls by `call_id`, and the tool spans read so far. Tool
+  // spans are held back until the file is read, for two reasons: whether a
+  // call is left without an action is known only then (an action can be
+  // written after its call's output, 27 times after its turn's end), and so
+  // is the token era, which decides which `llm_call` made the call.
+  const calls = new Map<string, CallState>();
+  /** Every call, in the order they were made. */
+  const callOrder: CallState[] = [];
+  /** Calls with no output yet, in the order they were made. */
+  let openCalls: CallState[] = [];
+  const toolSpans: { span: RawSpan; call: CallState | undefined }[] = [];
+  /** The call that was waiting for its output at a given moment. Calls do
+   * not overlap in what was surveyed, so the latest one made by then is the
+   * only candidate; a few more are looked at in case two ever run at once. */
+  const callOpenAt = (when: string): CallState | undefined => {
+    for (let i = callOrder.length - 1, tried = 0; i >= 0 && tried < 16; i--) {
+      const call = callOrder[i];
+      if (call === undefined || call.at === undefined || call.at > when) {
+        continue;
+      }
+      if (call.until === undefined || when <= call.until) return call;
+      tried++;
+    }
+    return undefined;
+  };
 
   // Both eras are followed while reading, because which one a file is in is
   // known only at its end: a file with usage records ignores token events.
@@ -525,13 +868,11 @@ async function emitThread(
       (turn === undefined ? undefined : modelOfTurn.get(turn.span.id)) ??
       lastModel ??
       'unknown';
-    // no response id repeats in 13,535 records; if one ever does, both
-    // records are calls and the second takes its line into its id
-    const spanId = spanIds.has(id) ? `${id}:${line}` : id;
-    spanIds.add(spanId);
     const durationMs = durationBetween(startedAt, endedAt);
     return {
-      id: spanId,
+      // no response id repeats in 13,535 records; if one ever does, both
+      // records are calls
+      id: uniqueId(id, line),
       parentId: turn?.span.id ?? sessionSpan.id,
       kind: 'llm_call',
       name: model,
@@ -630,7 +971,7 @@ async function emitThread(
           attributes: {},
           provenance: { file, line },
         };
-        current = { span, open: true, prompted: false };
+        current = { span, open: true, prompted: false, lastClosed: undefined };
         latest = current;
         turns.set(id, current);
         summary.turns++;
@@ -640,6 +981,10 @@ async function emitThread(
         legacyResponse = newResponse(undefined);
         tokenFirst = undefined;
         wroteInTurn = false;
+        // a call still unanswered when the next turn starts will not be
+        // answered in it: actions of the new turn are not its own
+        for (const call of openCalls) call.until = at ?? lastAt;
+        openCalls = [];
       } else if (event === 'task_complete' || event === 'turn_aborted') {
         const id = str(payload.turn_id);
         const turn = id === undefined ? current : turns.get(id);
@@ -691,9 +1036,91 @@ async function emitThread(
           session,
         );
         legacyCalls.push(span);
-        legacyResponse = newResponse(at ?? lastAt);
-        // token first: the items of this response are still to come
-        if (tokenFirst) legacyResponse.span = span;
+        // the call is that of the items read before it, or (token first)
+        // of the items still to come
+        const next = newResponse(at ?? lastAt);
+        if (tokenFirst) next.span = span;
+        else legacyResponse.span = span;
+        legacyResponse = next;
+      } else if (event === 'item_completed') {
+        // something the harness did: a tool span (design D4)
+        const item = isObj(payload.item) ? payload.item : undefined;
+        const identity = item === undefined ? undefined : actionIdentity(item);
+        if (item === undefined || identity === undefined) continue;
+        const namedTurn = str(payload.turn_id);
+        const turn =
+          (namedTurn === undefined ? undefined : turns.get(namedTurn)) ??
+          current;
+        // Whose action it is (design T7): the call it names; else the call
+        // that was waiting for its output when the action started; else,
+        // for an action with no start time or one started between calls,
+        // the call waiting now, then the call of the same turn that got its
+        // output last. The record is written when the action ends, and a
+        // command can outlive the call that launched it: 1,061 of 11,649
+        // ended while a later call was waiting, or just after one.
+        const itemId = str(item.id);
+        const began = isoOfMs(num(payload.started_at_ms));
+        const call =
+          (itemId === undefined ? undefined : calls.get(itemId)) ??
+          (began === undefined ? undefined : callOpenAt(began)) ??
+          openCalls.at(-1) ??
+          turn?.lastClosed;
+        if (call !== undefined) call.actions++;
+
+        const endedAt =
+          isoOfMs(num(payload.completed_at_ms)) ?? at ?? lastAt ?? EPOCH;
+        const tookMs = durationMsOf(item.duration) ?? num(item.durationMs);
+        // its own start where recorded, else its end less how long it took,
+        // else the moment its call was made
+        let startedAt =
+          began ??
+          (tookMs === undefined
+            ? undefined
+            : isoOfMs(Date.parse(endedAt) - tookMs)) ??
+          call?.at ??
+          endedAt;
+        if (startedAt > endedAt) startedAt = endedAt;
+        const durationMs = durationBetween(startedAt, endedAt);
+        const failed = item.status === 'failed';
+        const exitCode = int(item.exit_code);
+        // what the model was shown of a command's output; the older item
+        // has only the whole of it
+        const shown =
+          typeof item.formatted_output === 'string'
+            ? item.formatted_output
+            : typeof item.aggregated_output === 'string'
+              ? item.aggregated_output
+              : undefined;
+        toolSpans.push({
+          call,
+          span: {
+            id: uniqueId(itemId ?? `${summary.threadId}:action:${line}`, line),
+            // replaced by the call's response once the file is read
+            parentId: turn?.span.id ?? session.id,
+            kind: identity.kind,
+            name: identity.name,
+            status: failed ? 'error' : 'ok',
+            startedAt,
+            endedAt,
+            ...(durationMs === undefined ? {} : { durationMs }),
+            tool: {
+              name: identity.name,
+              ...(identity.mcpServer === undefined
+                ? {}
+                : { mcpServer: identity.mcpServer }),
+              isError: failed,
+              ...(exitCode === undefined ? {} : { exitCode }),
+              ...(shown === undefined
+                ? {}
+                : { outputBytes: Buffer.byteLength(shown, 'utf8') }),
+            },
+            ...(failed
+              ? failureContent(ctx.redact, previewOf(failureTextOf(item)))
+              : {}),
+            attributes: {},
+            provenance: { file, line },
+          },
+        });
       }
     } else if (type === 'turn_context') {
       const model = str(payload.model);
@@ -710,18 +1137,18 @@ async function emitThread(
         (namedTurnId === undefined ? undefined : turns.get(namedTurnId)) ??
         latest;
       summary.llmCalls++;
-      ctx.spans.push(
-        llmCall(
-          str(payload.response_id) ?? `${summary.threadId}:response:${line}`,
-          turn,
-          namedTurnId,
-          payload.usage,
-          response,
-          at,
-          line,
-          session,
-        ),
+      const span = llmCall(
+        str(payload.response_id) ?? `${summary.threadId}:response:${line}`,
+        turn,
+        namedTurnId,
+        payload.usage,
+        response,
+        at,
+        line,
+        session,
       );
+      ctx.spans.push(span);
+      response.span = span;
       response = newResponse(at ?? lastAt);
     } else if (type === 'response_item') {
       const item = str(payload.type);
@@ -751,11 +1178,52 @@ async function emitThread(
         response.callLine ??= line;
         legacyResponse.callLine ??= line;
         fillIn(legacyResponse);
+        // A call the harness answers carries a `call_id` (a hosted tool's
+        // record does not). It is open until its output is read.
+        const callId = str(payload.call_id);
+        if (callId !== undefined && !calls.has(callId)) {
+          const call: CallState = {
+            id: callId,
+            name: str(payload.name) ?? item.slice(0, -'_call'.length),
+            line,
+            at: at ?? lastAt,
+            turn: current,
+            response,
+            legacyResponse,
+            actions: 0,
+            until: undefined,
+            outcome: undefined,
+          };
+          calls.set(callId, call);
+          callOrder.push(call);
+          openCalls.push(call);
+        }
       } else if (item?.endsWith('_output')) {
-        // a tool output is handed back: the next response starts here
+        // A tool output is handed back: the next response starts here. Not
+        // the response that made the call, though. Its usage is sometimes
+        // written after its call's output (always in CLI 0.77 to 0.147),
+        // and a response cannot begin when its own tool has finished.
         const handedBack = at ?? lastAt;
-        response.floor = handedBack;
-        legacyResponse.floor = handedBack;
+        const callId = str(payload.call_id);
+        const call = callId === undefined ? undefined : calls.get(callId);
+        const startsAfter = (
+          so: ResponseSoFar,
+          madeBy: ResponseSoFar | undefined,
+        ): void => {
+          if (madeBy === so && so.span === undefined) return;
+          so.floor = handedBack;
+        };
+        startsAfter(response, call?.response);
+        startsAfter(legacyResponse, call?.legacyResponse);
+        // The first output closes its call. 5 `exec` calls in the survey
+        // have more, written later for a script they had left running; the
+        // call was answered by the first.
+        if (call !== undefined && call.outcome === undefined) {
+          openCalls = openCalls.filter((c) => c !== call);
+          call.until = handedBack;
+          call.outcome = outcomeOf(call.name, payload.output);
+          if (call.turn !== undefined) call.turn.lastClosed = call;
+        }
       }
     }
   }
@@ -772,10 +1240,74 @@ async function emitThread(
     const durationMs = durationBetween(firstAt, lastAt);
     if (durationMs !== undefined) session.durationMs = durationMs;
   }
-  if (summary.llmCalls === 0) {
+  const usageEra = summary.llmCalls > 0;
+  if (!usageEra) {
     // no usage record in the file: a legacy rollout, read from its counter
     summary.llmCalls = legacyCalls.length;
     ctx.spans.push(...legacyCalls);
+  }
+
+  // A call nothing was attributed to is a span of its own, named after the
+  // call: a script that only polled a process, a `wait`, an `update_plan`,
+  // and every command of the era before actions were recorded.
+  for (const call of calls.values()) {
+    if (call.actions > 0) continue;
+    const outcome = call.outcome;
+    const endedAt = outcome === undefined ? undefined : call.until;
+    let startedAt = call.at ?? session.startedAt;
+    if (endedAt !== undefined) {
+      if (outcome?.durationMs !== undefined) {
+        startedAt =
+          isoOfMs(Date.parse(endedAt) - outcome.durationMs) ?? startedAt;
+      }
+      if (startedAt > endedAt) startedAt = endedAt;
+    }
+    const durationMs = durationBetween(startedAt, endedAt);
+    // no output in the file: still running, as far as the file knows
+    const status = outcome?.status ?? 'in_progress';
+    toolSpans.push({
+      call,
+      span: {
+        id: uniqueId(call.id, call.line),
+        parentId: session.id, // set below
+        kind: 'tool_call',
+        name: call.name,
+        status,
+        ...(outcome?.statusReason === undefined
+          ? {}
+          : { statusReason: outcome.statusReason }),
+        startedAt,
+        ...(endedAt === undefined ? {} : { endedAt }),
+        ...(durationMs === undefined ? {} : { durationMs }),
+        tool: {
+          name: call.name,
+          isError: status === 'error',
+          ...(outcome?.exitCode === undefined
+            ? {}
+            : { exitCode: outcome.exitCode }),
+          ...(outcome?.outputBytes === undefined
+            ? {}
+            : { outputBytes: outcome.outputBytes }),
+        },
+        ...(status === 'error' || status === 'cancelled'
+          ? failureContent(ctx.redact, outcome?.preview)
+          : {}),
+        attributes: {},
+        provenance: { file, line: call.line },
+      },
+    });
+  }
+
+  // A tool span hangs from the `llm_call` of the response that made its
+  // call. A response with no call of its own (aborted before its usage was
+  // written) leaves its tools on the turn, and an action no call explains
+  // stays where it was put: on its turn, or on the session.
+  for (const { span, call } of toolSpans) {
+    if (call !== undefined) {
+      const made = usageEra ? call.response.span : call.legacyResponse.span;
+      span.parentId = made?.id ?? call.turn?.span.id ?? session.id;
+    }
+    ctx.spans.push(span);
   }
   return summary;
 }

@@ -91,7 +91,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 3. Adapter: tools
 
-- [ ] 3.1 A Calls, outputs and action attribution (D4, T7): pair calls with
+- [x] 3.1 A Calls, outputs and action attribution (D4, T7): pair calls with
       outputs by `call_id`; attribute harness actions by id, then to the open
       call, then to the call closed last in the same turn, then to the turn;
       emit action spans with their times, status, exit code, output size and
@@ -101,6 +101,15 @@ directly and the goldens test does not see `fixtures/codex` yet.
       a check on the `tool-errors` fixture that the number of tool spans
       equals actions plus action-less calls counted independently from the
       raw file.
+      Changed while doing it, with the measurements in T7: an action goes
+      to the call that was waiting when it **started** before the call open
+      when its record was written (1,061 of 11,649 actions outlive their
+      call), and which calls are left without an action is decided when the
+      file has been read, not at the end of a turn (27 actions are written
+      after their turn's end). Scenario "Command that outlives its call"
+      added to the spec. Figures on the 250 surveyed rollouts: 16,406 tool
+      spans in 214 threads, 16,404 under an `llm_call`, no id twice, every
+      run valid against the schema.
 - [ ] 3.2 A Shell unwrapping (T8): the wrapper table, the dialect guess for
       a script given as a bare string, a `codex` row in `adapters/target.ts`,
       a per-call dialect passed to the tool-usage classification (the

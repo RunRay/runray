@@ -244,6 +244,13 @@ to it. An MCP call SHALL be an `mcp_call` span carrying its server.
 - THEN one span named `exec_command` is emitted under that call's
   `llm_call`, and no span is named `exec`
 
+#### Scenario: Command that outlives its call
+- GIVEN an `exec` call that returned while its command was still running,
+  and a later `wait` call during which the command ended
+- WHEN it is parsed
+- THEN the `exec_command` span hangs from the `llm_call` of the `exec` call,
+  no span is named `exec`, and the `wait` call is a span of its own
+
 #### Scenario: Action with no call in its turn
 - GIVEN a command action in a turn in which no call has been made
 - WHEN it is parsed

@@ -146,8 +146,10 @@ Current Codex gives the model one tool, `exec`, whose input is a script
 
 Each of these is a tool span. The model-level call is a span only when no
 action is attributed to it under T7: a script that polled a background
-process, one that failed before calling anything, a `wait` that timed out.
-A response carried at most one call in the whole corpus.
+process, one that failed before calling anything, a `wait` on a command
+another call launched. A response carried at most one call in the current
+format; 35 legacy responses made several, and each call is read the same
+way.
 
 *Rejected:* a span per model-level call. Every command would be named `exec`.
 *Rejected:* both levels as parent and child tool spans. `counts.toolCalls`
@@ -297,7 +299,10 @@ response's own.
   start, the previous tool output and the end of the response before it
   (107 responses follow another with no tool between them, compactions
   among them), and ends at the usage record. That includes time to first
-  token, which is model time.
+  token, which is model time. The output of a call the response itself made
+  is not such a tool output, though it is sometimes written before the
+  response's usage (always in CLI 0.77 to 0.147): a response does not begin
+  when its own tool has finished.
 - The model is the one the latest `turn_context` of the record's turn
   names, else the last one named in the file: 2 usage records of 13,535
   have neither and are `unknown`. A `turn_context` can precede the
@@ -379,50 +384,94 @@ block. Records outside any turn attach to the session span.
 
 ### T7 — Attributing actions to calls
 
-A model-level call is open from its `function_call` / `custom_tool_call`
-record to the `…_output` record with the same `call_id` (all 5,567 calls had
-one). An `item_completed` action is attributed, in order:
+A model-level call is any `response_item` whose type ends in `_call` and
+that carries a `call_id` (`function_call`, `custom_tool_call`, 2
+`tool_search_call`; a hosted tool's record has no `call_id`). It waits for
+its output from its own record to the first `…_output` record with the same
+`call_id`. Every call in the survey had one; 5 `exec` calls have more (30
+further outputs in all), written later for a script they had left running,
+and those are ignored. A call still waiting when the next turn starts stops
+waiting there.
+
+An `item_completed` action (13,669 in the survey) is attributed, in order:
 
 1. to the call whose `call_id` equals the item's `id` (2,020 actions: MCP
-   calls, extensions, and the file changes of the legacy era);
-2. else to the single open call (10,233 actions; no action ever arrived with
-   two calls open);
-3. else to the call that closed most recently in the same turn (1,416
-   actions);
-4. else to the turn, or to the session for the 18 actions outside any turn.
+   tools and extensions the model called directly, and the file changes of
+   the legacy era);
+2. else to the call that was waiting when the action **started**, by the
+   record's `started_at_ms` against the times of the call's two records;
+3. else, for an action started while no call was waiting (168) or one with
+   no start time (none in the survey: the 31 without one all fall under
+   rule 1), to the call waiting now;
+4. else to the call of the same turn that got its output last;
+5. else to the turn the action names, or to the session outside any turn.
 
-Rule 3 is not an edge case. An action's record is often written just after
-its call's output: 983 of the 1,416 land within two records of that output,
-and all but two are in the same turn. 353 of them follow an `exec` call
-that had no action yet, so hanging them from the turn would also leave that
-call as a wrapper span beside its own command, which D4 rules out. Whether a
-call is left without an action is therefore decided when its turn ends, not
-when its output is read.
+Rule 2 goes by the start because the record is written when the action
+ends, and a command can outlive the call that launched it: the script
+returns `Script running with cell ID …`, and the command ends while a later
+`wait`, `sleep` or the next `exec` is waiting, or just after one. Going by
+the moment of the record, as an earlier draft of this section did, gave
+1,061 of the 11,649 actions without an id to a call that came after them:
+the tool span then started before the response it hung from, the call that
+launched the command stayed behind as a wrapper span next to it, and the
+`wait` that only watched disappeared. No action started or ended with two
+calls waiting, so the call waiting at a given moment is one call. After
+rule 2, 87 of 16,406 tool spans still start before their parent does.
+
+Rule 4 covers the record written just after its call's output when there is
+no start time to go by. 27 actions are written after their turn's end
+record and name that turn. For both reasons, whether a call is left without
+an action is decided when the file has been read, not when its output or
+its turn's end is.
 
 The action span's parent is the `llm_call` of the response that made the
-attributed call, or the turn in case 4. Its id is the item id, its times are
-`started_at_ms` / `completed_at_ms` where present and the record timestamp
-minus the item's `duration` otherwise. A call with no attributed action
-becomes a span named after the call (`exec`, `wait`, `sleep`, `update_plan`,
-`request_user_input_async`, …), `error` when its output says the script
-failed.
+attributed call (T4: the usage record, or in the legacy era the token event,
+that closes the items the call was read among), or the call's turn when that
+response has none, or the action's turn or the session in case 5. Its id is
+the item id. Its times are `started_at_ms` / `completed_at_ms`; without a
+start (31 actions) it is the end less the item's `duration` (`durationMs` for
+a sleep), else the time of its call's record. An item type the adapter does
+not know is no action and no span.
+
+A call with no attributed action becomes a span named after the call
+(`exec`, `wait`, `update_plan`, `request_user_input_async`, `view_image`, …)
+from its record to its output; with no output in the file it is
+`in_progress`. Its outcome is read from the output:
+
+| output | seen | outcome |
+|---|---|---|
+| `Script completed` / `Script running with cell ID N` / `Script terminated`, then `Wall time N seconds`, `Output:` | scripts and `wait` | `ok` |
+| `Script failed`, same head | 120 | `error`, preview from the text after the head |
+| JSON `{output, metadata: {exit_code, duration_seconds}}` | 981 legacy `shell` and `apply_patch` calls | `tool.exitCode`, `error` when non-zero |
+| `Exit code: N`, `Wall time: N seconds`, `Output:` | 354 legacy `shell_command` and `apply_patch` calls | the same, from the head |
+| plain text from `shell`, `shell_command` or `apply_patch` | 71 | `error`: the harness could not run it (arguments it could not parse, a patch it refused); a command that ran always reports an exit code |
+| text starting `aborted by user` | 4 `exec` calls | `cancelled` with `statusReason: user-rejected`, as the other adapters mark a call the person declined |
+| anything else | `update_plan`, `view_image`, … | `ok` |
 
 Span names are the harness's own, so the tool-usage resolver finds them in
 `HARNESS_TOOLS`: `exec_command` for a `CommandExecution`, `apply_patch` for a
-`FileChange`, the MCP tool name for an `McpToolCall` (with `tool.mcpServer`
-and kind `mcp_call`), `web.search` and the other extension kinds verbatim.
-The legacy era has no command actions at all (0 `CommandExecution` items
-against 1,081 `shell` / `shell_command` calls), so there a command is its
-call: the span keeps the call's name, and its exit code and duration come
-from the output's metadata. A legacy `shell` call whose argv starts with
-`apply_patch` (238 cases) is named `apply_patch`; 25 of them also have a
-`FileChange` item, which carries the call's id and is attributed by rule 1.
+`FileChange`, `view_image` for an `ImageView`, the MCP tool name for an
+`McpToolCall` (with `tool.mcpServer` and kind `mcp_call`), `web.search` and
+the other extension kinds verbatim. The legacy era has no command actions at
+all (0 `CommandExecution` items against 1,081 `shell` / `shell_command`
+calls), so there a command is its call: the span keeps the call's name, and
+its exit code and duration come from the output. The duration matters there:
+CLI 0.47 writes a call and its output in one batch, so in 381 of 686 `shell`
+calls the two records are closer together than the command ran, and the span
+is the output's time less the reported duration. A legacy `shell` call whose
+argv starts with `apply_patch` (238 cases) is named `apply_patch` (task 3.3);
+25 `apply_patch` calls also have a `FileChange` item, which carries the
+call's id and is attributed by rule 1.
 
-`tool.isError` and `status: 'error'` follow the item's `status: "failed"`;
-`tool.exitCode` is `exit_code` (or `metadata.exit_code` in a legacy output);
-`tool.outputBytes` is the byte length of what the model was shown
-(`formatted_output`, or the output record's text in the legacy era). The
-error preview of a failed action goes through `error-preview.ts`.
+`tool.isError` and `status: 'error'` follow the item's `status: "failed"`
+(for an MCP call it agrees with `result.isError` in all 2,011);
+`tool.exitCode` is `exit_code`; `tool.outputBytes` is the byte length of
+what the model was shown: a command's `formatted_output` (`aggregated_output`
+in the 961 items of the older shape that lack it), a call's output text, or
+the `output` field inside the legacy JSON form. The preview of a failure goes
+through `error-preview.ts` and is taken from the command's output, a file
+change's stderr, the first text part of an MCP result, or the call's output
+after its head; 112 of 1,462 failures have no text to preview.
 
 ### T8 — Unwrapping the shell
 
