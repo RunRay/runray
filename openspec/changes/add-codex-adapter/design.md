@@ -147,9 +147,11 @@ Current Codex gives the model one tool, `exec`, whose input is a script
 Each of these is a tool span. The model-level call is a span only when no
 action is attributed to it under T7: a script that polled a background
 process, one that failed before calling anything, a `wait` on a command
-another call launched. A response carried at most one call in the current
-format; 35 legacy responses made several, and each call is read the same
-way.
+another call launched. One exception: a call that failed or was stopped
+while every action of it went through is a span too, next to its actions,
+or the failure the model was handed would show nowhere (T7). A response
+carried at most one call in the current format; 35 legacy responses made
+several, and each call is read the same way.
 
 *Rejected:* a span per model-level call. Every command would be named `exec`.
 *Rejected:* both levels as parent and child tool spans. `counts.toolCalls`
@@ -436,7 +438,13 @@ not know is no action and no span.
 A call with no attributed action becomes a span named after the call
 (`exec`, `wait`, `update_plan`, `request_user_input_async`, `view_image`, …)
 from its record to its output; with no output in the file it is
-`in_progress`. Its outcome is read from the output:
+`in_progress`. So does a call whose output says it failed or was stopped
+when none of its actions failed: a script that ran its commands and then
+threw (18 of the 120 failed scripts, and 1 of the 4 stopped calls). Its
+actions stay spans; the call is one more, a sibling under the same
+`llm_call`, and counts in `toolErrors`. A failed script with a failed
+command is not repeated (24), and neither is a call whose action carries
+the call's id. The outcome is read from the output:
 
 | output | seen | outcome |
 |---|---|---|
@@ -471,7 +479,12 @@ in the 961 items of the older shape that lack it), a call's output text, or
 the `output` field inside the legacy JSON form. The preview of a failure goes
 through `error-preview.ts` and is taken from the command's output, a file
 change's stderr, the first text part of an MCP result, or the call's output
-after its head; 112 of 1,462 failures have no text to preview.
+after its head; 112 of 1,481 failures have no text to preview. Such a span
+has no `content` field in either mode. Under redaction a preview is null
+exactly where there is one without it: the two parses of a file differ in
+values, never in which fields exist, which is what lets the sanitized forms
+of both be identical (the "Redaction parity" scenario) without a rule in
+`sanitize.ts` that looks at a span's status.
 
 **MCP calls and extensions.** An MCP action's size is the text parts of
 `result.content`; an image part is not counted. An action that carries its
@@ -501,11 +514,20 @@ A command is an argv. The wrapper is recognised by the basename of
 
 | wrapper | script | dialect |
 |---|---|---|
-| `pwsh`, `powershell` | last element | `powershell` |
-| `bash`, `zsh`, `sh`, `dash` | last element | `posix` |
-| `cmd` | last element | guessed from the text, as hook commands are |
-| anything else | the argv joined with spaces | `posix` |
+| `pwsh`, `powershell` | everything after `-Command` / `-c`, joined | `powershell` |
+| `bash`, `zsh`, `sh`, `dash` | the one element after `-c` (`-lc`, `-ic`) | `posix` |
+| `cmd` | everything after `/c` / `/k`, joined | guessed from the text, as hook commands are |
+| anything else | the argv written back as one command line, each argument quoted where a POSIX shell needs it | `posix` |
 | a string, not an argv | the string | `powershell` in a thread whose working directory is a Windows path, else guessed from the text |
+
+The script follows the switch that hands the shell a command, read the way
+that shell takes it: PowerShell and `cmd` join what follows into one
+command line, a POSIX shell takes the next word and treats the rest as its
+arguments. In every command surveyed that is the last element. A wrapper
+with no such switch was given a script file (`bash build.sh --fast`), which
+is what is left after its own options. An argv with no shell in front keeps
+its arguments apart: joined with bare spaces, `git commit -m "wip; pnpm
+build"` would read as two commands and be classified as a build.
 
 The script is the `command` that target identity and tool usage are
 computed from. `adapters/target.ts` gets a `codex` row (`exec_command`,
@@ -543,12 +565,24 @@ unclassified. The tools at the top are `Get-Content`, `git`, `node`, `rg`
 and `npm`.
 
 The harness table gets the Codex names it lacked. `shell_command` is a
-shell tool. `web.search` is `web`, `request_user_input_async` is `human`,
-and `js` / `js_reset` (tools of an MCP server Codex ships, spans under those
-names only when the MCP action was not recorded) are `integration`. `exec`,
-`wait`, `sleep`, `clock.sleep`, `write_stdin`, `imagegen` and
-`image_gen.generation` are none of the kinds "Harness tool classification"
-names and are listed as `other`, which is also what an unlisted name gets.
+shell tool. `web.search` is `web` and `request_user_input_async` is
+`human`. `exec`, `wait`, `sleep`, `clock.sleep`, `write_stdin`, `imagegen`
+and `image_gen.generation` are none of the kinds "Harness tool
+classification" names and are listed as `other`, which is also what an
+unlisted name gets. `js` and `js_reset` are not listed: they are tools of
+an MCP server Codex ships and all 1,728 calls are recorded as MCP actions,
+while the table is shared by every source, where a tool that happens to be
+called `js` is not an MCP call.
+
+`runray.targetKey` is the hash of the script's first token, as for every
+shell tool. In PowerShell that token is often not a program: 1,717 of the
+9,220 command spans start with a here-string (683, one key between them),
+the call operator `&` (310) or an assignment. The retry-loop rule groups
+failures by tool name and target key, so it will merge unrelated failed
+scripts on Codex runs. The rule is shared by all sources and is being
+re-keyed on the classified program in a change of its own
+(RunRay/runray#80); the adapter does not diverge from the shared key in the
+meantime.
 
 ### T9 — File changes
 
@@ -585,8 +619,11 @@ tool usage is stamped, and the line counts and the single-file identity come
 from the patch text (`*** Add File:` / `*** Update File:` / `*** Delete
 File:` headers, `+` and `-` body lines). A deleted file has no body in a
 patch, so its lines are not counted. A path a patch gives relative to the
-working directory is joined to the thread's `cwd` before it is hashed, so
-the file has the key a current rollout gives it. The outcome is the call's
+working directory is joined to the directory the call ran in (its
+`workdir` argument where it has one, else the thread's `cwd`) and has its
+`.` and `..` resolved before it is hashed, so the file has the key a
+current rollout gives it. A path already from the root is hashed as
+written. The outcome is the call's
 (T7): 94 of the 568 failed. 25 more `apply_patch` calls do have a
 `FileChange` item, which carries the call's id (T7 rule 1) and is the span.
 

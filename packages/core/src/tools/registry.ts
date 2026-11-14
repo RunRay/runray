@@ -1904,12 +1904,7 @@ export const HARNESS_TOOLS: ReadonlyMap<string, HarnessTool> = new Map([
     'human',
     'AskUserQuestion ExitPlanMode question request_user_input_async',
   ),
-  // `js` and `js_reset` are tools of an MCP server Codex ships; they are
-  // spans under these names only when the MCP action itself was not recorded
-  ...harness(
-    'integration',
-    'ListMcpResourcesTool ReadMcpResourceTool js js_reset',
-  ),
+  ...harness('integration', 'ListMcpResourcesTool ReadMcpResourceTool'),
 ]);
 
 /** Activity of a harness tool by name; `other` for a name outside the table. */

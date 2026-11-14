@@ -324,8 +324,9 @@ interface CallState {
   /** The response being read when it was made, in each token era. */
   response: ResponseSoFar;
   legacyResponse: ResponseSoFar;
-  /** Harness actions attributed to it. */
+  /** Harness actions attributed to it, and how many of them failed. */
   actions: number;
+  failedActions: number;
   /** What its span carries if it becomes one: the identity of the command
    * for a call to a shell tool, of the file for a patch of one file,
    * nothing for any other. */
@@ -604,14 +605,19 @@ function mcpTextBytes(item: Json): number | undefined {
   return bytes;
 }
 
-/** The one tool output a run keeps is the start of a failure's text, as
- * in the other adapters; under redaction it is null. */
+/**
+ * The one tool output a run keeps is the start of a failure's text, as in
+ * the other adapters; under redaction it is null. A failure that said
+ * nothing has no `content` in either mode: the two parses of one file must
+ * differ in values only, never in which fields exist, or the sanitized
+ * forms of the two could not be told to match (redaction parity).
+ */
 function failureContent(
   redact: boolean,
   preview: string | undefined,
 ): Pick<RawSpan, 'content'> {
-  if (redact) return { content: { outputPreview: null } };
-  return preview === undefined ? {} : { content: { outputPreview: preview } };
+  if (preview === undefined) return {};
+  return { content: { outputPreview: redact ? null : preview } };
 }
 
 function previewOf(text: string | undefined): string | undefined {
@@ -667,12 +673,17 @@ function programOf(arg0: string): string {
  *
  * A command is an argv that starts with its shell: `pwsh.exe -Command …`
  * (8,232 of 8,407 actions), `cmd.exe /c …` (175), and in the legacy era
- * `powershell.exe -NoProfile -Command …` or `bash -lc …`. The script is the
- * last element in every one of them, and the wrapper names its dialect.
+ * `powershell.exe -NoProfile -Command …` or `bash -lc …`. The script is
+ * what follows the switch that hands the shell a command (the last element
+ * in every command surveyed), read the way that shell takes it: PowerShell
+ * and `cmd` join everything after the switch into one command line, a
+ * POSIX shell takes the next word alone. The wrapper names the dialect.
  * `cmd` has none of the two dialects, so its script is read by how it
  * looks, as a hook command is.
  *
- * An argv with no shell in front is the command itself (`git status`). Its
+ * An argv with no shell in front is the command itself (`git status`). It
+ * is written back as one POSIX command line, each argument quoted where it
+ * needs to be, so that a `;` inside a commit message stays inside it. Its
  * program is written without its directory when the path would not survive
  * being read back as one word.
  *
@@ -696,20 +707,55 @@ function scriptOf(command: unknown, windows: boolean): Script | undefined {
   const [arg0, ...rest] = argv;
   if (arg0 === undefined) return undefined;
   const program = programOf(arg0);
-  const last = rest.at(-1);
-  if (last !== undefined) {
-    if (POWERSHELL_WRAPPERS.has(program)) {
-      return { text: last, dialect: 'powershell', guessed: false };
+  if (POWERSHELL_WRAPPERS.has(program)) {
+    const text = handedTo(rest, /^-(?:c|command)$/i, true);
+    if (text !== undefined) {
+      return { text, dialect: 'powershell', guessed: false };
     }
-    if (POSIX_WRAPPERS.has(program)) {
-      return { text: last, dialect: 'posix', guessed: false };
-    }
-    if (program === 'cmd') {
-      return { text: last, dialect: guessShellDialect(last), guessed: true };
+  } else if (POSIX_WRAPPERS.has(program)) {
+    const text = handedTo(rest, /^-[A-Za-z]*c$/, false);
+    if (text !== undefined) return { text, dialect: 'posix', guessed: false };
+  } else if (program === 'cmd') {
+    const text = handedTo(rest, /^\/[ck]$/i, true);
+    if (text !== undefined) {
+      return { text, dialect: guessShellDialect(text), guessed: true };
     }
   }
   const head = /[\s\\]/.test(arg0) ? program : arg0;
-  return { text: [head, ...rest].join(' '), dialect: 'posix', guessed: false };
+  return {
+    text: [head, ...rest.map(posixWord)].join(' '),
+    dialect: 'posix',
+    guessed: false,
+  };
+}
+
+/**
+ * The script a shell wrapper was handed: what follows the switch that
+ * introduces a command, all of it joined when the shell joins it, else the
+ * one word after the switch. With no such switch the shell was given a
+ * script file and its arguments (`bash build.sh --fast`): what is left
+ * after the shell's own options. Nothing when the wrapper stands alone.
+ */
+function handedTo(
+  rest: string[],
+  commandSwitch: RegExp,
+  joinsTheRest: boolean,
+): string | undefined {
+  const at = rest.findIndex((arg) => commandSwitch.test(arg));
+  if (at < 0) {
+    const file = rest.findIndex((arg) => !arg.startsWith('-'));
+    return file < 0 ? undefined : rest.slice(file).join(' ');
+  }
+  const after = rest.slice(at + 1);
+  return joinsTheRest && after.length > 0 ? after.join(' ') : after[0];
+}
+
+/** An argument as a POSIX shell would need it written to read it back as
+ * one word. */
+function posixWord(arg: string): string {
+  return /^[A-Za-z0-9_@%+=:,./-]+$/.test(arg)
+    ? arg
+    : `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
 /**
@@ -740,9 +786,8 @@ function commandAttributes(
   };
 }
 
-/** The command a call to a shell tool was made with: `command` (an argv or
- * a string) in the legacy tools, `cmd` in `exec_command`. */
-function commandOfCall(payload: Json): unknown {
+/** The arguments a function call was made with: JSON in a string. */
+function argsOfCall(payload: Json): Json | undefined {
   let args: unknown = payload.arguments;
   if (typeof args === 'string') {
     try {
@@ -751,7 +796,31 @@ function commandOfCall(payload: Json): unknown {
       return undefined;
     }
   }
-  return isObj(args) ? (args.command ?? args.cmd) : undefined;
+  return isObj(args) ? args : undefined;
+}
+
+/** The command a call to a shell tool was made with: `command` (an argv or
+ * a string) in the legacy tools, `cmd` in `exec_command`. */
+function commandOf(args: Json | undefined): unknown {
+  return args?.command ?? args?.cmd;
+}
+
+/**
+ * A path a call gives, as a path from the root. A path that is already one
+ * is left exactly as written, which is how the other adapters hash theirs.
+ * A relative one is taken from the directory the call ran in, with `.` and
+ * `..` resolved; the separators do not matter to the result's identity
+ * (`target.ts` hashes the POSIX form), so they are written as `/`.
+ */
+function rootedPath(path: string, base: string | undefined): string {
+  if (base === undefined || /^(?:[A-Za-z]:[\\/]|[\\/])/.test(path)) return path;
+  const out: string[] = [];
+  for (const segment of `${base}/${path}`.split(/[\\/]/)) {
+    if (segment === '.' || (segment === '' && out.length > 0)) continue;
+    if (segment === '..' && out.length > 1 && out.at(-1) !== '..') out.pop();
+    else out.push(segment);
+  }
+  return out.join('/');
 }
 
 // --- file changes: what a patch did (design T9) ----------------------------
@@ -894,6 +963,7 @@ function patchOf(text: string): ChangeSummary | undefined {
 function patchOfCall(
   name: string,
   payload: Json,
+  command: unknown,
   windows: boolean,
 ): ChangeSummary | undefined {
   if (name === 'apply_patch') {
@@ -901,7 +971,6 @@ function patchOfCall(
     return input === undefined ? undefined : patchOf(input);
   }
   if (HARNESS_TOOLS.get(name)?.role !== 'shell') return undefined;
-  const command = commandOfCall(payload);
   if (Array.isArray(command)) {
     const [program, patch] = command;
     if (typeof program === 'string' && programOf(program) === 'apply_patch') {
@@ -918,21 +987,22 @@ function patchOfCall(
  * File-write identity for a change of exactly one path (the mean is 2.2
  * paths per change; with several there is no one target, as for OpenCode's
  * `apply_patch`). A relative path, which a legacy patch may give, is taken
- * from the thread's working directory, so the same file has the same key
- * however the patch spells it.
+ * from the directory the change was made in, so the same file has the same
+ * key however the patch spells it.
  */
 function changeAttributes(
   change: ChangeSummary | undefined,
-  cwd: string | undefined,
+  base: string | undefined,
   redact: boolean,
 ): Record<string, unknown> {
   const [path, ...others] = change?.paths ?? [];
   if (path === undefined || others.length > 0) return {};
-  const rooted =
-    cwd === undefined || /^(?:[A-Za-z]:[\\/]|[\\/])/.test(path)
-      ? path
-      : `${cwd.replace(/[\\/]+$/, '')}/${path.replace(/^\.[\\/]/, '')}`;
-  return toolTargetAttributes('codex', 'apply_patch', { path: rooted }, redact);
+  return toolTargetAttributes(
+    'codex',
+    'apply_patch',
+    { path: rootedPath(path, base) },
+    redact,
+  );
 }
 
 // The lines the harness puts in front of an output. A script's:
@@ -950,8 +1020,15 @@ const EXIT_HEAD = /^Exit code: (-?\d+)$/;
 const WALL_HEAD = /^Wall time:? (\d+(?:\.\d+)?) seconds$/;
 /** What the harness answers a call the person stopped. */
 const ABORTED_BY_USER = /^aborted by user/i;
-/** Calls of the era before harness actions were recorded: there the call
- * is the command, and a successful one always reports an exit code. */
+/**
+ * Calls of the era before harness actions were recorded: there the call is
+ * the command, and a successful one always reports an exit code, so an
+ * output without one is a refusal. This is a narrower list than the
+ * registry's shell tools on purpose. Any call to a shell tool has its
+ * command classified, but the refusal rule is a measurement (71 of 71) on
+ * these three names only: the output format of the other shell tools was
+ * not seen, and guessing it wrong would turn every command into an error.
+ */
 const COMMAND_CALLS: ReadonlySet<string> = new Set([
   'shell',
   'shell_command',
@@ -1341,6 +1418,8 @@ async function emitThread(
         // the running counter: the only token source of a legacy rollout
         const info = isObj(payload.info) ? payload.info : undefined;
         if (info === undefined || !isObj(info.last_token_usage)) continue;
+        // a file with a usage record is not legacy: nothing to follow
+        if (summary.llmCalls > 0) continue;
         const total = JSON.stringify(info.total_token_usage);
         if (total === lastThreadTotal) continue; // repeated: no new response
         lastThreadTotal = total;
@@ -1397,7 +1476,11 @@ async function emitThread(
           (began === undefined ? undefined : callOpenAt(began)) ??
           openCalls.at(-1) ??
           turn?.lastClosed;
-        if (call !== undefined) call.actions++;
+        const failed = item.status === 'failed';
+        if (call !== undefined) {
+          call.actions++;
+          if (failed) call.failedActions++;
+        }
 
         const endedAt =
           isoOfMs(num(payload.completed_at_ms)) ?? at ?? lastAt ?? EPOCH;
@@ -1413,7 +1496,6 @@ async function emitThread(
           endedAt;
         if (startedAt > endedAt) startedAt = endedAt;
         const durationMs = durationBetween(startedAt, endedAt);
-        const failed = item.status === 'failed';
         const exitCode = int(item.exit_code);
         // what the model was shown: of a command's output (the older item
         // has only the whole of it), or the text an MCP tool returned
@@ -1483,6 +1565,8 @@ async function emitThread(
         (namedTurnId === undefined ? undefined : turns.get(namedTurnId)) ??
         latest;
       summary.llmCalls++;
+      // what the token events gave so far is of no use any more
+      if (summary.llmCalls === 1) legacyCalls.length = 0;
       const span = llmCall(
         str(payload.response_id) ?? `${summary.threadId}:response:${line}`,
         turn,
@@ -1535,7 +1619,12 @@ async function emitThread(
           // in 268 cases); any other call to a shell tool is its command.
           // The script or the patch is read now, and only what it amounts
           // to is kept until the file is read.
-          const change = patchOfCall(name, payload, windows);
+          const shell = HARNESS_TOOLS.get(name)?.role === 'shell';
+          const args = shell ? argsOfCall(payload) : undefined;
+          const command = commandOf(args);
+          const change = patchOfCall(name, payload, command, windows);
+          // a legacy call may name the directory it runs in
+          const workdir = str(args?.workdir) ?? str(args?.cwd);
           const call: CallState = {
             id: callId,
             name: change === undefined ? name : 'apply_patch',
@@ -1545,16 +1634,18 @@ async function emitThread(
             response,
             legacyResponse,
             actions: 0,
+            failedActions: 0,
             attributes:
               change !== undefined
-                ? changeAttributes(change, summary.cwd, ctx.redact)
-                : HARNESS_TOOLS.get(name)?.role === 'shell'
-                  ? commandAttributes(
-                      name,
-                      commandOfCall(payload),
-                      windows,
-                      ctx.redact,
-                    )
+                ? changeAttributes(
+                    change,
+                    workdir === undefined
+                      ? summary.cwd
+                      : rootedPath(workdir, summary.cwd),
+                    ctx.redact,
+                  )
+                : shell
+                  ? commandAttributes(name, command, windows, ctx.redact)
                   : {},
             change,
             own: undefined,
@@ -1637,9 +1728,19 @@ async function emitThread(
   // A call nothing was attributed to is a span of its own, named after the
   // call: a script that only polled a process, a `wait`, an `update_plan`,
   // and every command of the era before actions were recorded.
+  //
+  // So is a call that failed or was stopped although every action of it
+  // went through: a script that ran its commands and then threw. Its
+  // actions are spans already, but none of them says that the model was
+  // handed a failure (18 of 120 failed scripts in the survey). An action
+  // that carries the call's id is the call, so there is nothing to add.
   for (const call of calls.values()) {
-    if (call.actions > 0) continue;
     const outcome = call.outcome;
+    const unseenFailure =
+      call.own === undefined &&
+      call.failedActions === 0 &&
+      (outcome?.status === 'error' || outcome?.status === 'cancelled');
+    if (call.actions > 0 && !unseenFailure) continue;
     const endedAt = outcome === undefined ? undefined : call.until;
     let startedAt = call.at ?? session.startedAt;
     if (endedAt !== undefined) {

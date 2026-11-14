@@ -212,7 +212,8 @@ The adapter SHALL emit a tool span for each action the harness records as
 completed (a command, a file change, an MCP call, a web search, a sleep, an
 image view), with that action's own times, outcome and exit code. A
 model-level tool call SHALL become a span only when no action is attributed
-to it. An MCP call SHALL be an `mcp_call` span carrying its server.
+to it, or when it failed or was stopped and no action attributed to it
+failed. An MCP call SHALL be an `mcp_call` span carrying its server.
 
 #### Scenario: Script that ran two commands
 - GIVEN one `exec` call during which the harness recorded two commands
@@ -225,6 +226,13 @@ to it. An MCP call SHALL be an `mcp_call` span carrying its server.
 - WHEN it is parsed
 - THEN one `tool_call` span named `exec` is emitted, spanning the call to its
   output
+
+#### Scenario: Script that failed after its commands
+- GIVEN an `exec` call whose output says the script failed, during which
+  the harness recorded one command that succeeded
+- WHEN it is parsed
+- THEN the command is an `exec_command` span with status `ok`, the call is
+  a span named `exec` with status `error`, and `counts.toolErrors` is 1
 
 #### Scenario: Failed command
 - GIVEN a command the harness recorded as failed with exit code 1

@@ -156,6 +156,20 @@ directly and the goldens test does not see `fixtures/codex` yet.
       results only through the call's output record (design T7); keeping
       the protocol's own keys there would mean re-scrubbing the fixtures.
 
+      Review of group 3 (after 3.4), fixed in one commit: a call that
+      failed or was stopped while its actions went through is a span (new
+      scenario "Script that failed after its commands"; 19 calls on the
+      250 rollouts, 16,425 tool spans in all); a failure with no text has
+      no `content` in either mode, so the redaction parity scenario holds
+      without a status rule in `sanitize.ts`; the script is read from
+      behind the wrapper's command switch and an unwrapped argv keeps its
+      arguments apart; a legacy patch path is taken from the call's
+      `workdir`; `js` and `js_reset` are out of the harness table. Left
+      as it is: `runray.targetKey` from the script's first token (1,717
+      of 9,220 command spans start with a here-string, `&` or an
+      assignment), which the retry-loop rule shares with every source and
+      RunRay/runray#80 re-keys.
+
 ## 4. Adapter: child threads and privacy
 
 - [ ] 4.1 A Child threads (D2, T10): subagent span per child with its

@@ -226,8 +226,10 @@ describe('harness tools', () => {
     expect(harnessActivity('web.search')).toBe('web');
     expect(harnessActivity('update_plan')).toBe('agent');
     expect(harnessActivity('request_user_input_async')).toBe('human');
-    expect(harnessActivity('js')).toBe('integration');
-    expect(harnessActivity('js_reset')).toBe('integration');
+    // Codex's `js` is a tool of an MCP server and is always recorded as an
+    // MCP call; the name alone says nothing in a table every source shares
+    expect(HARNESS_TOOLS.has('js')).toBe(false);
+    expect(HARNESS_TOOLS.has('js_reset')).toBe(false);
     for (const name of [
       'wait',
       'sleep',

@@ -2130,6 +2130,133 @@ describe('codex tool spans', () => {
     ]);
   });
 
+  it('shows a script that failed after its commands went through, since no action says so', async () => {
+    const thrown = 'Script error:\nTypeError: totals.map is not a function';
+    const script = (output: string, ...actions: string[]) => [
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'), // line 3
+      usageRecord(3, TURN_A, 'resp_1'),
+      ...actions,
+      output,
+      completed(8, TURN_A),
+    ];
+    const ok = action(5, TURN_A, command('exec-1'), 4);
+    const failed = action(
+      5,
+      TURN_A,
+      command('exec-1', { status: 'failed', exit_code: 1 }),
+      4,
+    );
+
+    // the command went through, the script then threw: both are spans
+    const { raw, file } = await parseLines(
+      script(scriptOutput(6, 'call_1', 'Script failed', thrown), ok),
+    );
+    expect(toolRows(raw)).toEqual([
+      'exec_command < resp_1 ok',
+      'exec < resp_1 error',
+    ]);
+    expect(toolsOf(raw)[1]).toMatchObject({
+      id: 'call_1',
+      kind: 'tool_call',
+      startedAt: at(2),
+      endedAt: at(6),
+      tool: { name: 'exec', isError: true },
+      content: { outputPreview: thrown },
+      attributes: {},
+      provenance: { file, line: 3 },
+    });
+    const totals = normalize(priceRun(raw)).totals.counts;
+    expect(totals.toolErrors).toBe(1);
+
+    // a failed command already says it: the script is no span
+    const told = await parseLines(
+      script(scriptOutput(6, 'call_1', 'Script failed', thrown), failed),
+    );
+    expect(toolRows(told.raw)).toEqual(['exec_command < resp_1 error']);
+    // one failed command among several is enough
+    const mixed = await parseLines(
+      script(
+        scriptOutput(6, 'call_1', 'Script failed', thrown),
+        ok,
+        action(5, TURN_A, command('exec-2', { status: 'failed' }), 4),
+      ),
+    );
+    expect(toolRows(mixed.raw)).toEqual([
+      'exec_command < resp_1 ok',
+      'exec_command < resp_1 error',
+    ]);
+    // a script that went through with its commands stays out
+    const fine = await parseLines(script(scriptOutput(6, 'call_1'), ok));
+    expect(toolRows(fine.raw)).toEqual(['exec_command < resp_1 ok']);
+
+    // stopped by the person after a command ran: the call says so
+    const stopped = await parseLines(
+      script(
+        rec(6, 'response_item', {
+          type: 'custom_tool_call_output',
+          call_id: 'call_1',
+          output: 'aborted by user after 3.0s',
+        }),
+        ok,
+      ),
+    );
+    expect(toolRows(stopped.raw)).toEqual([
+      'exec_command < resp_1 ok',
+      'exec < resp_1 cancelled',
+    ]);
+
+    // a tool called directly is its action: never a second span for it
+    const direct = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      functionCall(2, 'call_1', 'apply_patch'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(4, TURN_A, {
+        type: 'FileChange',
+        id: 'call_1',
+        changes: {},
+        status: 'completed',
+      }),
+      functionOutput(5, 'call_1', 'verification failed: stale patch'),
+      completed(6, TURN_A),
+    ]);
+    expect(toolsOf(direct.raw)).toHaveLength(1);
+  });
+
+  it('gives a failure that said nothing no content, redacted or not', async () => {
+    const silent = [
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      action(
+        5,
+        TURN_A,
+        command('exec-1', {
+          status: 'failed',
+          exit_code: 1,
+          aggregated_output: '',
+          formatted_output: '',
+        }),
+        4,
+      ),
+      // a legacy command that failed without a line of output
+      functionCall(6, 'call_2', 'shell', { command: ['bash', '-lc', 'false'] }),
+      usageRecord(7, TURN_A, 'resp_2'),
+      functionOutput(8, 'call_2', '{"output":"","metadata":{"exit_code":1}}'),
+      scriptOutput(9, 'call_1', 'Script failed', 'Script error:\nExit code: 1'),
+      completed(10, TURN_A),
+    ];
+    for (const redact of [false, true]) {
+      const { raw } = await parseLines(silent, redact);
+      const tools = toolsOf(raw);
+      expect(tools.map((s) => s.status)).toEqual(['error', 'error']);
+      for (const span of tools) expect(span).not.toHaveProperty('content');
+    }
+  });
+
   it('counts harness actions, not model calls, as tool calls', async () => {
     const lines = [sessionMeta(0), started(1, TURN_A)];
     let actions = 0;
@@ -2721,6 +2848,84 @@ describe('codex commands', () => {
       command: ['bash', '-lc', 'ls src'],
     });
     expect(posix?.attributes).toMatchObject({ 'runray.tool': 'ls' });
+  });
+
+  it('keeps the arguments of an argv apart when it writes it back as a command line', async () => {
+    // a separator inside an argument is not a separator of commands
+    const commit = await commandSpan([
+      'git',
+      'commit',
+      '-m',
+      'wip; pnpm build',
+    ]);
+    expect(commit?.attributes).toEqual({
+      'runray.targetKey': targetKeyOf('git'),
+      'runray.targetKind': 'command',
+      'runray.target': 'git',
+      'runray.toolActivity': 'vcs',
+      'runray.tool': 'git',
+      'runray.toolSub': 'commit',
+    });
+    const quoted = await commandSpan([
+      'git',
+      'commit',
+      '-m',
+      "it's done && docker push",
+    ]);
+    expect(quoted?.attributes).toMatchObject({ 'runray.tool': 'git' });
+    expect(quoted?.attributes).not.toHaveProperty('runray.toolsAlso');
+    const piped = await commandSpan(['rg', 'cargo test | head', 'src', '']);
+    expect(piped?.attributes).toMatchObject({ 'runray.tool': 'rg' });
+  });
+
+  it('takes the script from behind the switch that hands it to the shell', async () => {
+    // cmd and PowerShell join everything after the switch
+    const npm = { 'runray.tool': 'npm', 'runray.toolActivity': 'build' };
+    expect(
+      (await commandSpan(['cmd.exe', '/c', 'npm', 'run', 'build']))?.attributes,
+    ).toMatchObject({ ...npm, 'runray.targetKey': targetKeyOf('npm') });
+    expect(
+      (await commandSpan(['cmd.exe', '/d', '/s', '/C', 'npm run build']))
+        ?.attributes,
+    ).toMatchObject(npm);
+    expect(
+      (
+        await commandSpan([
+          'pwsh',
+          '-NoProfile',
+          '-Command',
+          'npm',
+          'run',
+          'build',
+        ])
+      )?.attributes,
+    ).toMatchObject(npm);
+    expect(
+      (await commandSpan(['powershell.exe', '-c', 'npm run build']))
+        ?.attributes,
+    ).toMatchObject(npm);
+    // a POSIX shell takes the one word after it; the rest are its arguments
+    const cargo = await commandSpan(['bash', '-lc', 'cargo test', '--', 'x']);
+    expect(cargo?.attributes).toMatchObject({
+      'runray.tool': 'cargo',
+      'runray.toolSub': 'test',
+    });
+    // no switch: the shell was given a script file
+    const file = await commandSpan([
+      'bash',
+      '-e',
+      'scripts/deploy.sh',
+      '--prod',
+    ]);
+    expect(file?.attributes['runray.targetKey']).toBe(
+      targetKeyOf('scripts/deploy.sh'),
+    );
+    const ps1 = await commandSpan(['pwsh', '-NoProfile', '-File', 'build.ps1']);
+    expect(ps1?.attributes['runray.targetKey']).toBe(targetKeyOf('build.ps1'));
+    // a switch with nothing behind it: the argv is the command
+    expect(
+      (await commandSpan(['bash', '-c']))?.attributes['runray.targetKey'],
+    ).toBe(targetKeyOf('bash'));
   });
 
   it('marks a command it cannot read as classified, of an activity nobody could tell', async () => {
@@ -3349,6 +3554,52 @@ describe('codex file changes', () => {
     });
   });
 
+  it('takes a path a legacy patch gives from the directory the call ran in', async () => {
+    const heredoc = (patch: string) => `apply_patch <<'EOF'\n${patch}\nEOF`;
+    const inSrc = PATCH.replace('src/totals.ts', 'totals.ts');
+    // the call names its directory, relative to the thread's
+    const [nested] = await legacySpans(
+      functionCall(3, 'call_1', 'shell_command', {
+        command: heredoc(inSrc),
+        workdir: 'src',
+      }),
+      'Exit code: 0\nWall time: 0.1 seconds\nOutput:\nDone\n',
+    );
+    expect(nested).toMatchObject({
+      name: 'apply_patch',
+      attributes: { 'runray.targetKey': fileKeyOf(TOTALS) },
+    });
+    // or in full
+    const [full] = await legacySpans(
+      functionCall(3, 'call_1', 'shell_command', {
+        command: heredoc(inSrc),
+        workdir: 'C:\\work\\billing-portal\\src',
+      }),
+      'Exit code: 0\nWall time: 0.1 seconds\nOutput:\nDone\n',
+    );
+    expect(full?.attributes['runray.targetKey']).toBe(fileKeyOf(TOTALS));
+    // `.` and `..` are resolved before the path is hashed
+    const [dotted] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: [
+          'apply_patch',
+          PATCH.replace('src/totals.ts', './docs/../src/./totals.ts'),
+        ],
+      }),
+      DONE,
+    );
+    expect(dotted?.attributes['runray.targetKey']).toBe(fileKeyOf(TOTALS));
+    // a path already from the root is hashed as written
+    const [rooted] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: ['apply_patch', PATCH.replace('src/totals.ts', TOTALS)],
+        workdir: 'elsewhere',
+      }),
+      DONE,
+    );
+    expect(rooted?.attributes['runray.targetKey']).toBe(fileKeyOf(TOTALS));
+  });
+
   it('keeps a command that only mentions apply_patch a command', async () => {
     const [span] = await legacySpans(
       functionCall(3, 'call_1', 'shell', {
@@ -3516,17 +3767,44 @@ describe('codex parse on the fixtures', () => {
       'legacy',
       'compaction',
     ]) {
-      for (const raw of await parseVariant(variant, true)) {
+      const open = await parseVariant(variant);
+      const redacted = await parseVariant(variant, true);
+      for (const [index, raw] of redacted.entries()) {
         expect(raw.title).toBeUndefined();
+        const openById = new Map(open[index]?.spans.map((s) => [s.id, s]));
+        let failuresWithText = 0;
         for (const span of raw.spans) {
           if (span.kind === 'turn') {
             expect(span.content).toEqual({ promptPreview: null });
           } else if (span.kind === 'llm_call') {
             expect(span.content).toEqual({ outputPreview: null });
-          } else if (span.status === 'error' || span.status === 'cancelled') {
-            // a tool that failed: its preview is the one output kept
-            expect(span.content).toEqual({ outputPreview: null });
-          } else expect(span).not.toHaveProperty('content');
+          } else {
+            // A tool span keeps one output, the start of a failure's text.
+            // The two parses must agree on which spans have it: null here
+            // exactly where there is text unredacted, no field otherwise.
+            const plain = openById.get(span.id);
+            expect(plain).toBeDefined();
+            if (plain?.content === undefined) {
+              expect(span).not.toHaveProperty('content');
+            } else {
+              failuresWithText++;
+              expect(plain.status).not.toBe('ok');
+              expect(plain.content.outputPreview).toBeTypeOf('string');
+              expect(span.content).toEqual({ outputPreview: null });
+            }
+            expect(span.attributes).not.toHaveProperty('runray.target');
+            expect(span.attributes).not.toHaveProperty('runray.toolName');
+            expect(span.attributes).not.toHaveProperty('runray.toolScript');
+          }
+        }
+        if (variant === 'tool-errors') {
+          expect(failuresWithText).toBeGreaterThan(10);
+          // and some failed with nothing to say
+          expect(
+            raw.spans.filter(
+              (s) => s.status === 'error' && s.content === undefined,
+            ).length,
+          ).toBeGreaterThan(0);
         }
       }
     }
