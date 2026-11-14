@@ -699,6 +699,34 @@ Under `redact`: `promptPreview`, `outputPreview` and error previews are
 bodies, or outputs. `project.path` is `cwd` and `project.gitBranch` is
 `git.branch`, as for Claude Code.
 
+"Nothing is emitted from" is about what the adapter reads. A preview is the
+start of what a person, the model or a failed tool wrote, and can hold
+anything they wrote: a commit hash is in two open previews of the 67 runs
+surveyed, printed by the model and by `git`. That is what redaction nulls.
+
+A redacted parse writes `promptPreview: null` on every turn and
+`outputPreview: null` on every model call, and an open parse writes a
+preview only where there is text. The sanitizer therefore gives a Codex run
+those two keys on those two kinds, as it does for the other sources, so that
+both parses come out the same. A tool span needs no arm: it has content in
+both parses or in neither (T7).
+
+Four values of the harness's vocabulary reach fields that redaction keeps:
+the reason of an interrupted turn and the code of an API error
+(`statusReason`), the kind of an extension (the span's name) and the kind of
+a child thread (`agent.name`). Each is taken only when it is one word:
+letters, digits, `_`, `.` and `-`, at most 40 characters. Every value
+surveyed is (`interrupted`, `usage_limit_exceeded`, `web.search`,
+`guardian`, 982 values in all). A sentence in the same place is dropped
+unread: the status stays, the reason does not, and an extension is named
+`extension`.
+
+A run warning's message is kept as written by redaction and by the
+sanitizer, which replace only its `file`. So no message of this adapter
+holds text from a rollout or a path: a child file that cannot be opened is
+named by the system's error code (`ENOENT`), whose message would name the
+path.
+
 ### T12 — Source-specific text, not source-specific logic
 
 `instructionsFile` returns `AGENTS.md` for Codex. The four other switches in

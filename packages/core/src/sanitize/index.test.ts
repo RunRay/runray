@@ -722,6 +722,52 @@ describe('Full sanitize projection', () => {
     expect(hasPathShape(JSON.stringify(sanitized))).toBe(false);
   });
 
+  it('gives a Codex run the content keys its redacted parse has, whatever the open parse had', () => {
+    // An open Codex parse writes a preview only where there is text; a
+    // redacted one writes null on every turn and every model call, and on a
+    // tool span only where a failure said something.
+    const run: Run = {
+      ...createMockRun(),
+      source: {
+        tool: 'codex',
+        format: 'codex-jsonl',
+        files: ['/home/alex/.codex/sessions/rollout-a.jsonl'],
+      },
+      spans: [
+        createMockSpan('thread', 'session'),
+        createMockSpan('turn-silent', 'turn', 'thread'),
+        {
+          ...createMockSpan('turn-asked', 'turn', 'thread'),
+          content: { promptPreview: 'Fix the rounding bug' },
+        },
+        createMockSpan('call-silent', 'llm_call', 'turn-asked'),
+        {
+          ...createMockSpan('call-spoke', 'llm_call', 'turn-asked'),
+          content: { outputPreview: 'Done: totals round half up now' },
+        },
+        createMockSpan('tool-ok', 'tool_call', 'call-spoke'),
+        {
+          ...createMockSpan('tool-failed', 'tool_call', 'call-spoke'),
+          status: 'error',
+          content: { outputPreview: 'error TS2322: Type string' },
+        },
+        createMockSpan('reviewer', 'subagent', 'turn-asked'),
+      ],
+    };
+
+    const byId = new Map(
+      sanitize(run, 'sanitized').spans.map((s) => [s.id, s]),
+    );
+    expect(byId.get('turn-silent')?.content).toEqual({ promptPreview: null });
+    expect(byId.get('turn-asked')?.content).toEqual({ promptPreview: null });
+    expect(byId.get('call-silent')?.content).toEqual({ outputPreview: null });
+    expect(byId.get('call-spoke')?.content).toEqual({ outputPreview: null });
+    expect(byId.get('tool-failed')?.content).toEqual({ outputPreview: null });
+    for (const id of ['thread', 'tool-ok', 'reviewer']) {
+      expect(byId.get(id)).not.toHaveProperty('content');
+    }
+  });
+
   it('scrubIdentityRuns and sanitizeTraceFile apply across multiple runs', () => {
     const run1 = createMockRun();
     const run2 = {

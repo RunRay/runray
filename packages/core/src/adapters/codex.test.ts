@@ -16,6 +16,9 @@ import { type Candidate, NoSessionYet, type RawRun } from '../adapter.js';
 import { normalize } from '../normalize.js';
 import { priceRun } from '../pricing/index.js';
 import { readRolloutLines } from '../rollout-lines.js';
+import { createIdentityTable } from '../sanitize/identity.js';
+import { findPathShapes } from '../sanitize/path-net.js';
+import { sanitizeRun } from '../sanitize/sanitize.js';
 import { identityContext, toolIdentity } from '../tools/identity.js';
 import { claudeCodeAdapter } from './claude-code.js';
 import { codexAdapter } from './codex.js';
@@ -4206,6 +4209,303 @@ describe('codex child threads', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// parse(): what never leaves the parser
+// ---------------------------------------------------------------------------
+
+describe('codex content and identifiers', () => {
+  /** In no run, redacted or not: who the session belongs to, what the
+   * harness told the model, and the text of everything that ran. */
+  const NEVER = [
+    'acct_4f1d2c3b',
+    'user_9a8b7c6d',
+    'git.example',
+    'c0ffee',
+    'INSTRUCTIONS-SENTINEL',
+    'ENCRYPTED-SENTINEL',
+    'SUMMARY-SENTINEL',
+    'LIMITS-SENTINEL',
+    'WORLD-SENTINEL',
+    'SETTINGS-SENTINEL',
+    'SCRIPT-SENTINEL',
+    'COMMAND-ARG-SENTINEL',
+    'OK-OUTPUT-SENTINEL',
+    'PATCH-BODY-SENTINEL',
+    'MCP-ARG-SENTINEL',
+    'MCP-RESULT-SENTINEL',
+    'SEARCH-SENTINEL',
+    'REVIEW-INSTRUCTIONS-SENTINEL',
+  ];
+  /** In an open run and in no redacted one: the previews, and the file a
+   * change was made to. */
+  const ONLY_OPEN = [
+    'PROMPT-SENTINEL',
+    'ANSWER-SENTINEL',
+    'FAILURE-SENTINEL',
+    'target-sentinel.ts',
+    'REVIEW-PROMPT-SENTINEL',
+    'REVIEW-ANSWER-SENTINEL',
+  ];
+  const TARGET = 'C:\\work\\billing-portal\\src\\target-sentinel.ts';
+
+  const rootLines = () => [
+    sessionMeta(0, {
+      creator_account_id: 'acct_4f1d2c3b',
+      creator_user_id: 'user_9a8b7c6d',
+      base_instructions: { text: 'INSTRUCTIONS-SENTINEL' },
+    }),
+    rec(0, 'world_state', { roots: ['WORLD-SENTINEL'] }),
+    started(1, TURN_A),
+    rec(1, 'event_msg', {
+      type: 'thread_settings_applied',
+      settings: { note: 'SETTINGS-SENTINEL' },
+    }),
+    userMessage(2, 'PROMPT-SENTINEL fix the totals'),
+    rec(3, 'response_item', {
+      type: 'reasoning',
+      encrypted_content: 'ENCRYPTED-SENTINEL',
+      summary: [{ type: 'summary_text', text: 'SUMMARY-SENTINEL' }],
+    }),
+    assistantMessage(4, 'ANSWER-SENTINEL on it'),
+    rec(5, 'response_item', {
+      type: 'custom_tool_call',
+      call_id: 'call_1',
+      name: 'exec',
+      input: '// SCRIPT-SENTINEL\nawait tools.exec_command({cmd: "pnpm test"})',
+    }),
+    usageRecord(6, TURN_A, 'resp_1'),
+    rec(6, 'event_msg', {
+      type: 'token_count',
+      info: {
+        last_token_usage: SMALL,
+        total_token_usage: { total_tokens: 110 },
+      },
+      rate_limits: { plan: 'LIMITS-SENTINEL' },
+    }),
+    action(
+      8,
+      TURN_A,
+      command('item_1', {
+        command: [
+          'pwsh.exe',
+          '-Command',
+          'pnpm test --filter COMMAND-ARG-SENTINEL',
+        ],
+        aggregated_output: 'OK-OUTPUT-SENTINEL\n',
+        formatted_output: 'OK-OUTPUT-SENTINEL\n',
+        stdout: 'OK-OUTPUT-SENTINEL\n',
+      }),
+      7,
+    ),
+    action(
+      9,
+      TURN_A,
+      command('item_2', {
+        status: 'failed',
+        exit_code: 1,
+        aggregated_output: 'FAILURE-SENTINEL: 2 tests failed\n',
+        formatted_output: 'FAILURE-SENTINEL: 2 tests failed\n',
+      }),
+      8,
+    ),
+    action(
+      10,
+      TURN_A,
+      {
+        type: 'FileChange',
+        id: 'item_3',
+        status: 'completed',
+        changes: {
+          [TARGET]: { type: 'add', content: 'PATCH-BODY-SENTINEL\n' },
+        },
+      },
+      9,
+    ),
+    action(
+      11,
+      TURN_A,
+      {
+        type: 'McpToolCall',
+        id: 'item_4',
+        server: 'tracker',
+        tool: 'get_issue',
+        arguments: { query: 'MCP-ARG-SENTINEL' },
+        status: 'completed',
+        result: {
+          content: [{ type: 'text', text: 'MCP-RESULT-SENTINEL' }],
+          isError: false,
+        },
+      },
+      10,
+    ),
+    action(
+      12,
+      TURN_A,
+      {
+        type: 'Extension',
+        id: 'item_5',
+        kind: 'web.search',
+        status: 'completed',
+        query: 'SEARCH-SENTINEL',
+      },
+      11,
+    ),
+    scriptOutput(13, 'call_1', 'Script completed', 'OK-OUTPUT-SENTINEL'),
+    completed(14, TURN_A),
+  ];
+  const reviewerLines = () => [
+    childMeta(0, CHILD, {
+      creator_account_id: 'acct_4f1d2c3b',
+      creator_user_id: 'user_9a8b7c6d',
+      base_instructions: { text: 'REVIEW-INSTRUCTIONS-SENTINEL' },
+    }),
+    startedFrom(7, TURN_R, { root: TURN_A }),
+    userMessage(7, 'REVIEW-PROMPT-SENTINEL may it run pnpm test?'),
+    assistantMessage(8, 'REVIEW-ANSWER-SENTINEL yes'),
+    usageRecord(8, TURN_R, 'resp_review_1'),
+    completed(8, TURN_R),
+  ];
+  const parseBoth = async (redact: boolean) =>
+    (await parseThreads(rootLines(), [[CHILD, reviewerLines()]], redact)).raw;
+
+  it('keeps identifiers, instructions and the text of what ran out of an open run', async () => {
+    const raw = await parseBoth(false);
+    expect(raw.warnings).toEqual([]);
+    // the rollout gave every kind of span: this is not a search of nothing
+    expect(new Set(raw.spans.map((s) => s.kind))).toEqual(
+      new Set([
+        'session',
+        'turn',
+        'llm_call',
+        'tool_call',
+        'mcp_call',
+        'subagent',
+      ]),
+    );
+    expect(toolsOf(raw)).toHaveLength(5);
+    for (const serialised of [
+      JSON.stringify(raw),
+      JSON.stringify(normalize(priceRun(raw))),
+    ]) {
+      for (const needle of NEVER) {
+        expect(serialised, needle).not.toContain(needle);
+      }
+      // what an open run does show
+      for (const needle of ONLY_OPEN) expect(serialised).toContain(needle);
+    }
+  });
+
+  it('nulls every content field and drops the target under redaction, in the child thread too', async () => {
+    const raw = await parseBoth(true);
+    expect(raw.title).toBeUndefined();
+    for (const serialised of [
+      JSON.stringify(raw),
+      JSON.stringify(normalize(priceRun(raw))),
+    ]) {
+      for (const needle of [...NEVER, ...ONLY_OPEN]) {
+        expect(serialised, needle).not.toContain(needle);
+      }
+    }
+    let nulled = 0;
+    for (const span of raw.spans) {
+      for (const value of Object.values(span.content ?? {})) {
+        expect(value, `${span.kind} ${span.id}`).toBeNull();
+        nulled++;
+      }
+      for (const key of [
+        'runray.target',
+        'runray.toolName',
+        'runray.toolScript',
+      ]) {
+        expect(span.attributes, span.id).not.toHaveProperty(key);
+      }
+    }
+    // two turns, two model calls and the failed command
+    expect(nulled).toBe(5);
+    // what identifies the work without saying what it was stays
+    const failed = raw.spans.find((s) => s.id === 'item_2');
+    expect(failed).toMatchObject({
+      status: 'error',
+      tool: { exitCode: 1 },
+      attributes: { 'runray.tool': 'pnpm' },
+    });
+    expect(raw.spans.find((s) => s.id === 'item_3')?.attributes).toHaveProperty(
+      'runray.targetKey',
+    );
+  });
+
+  it('gives the same run from both parses once sanitized', async () => {
+    const sanitized = (raw: RawRun) => {
+      const run = normalize(priceRun(raw));
+      return sanitizeRun(run, 'sanitized', createIdentityTable([run]));
+    };
+    // the same files, read twice
+    const { files } = await parseThreads(rootLines(), [
+      [CHILD, reviewerLines()],
+    ]);
+    const candidate = candidateOf(files[0] ?? '', files);
+    const open = sanitized(
+      await codexAdapter.parse(candidate, { redact: false }),
+    );
+    const redacted = sanitized(
+      await codexAdapter.parse(candidate, { redact: true }),
+    );
+    expect(open).toEqual(redacted);
+    const serialised = JSON.stringify(open);
+    for (const needle of [...NEVER, ...ONLY_OPEN]) {
+      expect(serialised, needle).not.toContain(needle);
+    }
+    expect(findPathShapes(serialised)).toEqual([]);
+  });
+
+  it('takes a reason, an error code and an extension kind only when it is one word of the harness', async () => {
+    const sentence = 'the person at C:\\Users\\zofia-sentinel pressed stop';
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      action(2, TURN_A, {
+        type: 'Extension',
+        id: 'item_1',
+        kind: sentence,
+        status: 'completed',
+      }),
+      aborted(3, TURN_A, sentence),
+      started(4, TURN_B),
+      completed(5, TURN_B, { error: { codex_error_info: sentence } }),
+    ]);
+    const [first, second] = turnsOf(raw);
+    expect(first?.status).toBe('cancelled');
+    expect(first).not.toHaveProperty('statusReason');
+    expect(second?.status).toBe('error');
+    expect(second).not.toHaveProperty('statusReason');
+    expect(toolsOf(raw)[0]?.name).toBe('extension');
+    expect(JSON.stringify(raw.spans)).not.toContain('zofia-sentinel');
+  });
+
+  it('names a child file that is gone by the error code, not by the message with its path', async () => {
+    const dir = tempDir();
+    const rootFile = rollout(dir, ROOT, {
+      text: `${twoTurnRoot().join('\n')}\n`,
+    });
+    const gone = join(dir, `rollout-2026-10-13T09-00-01-${CHILD}.jsonl`);
+    const raw = await codexAdapter.parse(
+      candidateOf(rootFile, [rootFile, gone]),
+      {
+        redact: true,
+      },
+    );
+    expect(raw.warnings).toEqual([
+      { message: 'child thread not read: ENOENT', file: gone },
+    ]);
+    const run = normalize(priceRun(raw));
+    const serialised = JSON.stringify(
+      sanitizeRun(run, 'sanitized', createIdentityTable([run])),
+    );
+    expect(findPathShapes(serialised)).toEqual([]);
+    expect(serialised).not.toContain(basename(dir));
+  });
+});
+
 describe('codex parse on the fixtures', () => {
   const candidatesIn = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -4454,6 +4754,66 @@ describe('codex parse on the fixtures', () => {
         }
       }
     }
+  });
+
+  it('carries no account id, user id, repository URL or commit of any fixture into its run', async () => {
+    /** The identifiers in a rollout's first record, read apart from the
+     * adapter. The scrubber left stand-ins there (`anon_…`, an example
+     * URL), which are as findable as the real values were. */
+    async function identifiersOf(file: string): Promise<string[]> {
+      for await (const { text } of readRolloutLines(file)) {
+        if (text === '') continue;
+        const record = JSON.parse(text);
+        if (record.type !== 'session_meta') continue;
+        const { creator_account_id, creator_user_id, git } = record.payload;
+        return [
+          creator_account_id,
+          creator_user_id,
+          git?.repository_url,
+          git?.commit_hash,
+        ].filter((v): v is string => typeof v === 'string' && v.length >= 8);
+      }
+      return [];
+    }
+    const searched = new Set<string>();
+    for (const variant of [
+      'simple',
+      'zstd',
+      'guardian',
+      'tool-errors',
+      'legacy',
+      'compaction',
+    ]) {
+      for (const redact of [false, true]) {
+        for (const raw of await parseVariant(variant, redact)) {
+          const needles = new Set<string>();
+          for (const file of raw.source.files) {
+            for (const id of await identifiersOf(file)) needles.add(id);
+          }
+          // every fixture names a repository, so every run is searched
+          expect(needles.size, variant).toBeGreaterThan(0);
+          const run = normalize(priceRun(raw));
+          for (const serialised of [
+            JSON.stringify(raw),
+            JSON.stringify(run),
+            JSON.stringify(
+              sanitizeRun(run, 'sanitized', createIdentityTable([run])),
+            ),
+          ]) {
+            for (const needle of needles) {
+              expect(serialised.includes(needle), `${variant}: ${needle}`).toBe(
+                false,
+              );
+              searched.add(needle);
+            }
+          }
+        }
+      }
+    }
+    // an account id, a user id, a repository URL and a commit were all there
+    expect([...searched].some((n) => n.startsWith('anon_'))).toBe(true);
+    expect([...searched].some((n) => /^[a-z]+:\/\/|^git@/.test(n))).toBe(true);
+    expect(searched.size).toBeGreaterThanOrEqual(4);
   });
 
   /** Tool spans of a run counted by name (an MCP call as `mcp`), failures

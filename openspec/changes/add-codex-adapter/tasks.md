@@ -195,12 +195,27 @@ directly and the goldens test does not see `fixtures/codex` yet.
       runs: 147 subagent spans, every one on a turn, no warning, no
       duplicate id, every run valid against the schema; 16,425 tool spans
       and 15,053 model calls as before.
-- [ ] 4.2 A Redaction and identifiers (T11): the `redact` path of every
+- [x] 4.2 A Redaction and identifiers (T11): the `redact` path of every
       content field and `runray.target`, a Codex branch in
       `sanitize/sanitize.ts`, and Codex fixtures added to the redaction
       parity and sanitize invariant tests. Verify: tests for every scenario
       of "Codex content and identifiers stay in the parser", including a
       serialised-run search for the fixture's account id and repository URL.
+      The content fields were already nulled by the tasks that added them;
+      what this task added: the `llm_call` and `turn` arms in the sanitizer,
+      the Codex adapter in `invariants.test.ts` ahead of its registration
+      (5.2 leaves the helper as it is: it lists an adapter once), and two
+      things the audit found. A reason, an error code and an extension kind
+      survive redaction, so each is taken only when it is one word of the
+      harness's vocabulary (all 982 values surveyed are). And a child file
+      that cannot be opened is named by its error code: the system's message
+      holds the path, and neither redaction nor the sanitizer rewrites a
+      warning's message. On the 67 real runs: both parses agree after
+      sanitizing in both profiles, all 18,826 content values of the redacted
+      parse are null, and no account id, user id, repository URL, path shape
+      or project name is in a sanitized run. A commit hash is in two open
+      previews, because the model and `git` printed it; nothing reads it
+      from `session_meta`.
 
 ## 5. Pipeline integration (Codex goldens missing between 5.2 and 5.3)
 

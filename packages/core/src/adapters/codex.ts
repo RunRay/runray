@@ -98,6 +98,18 @@ function num(v: unknown): number | undefined {
 function int(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isInteger(v) ? v : undefined;
 }
+/**
+ * One word of the harness's own vocabulary: a reason, an error code, the
+ * kind of an extension or of a subagent. These reach fields that survive
+ * redaction, so a value is taken only when it has the shape of such a word.
+ * Every value surveyed has (`interrupted`, `usage_limit_exceeded`,
+ * `web.search`, `guardian`); a sentence in the same place is not one, and
+ * is dropped unread.
+ */
+const HARNESS_WORD = /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/;
+function word(v: unknown): string | undefined {
+  return typeof v === 'string' && HARNESS_WORD.test(v) ? v : undefined;
+}
 /** A token counter: a whole number, never below zero. */
 function count(v: unknown): number {
   const n = num(v);
@@ -400,9 +412,6 @@ function projectName(cwd: string): string {
     : last;
 }
 
-/** A name the harness gave, not text someone wrote: one short word. */
-const AGENT_NAME = /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/;
-
 /**
  * What a child thread is, from `session_meta.source` (design T10). The
  * approval reviewer is `{subagent: {other: "guardian"}}`, on all 183 child
@@ -413,13 +422,9 @@ const AGENT_NAME = /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/;
  */
 function agentNameOf(source: unknown): string {
   const subagent = isObj(source) ? source.subagent : undefined;
-  let name: string | undefined;
-  if (typeof subagent === 'string') name = subagent;
-  else if (isObj(subagent)) {
-    name =
-      subagent.other === 'guardian' ? 'guardian' : Object.keys(subagent)[0];
-  }
-  return name !== undefined && AGENT_NAME.test(name) ? name : 'unknown';
+  if (!isObj(subagent)) return word(subagent) ?? 'unknown';
+  if (subagent.other === 'guardian') return 'guardian';
+  return word(Object.keys(subagent)[0]) ?? 'unknown';
 }
 
 /**
@@ -472,8 +477,7 @@ function promptOf(message: Json): string | undefined {
  * as an object keyed by the code, the other way such an enum is written. */
 function errorCodeOf(error: Json): string | undefined {
   const info = error.codex_error_info;
-  if (isObj(info)) return Object.keys(info)[0];
-  return str(info);
+  return word(isObj(info) ? Object.keys(info)[0] : info);
 }
 
 /** The start of the first text the model wrote in an assistant message. */
@@ -590,7 +594,7 @@ function actionIdentity(item: Json): ActionIdentity | undefined {
     case 'ImageView':
       return { name: 'view_image', kind: 'tool_call' };
     case 'Extension':
-      return { name: str(item.kind) ?? 'extension', kind: 'tool_call' };
+      return { name: word(item.kind) ?? 'extension', kind: 'tool_call' };
     case 'McpToolCall': {
       const mcpServer = str(item.server);
       return {
@@ -1468,7 +1472,7 @@ async function emitThread(
         if (durationMs !== undefined) span.durationMs = durationMs;
         if (event === 'turn_aborted') {
           span.status = 'cancelled';
-          const reason = str(payload.reason);
+          const reason = word(payload.reason);
           if (reason !== undefined) span.statusReason = reason;
         } else if (isObj(payload.error)) {
           span.status = 'error';
@@ -1931,6 +1935,18 @@ function anchorOf(
 }
 
 /**
+ * Why a file could not be read, in words that are safe in a run. A system
+ * error's message names the path it failed on, and a warning's message is
+ * kept as written by redaction and by the sanitizer, which replace only its
+ * `file`. So a system error gives its code (`ENOENT`), and only an error
+ * raised by this reader gives its message.
+ */
+function unreadableBecause(err: unknown): string {
+  if (isObj(err) && typeof err.code === 'string') return err.code;
+  return err instanceof Error ? err.message : 'unreadable';
+}
+
+/**
  * Reads the candidate's other files, each a child thread, into the run
  * (design D2, T10). A child is one `subagent` span with its own turns and
  * calls beneath it, hung on the turn of its parent thread that `anchorOf`
@@ -1963,9 +1979,8 @@ async function emitChildren(
     } catch (err) {
       // the root's file failing is the run failing; a child's is a gap in it
       if (!(err instanceof NoSessionYet)) {
-        const reason = err instanceof Error ? err.message : String(err);
         ctx.warnings.push({
-          message: `child thread not read: ${reason}`,
+          message: `child thread not read: ${unreadableBecause(err)}`,
           file,
         });
       }
