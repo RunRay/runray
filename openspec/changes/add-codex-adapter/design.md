@@ -847,6 +847,24 @@ documentation on 2026-11-14: `/model`, `/compact`, the `model` key,
 `model` key, `agents.default_subagent_model`, and `approvals_reviewer` with
 the values `user` and `auto_review`.
 
+The playbooks (task 6.2). `PlaybookSource` is shared by the rule playbooks
+and the error-class playbooks of the Errors tab, so both registries get a
+Codex section: 12 rules and 22 error classes. Without the second, a Codex
+session in the Errors tab would have read the custom-agent wording. The
+sections for `cache-prefix-break` and `idle-cache-expiry` say that RunRay
+does not report those findings on Codex sessions and keep the habit that
+still holds. Levers added on top of the list above, checked the same day:
+`/new`, `/mcp`, `/permissions`, `/usage`, `codex resume --last`,
+`codex exec`, `codex login`, `codex --model`, `model_reasoning_effort`,
+`model_provider`, `model_auto_compact_token_limit`,
+`tool_output_token_limit`, `project_doc_max_bytes`, `enabled_tools` and
+`disabled_tools`, `skills.config`, `sandbox_mode`,
+`sandbox_workspace_write.network_access`, and `prefix_rule` with
+`decision = "forbidden"` in a `.rules` file (the documentation marks rules
+as experimental, and the playbook says so). Left out because the
+documentation did not confirm them word for word: the key that interrupts
+a turn, and how a hook blocks a call.
+
 Not done here: the downgrade ladder for `model-mismatch` and
 `expensive-subagent` knows the `gpt-5` family only, so a Codex session on a
 newer family (`gpt-6-astra` in the fixtures) gets no cheaper-model finding.

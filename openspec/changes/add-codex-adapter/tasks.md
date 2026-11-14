@@ -363,10 +363,18 @@ directly and the goldens test does not see `fixtures/codex` yet.
       and the Codex command tools on the list of shell tools. Found and
       left: the downgrade ladder knows no family after `gpt-5` (design
       T12).
-- [ ] 6.2 A Codex in `insights/meta.ts` (`PlaybookSource`, labels, a section
+- [x] 6.2 A Codex in `insights/meta.ts` (`PlaybookSource`, labels, a section
       per rule) and regenerated `docs/08-FINDINGS.md` via
       `pnpm docs:playbooks`. Verify: `playbooks-docs.test.ts` and
       `pnpm docs:playbooks --check` pass.
+      Done, and wider than the list: `PlaybookSource` also types the
+      error-class playbooks in `triage/meta.ts`, so the 22 error classes
+      got a Codex section too and both generated blocks of
+      `docs/08-FINDINGS.md` changed. Two shared cause lines that named
+      only Claude Code (`CLAUDE.md`, `claude -p`) now name Codex beside
+      it. Seen in the built UI: the Waste tab of a Codex session reads
+      "What you can do · Codex". The levers checked are listed in design
+      T12.
 
 ## 7. Visualizer
 
