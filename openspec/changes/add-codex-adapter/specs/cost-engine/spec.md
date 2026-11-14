@@ -51,6 +51,33 @@ be named on a documented list, with the reason.
 - THEN those ids resolve to their own entries, as they do in the bundled
   table
 
+### Requirement: A refreshed snapshot keeps retired models
+A model that the upstream price list no longer holds SHALL stay in the
+bundled pricing table at the rates the list last published for it, and SHALL
+be named on the snapshot's list of retired models. A model the list still
+holds SHALL take its rates from the list. The size a downloaded price list
+is compared with, to refuse a truncated one, SHALL be the number of models
+the list itself held when the snapshot was built, without the retired ones.
+
+#### Scenario: Model dropped from the list
+- GIVEN a bundled snapshot that prices `claude-opus-4-1` and an upstream
+  list that no longer holds it
+- WHEN the snapshot is rebuilt from that list
+- THEN `claude-opus-4-1` resolves to an entry of its own id at its earlier
+  rates, and is named among the retired models
+
+#### Scenario: Retired dated id next to its current family id
+- GIVEN a snapshot that prices `mistral-large-2402` at 4 / 12 and an
+  upstream list that holds only `mistral-large` at 0.5 / 1.5
+- WHEN the snapshot is rebuilt and a `mistral-large-2402` call is priced
+- THEN the call is priced at 4 / 12, not at the rates of `mistral-large`
+
+#### Scenario: Retired models do not raise the truncation bar
+- GIVEN a bundled snapshot of 363 entries of which 76 are retired
+- WHEN `runray pricing --refresh` downloads a list of 150 usable models
+- THEN the list is accepted, because 150 is over half of the 287 the list
+  held at the snapshot
+
 ### Requirement: Suggestions and playbooks address Codex
 Wherever a suggestion or a rule playbook picks its lever by source, a Codex
 run SHALL get Codex levers: `AGENTS.md` as the instructions file, and

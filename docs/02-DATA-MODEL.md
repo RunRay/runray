@@ -159,6 +159,24 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 ### PricingTable (bundled asset, not part of TraceFile)
 `{ modelPattern, inputPerMTok, outputPerMTok, cacheReadPerMTok, cacheWritePerMTok }[]` + `snapshotDate`, `source: "litellm-snapshot"`. Shipped inside the package for offline use; `runray pricing --refresh` is explicit and opt-in.
 
+The table is built from the LiteLLM entries of mode `chat` and `responses` for six providers (Anthropic, OpenAI, Gemini, xAI, DeepSeek, Mistral). `responses` is where LiteLLM files the OpenAI models served only by the Responses API: the Codex family, the `-pro` models and deep research. A model is matched by its exact id first and by the longest listed prefix second, so an id missing from the table is priced as the shorter id it starts with.
+
+**Snapshot of 2026-11-14 (price change).** Until this snapshot the table held `chat` entries only, and Codex-family ids were priced by prefix. They now have entries of their own (per million tokens, input / output):
+
+| id | priced before as | priced now | effect on a run's cost |
+|---|---|---|---|
+| `gpt-5.3-codex` | `gpt-5`, 1.25 / 10 | 1.75 / 14 | 40% higher |
+| `gpt-5.1-codex-mini` | `gpt-5.1`, 1.25 / 10 | 0.25 / 2 | five times lower |
+| `gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-max`, `gpt-5.2-codex` | their base model | the same rates | none |
+| `claude-fable-5-1` | `claude-fable-5`, cache read 1 | cache read 0.25 | lower, by its cache-read share |
+| `gpt-6-astra` | unpriced | 10 / 50 | now priced |
+
+The same refresh brought in the other `responses` ids (`gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.5-pro`, `o1-pro`, `o3-pro`, the deep-research models), which the prefix rule had priced as their far cheaper base models. A run parsed again after an upgrade is priced with the new table, so its totals can differ from an earlier report of the same session.
+
+**Retired models.** LiteLLM drops a model from its list once the provider retires it; 76 ids left between the snapshots of 2026-08-18 and 2026-11-14, `claude-opus-4-1`, `claude-sonnet-4-20250514` and `grok-4` among them. Sessions run on them are still on disk, so the bundled table keeps each such entry at the rates the list last published for it and names the ids in `RETIRED_MODELS` (`packages/core/src/pricing/snapshot.ts`). A model the list still holds always takes the list's rates. A table written by `runray pricing --refresh` holds only what the list holds that day, so retired models are unpriced under a user override.
+
+**Ids with no published price.** `codex-auto-review`, the model of the Codex approval reviewer, has no rates in any price list. Its calls keep `costSource: "unknown"`, their tokens count in the run totals, and the coverage warning names the model. It is never priced as another model. The list lives next to the test that enforces it (`packages/core/src/pricing/snapshot.test.ts`).
+
 ## Source → schema mapping cheatsheet
 
 | Concept | Claude Code JSONL | OpenCode | OTLP (Claude Code traces beta) |

@@ -214,13 +214,46 @@ on 2026-11-14). The mode is the filter, so the same change brings in the 18
 other OpenAI `responses` ids: the `-pro` models (`gpt-5-pro`, `gpt-5.2-pro`,
 `gpt-5.4-pro`, `gpt-5.5-pro`, `o1-pro`, `o3-pro`) and the deep-research
 ones. Those are mispriced by the same prefix rule today, far more than the
-Codex ids are, so they are kept, not filtered back out. `gpt-6-astra` is
-upstream as a `chat` entry and needs only the refresh.
+Codex ids are, so they are kept, not filtered back out. xAI is the only
+other listed provider with `responses` entries (seven
+`grok-4.20-multi-agent` ids), and they come in the same way. `gpt-6-astra`
+is upstream as a `chat` entry and needs only the refresh.
+
+A refresh also takes models away, which the survey before sign-off did not
+look at. The list drops a model once its provider retires it: between
+2026-08-18 and 2026-11-14 it dropped 76 of the snapshot's 249 ids. With a
+plain refresh 45 of them would become unpriced (`claude-opus-4-1`,
+`claude-sonnet-4-20250514`, `claude-3-7-sonnet-20250219`, `grok-4`,
+`gemini-2.0-flash` among them) and 28 would be priced by the prefix rule as
+the current model their id starts with (`mistral-large-2402`, published at
+4 / 12, as today's `mistral-large` at 0.5 / 1.5). RunRay prices sessions
+that are already on disk, so a retired model still has runs to price. The
+build script therefore keeps every entry the list no longer has, at its last
+rates, and names those ids in `RETIRED_MODELS` next to the table
+(`keepRetiredModels`; signed off on 2026-11-14 when the refresh showed the
+loss). A model the list still has always takes the list's rates.
+`--drop-retired` builds the snapshot without them.
+*Rejected:* the plain refresh, for the regression above. *Rejected:* a
+marker on each entry: `PricingTable` is also the shape of the user's
+`pricing.json` and of the `/api/pricing` payload, and a list beside the table
+touches neither.
+*Cost:* an entry the list removed because it was wrong stays too; nothing
+tells the two apart. And the truncation check of `pricing --refresh`
+compared a download with half the snapshot's length, which retired entries
+would raise with every refresh until a complete list was refused. It now
+compares with the number of models the list itself held at the snapshot
+(`bundledListSize()`, 287 here). `pricing --refresh` does not keep retired
+models: the user's file replaces the bundled table whole, as before.
 
 This moves numbers outside Codex. `gpt-5.3-codex` is the model of four
 OpenCode fixtures and both OpenCode demo runs (286 calls); their costs rise
 by 40%, their goldens are regenerated in 5.1, and the demo runs are rebuilt
-with `pnpm demo:build`. A fixture model id that still resolves only by
+with `pnpm demo:build`. The refresh itself moves one more golden, which the
+survey before sign-off missed: `claude-fable-5-1`, the model of the Claude
+Code fixture `duplicate-records`, was priced by prefix as `claude-fable-5`
+and now has an entry of its own with a cache-read rate of 0.25 where the
+base model has 1, so that run's cost falls from $1.09 to $0.75. A fixture
+model id that still resolves only by
 prefix fails the test in 5.1 unless it is on a short documented list with
 the reason. `codex-auto-review` is
 not a published model; it stays `costSource: 'unknown'`, counted by the

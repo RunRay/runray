@@ -147,8 +147,10 @@ rollouts and their goldens in the three profiles. Existing goldens hold a
 single run each and no version string, so the schema bump leaves them
 byte-identical. The pricing step moves some of them: the four OpenCode
 fixtures and the two OpenCode demo runs use `gpt-5.3-codex`, whose cost
-rises by 40% once it has its own entry. They are regenerated in that step's
-dedicated commit, and the demo runs are rebuilt.
+rises by 40% once it has its own entry, and the Claude Code fixture
+`duplicate-records` uses `claude-fable-5-1`, which the refreshed list prices
+under its own id with a lower cache-read rate. They are regenerated in that
+step's dedicated commit, and the demo runs are rebuilt.
 
 **Docs**: `01-FEATURES`, `02-DATA-MODEL`, `04-SAMPLE-LOGS`, `05-ARCHITECTURE`,
 `07-DATA-SOURCES`, `08-FINDINGS` (generated playbooks), `12-ONBOARDING-COPY`,

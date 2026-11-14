@@ -229,7 +229,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 5. Pipeline integration (Codex goldens missing between 5.2 and 5.3)
 
-- [ ] 5.1 A Pricing for Codex models (D6): let `convertLitellmPricing` keep
+- [x] 5.1 A Pricing for Codex models (D6): let `convertLitellmPricing` keep
       `responses`-mode entries next to `chat` ones, refresh the bundled
       snapshot with `scripts/build-pricing-snapshot.ts`, regenerate the
       goldens that move (the OpenCode fixtures on `gpt-5.3-codex`), rebuild
@@ -242,6 +242,18 @@ directly and the goldens test does not see `fixtures/codex` yet.
       entry of that exact id or is on the documented no-price list; the
       golden diff touches only cost fields of runs on a model whose entry
       changed; and `pnpm test` green on the regenerated goldens.
+      Done in four commits: the converter, the retired-model rule, the
+      generated files, and the snapshot test with the docs. The snapshot
+      goes from 249 to 363 entries (114 new, 38 re-priced, 76 retired and
+      kept). Two things the design did not foresee, both accepted by the
+      maintainer or recorded in D6: the list had dropped 76 ids, which
+      the build script now keeps at their last rates (`RETIRED_MODELS`,
+      spec "A refreshed snapshot keeps retired models"), and a fifth
+      golden moved, `claude-code/duplicate-records`, whose model
+      `claude-fable-5-1` got an entry of its own ($1.09 to $0.75). The
+      golden and demo diff touches cost fields only: 171 calls on
+      `gpt-5.3-codex` in the goldens and 115 in the demo runs at 1.4
+      times their cost, and 4 calls on `claude-fable-5-1`.
 - [ ] 5.2 A Register the adapter after OpenCode, make the Claude Code
       adapter skip rollout files, and add the CLI surface: `codex` in
       `SOURCE_ALIASES`, the four `--source` help strings, the unknown-source
