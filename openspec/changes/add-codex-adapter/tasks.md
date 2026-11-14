@@ -254,7 +254,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       golden and demo diff touches cost fields only: 171 calls on
       `gpt-5.3-codex` in the goldens and 115 in the demo runs at 1.4
       times their cost, and 4 calls on `claude-fable-5-1`.
-- [ ] 5.2 A Register the adapter after OpenCode, make the Claude Code
+- [x] 5.2 A Register the adapter after OpenCode, make the Claude Code
       adapter skip rollout files, and add the CLI surface: `codex` in
       `SOURCE_ALIASES`, the four `--source` help strings, the unknown-source
       error, the setup guides text and `docs/12-ONBOARDING-COPY.md`. Verify:
@@ -264,6 +264,16 @@ directly and the goldens test does not see `fixtures/codex` yet.
       the fixture sessions. Registration makes `goldens.test.ts` expect
       Codex goldens, so this task and 5.3 land back to back; every other
       test is green here.
+      Done: the registry order is claude-code, opencode, codex, otlp, and
+      one name test (`isRolloutFileName`) decides for both adapters whose
+      file a rollout is. `runray list fixtures/codex --source codex` lists
+      7 sessions with nothing skipped, and the dashboard and a run view
+      render them (`cli-view-codex` in `.claude/launch.json`). The
+      wizard hint and the "Expected one of" line name Codex too. Red here,
+      as planned: the three tests of `goldens.test.ts`, until 5.3. Left
+      for later tasks: the unpriced warning still suggests
+      `runray pricing --refresh` for `codex-auto-review`, which no
+      refresh can price.
 - [ ] 5.3 A Generate the Codex goldens in the three profiles with
       `pnpm goldens`, in one dedicated commit. Verify: `goldens.test.ts`
       passes with `fixtures/codex` included, the existing goldens are

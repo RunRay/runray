@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { NumberedLine } from './lines.js';
 import {
   isCompressedRollout,
+  isRolloutFileName,
   isZstdUnavailable,
   readRolloutLines,
   ZstdUnavailableError,
@@ -49,6 +50,33 @@ const ZST = `${PLAIN}.zst`;
 function jsonl(records: unknown[]): string {
   return records.map((r) => `${JSON.stringify(r)}\n`).join('');
 }
+
+describe('isRolloutFileName', () => {
+  it('takes the names Codex gives a rollout, plain or compressed', () => {
+    for (const name of [
+      'rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl',
+      'rollout-2026-09-17T19-11-16-01a0b059-e3b9-7a20-87cc-da1f5e28e984.jsonl.zst',
+      'rollout-x.jsonl',
+      'ROLLOUT-X.JSONL.ZST',
+    ])
+      expect(isRolloutFileName(name), name).toBe(true);
+  });
+
+  it('takes nothing else: other JSONL, other rollout-like names, a path', () => {
+    for (const name of [
+      '0c0f6d2e-55f7-4d8a-9d6b-3a2a7f0f8a11.jsonl',
+      'agent-a1b2c3.jsonl',
+      'notes.jsonl',
+      'rollout.jsonl',
+      'rollout-x.json',
+      'rollout-x.jsonl.bak',
+      'rollout-x.jsonlzst',
+      'my-rollout-x.jsonl',
+      'sessions/rollout-x.jsonl',
+    ])
+      expect(isRolloutFileName(name), name).toBe(false);
+  });
+});
 
 describe('isCompressedRollout', () => {
   it('goes by the file name', () => {

@@ -107,7 +107,7 @@ What would you like to do?
 | label | hint |
 |---|---|
 | `Open the sample session` | `recommended, nothing to install` |
-| `Show setup guides` | `Claude Code · OpenCode · OTLP` |
+| `Show setup guides` | `Claude Code · OpenCode · Codex · OTLP` |
 | `Point at a folder` | `logs live somewhere else` |
 | `Open the dashboard anyway` | `empty, but it explains itself` |
 | `Exit` | `show me where you looked` |
@@ -138,6 +138,7 @@ No agent sessions found.
 Checked:
   ~/.claude/projects                                    missing
   ~/.local/share/opencode                               missing
+  ~/.codex/sessions                                     missing
 
 RunRay reads logs coding agents already write. There is nothing to set
 up. Two ways forward:
@@ -168,11 +169,16 @@ OpenCode
   both the legacy file storage and the newer SQLite store.
   Installed somewhere non-standard? runray view <that folder>
 
+Codex
+  Nothing to configure. Any session writes a rollout under ~/.codex/sessions
+  (or $CODEX_HOME/sessions). Compressed rollouts need Node 22.15 or newer.
+  Run:  codex "explain this repo"      then:  runray view
+
 Other agents (Cursor, custom pipelines)
   No on-disk session logs to read. Export OTLP/JSON with an OTel Collector
   file exporter, then:  runray view <that file>
 
-All three are read locally. RunRay makes no network calls.
+All four are read locally. RunRay makes no network calls.
 ```
 
 ### §3.6 Custom path found nothing (wizard option 3)
@@ -180,7 +186,8 @@ All three are read locally. RunRay makes no network calls.
 ```
 Nothing readable in <path>.
 
-Expected one of: Claude Code JSONL, an OpenCode store, or OTLP/JSON.
+Expected one of: Claude Code JSONL, an OpenCode store, Codex rollouts, or
+OTLP/JSON.
 Try the parent folder, or a single session file directly.
 ```
 
@@ -469,6 +476,7 @@ the existing hint, when the CLI supplied checked roots:
 Looked in:
   ~/.claude/projects           missing
   ~/.local/share/opencode      missing
+  ~/.codex/sessions            missing
 ```
 
 Live mode only. Never in exports (plan constraint 6).

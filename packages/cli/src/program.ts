@@ -100,7 +100,10 @@ export function createProgram(): Command {
       'discover sessions and open the local dashboard (127.0.0.1 only)',
     )
     .argument('[path]', 'directory to scan instead of the default locations')
-    .option('--source <tool>', 'only one source: claude | opencode | otlp')
+    .option(
+      '--source <tool>',
+      'only one source: claude | opencode | codex | otlp',
+    )
     .option(
       '--since <duration>',
       'only sessions modified within e.g. 7d, 24h, 30m',
@@ -295,7 +298,10 @@ export function createProgram(): Command {
       '--since <duration>',
       'only sessions modified within e.g. 7d, 24h, 30m',
     )
-    .option('--source <tool>', 'only one source: claude | opencode | otlp')
+    .option(
+      '--source <tool>',
+      'only one source: claude | opencode | codex | otlp',
+    )
     .action(async (path: string | undefined, opts: Record<string, unknown>) => {
       const globals = program.opts<{ config?: string }>();
       const config = loadConfig(globals.config);
@@ -351,7 +357,10 @@ export function createProgram(): Command {
     .argument('<runB>', 'comparison run id (unique prefix ok)')
     .argument('[path]', 'directory to scan instead of the default locations')
     .option('--json', 'machine-readable RunDiff on stdout (the CI-gate input)')
-    .option('--source <tool>', 'only one source: claude | opencode | otlp')
+    .option(
+      '--source <tool>',
+      'only one source: claude | opencode | codex | otlp',
+    )
     .option(
       '--since <duration>',
       'only sessions modified within e.g. 7d, 24h, 30m',
@@ -445,7 +454,10 @@ export function createProgram(): Command {
       '--json <file>',
       'also write the normalized TraceFile JSON to this path',
     )
-    .option('--source <tool>', 'only one source: claude | opencode | otlp')
+    .option(
+      '--source <tool>',
+      'only one source: claude | opencode | codex | otlp',
+    )
     .option(
       '--since <duration>',
       'only sessions modified within e.g. 7d, 24h, 30m',

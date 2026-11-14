@@ -12,6 +12,7 @@ import type {
 import { NoSessionYet } from '../adapter.js';
 import {
   isCompressedRollout,
+  isRolloutFileName,
   isZstdUnavailable,
   readRolloutLines,
 } from '../rollout-lines.js';
@@ -71,10 +72,6 @@ import { guessShellDialect, shellScriptAttributes } from './usage.js';
 
 const PREVIEW_CHARS = 200;
 const EPOCH = '1970-01-01T00:00:00Z';
-
-/** A rollout file name, plain or compressed. Anything else in a scanned
- * folder is never opened. */
-const ROLLOUT_FILE_RE = /^rollout-.*\.jsonl(\.zst)?$/i;
 
 /** `YYYY/MM/DD` is three levels under the sessions root; the bound leaves
  * room for a root given a few levels above it (the Codex home, a backup
@@ -153,7 +150,7 @@ async function findRollouts(root: string, depth = 0): Promise<string[]> {
   for (const entry of await safeReaddir(root)) {
     const path = join(root, entry.name);
     if (entry.isDirectory()) out.push(...(await findRollouts(path, depth + 1)));
-    else if (entry.isFile() && ROLLOUT_FILE_RE.test(entry.name)) out.push(path);
+    else if (entry.isFile() && isRolloutFileName(entry.name)) out.push(path);
   }
   return out;
 }

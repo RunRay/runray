@@ -33,6 +33,19 @@
       "port": 4321
     },
     {
+      "name": "cli-view-codex",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "packages/cli/dist/bin.js",
+        "view",
+        "fixtures/codex",
+        "--no-open",
+        "--port",
+        "4327"
+      ],
+      "port": 4327
+    },
+    {
       "name": "cli-view-real",
       "runtimeExecutable": "node",
       "runtimeArgs": [

@@ -13,6 +13,7 @@ import type {
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import { isRolloutFileName } from '../rollout-lines.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
 import { durationBetween, extendContainers } from './span-time.js';
@@ -1053,6 +1054,10 @@ export const claudeCodeAdapter: SourceAdapter = {
           if (!entry.isFile() || !entry.name.endsWith('.jsonl')) continue;
           if (AGENT_FILE_RE.test(entry.name) || entry.name === 'journal.jsonl')
             continue;
+          // a Codex rollout is the Codex adapter's file. Taken here it would
+          // be listed twice: once as a run, and once as a skipped file that
+          // "is not a Claude Code session".
+          if (isRolloutFileName(entry.name)) continue;
           const sessionFile = join(dir, entry.name);
           if (looksLikeOtlp(sessionFile)) continue;
 

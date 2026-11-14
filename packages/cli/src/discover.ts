@@ -29,6 +29,7 @@ const SOURCE_ALIASES: Record<string, string> = {
   claude: 'claude-code',
   'claude-code': 'claude-code',
   opencode: 'opencode',
+  codex: 'codex',
   otlp: 'otlp',
 };
 
@@ -218,7 +219,7 @@ export async function buildTraceFile(
       : SOURCE_ALIASES[options.source.toLowerCase()];
   if (options.source !== undefined && wantedSource === undefined) {
     throw new Error(
-      `unknown --source "${options.source}" (claude|opencode|otlp)`,
+      `unknown --source "${options.source}" (claude|opencode|codex|otlp)`,
     );
   }
   const cutoff =

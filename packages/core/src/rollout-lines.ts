@@ -35,6 +35,16 @@ import { stripBom } from './text.js';
 
 const ZSTD_SUFFIX = '.zst';
 
+/**
+ * True for the name Codex gives a rollout file, plain or compressed:
+ * `rollout-<start time>-<thread id>.jsonl[.zst]`. The Codex adapter takes
+ * such files as candidates and the Claude Code adapter leaves them alone,
+ * so both go by this one test.
+ */
+export function isRolloutFileName(name: string): boolean {
+  return /^rollout-.*\.jsonl(\.zst)?$/i.test(name);
+}
+
 /** True when the file name says the rollout is zstd-compressed. */
 export function isCompressedRollout(file: string): boolean {
   return file.toLowerCase().endsWith(ZSTD_SUFFIX);

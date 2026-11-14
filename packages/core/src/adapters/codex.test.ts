@@ -1,6 +1,7 @@
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   rmSync,
   statSync,
   utimesSync,
@@ -398,6 +399,17 @@ describe('codex detect on the fixtures', () => {
       expect(candidates, variant).toHaveLength(2);
       for (const c of candidates) expect(c.files).toEqual([c.runRef]);
     }
+  });
+
+  it('leaves no rollout for the Claude Code adapter, in the set or in any variant folder', async () => {
+    // Claude Code scans a root and the folders right under it for `.jsonl`
+    // files, which is where `compaction`, `simple` and `legacy` keep theirs
+    const variants = readdirSync(fixtures, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => join(fixtures, entry.name));
+    expect(variants.length).toBeGreaterThan(4);
+    for (const root of [fixtures, ...variants])
+      expect(await claudeCodeAdapter.detect([root]), root).toEqual([]);
   });
 
   it('over the whole set: seven candidates, simple and zstd counted once, from the plain file', async () => {
