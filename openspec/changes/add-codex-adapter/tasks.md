@@ -394,12 +394,25 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 7. Visualizer
 
-- [ ] 7.1 B [UI → /frontend-design] Source colour: a Codex source colour
+- [x] 7.1 B [UI → /frontend-design] Source colour: a Codex source colour
       derived from the brand tokens in `packages/ui/src/index.css` for both
       themes, wired in `lib/model-colors.ts`. The legend and the filter show
       the source id, `codex`, as they do for the other sources. Verify: tests for every scenario of "Codex is
       presented as a named source", including the contrast check the theme
       token tests apply to the other source colours.
+      Done: `--color-source-codex`, the brand hue turned 40 degrees toward
+      magenta, `#febeff` on ink and `#5b007f` on paper. The other sources
+      borrow span hues; the one left, the subagent chartreuse, is the
+      subagents badge on the same page, and the warm hues are waste and
+      severity, so Codex got a token of its own. No test held the source
+      colours to a threshold before, so `source-palette.test.ts` takes the
+      ones of the activity ramp: 12 OKLab ΔE from every other source and
+      from the waste strip in three visions, and 3:1 on the card ground for
+      every named source. `overview-sources.test.tsx` covers the chart, the
+      ranking row and the URL. The source filter needed no change: it
+      lists the sources of the loaded runs. Seen in both themes through the
+      new `cli-view-sources` preview. Noticed and left: on paper OpenCode
+      and OTLP are two greys, and the fallback grey is under 3:1 on white.
 - [ ] 7.2 B [UI → /frontend-design] Per-source hints (and, from the review
       of group 5, the unpriced notice in `components/CoverageNotices.tsx`:
       no "Try runray pricing --refresh" when every unpriced model is on

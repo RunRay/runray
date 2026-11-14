@@ -46,6 +46,19 @@
       "port": 4327
     },
     {
+      "name": "cli-view-sources",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "packages/cli/dist/bin.js",
+        "view",
+        "fixtures",
+        "--no-open",
+        "--port",
+        "4328"
+      ],
+      "port": 4328
+    },
+    {
       "name": "cli-view-real",
       "runtimeExecutable": "node",
       "runtimeArgs": [
