@@ -172,7 +172,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 4. Adapter: child threads and privacy
 
-- [ ] 4.1 A Child threads (D2, T10): subagent span per child with its
+- [x] 4.1 A Child threads (D2, T10): subagent span per child with its
       subtree, anchor on the named parent turn with the session fallback and
       warning, silent drop of a child with no turn, container extension.
       Verify: tests for every scenario of "Codex child threads nest under
@@ -182,6 +182,19 @@ directly and the goldens test does not see `fixtures/codex` yet.
       turns of the `guardian` fixture name a turn of their root in
       `root_turn_id` instead, so T10's anchor needs that as a second source
       (a design and spec change the maintainer signs off).
+      Done with `root_turn_id` as the second source (signed off), and with
+      two things the survey of all 183 child threads added, both in the
+      spec delta and both still the maintainer's to confirm. A third
+      source: 28 of the 147 threads that ran name no turn at all, and each
+      of their 249 turns began while exactly one turn of its parent was
+      running, so such a thread goes under that turn; a thread that names a
+      turn its parent lacks still goes to the session with a warning. And
+      one span per thread: 67 of 119 reviewers answered in more than one
+      turn of their parent, so 80 of 147 spans end after the turn they hang
+      on (D2 says why a span per parent turn was rejected). On the 67 real
+      runs: 147 subagent spans, every one on a turn, no warning, no
+      duplicate id, every run valid against the schema; 16,425 tool spans
+      and 15,053 model calls as before.
 - [ ] 4.2 A Redaction and identifiers (T11): the `redact` path of every
       content field and `runray.target`, a Codex branch in
       `sanitize/sanitize.ts`, and Codex fixtures added to the redaction

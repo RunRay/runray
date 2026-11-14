@@ -37,7 +37,7 @@ What a rollout looks like:
 
 ```
 {"timestamp": "...Z", "ordinal": 0, "type": "session_meta", "payload": {id, cwd, git, model_provider, parent_thread_id?, thread_source?, ...}}
-{"type": "event_msg",     "payload": {"type": "task_started", turn_id, started_at, turn_attribution?}}
+{"type": "event_msg",     "payload": {"type": "task_started", turn_id, started_at, root_turn_id?, turn_attribution?}}
 {"type": "turn_context",  "payload": {turn_id, model, effort, cwd, ...}}
 {"type": "response_item", "payload": {"type": "message" | "reasoning" | "function_call" | "custom_tool_call" | "..._output", call_id?, ...}}
 {"type": "token_usage_record", "payload": {response_id, turn_id, usage, turn_token_usage, thread_token_usage}}
@@ -112,6 +112,21 @@ sessions, and it puts the reviewer's tokens in the run that caused them.
 
 A child with no turn is dropped silently: it is the reviewer started and
 never consulted, the same class as a transcript with no prompt yet.
+
+One span per child thread, not one per parent turn it worked in. A reviewer
+thread lives as long as its parent and is consulted again and again: the 147
+that ran have 1,765 turns between them, and 67 of the 119 that name their
+parent's turns name more than one. All of a thread's turns sit under the one
+span, which hangs on the turn that first consulted it (T10), so 80 of the 147
+spans end after the turn they hang on. The tokens are in the right run and
+under the right agent; what is approximate is which of the parent's turns a
+later review is shown under.
+
+*Rejected:* a `subagent` span per parent turn. It would put every review
+under the turn that asked for it, and it would cut one conversation into
+several: a `subagent` span is a context scope to the insight rules, which
+follow the prompt from call to call inside it, and to `counts.subagents`,
+which would count one reviewer several times.
 
 ### D3 — Turn spans
 
@@ -632,13 +647,47 @@ written. The outcome is the call's
 A child thread's span: kind `subagent`, id the child's thread id,
 `agent.sessionId` the same id, `agent.name` from the source (`guardian` for
 `source.subagent.other == "guardian"`; the key under `source.subagent`
-otherwise; `unknown` when neither is present), name `subagent:<agent.name>`.
-Parent: the parent run's `turn` whose id equals the child's first
-`turn_attribution.parent_turn_id`; when no such turn exists, the session span
-with a run warning. Status `error` if any of its turns errored, else `ok`.
-The child's turns and calls are emitted beneath it exactly as a root's are.
-Containers are extended to cover their children, as in the Claude Code
-adapter.
+otherwise, or `source.subagent` itself where it is a bare word; `unknown`
+when neither is present or it is not one short word), name
+`subagent:<agent.name>`. The value under a key is never the name: `other`
+holds free text. Status `error` if any of its turns errored, else `ok`. It
+starts with the thread's first turn, not with its file, which is opened long
+before the reviewer is first asked. The child's turns and calls are emitted
+beneath it exactly as a root's are.
+
+Parent: a turn of the parent thread, found from the child's first turn in
+this order.
+
+1. The turn named in `turn_attribution.parent_turn_id`.
+2. The turn named in `root_turn_id`, when the parent is a root thread. The
+   id is a turn of the root, so it says nothing about a parent that is itself
+   a child.
+3. When the first turn names neither: the one turn of the parent that was
+   running as it began.
+
+Releases differ in what they write. Of the 147 child threads with a turn, 22
+carry both ids (they agree on all 318 turns), 97 only `root_turn_id`, and 28
+neither; every one of the 249 turns of those 28 began while exactly one turn
+of its parent was running. All 1,516 turns that name a parent turn start and
+end inside it. With the three sources all 147 threads land on a turn.
+
+When no turn is found the span hangs on the parent thread's own span (the
+session span for a child of the root) and the run carries a warning naming
+the child. That covers a named turn the parent does not have, a thread that
+names none and began while no turn or several were running, and a parent
+thread that is not in the run. A child that names a turn its parent lacks is
+not placed by the clock: what it says is wrong, and that is worth a warning,
+not a guess. A child file that cannot be read is a warning too, and the rest
+of the run stands.
+
+Ids are unique within a rollout and, in what was surveyed, across a parent
+and its children (no turn, response, call or item id of a child is also its
+parent's). A child's span whose id the run already holds takes the child's
+thread id in front.
+
+Session and subagent spans are extended to end no earlier than what is under
+them, as in the Claude Code adapter. Turns are left as the rollout brackets
+them, so a reviewer's span can end after the turn it hangs on (D2).
 
 ### T11 — What never leaves the parser
 

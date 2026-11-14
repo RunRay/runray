@@ -3645,6 +3645,567 @@ describe('codex file changes', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// parse(): child threads
+// ---------------------------------------------------------------------------
+
+const TURN_R = '0199f3a2-0000-7000-8000-00000000000a';
+const TURN_Q = '0199f3a2-0000-7000-8000-00000000000b';
+const GUARDIAN = { subagent: { other: 'guardian' } };
+
+/** The first record of a child thread: the approval reviewer of ROOT,
+ * unless `extra` says otherwise. */
+const childMeta = (
+  sec: number,
+  id: string = CHILD,
+  extra: Record<string, unknown> = {},
+) =>
+  sessionMeta(sec, {
+    id,
+    parent_thread_id: ROOT,
+    source: GUARDIAN,
+    thread_source: 'guardian_review',
+    ...extra,
+  });
+/** A turn start that says where it came from: `parent` is the turn of the
+ * parent thread in `turn_attribution`, `root` the turn of the root. */
+const startedFrom = (
+  sec: number,
+  turn: string,
+  from: { parent?: string; root?: string } = {},
+) =>
+  rec(sec, 'event_msg', {
+    type: 'task_started',
+    turn_id: turn,
+    ...(from.root === undefined ? {} : { root_turn_id: from.root }),
+    ...(from.parent === undefined
+      ? {}
+      : {
+          turn_attribution: {
+            turn_id: turn,
+            parent_turn_id: from.parent,
+            initiating_agent_path: null,
+          },
+        }),
+  });
+/** A root thread with two turns: A from second 1 to 20, B from 30 to 50. */
+const twoTurnRoot = () => [
+  sessionMeta(0),
+  started(1, TURN_A),
+  usageRecord(2, TURN_A, 'resp_root_1'),
+  completed(20, TURN_A),
+  started(30, TURN_B),
+  usageRecord(31, TURN_B, 'resp_root_2'),
+  completed(50, TURN_B),
+];
+/** A reviewer thread opened with its parent and consulted once, from
+ * second `sec` to three seconds later. */
+const reviewer = (
+  sec: number,
+  from: { parent?: string; root?: string } = {},
+  id: string = CHILD,
+  extra: Record<string, unknown> = {},
+) => [
+  childMeta(0, id, extra),
+  startedFrom(sec, TURN_R, from),
+  turnContext(sec, 'codex-auto-review', TURN_R),
+  usageRecord(sec + 2, TURN_R, 'resp_review_1', usageOf(1_000, 0, 50, 0)),
+  completed(sec + 3, TURN_R),
+];
+
+/** Writes a root rollout and its child rollouts, in the order given, and
+ * parses them as one run. */
+async function parseThreads(
+  rootLines: string[],
+  children: [id: string, lines: string[] | string][],
+  redact = false,
+): Promise<{ raw: RawRun; files: string[] }> {
+  const dir = tempDir();
+  const text = (lines: string[] | string) =>
+    typeof lines === 'string' ? lines : `${lines.join('\n')}\n`;
+  const files = [
+    rollout(dir, ROOT, { text: text(rootLines) }),
+    ...children.map(([id, lines], index) =>
+      rollout(dir, id, {
+        time: `2026-10-13T09-00-0${index + 1}`,
+        text: text(lines),
+      }),
+    ),
+  ];
+  const raw = await codexAdapter.parse(candidateOf(files[0] ?? '', files), {
+    redact,
+  });
+  return { raw, files };
+}
+
+const subagentsOf = (raw: RawRun) =>
+  raw.spans.filter((s) => s.kind === 'subagent');
+
+describe('codex child threads', () => {
+  it('hangs a reviewer thread on the turn its first turn names, with its own turns and calls beneath', async () => {
+    const { raw, files } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { parent: TURN_B, root: TURN_B })],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(raw.spans.filter((s) => s.kind === 'session')).toHaveLength(1);
+    expect(subagentsOf(raw)).toHaveLength(1);
+    const [subagent] = subagentsOf(raw);
+    // it starts with its first turn, not with its file (second 0)
+    expect(subagent).toMatchObject({
+      id: CHILD,
+      parentId: TURN_B,
+      name: 'subagent:guardian',
+      agent: { name: 'guardian', sessionId: CHILD },
+      status: 'ok',
+      startedAt: at(35),
+      endedAt: at(38),
+      durationMs: 3_000,
+      provenance: { file: files[1], line: 1 },
+    });
+    expect(subagent).not.toHaveProperty('content');
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    expect(byId.get(TURN_R)).toMatchObject({ kind: 'turn', parentId: CHILD });
+    expect(byId.get('resp_review_1')).toMatchObject({
+      kind: 'llm_call',
+      parentId: TURN_R,
+      name: 'codex-auto-review',
+      provenance: { file: files[1] },
+    });
+    // the parent's turns are where they were
+    expect(byId.get(TURN_A)?.parentId).toBe(ROOT);
+    expect(byId.get(TURN_B)?.parentId).toBe(ROOT);
+  });
+
+  it('takes the turn from root_turn_id when the turn start carries no attribution', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { root: TURN_B })],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(TURN_B);
+  });
+
+  it('believes turn_attribution before root_turn_id', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { parent: TURN_A, root: TURN_B })],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(TURN_A);
+  });
+
+  it('falls back on root_turn_id when the attributed turn is not in the parent', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { parent: TURN_STRAY, root: TURN_B })],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(TURN_B);
+  });
+
+  it('places a thread that names no turn under the one turn running when it began', async () => {
+    const early = await parseThreads(twoTurnRoot(), [[CHILD, reviewer(5)]]);
+    expect(early.raw.warnings).toEqual([]);
+    expect(subagentsOf(early.raw)[0]?.parentId).toBe(TURN_A);
+
+    const late = await parseThreads(twoTurnRoot(), [[CHILD, reviewer(35)]]);
+    expect(late.raw.warnings).toEqual([]);
+    expect(subagentsOf(late.raw)[0]?.parentId).toBe(TURN_B);
+  });
+
+  it('places it under a turn of the parent that is still open', async () => {
+    const { raw } = await parseThreads(
+      [sessionMeta(0), started(1, TURN_A), usageRecord(2, TURN_A, 'resp_1')],
+      [[CHILD, reviewer(5)]],
+    );
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(TURN_A);
+  });
+
+  it('attaches a thread that names a turn its parent does not have to the session, with a warning naming it', async () => {
+    // second 35 is inside turn B, and the clock is still not asked: what
+    // the thread says is wrong
+    for (const from of [{ parent: TURN_STRAY }, { root: TURN_STRAY }]) {
+      const { raw, files } = await parseThreads(twoTurnRoot(), [
+        [CHILD, reviewer(35, from)],
+      ]);
+      expect(subagentsOf(raw)[0]).toMatchObject({ id: CHILD, parentId: ROOT });
+      expect(raw.warnings).toEqual([
+        {
+          message: `child thread ${CHILD} attached to the session: the turn it names is not in its parent thread`,
+          file: files[1],
+        },
+      ]);
+      // its subtree is whole all the same
+      expect(raw.spans.find((s) => s.id === TURN_R)?.parentId).toBe(CHILD);
+    }
+  });
+
+  it('attaches a thread that names no turn and began between two turns to the session, with a warning', async () => {
+    const { raw, files } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(24)],
+    ]);
+    expect(subagentsOf(raw)[0]?.parentId).toBe(ROOT);
+    expect(raw.warnings).toEqual([
+      {
+        message: `child thread ${CHILD} attached to the session: it names no turn, and no single turn of its parent was running when it began`,
+        file: files[1],
+      },
+    ]);
+  });
+
+  it('counts the tokens of the reviewer in the run, and one subagent', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { root: TURN_B })],
+    ]);
+    const run = normalize(priceRun(raw));
+    expect(RunSchema.safeParse(run).error).toBeUndefined();
+    expect(run.totals.counts.subagents).toBe(1);
+    expect(run.totals.counts.llmCalls).toBe(3);
+    // two calls of 110 in the root, one of 1,050 in the reviewer
+    expect(run.totals.tokens.total).toBe(110 + 110 + 1_050);
+    const depthOf = (id: string) => run.spans.find((s) => s.id === id)?.depth;
+    expect(depthOf(CHILD)).toBe(2);
+    expect(depthOf('resp_review_1')).toBe(4);
+  });
+
+  it('drops a child that never ran a turn, with whatever its file warns of', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          'this line is not JSON',
+          tokenCount(3, usageOf(9_000, 0, 10, 0), 9_010),
+          usageRecord(4, undefined, 'resp_inherited', usageOf(9_000, 0, 10, 0)),
+        ],
+      ],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)).toEqual([]);
+    expect(
+      raw.spans.every((s) => s.provenance.file === raw.source.files[0]),
+    ).toBe(true);
+    expect(normalize(priceRun(raw)).totals.tokens.total).toBe(220);
+  });
+
+  it('keeps the warnings of a child that ran, under the name of its file', async () => {
+    const lines = reviewer(35, { root: TURN_B });
+    lines.splice(2, 0, 'this line is not JSON');
+    const { raw, files } = await parseThreads(twoTurnRoot(), [[CHILD, lines]]);
+    expect(raw.warnings).toEqual([
+      { message: 'unparseable JSONL line', file: files[1], line: 3 },
+    ]);
+  });
+
+  it('names a child by what the harness says it is, never by free text', async () => {
+    const cases: [source: unknown, name: string][] = [
+      [GUARDIAN, 'guardian'],
+      [
+        { subagent: { thread_spawn: { depth: 1, agent_nickname: 'Ada' } } },
+        'thread_spawn',
+      ],
+      [{ subagent: 'review' }, 'review'],
+      [{ subagent: { other: 'Some words a person wrote' } }, 'other'],
+      [{ subagent: 'Some words a person wrote' }, 'unknown'],
+      ['cli', 'unknown'],
+      [undefined, 'unknown'],
+    ];
+    for (const [source, name] of cases) {
+      const { raw } = await parseThreads(twoTurnRoot(), [
+        [CHILD, reviewer(35, { root: TURN_B }, CHILD, { source })],
+      ]);
+      expect(subagentsOf(raw)[0], JSON.stringify(source)).toMatchObject({
+        name: `subagent:${name}`,
+        agent: { name, sessionId: CHILD },
+      });
+    }
+  });
+
+  it('marks the subagent failed when one of its turns ended in an error, and only then', async () => {
+    const failed = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          startedFrom(35, TURN_R, { root: TURN_B }),
+          completed(36, TURN_R),
+          startedFrom(37, TURN_Q, { root: TURN_B }),
+          completed(38, TURN_Q, { error: { codex_error_info: 'other' } }),
+        ],
+      ],
+    ]);
+    expect(subagentsOf(failed.raw)[0]?.status).toBe('error');
+
+    const stopped = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          startedFrom(35, TURN_R, { root: TURN_B }),
+          aborted(36, TURN_R, 'interrupted'),
+          startedFrom(37, TURN_Q, { root: TURN_B }),
+        ],
+      ],
+    ]);
+    expect(subagentsOf(stopped.raw)[0]?.status).toBe('ok');
+  });
+
+  it('keeps one span for a thread that answered in two turns of its parent, under the first', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          startedFrom(5, TURN_R, { root: TURN_A }),
+          usageRecord(6, TURN_R, 'resp_review_1'),
+          completed(7, TURN_R),
+          startedFrom(35, TURN_Q, { root: TURN_B }),
+          usageRecord(36, TURN_Q, 'resp_review_2'),
+          completed(37, TURN_Q),
+        ],
+      ],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)).toHaveLength(1);
+    expect(subagentsOf(raw)[0]).toMatchObject({
+      parentId: TURN_A,
+      startedAt: at(5),
+      endedAt: at(37),
+    });
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    expect(byId.get(TURN_R)?.parentId).toBe(CHILD);
+    expect(byId.get(TURN_Q)?.parentId).toBe(CHILD);
+    // a turn is left as its rollout brackets it: A still ends at second 20
+    expect(byId.get(TURN_A)?.endedAt).toBe(at(20));
+  });
+
+  it('extends the session over a child that outlasts its file', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          startedFrom(35, TURN_R, { root: TURN_B }),
+          usageRecord(80, TURN_R, 'resp_review_1'),
+          completed(90, TURN_R),
+        ],
+      ],
+    ]);
+    const [session] = raw.spans;
+    expect(session).toMatchObject({
+      kind: 'session',
+      startedAt: at(0),
+      endedAt: at(90),
+      durationMs: 90_000,
+    });
+    expect(subagentsOf(raw)[0]).toMatchObject({
+      startedAt: at(35),
+      endedAt: at(90),
+      durationMs: 55_000,
+    });
+  });
+
+  it('keeps the ids of a child apart from those of its parent', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0),
+          startedFrom(35, TURN_A, { root: TURN_B }), // the parent's turn id
+          toolCall(36, 'call_1'),
+          usageRecord(37, TURN_A, 'resp_root_1'), // and its response id
+          toolOutput(38, 'call_1'),
+          completed(39, TURN_A),
+        ],
+      ],
+    ]);
+    expect(new Set(raw.spans.map((s) => s.id)).size).toBe(raw.spans.length);
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    expect(byId.get(`${CHILD}:${TURN_A}`)).toMatchObject({
+      kind: 'turn',
+      parentId: CHILD,
+    });
+    expect(byId.get(`${CHILD}:resp_root_1`)).toMatchObject({
+      kind: 'llm_call',
+      parentId: `${CHILD}:${TURN_A}`,
+    });
+    expect(byId.get('call_1')?.parentId).toBe(`${CHILD}:resp_root_1`);
+    // the parent keeps the plain ids, and the child hangs on the turn named
+    expect(byId.get(TURN_A)?.parentId).toBe(ROOT);
+    expect(byId.get('resp_root_1')?.parentId).toBe(TURN_A);
+    expect(byId.get(CHILD)?.parentId).toBe(TURN_B);
+    expect(RunSchema.safeParse(normalize(priceRun(raw))).error).toBeUndefined();
+  });
+
+  it('nests a child of a child under a turn of its parent', async () => {
+    const grandchild = (from: { parent?: string; root?: string }) => [
+      childMeta(0, GRANDCHILD, { parent_thread_id: CHILD }),
+      startedFrom(36, TURN_Q, from),
+      usageRecord(37, TURN_Q, 'resp_review_2'),
+      completed(37, TURN_Q),
+    ];
+    // named by attribution; then by nothing its parent has: root_turn_id is
+    // a turn of the root, so the clock places it in the reviewer's turn
+    for (const from of [{ parent: TURN_R, root: TURN_B }, { root: TURN_B }]) {
+      const { raw } = await parseThreads(twoTurnRoot(), [
+        [CHILD, reviewer(35, { root: TURN_B })],
+        [GRANDCHILD, grandchild(from)],
+      ]);
+      expect(raw.warnings).toEqual([]);
+      const byId = new Map(raw.spans.map((s) => [s.id, s]));
+      expect(byId.get(GRANDCHILD)).toMatchObject({
+        kind: 'subagent',
+        parentId: TURN_R,
+      });
+      expect(byId.get(TURN_Q)?.parentId).toBe(GRANDCHILD);
+      const run = normalize(priceRun(raw));
+      expect(run.totals.counts.subagents).toBe(2);
+      expect(run.spans.find((s) => s.id === 'resp_review_2')?.depth).toBe(6);
+    }
+  });
+
+  it('reads a child of a child whichever file comes first', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        GRANDCHILD,
+        [
+          childMeta(0, GRANDCHILD, { parent_thread_id: CHILD }),
+          startedFrom(36, TURN_Q, { parent: TURN_R }),
+          completed(37, TURN_Q),
+        ],
+      ],
+      [CHILD, reviewer(35, { root: TURN_B })],
+    ]);
+    expect(raw.warnings).toEqual([]);
+    expect(raw.spans.find((s) => s.id === GRANDCHILD)?.parentId).toBe(TURN_R);
+  });
+
+  it('attaches a thread whose parent is not in the run to the session, with a warning', async () => {
+    // its parent never ran a turn, so it is not in the run
+    const { raw, files } = await parseThreads(twoTurnRoot(), [
+      [CHILD, [childMeta(0)]],
+      [
+        GRANDCHILD,
+        [
+          childMeta(0, GRANDCHILD, { parent_thread_id: CHILD }),
+          startedFrom(36, TURN_Q, { parent: TURN_R }),
+          completed(37, TURN_Q),
+        ],
+      ],
+    ]);
+    expect(subagentsOf(raw)).toHaveLength(1);
+    expect(subagentsOf(raw)[0]).toMatchObject({
+      id: GRANDCHILD,
+      parentId: ROOT,
+    });
+    expect(raw.warnings).toEqual([
+      {
+        message: `child thread ${GRANDCHILD} attached to the session: its parent thread is not in this run`,
+        file: files[2],
+      },
+    ]);
+  });
+
+  it('attaches threads that name each other as parent to the session: no cycle reaches the run', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [
+        CHILD,
+        [
+          childMeta(0, CHILD, { parent_thread_id: GRANDCHILD }),
+          startedFrom(35, TURN_R, { parent: TURN_Q }),
+          completed(36, TURN_R),
+        ],
+      ],
+      [
+        GRANDCHILD,
+        [
+          childMeta(0, GRANDCHILD, { parent_thread_id: CHILD }),
+          startedFrom(35, TURN_Q, { parent: TURN_R }),
+          completed(36, TURN_Q),
+        ],
+      ],
+    ]);
+    expect(subagentsOf(raw).map((s) => s.parentId)).toEqual([ROOT, ROOT]);
+    expect(raw.warnings).toHaveLength(2);
+    expect(RunSchema.safeParse(normalize(priceRun(raw))).error).toBeUndefined();
+  });
+
+  it('reports a child file that is not a rollout and keeps the run', async () => {
+    const { raw, files } = await parseThreads(twoTurnRoot(), [
+      [CHILD, 'not a rollout at all\n'],
+      [GRANDCHILD, reviewer(35, { root: TURN_B }, GRANDCHILD)],
+    ]);
+    expect(raw.warnings).toEqual([
+      {
+        message:
+          'child thread not read: not a Codex rollout: no line of it is a JSON record',
+        file: files[1],
+      },
+    ]);
+    expect(subagentsOf(raw).map((s) => s.id)).toEqual([GRANDCHILD]);
+    expect(turnsOf(raw)).toHaveLength(3);
+  });
+
+  it('reads an empty child file as a thread not started yet: nothing, and no warning', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [[CHILD, '']]);
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)).toEqual([]);
+  });
+
+  it('reads the same thread once when two files hold it', async () => {
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, reviewer(35, { root: TURN_B })],
+      [CHILD, reviewer(35, { root: TURN_B })],
+    ]);
+    expect(subagentsOf(raw)).toHaveLength(1);
+    expect(new Set(raw.spans.map((s) => s.id)).size).toBe(raw.spans.length);
+    expect(normalize(priceRun(raw)).totals.tokens.total).toBe(220 + 1_050);
+  });
+
+  it('redacts a child thread as it does its parent', async () => {
+    const lines = [
+      childMeta(0),
+      startedFrom(35, TURN_R, { root: TURN_B }),
+      userMessage(35, 'May the agent run rm -rf build?'),
+      assistantMessage(36, 'Yes: build is generated output.'),
+      usageRecord(37, TURN_R, 'resp_review_1'),
+      completed(38, TURN_R),
+    ];
+    const open = await parseThreads(twoTurnRoot(), [[CHILD, lines]]);
+    const openById = new Map(open.raw.spans.map((s) => [s.id, s]));
+    expect(openById.get(TURN_R)?.content?.promptPreview).toBe(
+      'May the agent run rm -rf build?',
+    );
+    expect(openById.get('resp_review_1')?.content?.outputPreview).toBe(
+      'Yes: build is generated output.',
+    );
+
+    const { raw } = await parseThreads(twoTurnRoot(), [[CHILD, lines]], true);
+    const byId = new Map(raw.spans.map((s) => [s.id, s]));
+    expect(byId.get(TURN_R)?.content).toEqual({ promptPreview: null });
+    expect(byId.get('resp_review_1')?.content).toEqual({ outputPreview: null });
+    expect(byId.get(CHILD)).not.toHaveProperty('content');
+    expect(JSON.stringify(raw)).not.toContain('rm -rf');
+  });
+
+  it('reads a child given on its own as a run of its own, under a session span', async () => {
+    const file = rollout(tempDir(), CHILD, {
+      text: `${reviewer(35, { root: TURN_B }).join('\n')}\n`,
+    });
+    const raw = await codexAdapter.parse(candidateOf(file), { redact: false });
+    expect(raw.warnings).toEqual([]);
+    expect(subagentsOf(raw)).toEqual([]);
+    expect(raw.spans[0]).toMatchObject({
+      id: CHILD,
+      kind: 'session',
+      parentId: null,
+      name: 'session',
+      agent: { sessionId: CHILD },
+      // a run of its own starts with its file
+      startedAt: at(0),
+    });
+    expect(raw.spans[0]?.agent).not.toHaveProperty('name');
+  });
+});
+
 describe('codex parse on the fixtures', () => {
   const candidatesIn = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -3657,6 +4218,11 @@ describe('codex parse on the fixtures', () => {
     }
     return out;
   };
+  /** The run without its child threads: what the root's own file gave. */
+  const rootThread = (raw: RawRun): RawRun => ({
+    ...raw,
+    spans: raw.spans.filter((s) => s.provenance.file === raw.source.files[0]),
+  });
   /** Turn statuses of a run, with the reason where there is one. */
   const statuses = (raw: RawRun) =>
     turnsOf(raw).map((t) =>
@@ -3722,8 +4288,88 @@ describe('codex parse on the fixtures', () => {
 
   it('reads the two turns of the guardian root and lists all three files as its source', async () => {
     const [raw] = await parseVariant('guardian');
-    expect(turnsOf(raw as RawRun)).toHaveLength(2);
+    expect(turnsOf(rootThread(raw as RawRun))).toHaveLength(2);
     expect(raw?.source.files).toHaveLength(3);
+  });
+
+  it('nests the reviewer thread of guardian under the root turn its first turn names', async () => {
+    const [raw] = (await parseVariant('guardian')) as [RawRun];
+    const [rootFile, reviewerFile, idleFile] = raw.source.files;
+    expect(raw.warnings).toEqual([]);
+    expect(raw.spans.filter((s) => s.kind === 'session')).toHaveLength(1);
+    // the fixture's turn starts carry `root_turn_id` and no attribution
+    const [firstRootTurn] = turnsOf(rootThread(raw));
+    expect(subagentsOf(raw)).toHaveLength(1);
+    const [subagent] = subagentsOf(raw);
+    expect(subagent).toMatchObject({
+      id: '01a0f0f6-9e8a-7852-8a51-f5ffa473ace1',
+      parentId: firstRootTurn?.id,
+      name: 'subagent:guardian',
+      agent: {
+        name: 'guardian',
+        sessionId: '01a0f0f6-9e8a-7852-8a51-f5ffa473ace1',
+      },
+      status: 'ok',
+      provenance: { file: reviewerFile, line: 2 },
+    });
+    // 20 turns under the span, one model call under each, nothing else
+    const reviewed = raw.spans.filter(
+      (s) => s.provenance.file === reviewerFile && s !== subagent,
+    );
+    const turnIds = new Set(
+      reviewed.filter((s) => s.kind === 'turn').map((s) => s.id),
+    );
+    expect(turnIds.size).toBe(20);
+    expect(reviewed).toHaveLength(40);
+    for (const span of reviewed) {
+      if (span.kind === 'turn') expect(span.parentId).toBe(subagent?.id);
+      else {
+        expect(span.kind).toBe('llm_call');
+        expect(turnIds.has(span.parentId ?? '')).toBe(true);
+        expect(span.name).toBe('codex-auto-review');
+      }
+      expect(span.startedAt >= (subagent?.startedAt ?? '')).toBe(true);
+      expect(
+        (span.endedAt ?? span.startedAt) <= (subagent?.endedAt ?? ''),
+      ).toBe(true);
+    }
+    // the span starts with the reviewer's first turn, inside the root turn
+    expect(subagent?.startedAt).toBe(
+      reviewed.find((s) => s.kind === 'turn')?.startedAt,
+    );
+    expect(
+      (subagent?.startedAt ?? '') >= (firstRootTurn?.startedAt ?? ''),
+    ).toBe(true);
+    // the reviewer that never ran left nothing
+    expect(raw.spans.some((s) => s.provenance.file === idleFile)).toBe(false);
+    expect(raw.spans[0]?.provenance.file).toBe(rootFile);
+    expect(new Set(raw.spans.map((s) => s.id)).size).toBe(raw.spans.length);
+  });
+
+  it('counts the tokens of the guardian reviewer in the run, and one subagent', async () => {
+    const [raw] = (await parseVariant('guardian')) as [RawRun];
+    const [rootFile = '', reviewerFile = ''] = raw.source.files;
+    // read apart from the adapter: what each usage record of the reviewer
+    // says the response used (its thread total starts from the root's)
+    let reviewerTokens = 0;
+    let reviewerRecords = 0;
+    for await (const { text } of readRolloutLines(reviewerFile)) {
+      if (text === '') continue;
+      const record = JSON.parse(text);
+      if (record.type !== 'token_usage_record') continue;
+      reviewerRecords++;
+      reviewerTokens += record.payload.usage.total_tokens;
+    }
+    expect(reviewerRecords).toBe(20);
+    const root = await countersOf(rootFile);
+    const run = normalize(priceRun(raw));
+    expect(RunSchema.safeParse(run).error).toBeUndefined();
+    expect(run.totals.counts.subagents).toBe(1);
+    expect(run.totals.counts.llmCalls).toBe(73 + 20);
+    expect(run.totals.tokens.total).toBe(
+      (root.threadTotal ?? 0) + reviewerTokens,
+    );
+    expect(tokenSum(rootThread(raw))).toBe(root.threadTotal);
   });
 
   it('skips the reviewer thread of guardian that never ran a turn', async () => {
@@ -3745,7 +4391,7 @@ describe('codex parse on the fixtures', () => {
       for (const raw of await parseVariant(variant)) {
         const [session] = raw.spans;
         expect(new Set(raw.spans.map((s) => s.id)).size).toBe(raw.spans.length);
-        for (const turn of turnsOf(raw)) {
+        for (const turn of turnsOf(rootThread(raw))) {
           expect(turn.parentId).toBe(session?.id);
           expect(turn.provenance.file).toBe(raw.source.files[0]);
           expect(turn.provenance.line).toBeGreaterThan(1);
@@ -4228,8 +4874,9 @@ describe('codex parse on the fixtures', () => {
         const file = raw.source.files[0] ?? '';
         const counters = await countersOf(file);
         expect(counters.usageRecords, variant).toBeGreaterThan(0);
-        expect(llmCallsOf(raw), variant).toHaveLength(counters.usageRecords);
-        expect(tokenSum(raw), variant).toBe(counters.threadTotal);
+        const own = rootThread(raw);
+        expect(llmCallsOf(own), variant).toHaveLength(counters.usageRecords);
+        expect(tokenSum(own), variant).toBe(counters.threadTotal);
       }
     }
   });

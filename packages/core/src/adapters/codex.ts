@@ -34,14 +34,16 @@ import { guessShellDialect, shellScriptAttributes } from './usage.js';
  *
  * A thread whose `session_meta` names a `parent_thread_id` is a child thread
  * (on every machine surveyed: the approval reviewer). It is not a run of its
- * own: its file joins the candidate of its root thread (design D2).
+ * own: its file joins the candidate of its root thread, and in the run it
+ * is one `subagent` span with its own turns and calls beneath it, hung on
+ * the turn of its parent that started it (design D2, T10).
  *
- * What `parse()` emits so far: the session span, one `turn` span per turn
- * the rollout brackets (design D3, T6), one `llm_call` span per API
- * response (T4, T5) and one tool span per thing the harness did (D4, T7),
- * a command's span with the identity of the program it ran (T8) and a
- * file change's with the lines it changed (T9). Child threads follow in
- * task 4.1.
+ * What `parse()` emits: the session span, one `turn` span per turn the
+ * rollout brackets (design D3, T6), one `llm_call` span per API response
+ * (T4, T5) and one tool span per thing the harness did (D4, T7), a
+ * command's span with the identity of the program it ran (T8) and a file
+ * change's with the lines it changed (T9); then the same for each child
+ * thread, under its `subagent` span.
  *
  * Tool spans are harness actions, not model calls. Current Codex gives the
  * model one tool, `exec`, whose input is a script; what the script ran is
@@ -281,15 +283,32 @@ interface ParseContext {
   redact: boolean;
 }
 
+/** Where a thread's first turn says it came from. */
+interface FirstTurn {
+  startedAt: string;
+  /** `turn_attribution.parent_turn_id`: a turn of the parent thread. */
+  parentTurnId: string | undefined;
+  /** `root_turn_id`: a turn of the root thread. */
+  rootTurnId: string | undefined;
+}
+
 /** What one rollout said about its thread. */
 interface ThreadSummary {
   threadId: string;
+  /** The thread it names as its parent. */
+  parentThreadId: string | undefined;
   cwd: string | undefined;
   gitBranch: string | undefined;
   /** Turns the file started. */
   turns: number;
   /** Model calls the file recorded. */
   llmCalls: number;
+  /** The span everything of the thread hangs from: the session span of a
+   * root thread, the subagent span of a child. */
+  top: RawSpan;
+  /** The thread's turn spans, by the id the rollout gives each turn. */
+  turnSpans: Map<string, RawSpan>;
+  firstTurn: FirstTurn | undefined;
 }
 
 interface TurnState {
@@ -379,6 +398,28 @@ function projectName(cwd: string): string {
     (segments.length === 1 && /^[A-Za-z]:$/.test(last))
     ? cwd
     : last;
+}
+
+/** A name the harness gave, not text someone wrote: one short word. */
+const AGENT_NAME = /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/;
+
+/**
+ * What a child thread is, from `session_meta.source` (design T10). The
+ * approval reviewer is `{subagent: {other: "guardian"}}`, on all 183 child
+ * threads surveyed. Any other child is named by what kind of subagent the
+ * harness says it is: the key under `subagent`, or `subagent` itself where
+ * it is a bare word. The value under a key is never the name: `other` holds
+ * free text.
+ */
+function agentNameOf(source: unknown): string {
+  const subagent = isObj(source) ? source.subagent : undefined;
+  let name: string | undefined;
+  if (typeof subagent === 'string') name = subagent;
+  else if (isObj(subagent)) {
+    name =
+      subagent.other === 'guardian' ? 'guardian' : Object.keys(subagent)[0];
+  }
+  return name !== undefined && AGENT_NAME.test(name) ? name : 'unknown';
 }
 
 /**
@@ -1173,6 +1214,9 @@ function outcomeOf(name: string, output: unknown): CallOutcome {
 async function emitThread(
   file: string,
   ctx: ParseContext,
+  /** The thread is read as a child of the run's root: its top span is a
+   * `subagent` span, which `emitChildren` hangs on the parent thread. */
+  child: boolean,
 ): Promise<ThreadSummary> {
   let session: RawSpan | undefined;
   let summary: ThreadSummary | undefined;
@@ -1338,26 +1382,34 @@ async function emitThread(
       const threadId =
         str(payload.id) ?? basename(file).replace(/\.jsonl(\.zst)?$/i, '');
       const git = isObj(payload.git) ? payload.git : undefined;
+      const agent = child ? agentNameOf(payload.source) : undefined;
+      session = {
+        id: threadId,
+        parentId: null, // a child's is set once its parent thread is known
+        kind: agent === undefined ? 'session' : 'subagent',
+        name: agent === undefined ? 'session' : `subagent:${agent}`,
+        status: 'ok',
+        startedAt: EPOCH, // set once the file is read
+        agent: {
+          ...(agent === undefined ? {} : { name: agent }),
+          sessionId: threadId,
+        },
+        attributes: {},
+        provenance: { file, line },
+      };
       summary = {
         threadId,
+        parentThreadId: str(payload.parent_thread_id),
         cwd: str(payload.cwd),
         gitBranch: git === undefined ? undefined : str(git.branch),
         turns: 0,
         llmCalls: 0,
+        top: session,
+        turnSpans: new Map(),
+        firstTurn: undefined,
       };
       provider = str(payload.model_provider) ?? 'unknown';
       windows = /^(?:[A-Za-z]:[\\/]|\\\\)/.test(summary.cwd ?? '');
-      session = {
-        id: threadId,
-        parentId: null,
-        kind: 'session',
-        name: 'session',
-        status: 'ok',
-        startedAt: EPOCH, // set once the file is read
-        agent: { sessionId: threadId },
-        attributes: {},
-        provenance: { file, line },
-      };
       ctx.spans.push(session);
       continue;
     }
@@ -1382,6 +1434,17 @@ async function emitThread(
         current = { span, open: true, prompted: false, lastClosed: undefined };
         latest = current;
         turns.set(id, current);
+        summary.turnSpans.set(id, span);
+        if (summary.firstTurn === undefined) {
+          const attribution = isObj(payload.turn_attribution)
+            ? payload.turn_attribution
+            : undefined;
+          summary.firstTurn = {
+            startedAt: span.startedAt,
+            parentTurnId: str(attribution?.parent_turn_id),
+            rootTurnId: str(payload.root_turn_id),
+          };
+        }
         summary.turns++;
         ctx.spans.push(span);
         // whatever was read before belongs to no response of this turn
@@ -1712,11 +1775,21 @@ async function emitThread(
     if (!sawText) throw new NoSessionYet('empty Codex rollout');
     throw new Error('not a Codex rollout: no line of it is a JSON record');
   }
-  session.startedAt = firstAt ?? EPOCH;
-  if (lastAt !== undefined && firstAt !== undefined) {
+  // A child's span starts with its first turn, not with its file: the
+  // reviewer's thread is opened long before it is first consulted, and
+  // nothing in the file before that turn is the thread's own work.
+  const startedAt =
+    (child ? summary.firstTurn?.startedAt : undefined) ?? firstAt;
+  session.startedAt = startedAt ?? EPOCH;
+  if (lastAt !== undefined && startedAt !== undefined) {
     session.endedAt = lastAt;
-    const durationMs = durationBetween(firstAt, lastAt);
+    const durationMs = durationBetween(startedAt, lastAt);
     if (durationMs !== undefined) session.durationMs = durationMs;
+  }
+  if (child) {
+    for (const turn of turns.values()) {
+      if (turn.span.status === 'error') session.status = 'error';
+    }
   }
   const usageEra = summary.llmCalls > 0;
   if (!usageEra) {
@@ -1806,17 +1879,203 @@ async function emitThread(
   return summary;
 }
 
+/**
+ * The turn of its parent thread a child thread belongs under (design T10):
+ *
+ *   1. the turn its first turn names in `turn_attribution.parent_turn_id`;
+ *   2. the turn it names in `root_turn_id`, when the parent is a root
+ *      thread (the id is a turn of the root, so it says nothing about a
+ *      parent that is itself a child);
+ *   3. when it names neither, the one turn of the parent that was running
+ *      as its first turn began.
+ *
+ * Releases differ in what they write: of 147 reviewer threads with a turn,
+ * 22 carry both ids (and they agree on all 318 turns), 97 only
+ * `root_turn_id`, 28 neither. Every one of the 249 turns of those 28 began
+ * while exactly one turn of its parent was running.
+ *
+ * A thread that names a turn its parent does not have is not placed by the
+ * clock: what it says is wrong, and that is worth a warning, not a guess.
+ */
+function anchorOf(
+  child: ThreadSummary,
+  parent: ThreadSummary,
+): { turn: RawSpan } | { why: string } {
+  const first = child.firstTurn;
+  const named = [
+    first?.parentTurnId,
+    parent.parentThreadId === undefined ? first?.rootTurnId : undefined,
+  ].filter((id) => id !== undefined);
+  for (const id of named) {
+    const turn = parent.turnSpans.get(id);
+    if (turn !== undefined) return { turn };
+  }
+  if (named.length > 0) {
+    return { why: 'the turn it names is not in its parent thread' };
+  }
+  const began = first?.startedAt;
+  const running =
+    began === undefined
+      ? []
+      : [...parent.turnSpans.values()].filter(
+          (turn) =>
+            turn.startedAt <= began &&
+            (turn.endedAt === undefined || began <= turn.endedAt),
+        );
+  const [turn] = running;
+  return turn !== undefined && running.length === 1
+    ? { turn }
+    : {
+        why: 'it names no turn, and no single turn of its parent was running when it began',
+      };
+}
+
+/**
+ * Reads the candidate's other files, each a child thread, into the run
+ * (design D2, T10). A child is one `subagent` span with its own turns and
+ * calls beneath it, hung on the turn of its parent thread that `anchorOf`
+ * finds, or on the parent's own span with a run warning when there is none.
+ *
+ * One span per thread, not per parent turn it worked in: a reviewer thread
+ * is one conversation with one context, and that is what a `subagent` span
+ * stands for in the rules that follow a context from call to call. The
+ * price is the position of its later turns: 67 of 119 reviewer threads
+ * surveyed answered in more than one turn of their parent, and all of their
+ * turns sit under the turn the first one names.
+ *
+ * A child with no turn is the reviewer started and never consulted (36 of
+ * 183): no span and no warning, whatever its file holds.
+ */
+async function emitChildren(
+  candidate: Candidate,
+  root: ThreadSummary,
+  ctx: ParseContext,
+): Promise<void> {
+  const threads = new Map([[root.threadId, root]]);
+  const taken = new Set(ctx.spans.map((s) => s.id));
+  const children: ThreadSummary[] = [];
+  for (const file of candidate.files) {
+    if (file === candidate.runRef) continue;
+    const own: ParseContext = { spans: [], warnings: [], redact: ctx.redact };
+    let child: ThreadSummary;
+    try {
+      child = await emitThread(file, own, true);
+    } catch (err) {
+      // the root's file failing is the run failing; a child's is a gap in it
+      if (!(err instanceof NoSessionYet)) {
+        const reason = err instanceof Error ? err.message : String(err);
+        ctx.warnings.push({
+          message: `child thread not read: ${reason}`,
+          file,
+        });
+      }
+      continue;
+    }
+    // the same thread twice (a copy of a file) is read once
+    if (child.turns === 0 || threads.has(child.threadId)) continue;
+    // Ids are unique within a file. No id of a child was also its parent's
+    // in what was surveyed; one that is takes the thread's id in front, so
+    // the run never holds two spans under one id.
+    const renamed = new Map<string, string>();
+    for (const span of own.spans) {
+      if (taken.has(span.id)) {
+        renamed.set(span.id, `${child.threadId}:${span.id}`);
+      }
+    }
+    for (const span of own.spans) {
+      span.id = renamed.get(span.id) ?? span.id;
+      if (span.parentId !== null) {
+        span.parentId = renamed.get(span.parentId) ?? span.parentId;
+      }
+      taken.add(span.id);
+    }
+    threads.set(child.threadId, child);
+    children.push(child);
+    ctx.spans.push(...own.spans);
+    ctx.warnings.push(...own.warnings);
+  }
+
+  /** The thread a child hangs on, when following parents from it ends at
+   * the root. Detection never groups a parent cycle; a candidate built by
+   * hand could, and its threads would hang on each other and on nothing. */
+  const parentOf = (child: ThreadSummary): ThreadSummary | undefined => {
+    const parent =
+      child.parentThreadId === undefined
+        ? undefined
+        : threads.get(child.parentThreadId);
+    const seen = new Set([child.threadId]);
+    for (let up = parent; up !== undefined && up !== root; ) {
+      if (seen.has(up.threadId)) return undefined;
+      seen.add(up.threadId);
+      up =
+        up.parentThreadId === undefined
+          ? undefined
+          : threads.get(up.parentThreadId);
+    }
+    return parent;
+  };
+  for (const child of children) {
+    const parent = parentOf(child);
+    const anchor =
+      parent === undefined
+        ? { why: 'its parent thread is not in this run' }
+        : anchorOf(child, parent);
+    if ('turn' in anchor) {
+      child.top.parentId = anchor.turn.id;
+      continue;
+    }
+    const onto = parent ?? root;
+    child.top.parentId = onto.top.id;
+    ctx.warnings.push({
+      message: `child thread ${child.threadId} attached to ${
+        onto === root ? 'the session' : `thread ${onto.threadId}`
+      }: ${anchor.why}`,
+      file: child.top.provenance.file,
+    });
+  }
+}
+
+/**
+ * A session and a subagent end no earlier than what happened under them,
+ * as in the Claude Code adapter. A child thread can outlast the last record
+ * of its parent's file, and an action's own end time can fall after the
+ * record that reports it. Turns are left as the rollout brackets them.
+ */
+function extendContainers(spans: RawSpan[]): void {
+  const byId = new Map(spans.map((s) => [s.id, s]));
+  for (const span of spans) {
+    const end = span.endedAt ?? span.startedAt;
+    // rollouts cannot build a cycle; the bound is for a tree that did
+    let parentId = span.parentId;
+    for (let depth = 0; parentId !== null && depth < 64; depth++) {
+      const parent = byId.get(parentId);
+      if (parent === undefined) break;
+      if (
+        (parent.kind === 'subagent' || parent.kind === 'session') &&
+        (parent.endedAt ?? parent.startedAt) < end
+      ) {
+        parent.endedAt = end;
+        const durationMs = durationBetween(parent.startedAt, end);
+        if (durationMs !== undefined) parent.durationMs = durationMs;
+      }
+      parentId = parent.parentId;
+    }
+  }
+}
+
 async function parse(
   candidate: Candidate,
   opts: ParseOptions,
 ): Promise<RawRun> {
   const ctx: ParseContext = { spans: [], warnings: [], redact: opts.redact };
-  const thread = await emitThread(candidate.runRef, ctx);
+  const thread = await emitThread(candidate.runRef, ctx, false);
   // A rollout that holds its first record and no turn is a session nobody
   // has prompted yet: nothing is wrong and there is nothing to show.
   if (thread.turns === 0 && thread.llmCalls === 0) {
     throw new NoSessionYet('Codex rollout with no turn yet');
   }
+  await emitChildren(candidate, thread, ctx);
+  extendContainers(ctx.spans);
   return {
     source: {
       tool: 'codex',
