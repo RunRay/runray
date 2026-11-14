@@ -68,7 +68,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       mtime and size over all files of a candidate. Verify: adapter tests
       for every scenario of "Codex rollout discovery" plus "Orphan child",
       run against `fixtures/codex` and temp directories.
-- [ ] 2.2 A Session and turn spans (D3, T6) and the tolerant parse loop:
+- [x] 2.2 A Session and turn spans (D3, T6) and the tolerant parse loop:
       session span, project and branch, turn spans matched by turn id with
       status and reason (a completion for an id that never started is
       ignored),
@@ -129,6 +129,11 @@ directly and the goldens test does not see `fixtures/codex` yet.
       warning, silent drop of a child with no turn, container extension.
       Verify: tests for every scenario of "Codex child threads nest under
       their parent" on the `guardian` fixture and inline rollouts.
+      Found in 2.2, to settle here before coding: `turn_attribution` is on
+      372 of 2,404 turn starts and on none in the fixtures. The 20 reviewer
+      turns of the `guardian` fixture name a turn of their root in
+      `root_turn_id` instead, so T10's anchor needs that as a second source
+      (a design and spec change the maintainer signs off).
 - [ ] 4.2 A Redaction and identifiers (T11): the `redact` path of every
       content field and `runray.target`, a Codex branch in
       `sanitize/sanitize.ts`, and Codex fixtures added to the redaction

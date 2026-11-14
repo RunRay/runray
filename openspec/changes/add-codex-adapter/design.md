@@ -334,10 +334,19 @@ turn. A completion or abort for an id with no `task_started` is ignored. No
 turn id is started twice. Status: `cancelled` with `statusReason` from `reason` when
 aborted, `error` with `statusReason` from `error.codex_error_info` when the
 completion carries an error, `in_progress` when the file ends inside the
-turn, otherwise `ok`. `promptPreview` is the first user message of the turn
-that is not harness context; messages whose text starts with a tag the
-harness writes (`<environment_context>`, `<turn_aborted>`, …) are skipped.
-Records outside any turn attach to the session span.
+turn, otherwise `ok`. `promptPreview` is the first text of the turn's user
+messages that is not harness context. A user message is a list of text
+parts, and the harness writes its context as parts of their own that open
+with a tag (`<environment_context>`, `<turn_aborted>`,
+`<guardian_tool_descriptions>`, `<recommended_plugins>`, the `<image>`
+wrapper, nine names in the corpus). The names are several lowercase words
+joined by `_` or `-`, which pasted HTML is not, so the shape of the name is
+the test, not a list. One block shares its part with the prompt:
+`<in-app-browser-context>` is followed by what the person typed in 110 of
+110 cases, so the text after a leading block's closing tag counts as the
+person's. Measured over the 639 turns of the 67 root threads: 627 get a
+preview, and the 12 without one hold only a `<send_user_message_question_reply>`
+block. Records outside any turn attach to the session span.
 
 ### T7 — Attributing actions to calls
 
