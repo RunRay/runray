@@ -67,6 +67,7 @@ export type {
   UnpricedCoverage,
 } from './pricing/index.js';
 export {
+  bundledListSize,
   bundledPricing,
   CACHE_WRITE_1H_ATTR,
   cacheWrite1hTokens,

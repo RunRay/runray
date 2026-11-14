@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { computeCostUSD, matchModel } from './engine.js';
+import { computeCostUSD, matchModel, type PricingTable } from './engine.js';
 import {
   convertLitellmPricing,
+  keepRetiredModels,
   PriceListTooShortError,
   priceListFromText,
 } from './litellm.js';
@@ -214,6 +215,79 @@ describe('convertLitellmPricing with responses-mode models', () => {
     expect(invalid).toEqual(['gpt-5.2-codex']);
     expect(table.entries.some((e) => e.modelPattern === 'gpt-5.2-codex')).toBe(
       false,
+    );
+  });
+});
+
+describe('keepRetiredModels', () => {
+  const entry = (modelPattern: string, input: number, output: number) => ({
+    modelPattern,
+    inputPerMTok: input,
+    outputPerMTok: output,
+    cacheReadPerMTok: input / 10,
+    cacheWritePerMTok: input,
+  });
+  const tableOf = (
+    snapshotDate: string,
+    ...entries: ReturnType<typeof entry>[]
+  ): PricingTable => ({
+    snapshotDate,
+    source: 'litellm-snapshot',
+    aliases: {},
+    entries,
+  });
+  const previous = tableOf(
+    '2026-08-18',
+    entry('mistral-large', 2, 6),
+    entry('mistral-large-2402', 4, 12),
+    entry('old-opus-4-1', 15, 75),
+    entry('zeta', 1, 2),
+  );
+  // the list dropped two ids and re-priced one it still has
+  const fresh = tableOf(
+    '2026-11-14',
+    entry('mistral-large', 0.5, 1.5),
+    entry('new-model', 3, 9),
+    entry('zeta', 1, 2),
+  );
+  const { table, retired } = keepRetiredModels(fresh, previous);
+
+  it('keeps the models the list no longer has, at the rates they last had', () => {
+    expect(retired).toEqual(['mistral-large-2402', 'old-opus-4-1']);
+    expect(table.entries.map((e) => e.modelPattern)).toEqual([
+      'mistral-large',
+      'mistral-large-2402',
+      'new-model',
+      'old-opus-4-1',
+      'zeta',
+    ]);
+    expect(matchModel(table, 'old-opus-4-1')).toEqual(
+      entry('old-opus-4-1', 15, 75),
+    );
+    expect(table.snapshotDate).toBe('2026-11-14');
+  });
+
+  it('takes a model the list still has from the list', () => {
+    expect(matchModel(table, 'mistral-large')?.inputPerMTok).toBe(0.5);
+  });
+
+  it('prices a retired dated id as itself, not as the current model it starts with', () => {
+    expect(matchModel(fresh, 'mistral-large-2402')?.inputPerMTok).toBe(0.5);
+    expect(matchModel(table, 'mistral-large-2402')?.inputPerMTok).toBe(4);
+  });
+
+  it('names the same models again on the next refresh, and none once they are back', () => {
+    const later = tableOf('2027-01-10', entry('zeta', 1, 2));
+    expect(keepRetiredModels(later, table).retired).toEqual([
+      'mistral-large',
+      'mistral-large-2402',
+      'new-model',
+      'old-opus-4-1',
+    ]);
+    const back = tableOf('2027-01-10', ...table.entries);
+    expect(keepRetiredModels(back, table).retired).toEqual([]);
+    expect(keepRetiredModels(fresh, fresh).table.entries).toEqual(
+      fresh.entries,
     );
   });
 });

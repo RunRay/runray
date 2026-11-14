@@ -9,7 +9,7 @@ import { createServer, type RequestListener } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bundledPricing, matchModel } from '@runray/core';
+import { bundledListSize, bundledPricing, matchModel } from '@runray/core';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   effectivePricing,
@@ -169,8 +169,8 @@ describe('refreshPricing', () => {
       await refused(replyWith('{}').fetchImpl, /no usable models/);
     });
 
-    it('a list under half the bundled snapshot', async () => {
-      const short = Math.ceil(bundledCount / 2) - 1;
+    it('a list under half of what the list held at the bundled snapshot', async () => {
+      const short = Math.ceil(bundledListSize() / 2) - 1;
       await refused(
         replyWith(JSON.stringify(priceList(short))).fetchImpl,
         new RegExp(

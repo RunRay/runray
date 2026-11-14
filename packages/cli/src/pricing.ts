@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import {
+  bundledListSize,
   bundledPricing,
   LITELLM_PRICING_URL,
   PriceListTooShortError,
@@ -95,7 +96,7 @@ export interface RefreshResult {
   path: string;
   entries: number;
   snapshotDate: string;
-  /** Chat models left out because a published rate was unusable. */
+  /** Models left out because a published rate was unusable. */
   skipped: Array<{ model: string; problem: string }>;
 }
 
@@ -217,14 +218,16 @@ async function fetchPriceList(
  * The reply is untrusted: it is size- and time-capped, then parsed,
  * shape-checked and converted by `priceListFromText` (which drops models
  * with unusable rates), and must hold at least half as many models as the
- * bundled snapshot unless `allowShortList` is set. Only then is the
- * override replaced, atomically; any failure leaves it untouched.
+ * list held when the bundled snapshot was built unless `allowShortList` is
+ * set. Only then is the override replaced, atomically; any failure leaves
+ * it untouched.
  */
 export async function refreshPricing(
   options: {
     path?: string;
     fetchImpl?: typeof fetch;
-    /** Accept a list under half the bundled snapshot's size (never empty). */
+    /** Accept a list under half the size it had at the bundled snapshot
+     * (never empty). */
     allowShortList?: boolean;
     limits?: Partial<DownloadLimits>;
   } = {},
@@ -237,7 +240,7 @@ export async function refreshPricing(
     ...options.limits,
   });
 
-  const bundled = bundledPricing().entries.length;
+  const bundled = bundledListSize();
   const skipped: RefreshResult['skipped'] = [];
   let table: PricingTable;
   try {
@@ -251,7 +254,7 @@ export async function refreshPricing(
     if (err.models === 0)
       throw new Error('the price list has no usable models');
     throw new Error(
-      `the price list has only ${err.models} usable models, under half of the ${bundled} in the bundled snapshot, so it looks truncated. If LiteLLM really dropped those models, run \`runray pricing --refresh --allow-short-list\`.`,
+      `the price list has only ${err.models} usable models, under half of the ${bundled} the list held when this version was built, so it looks truncated. If LiteLLM really dropped those models, run \`runray pricing --refresh --allow-short-list\`.`,
     );
   }
 

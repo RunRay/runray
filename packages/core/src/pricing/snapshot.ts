@@ -1775,3 +1775,9 @@ export const BUNDLED_PRICING: PricingTable = {
     },
   ],
 };
+
+/**
+ * Models in BUNDLED_PRICING that the list no longer has. Their rates are the
+ * last ones it published for them.
+ */
+export const RETIRED_MODELS: readonly string[] = [];

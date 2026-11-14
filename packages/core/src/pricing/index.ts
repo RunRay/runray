@@ -1,7 +1,7 @@
 import type { RawRun, RawSpan } from '../adapter.js';
 import type { PricingTable } from './engine.js';
 import { cacheWrite1hTokens, computeCostUSD, matchModel } from './engine.js';
-import { BUNDLED_PRICING } from './snapshot.js';
+import { BUNDLED_PRICING, RETIRED_MODELS } from './snapshot.js';
 
 /**
  * Cost engine (task 2.5, 05-ARCHITECTURE §2.3). Prices llm_call spans from a
@@ -48,6 +48,17 @@ export {
 
 export function bundledPricing(): PricingTable {
   return BUNDLED_PRICING;
+}
+
+/**
+ * How many models the price list itself held when the bundled snapshot was
+ * built. The snapshot is longer: it also keeps the models the list has
+ * since dropped (see `keepRetiredModels`). A fresh download is compared
+ * with this number, not with the snapshot's length, or every model the list
+ * retires would raise the bar the list has to clear.
+ */
+export function bundledListSize(): number {
+  return BUNDLED_PRICING.entries.length - RETIRED_MODELS.length;
 }
 
 function priceSpan(span: RawSpan, table: PricingTable): RawSpan {
