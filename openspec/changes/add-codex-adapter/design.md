@@ -459,7 +459,7 @@ its exit code and duration come from the output. The duration matters there:
 CLI 0.47 writes a call and its output in one batch, so in 381 of 686 `shell`
 calls the two records are closer together than the command ran, and the span
 is the output's time less the reported duration. A legacy `shell` call whose
-argv starts with `apply_patch` (238 cases) is named `apply_patch` (task 3.3);
+argv starts with `apply_patch` (238 cases) is named `apply_patch` (T9);
 25 `apply_patch` calls also have a `FileChange` item, which carries the
 call's id and is attributed by rule 1.
 
@@ -532,13 +532,42 @@ names and are listed as `other`, which is also what an unlisted name gets.
 ### T9 — File changes
 
 One span per `FileChange` item. `linesAdded` / `linesRemoved`, on success
-only: for `update`, lines of `unified_diff` starting with `+` / `-` that are
-not `+++` / `---` headers; for `add`, the line count of `content`; for
-`delete`, the line count of `content` as removed. `runray.targetKey` and
-`runray.targetKind: 'file-write'` are stamped only when the item changes
-exactly one path (the mean is 2.2 paths per item); otherwise the span carries
-no target identity, as OpenCode's `apply_patch` does. `duplicate-read` gains
-nothing either way: Codex has no read tool, it reads through the shell.
+only: for `update`, the `+` / `-` lines of `unified_diff`; for `add`, the
+line count of `content`; for `delete`, the line count of `content` as
+removed. A final line break ends the last line and does not start another
+(every added file in the survey ends with one), so a file of ten lines
+counts ten.
+
+A diff's `---` / `+++` header lines are not changed lines. Codex writes
+none: all 3,130 diffs open with a sized hunk header (`@@ -20,3 +20,4 @@`).
+The count therefore goes by hunks, which is also what keeps a removed line
+whose own text begins with `--` (an SQL comment) from being taken for a
+header: only lines inside a hunk count, and a sized hunk ends when the
+lines it announces have been read. A diff with no hunk header is counted
+line by line with `+++` / `---` lines left out. On the 54 threads with file
+changes the result equals a plain count of `+` and `-` lines.
+
+`runray.targetKey` and `runray.targetKind: 'file-write'` are stamped only
+when the item changes exactly one path (1,014 of 2,058 items; the mean is
+2.2 paths); otherwise the span carries no target identity, as OpenCode's
+`apply_patch` does. A failed change keeps the identity of the file it was
+aimed at, as a failed `Edit` does in the other adapters, and has no line
+counts. `duplicate-read` gains nothing either way: Codex has no read tool,
+it reads through the shell.
+
+**Legacy patches.** The legacy era has no `FileChange` item for 568 patch
+calls, in three forms: the `apply_patch` tool with the patch as its input
+(300), a `shell` call whose argv is `["apply_patch", <patch>]` (238), and a
+shell script that starts with `apply_patch` and holds the patch in a
+here-document (30). Each is a span named `apply_patch`, not a command: no
+tool usage is stamped, and the line counts and the single-file identity come
+from the patch text (`*** Add File:` / `*** Update File:` / `*** Delete
+File:` headers, `+` and `-` body lines). A deleted file has no body in a
+patch, so its lines are not counted. A path a patch gives relative to the
+working directory is joined to the thread's `cwd` before it is hashed, so
+the file has the key a current rollout gives it. The outcome is the call's
+(T7): 94 of the 568 failed. 25 more `apply_patch` calls do have a
+`FileChange` item, which carries the call's id (T7 rule 1) and is the span.
 
 ### T10 — Child threads
 

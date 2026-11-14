@@ -39,9 +39,9 @@ import { guessShellDialect, shellScriptAttributes } from './usage.js';
  * What `parse()` emits so far: the session span, one `turn` span per turn
  * the rollout brackets (design D3, T6), one `llm_call` span per API
  * response (T4, T5) and one tool span per thing the harness did (D4, T7),
- * a command's span with the identity of the program it ran (T8). What a
- * span says about a patch follows in tasks 3.3 and 3.4, child threads in
- * 4.1.
+ * a command's span with the identity of the program it ran (T8) and a
+ * file change's with the lines it changed (T9). Child threads follow in
+ * task 4.1.
  *
  * Tool spans are harness actions, not model calls. Current Codex gives the
  * model one tool, `exec`, whose input is a script; what the script ran is
@@ -327,8 +327,11 @@ interface CallState {
   /** Harness actions attributed to it. */
   actions: number;
   /** What its span carries if it becomes one: the identity of the command
-   * for a call to a shell tool, nothing for any other. */
+   * for a call to a shell tool, of the file for a patch of one file,
+   * nothing for any other. */
   attributes: Record<string, unknown>;
+  /** The patch it applied, when it is a legacy patch call. */
+  change: ChangeSummary | undefined;
   /** When it stopped waiting for its output: the output was read, or the
    * next turn began without one. */
   until: string | undefined;
@@ -733,6 +736,187 @@ function commandOfCall(payload: Json): unknown {
     }
   }
   return isObj(args) ? (args.command ?? args.cmd) : undefined;
+}
+
+// --- file changes: what a patch did (design T9) ----------------------------
+
+/** What a file change did, summed over the paths it names. */
+interface ChangeSummary {
+  paths: string[];
+  added: number;
+  removed: number;
+}
+
+/** Lines of a text. A final line break ends the last line; it does not
+ * start another. */
+function linesOf(text: unknown): number {
+  if (typeof text !== 'string' || text === '') return 0;
+  let breaks = 0;
+  for (let i = text.indexOf('\n'); i !== -1; i = text.indexOf('\n', i + 1)) {
+    breaks++;
+  }
+  return text.endsWith('\n') ? breaks : breaks + 1;
+}
+
+const SIZED_HUNK = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/;
+
+/**
+ * Added and removed lines of a unified diff. Only lines inside a hunk
+ * count, and a hunk that states its size (`@@ -20,3 +20,4 @@`, every hunk
+ * Codex writes) ends when that many lines have been read. So the `---` and
+ * `+++` lines that head a diff are never counted, and a removed line whose
+ * own text begins with `--` is. A diff with no hunk header at all is
+ * counted line by line, its header lines left out.
+ */
+function diffLines(diff: string): { added: number; removed: number } {
+  let added = 0;
+  let removed = 0;
+  let sawHunk = false;
+  let inHunk = false;
+  let sized = false;
+  let oldLeft = 0;
+  let newLeft = 0;
+  const lines = diff.split('\n');
+  for (const line of lines) {
+    if (line.startsWith('@@')) {
+      const size = SIZED_HUNK.exec(line);
+      sawHunk = true;
+      inHunk = true;
+      sized = size !== null;
+      oldLeft = size === null ? 0 : Number(size[1] ?? 1);
+      newLeft = size === null ? 0 : Number(size[2] ?? 1);
+      continue;
+    }
+    if (!inHunk) continue;
+    const mark = line[0];
+    if (mark === '\\') continue; // "\ No newline at end of file"
+    if (sized && oldLeft <= 0 && newLeft <= 0) {
+      inHunk = false; // the hunk is complete: what follows is not its line
+    } else if (mark === '+') {
+      added++;
+      newLeft--;
+    } else if (mark === '-') {
+      removed++;
+      oldLeft--;
+    } else {
+      oldLeft--;
+      newLeft--;
+    }
+  }
+  if (sawHunk) return { added, removed };
+  for (const line of lines) {
+    if (line.startsWith('+++') || line.startsWith('---')) continue;
+    if (line.startsWith('+')) added++;
+    else if (line.startsWith('-')) removed++;
+  }
+  return { added, removed };
+}
+
+/**
+ * A `FileChange` item's `changes`: path → `{type: 'add', content}`,
+ * `{type: 'delete', content}` or `{type: 'update', unified_diff}`. An added
+ * file adds its lines, a deleted one removes them, an update is counted
+ * from its diff.
+ */
+function changesOf(changes: unknown): ChangeSummary | undefined {
+  if (!isObj(changes)) return undefined;
+  const summary: ChangeSummary = { paths: [], added: 0, removed: 0 };
+  for (const [path, change] of Object.entries(changes)) {
+    summary.paths.push(path);
+    if (!isObj(change)) continue;
+    if (change.type === 'add') summary.added += linesOf(change.content);
+    else if (change.type === 'delete') {
+      summary.removed += linesOf(change.content);
+    } else if (typeof change.unified_diff === 'string') {
+      const lines = diffLines(change.unified_diff);
+      summary.added += lines.added;
+      summary.removed += lines.removed;
+    }
+  }
+  return summary;
+}
+
+const PATCH_BEGIN = '*** Begin Patch';
+const PATCH_END = '*** End Patch';
+const PATCH_FILE = /^\*\*\* (?:Add|Update|Delete) File: (.+?)\s*$/;
+
+/**
+ * The same summary from the text of a patch, the form the legacy era has
+ * instead of a `FileChange` item:
+ *
+ *   *** Begin Patch
+ *   *** Update File: src/totals.ts
+ *   @@
+ *   -old line
+ *   +new line
+ *   *** End Patch
+ *
+ * A deleted file has no body there, so its lines are not known.
+ */
+function patchOf(text: string): ChangeSummary | undefined {
+  const from = text.indexOf(PATCH_BEGIN);
+  if (from < 0) return undefined;
+  const to = text.indexOf(PATCH_END, from);
+  const summary: ChangeSummary = { paths: [], added: 0, removed: 0 };
+  for (const line of text.slice(from, to < 0 ? undefined : to).split('\n')) {
+    if (line.startsWith('***')) {
+      const path = PATCH_FILE.exec(line)?.[1];
+      if (path !== undefined) summary.paths.push(path);
+    } else if (line.startsWith('+')) summary.added++;
+    else if (line.startsWith('-')) summary.removed++;
+  }
+  return summary;
+}
+
+/**
+ * The patch a legacy call applied, if that is what the call did. Three
+ * forms were seen, none with a harness action of its own: the `apply_patch`
+ * tool with the patch as its input (300), a `shell` call whose argv is
+ * `["apply_patch", <patch>]` (238), and a shell script that starts with
+ * `apply_patch` and holds the patch in a here-document (30).
+ */
+function patchOfCall(
+  name: string,
+  payload: Json,
+  windows: boolean,
+): ChangeSummary | undefined {
+  if (name === 'apply_patch') {
+    const input = str(payload.input);
+    return input === undefined ? undefined : patchOf(input);
+  }
+  if (HARNESS_TOOLS.get(name)?.role !== 'shell') return undefined;
+  const command = commandOfCall(payload);
+  if (Array.isArray(command)) {
+    const [program, patch] = command;
+    if (typeof program === 'string' && programOf(program) === 'apply_patch') {
+      return typeof patch === 'string' ? patchOf(patch) : undefined;
+    }
+  }
+  const script = scriptOf(command, windows)?.text;
+  return script !== undefined && /^\s*apply_patch\b/.test(script)
+    ? patchOf(script)
+    : undefined;
+}
+
+/**
+ * File-write identity for a change of exactly one path (the mean is 2.2
+ * paths per change; with several there is no one target, as for OpenCode's
+ * `apply_patch`). A relative path, which a legacy patch may give, is taken
+ * from the thread's working directory, so the same file has the same key
+ * however the patch spells it.
+ */
+function changeAttributes(
+  change: ChangeSummary | undefined,
+  cwd: string | undefined,
+  redact: boolean,
+): Record<string, unknown> {
+  const [path, ...others] = change?.paths ?? [];
+  if (path === undefined || others.length > 0) return {};
+  const rooted =
+    cwd === undefined || /^(?:[A-Za-z]:[\\/]|[\\/])/.test(path)
+      ? path
+      : `${cwd.replace(/[\\/]+$/, '')}/${path.replace(/^\.[\\/]/, '')}`;
+  return toolTargetAttributes('codex', 'apply_patch', { path: rooted }, redact);
 }
 
 // The lines the harness puts in front of an output. A script's:
@@ -1222,6 +1406,8 @@ async function emitThread(
             : typeof item.aggregated_output === 'string'
               ? item.aggregated_output
               : undefined;
+        const change =
+          item.type === 'FileChange' ? changesOf(item.changes) : undefined;
         toolSpans.push({
           call,
           span: {
@@ -1244,6 +1430,10 @@ async function emitThread(
               ...(shown === undefined
                 ? {}
                 : { outputBytes: Buffer.byteLength(shown, 'utf8') }),
+              // a change that failed changed no line
+              ...(change === undefined || failed
+                ? {}
+                : { linesAdded: change.added, linesRemoved: change.removed }),
             },
             ...(failed
               ? failureContent(ctx.redact, previewOf(failureTextOf(item)))
@@ -1256,7 +1446,7 @@ async function emitThread(
                     windows,
                     ctx.redact,
                   )
-                : {},
+                : changeAttributes(change, summary.cwd, ctx.redact),
             provenance: { file, line },
           },
         });
@@ -1322,27 +1512,34 @@ async function emitThread(
         const callId = str(payload.call_id);
         if (callId !== undefined && !calls.has(callId)) {
           const name = str(payload.name) ?? item.slice(0, -'_call'.length);
+          // In the legacy era no action is recorded for a command or a
+          // patch: the call is the thing done. A call that applied a patch
+          // is `apply_patch` whatever tool carried it (a `shell` call does
+          // in 268 cases); any other call to a shell tool is its command.
+          // The script or the patch is read now, and only what it amounts
+          // to is kept until the file is read.
+          const change = patchOfCall(name, payload, windows);
           const call: CallState = {
             id: callId,
-            name,
+            name: change === undefined ? name : 'apply_patch',
             line,
             at: at ?? lastAt,
             turn: current,
             response,
             legacyResponse,
             actions: 0,
-            // A call to a shell tool is the command when no action is
-            // recorded for it (the legacy era). Its script is read now and
-            // only what it classifies as is kept until the file is read.
             attributes:
-              HARNESS_TOOLS.get(name)?.role === 'shell'
-                ? commandAttributes(
-                    name,
-                    commandOfCall(payload),
-                    windows,
-                    ctx.redact,
-                  )
-                : {},
+              change !== undefined
+                ? changeAttributes(change, summary.cwd, ctx.redact)
+                : HARNESS_TOOLS.get(name)?.role === 'shell'
+                  ? commandAttributes(
+                      name,
+                      commandOfCall(payload),
+                      windows,
+                      ctx.redact,
+                    )
+                  : {},
+            change,
             until: undefined,
             outcome: undefined,
           };
@@ -1440,6 +1637,12 @@ async function emitThread(
           ...(outcome?.outputBytes === undefined
             ? {}
             : { outputBytes: outcome.outputBytes }),
+          ...(call.change === undefined || status !== 'ok'
+            ? {}
+            : {
+                linesAdded: call.change.added,
+                linesRemoved: call.change.removed,
+              }),
         },
         ...(status === 'error' || status === 'cancelled'
           ? failureContent(ctx.redact, outcome?.preview)

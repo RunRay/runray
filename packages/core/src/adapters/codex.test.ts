@@ -2755,6 +2755,343 @@ describe('codex commands', () => {
   });
 });
 
+describe('codex file changes', () => {
+  const TOTALS = 'C:\\work\\billing-portal\\src\\totals.ts';
+  const README = 'C:\\work\\billing-portal\\README.md';
+  /** The key a Claude Code `Edit` of the same file gets. */
+  const fileKeyOf = (path: string) =>
+    extractToolTarget('claude-code', 'Edit', { file_path: path })?.key;
+  const update = (unified_diff: string) => ({
+    type: 'update',
+    unified_diff,
+    move_path: null,
+  });
+  const fileChange = (
+    changes: Record<string, unknown>,
+    extra: Record<string, unknown> = {},
+  ) => ({
+    type: 'FileChange',
+    id: 'exec-1',
+    changes,
+    status: 'completed',
+    stdout: 'Success. Updated the following files:\nM src/totals.ts\n',
+    stderr: '',
+    ...extra,
+  });
+  /** The span of one file change action. */
+  const changeSpan = async (item: Record<string, unknown>, redact = false) => {
+    const { raw } = await parseLines(
+      [
+        sessionMeta(0),
+        started(1, TURN_A),
+        toolCall(2, 'call_1'),
+        usageRecord(3, TURN_A, 'resp_1'),
+        action(4, TURN_A, item, 3),
+        toolOutput(5, 'call_1'),
+        completed(6, TURN_A),
+      ],
+      redact,
+    );
+    expect(toolsOf(raw)).toHaveLength(1);
+    return { span: toolsOf(raw)[0], raw };
+  };
+  const linesOf = async (diff: string) => {
+    const { span } = await changeSpan(fileChange({ [TOTALS]: update(diff) }));
+    return [span?.tool?.linesAdded, span?.tool?.linesRemoved];
+  };
+
+  it('counts an update from its diff and gives a change of one file that file as its target', async () => {
+    const diff = '@@ -1,3 +1,5 @@\n a\n-b\n+B\n+c\n+d\n e\n';
+    const { span } = await changeSpan(fileChange({ [TOTALS]: update(diff) }));
+    expect(span).toMatchObject({
+      kind: 'tool_call',
+      name: 'apply_patch',
+      status: 'ok',
+      tool: {
+        name: 'apply_patch',
+        isError: false,
+        linesAdded: 3,
+        linesRemoved: 1,
+      },
+    });
+    expect(span?.attributes).toEqual({
+      'runray.targetKey': fileKeyOf(TOTALS),
+      'runray.targetKind': 'file-write',
+      'runray.target': 'totals.ts',
+    });
+    // the same file under any spelling of its separators
+    expect(span?.attributes['runray.targetKey']).toBe(
+      fileKeyOf('C:/work/billing-portal/src/totals.ts'),
+    );
+  });
+
+  it('does not count the header lines of a diff, and does count a changed line that looks like one', async () => {
+    // headers in front of the first hunk
+    expect(
+      await linesOf(
+        '--- a/src/totals.ts\n+++ b/src/totals.ts\n@@ -1,2 +1,2 @@\n-old\n+new\n same\n',
+      ),
+    ).toEqual([1, 1]);
+    // a removed SQL comment and an added `++` line, inside a hunk
+    expect(
+      await linesOf(
+        '@@ -1,2 +1,2 @@\n--- drop the legacy table\n+++i;\n keep\n',
+      ),
+    ).toEqual([1, 1]);
+    // headers of a second file after a complete hunk
+    expect(
+      await linesOf(
+        '@@ -1 +1 @@\n-a\n+b\n--- a/other.ts\n+++ b/other.ts\n@@ -4,2 +4,3 @@\n x\n+y\n z\n',
+      ),
+    ).toEqual([2, 1]);
+    // several hunks, CRLF line ends and the no-newline marker
+    expect(
+      await linesOf(
+        '@@ -1,2 +1,2 @@\r\n-a\r\n+b\r\n c\r\n@@ -9 +9,2 @@\r\n d\r\n+e\r\n\\ No newline at end of file\r\n',
+      ),
+    ).toEqual([2, 1]);
+    // a hunk that does not state its size, as a patch body writes it
+    expect(await linesOf('@@\n-a\n+b\n+c\n d\n')).toEqual([2, 1]);
+    // no hunk header at all: line by line, headers left out
+    expect(await linesOf('--- a/x\n+++ b/x\n-a\n+b\n+c\n')).toEqual([2, 1]);
+    expect(await linesOf('')).toEqual([0, 0]);
+  });
+
+  it('sums the lines over every file of a change, and names no target when there are several', async () => {
+    const tenLines = `${Array.from({ length: 10 }, (_, i) => `line ${i}`).join('\n')}\n`;
+    const { span } = await changeSpan(
+      fileChange({
+        [README]: { type: 'add', content: tenLines },
+        [TOTALS]: update('@@ -4,2 +4,4 @@\n a\n+b\n+c\n d\n'),
+      }),
+    );
+    expect(span?.tool).toEqual({
+      name: 'apply_patch',
+      isError: false,
+      linesAdded: 12,
+      linesRemoved: 0,
+    });
+    expect(span?.attributes).toEqual({});
+  });
+
+  it('counts a deleted file as removed lines and an added one with no final line break in full', async () => {
+    const removed = await changeSpan(
+      fileChange({ [README]: { type: 'delete', content: 'a\nb\nc\n' } }),
+    );
+    expect(removed.span?.tool).toMatchObject({
+      linesAdded: 0,
+      linesRemoved: 3,
+    });
+    const added = await changeSpan(
+      fileChange({ [README]: { type: 'add', content: 'a\nb' } }),
+    );
+    expect(added.span?.tool).toMatchObject({ linesAdded: 2, linesRemoved: 0 });
+    const empty = await changeSpan(
+      fileChange({ [README]: { type: 'add', content: '' } }),
+    );
+    expect(empty.span?.tool).toMatchObject({ linesAdded: 0, linesRemoved: 0 });
+  });
+
+  it('reads a failed change as an error with no line counts', async () => {
+    const { span } = await changeSpan(
+      fileChange(
+        { [TOTALS]: update('@@ -1 +1,2 @@\n a\n+b\n') },
+        {
+          status: 'failed',
+          stdout: '',
+          stderr: 'Failed to find expected lines in src/totals.ts\n',
+        },
+      ),
+    );
+    expect(span).toMatchObject({
+      name: 'apply_patch',
+      status: 'error',
+      content: {
+        outputPreview: 'Failed to find expected lines in src/totals.ts\n',
+      },
+    });
+    expect(span?.tool).toEqual({ name: 'apply_patch', isError: true });
+    // which file it was aimed at is still its identity
+    expect(span?.attributes['runray.targetKey']).toBe(fileKeyOf(TOTALS));
+  });
+
+  it('keeps the file key and drops the file name and every changed line under redaction', async () => {
+    const item = fileChange({
+      [TOTALS]: update(
+        '@@ -1 +1,2 @@\n const vat = 0.23;\n+const secretRate = 0.08;\n',
+      ),
+    });
+    const { span, raw } = await changeSpan(item, true);
+    expect(span?.attributes).toEqual({
+      'runray.targetKey': fileKeyOf(TOTALS),
+      'runray.targetKind': 'file-write',
+    });
+    expect(span?.tool).toMatchObject({ linesAdded: 1, linesRemoved: 0 });
+    for (const text of ['totals', 'secretRate', 'vat']) {
+      expect(JSON.stringify(raw.spans)).not.toContain(text);
+    }
+    // no line of a diff is kept unredacted either: only the file's name
+    const open = await changeSpan(item);
+    expect(JSON.stringify(open.raw.spans)).not.toContain('secretRate');
+    expect(open.span?.attributes['runray.target']).toBe('totals.ts');
+  });
+
+  const PATCH = [
+    '*** Begin Patch',
+    '*** Update File: src/totals.ts',
+    '@@',
+    ' const vat = 0.23;',
+    '-const net = gross;',
+    '+const net = gross / (1 + vat);',
+    '+const tax = gross - net;',
+    '*** End Patch',
+  ].join('\n');
+  const TWO_FILES = [
+    '*** Begin Patch',
+    '*** Add File: docs/vat.md',
+    '+# VAT',
+    '+Rates per country.',
+    '*** Delete File: docs/old.md',
+    '*** End Patch',
+  ].join('\n');
+  /** One legacy call and its output, parsed. */
+  const legacySpans = async (call: string, output: unknown) => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      tokenCount(2, SMALL, 110),
+      call,
+      functionOutput(3, 'call_1', output),
+      completed(4, TURN_A),
+    ]);
+    return toolsOf(raw);
+  };
+  const DONE = JSON.stringify({
+    output: 'Success. Updated the following files:\nM src/totals.ts\n',
+    metadata: { exit_code: 0, duration_seconds: 0.5 },
+  });
+
+  it('reads a legacy shell call that runs apply_patch as the file change it is', async () => {
+    const spans = await legacySpans(
+      functionCall(3, 'call_1', 'shell', { command: ['apply_patch', PATCH] }),
+      DONE,
+    );
+    expect(spans).toHaveLength(1);
+    expect(spans[0]).toMatchObject({
+      id: 'call_1',
+      kind: 'tool_call',
+      name: 'apply_patch',
+      status: 'ok',
+      tool: {
+        name: 'apply_patch',
+        isError: false,
+        exitCode: 0,
+        linesAdded: 2,
+        linesRemoved: 1,
+      },
+    });
+    // a path the patch gives from the working directory is the same file
+    // as the one a current rollout names in full; no command identity
+    expect(spans[0]?.attributes).toEqual({
+      'runray.targetKey': fileKeyOf(TOTALS),
+      'runray.targetKind': 'file-write',
+      'runray.target': 'totals.ts',
+    });
+  });
+
+  it('reads the other two legacy forms the same way: the patch tool and a here-document', async () => {
+    const tool = await legacySpans(
+      rec(3, 'response_item', {
+        type: 'custom_tool_call',
+        call_id: 'call_1',
+        name: 'apply_patch',
+        input: PATCH,
+      }),
+      DONE,
+    );
+    const heredoc = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: ['bash', '-lc', `apply_patch <<'EOF'\n${PATCH}\nEOF`],
+      }),
+      DONE,
+    );
+    for (const [span] of [tool, heredoc]) {
+      expect(span).toMatchObject({
+        name: 'apply_patch',
+        tool: { linesAdded: 2, linesRemoved: 1 },
+        attributes: { 'runray.targetKey': fileKeyOf(TOTALS) },
+      });
+      expect(span?.attributes).not.toHaveProperty('runray.toolActivity');
+    }
+    // two files: no one target; a deleted file's lines are not in a patch
+    const [several] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: ['apply_patch', TWO_FILES],
+      }),
+      DONE,
+    );
+    expect(several?.tool).toMatchObject({ linesAdded: 2, linesRemoved: 0 });
+    expect(several?.attributes).toEqual({});
+  });
+
+  it('gives a legacy patch the harness refused no line counts', async () => {
+    const [span] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', { command: ['apply_patch', PATCH] }),
+      'apply_patch verification failed: Failed to find expected lines',
+    );
+    expect(span).toMatchObject({ name: 'apply_patch', status: 'error' });
+    expect(span?.tool).toEqual({
+      name: 'apply_patch',
+      isError: true,
+      outputBytes: 62,
+    });
+  });
+
+  it('keeps a command that only mentions apply_patch a command', async () => {
+    const [span] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: ['bash', '-lc', 'rg apply_patch src'],
+      }),
+      DONE,
+    );
+    expect(span).toMatchObject({
+      name: 'shell',
+      attributes: { 'runray.tool': 'rg' },
+    });
+    expect(span?.tool).not.toHaveProperty('linesAdded');
+  });
+
+  it('emits one span for a legacy patch call that also has a file change item', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      tokenCount(2, SMALL, 110),
+      rec(3, 'response_item', {
+        type: 'custom_tool_call',
+        call_id: 'call_1',
+        name: 'apply_patch',
+        input: PATCH,
+      }),
+      // the item carries the call's id and the paths in full
+      action(4, TURN_A, {
+        ...fileChange({
+          [TOTALS]: update('@@ -1,2 +1,3 @@\n a\n-b\n+B\n+c\n'),
+        }),
+        id: 'call_1',
+      }),
+      functionOutput(4, 'call_1', DONE),
+      completed(5, TURN_A),
+    ]);
+    expect(toolsOf(raw)).toHaveLength(1);
+    expect(toolsOf(raw)[0]).toMatchObject({
+      id: 'call_1',
+      name: 'apply_patch',
+      tool: { linesAdded: 2, linesRemoved: 1 },
+      attributes: { 'runray.targetKey': fileKeyOf(TOTALS) },
+    });
+  });
+});
+
 describe('codex parse on the fixtures', () => {
   const candidatesIn = async (variant: string) =>
     (await detect(join(fixtures, variant))).filter(
@@ -3051,12 +3388,16 @@ describe('codex parse on the fixtures', () => {
       'exec error': 3,
     });
 
-    // legacy: the call is the command. 23 `shell` calls, 2 of them with a
-    // non-zero exit and 2 the harness refused to run; 5 `shell_command`
+    // legacy: the call is the command. 23 `shell` calls: 7 of them send a
+    // patch as `["apply_patch", …]` and are file changes, 2 of which the
+    // harness refused; 2 of the other 16 end with a non-zero exit. Then 5
+    // `shell_command` calls.
     const [old, newer] = await parseVariant('legacy');
     expect(toolTally(old as RawRun)).toEqual({
-      shell: 19,
-      'shell error': 4,
+      shell: 14,
+      'shell error': 2,
+      apply_patch: 5,
+      'apply_patch error': 2,
       update_plan: 2,
     });
     expect(
@@ -3075,6 +3416,69 @@ describe('codex parse on the fixtures', () => {
     expect(toolsOf(review as RawRun)).toEqual([]);
   });
 
+  /** Lines the file changes of a rollout added and removed, counted from
+   * the file apart from the adapter: every `+` and `-` line of a diff
+   * (Codex writes no header lines into one), every line of an added or a
+   * deleted file. Failed changes changed nothing. */
+  async function changedLinesOf(file: string) {
+    const lineCount = (text: string) =>
+      text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+    let added = 0;
+    let removed = 0;
+    let changes = 0;
+    let singlePath = 0;
+    for await (const { text } of readRolloutLines(file)) {
+      if (!text.includes('"FileChange"')) continue;
+      const item = JSON.parse(text).payload?.item;
+      if (item?.type !== 'FileChange') continue;
+      changes++;
+      const entries = Object.values(item.changes) as Array<{
+        type: string;
+        content?: string;
+        unified_diff?: string;
+      }>;
+      if (entries.length === 1) singlePath++;
+      if (item.status === 'failed') continue;
+      for (const change of entries) {
+        if (change.type === 'add') added += lineCount(change.content ?? '');
+        else if (change.type === 'delete') {
+          removed += lineCount(change.content ?? '');
+        } else {
+          for (const line of (change.unified_diff ?? '').split('\n')) {
+            if (line.startsWith('+')) added++;
+            else if (line.startsWith('-')) removed++;
+          }
+        }
+      }
+    }
+    return { added, removed, changes, singlePath };
+  }
+
+  it('counts the lines the file changes of a rollout added and removed', async () => {
+    for (const variant of ['simple', 'guardian', 'tool-errors']) {
+      for (const raw of await parseVariant(variant)) {
+        const expected = await changedLinesOf(raw.source.files[0] ?? '');
+        const patches = toolsOf(raw).filter((s) => s.name === 'apply_patch');
+        expect(patches, variant).toHaveLength(expected.changes);
+        expect(expected.added, variant).toBeGreaterThan(0);
+        expect(normalize(priceRun(raw)).totals.codeChanges, variant).toEqual({
+          linesAdded: expected.added,
+          linesRemoved: expected.removed,
+        });
+        // file identity exactly where the change names one file
+        expect(
+          patches.filter((s) => s.attributes['runray.targetKey'] !== undefined),
+          variant,
+        ).toHaveLength(expected.singlePath);
+      }
+    }
+    // the legacy era has the patch text only: 5 patches went through
+    const [old] = await parseVariant('legacy');
+    const totals = normalize(priceRun(old as RawRun)).totals.codeChanges;
+    expect(totals?.linesAdded).toBeGreaterThan(0);
+    expect(totals?.linesRemoved).toBeGreaterThan(0);
+  });
+
   it('hangs every tool span from a call or a turn of its file, with times in order', async () => {
     for (const variant of ['simple', 'guardian', 'tool-errors', 'legacy']) {
       for (const raw of await parseVariant(variant)) {
@@ -3086,10 +3490,26 @@ describe('codex parse on the fixtures', () => {
           expect(tool.tool?.isError).toBe(tool.status === 'error');
           expect(tool.endedAt).toBeDefined();
           expect(tool.startedAt <= (tool.endedAt ?? '')).toBe(true);
-          // a command is classified, whatever its (scrubbed) script; no
-          // other tool carries an attribute yet
+          // a command is classified, whatever its (scrubbed) script; a
+          // file change has the identity of its file when it has one file;
+          // no other tool carries an attribute
           if (['exec_command', 'shell', 'shell_command'].includes(tool.name)) {
             expect(tool.attributes['runray.toolActivity']).toBeTypeOf('string');
+          } else if (tool.name === 'apply_patch') {
+            if (Object.keys(tool.attributes).length > 0) {
+              expect(tool.attributes).toEqual({
+                'runray.targetKey': expect.stringMatching(/^[0-9a-f]{16}$/),
+                'runray.targetKind': 'file-write',
+                'runray.target': expect.any(String),
+              });
+            }
+            // line counts on success, and only then
+            expect(tool.tool?.linesAdded !== undefined).toBe(
+              tool.status === 'ok',
+            );
+            expect(tool.tool?.linesRemoved !== undefined).toBe(
+              tool.status === 'ok',
+            );
           } else expect(tool.attributes).toEqual({});
           expect(tool.provenance.line).toBeGreaterThan(1);
           if (tool.status !== 'ok') {

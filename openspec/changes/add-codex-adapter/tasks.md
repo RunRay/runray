@@ -133,10 +133,17 @@ directly and the goldens test does not see `fixtures/codex` yet.
       snapshots did not move: harness names are not registry ids. On the
       250 surveyed rollouts 9,075 of 9,488 command spans resolve to a
       registry tool and none is left unclassified.
-- [ ] 3.3 A File changes (T9): line counts per change type, header lines
+- [x] 3.3 A File changes (T9): line counts per change type, header lines
       excluded, single-path target identity, legacy `shell` calls that run
       `apply_patch`. Verify: tests for every scenario of "Codex file
       changes" and one for the legacy form.
+      Beyond the wording, with the measurements in T9: a legacy patch call
+      also gets its line counts and its single-file identity, read from
+      the patch text, in all three forms it takes (the `apply_patch` tool,
+      a `shell` argv, a here-document), 568 calls in the survey. On the 250
+      rollouts: 2,626 `apply_patch` spans, and in each of the 54 threads
+      with `FileChange` items the counted lines equal a plain count of
+      `+` and `-` lines.
 - [ ] 3.4 A MCP calls and extensions: `mcp_call` spans with their server,
       extension kinds as tool names, image views. Verify: tests for the
       "MCP call" scenario and one per extension kind seen in the fixtures.
