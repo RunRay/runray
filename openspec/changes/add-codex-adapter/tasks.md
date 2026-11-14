@@ -84,7 +84,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       calls", "Codex token conversion" and "Legacy Codex token events", and
       a test over the `simple` and `legacy` fixtures asserting the summed
       tokens equal the thread total recorded in the file.
-- [ ] 2.4 A Document the Codex adapter in `docs/05-ARCHITECTURE.md` (storage
+- [x] 2.4 A Document the Codex adapter in `docs/05-ARCHITECTURE.md` (storage
       layout, record types read, the two token eras, what is deliberately
       not read). Verify: the section names the record types and files the
       code reads after 2.3.
