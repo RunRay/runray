@@ -250,10 +250,10 @@ describe('keepRetiredModels', () => {
     entry('new-model', 3, 9),
     entry('zeta', 1, 2),
   );
-  const { table, retired } = keepRetiredModels(fresh, previous);
+  const table = keepRetiredModels(fresh, previous);
 
   it('keeps the models the list no longer has, at the rates they last had', () => {
-    expect(retired).toEqual(['mistral-large-2402', 'old-opus-4-1']);
+    expect(table.retired).toEqual(['mistral-large-2402', 'old-opus-4-1']);
     expect(table.entries.map((e) => e.modelPattern)).toEqual([
       'mistral-large',
       'mistral-large-2402',
@@ -276,6 +276,28 @@ describe('keepRetiredModels', () => {
     expect(matchModel(table, 'mistral-large-2402')?.inputPerMTok).toBe(4);
   });
 
+  it('lets a retired model price its own id only, never a longer one', () => {
+    // in either spelling of the version separator
+    expect(matchModel(table, 'old-opus-4.1')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+    expect(matchModel(table, 'vendor/old-opus-4-1')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+    // an id the list never held under that name is not that model
+    expect(matchModel(table, 'old-opus-4-1-fast')).toBeUndefined();
+    expect(matchModel(table, 'old-opus-4-1-20260101')).toBeUndefined();
+    // past a retired entry, a listed family still prices its variants
+    expect(matchModel(table, 'mistral-large-2402-v2')?.modelPattern).toBe(
+      'mistral-large',
+    );
+    // the same entries with no retired list: the prefix rule as it was
+    const { retired: _retired, ...plain } = table;
+    expect(matchModel(plain, 'old-opus-4-1-fast')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+  });
+
   it('names the same models again on the next refresh, and none once they are back', () => {
     const later = tableOf('2027-01-10', entry('zeta', 1, 2));
     expect(keepRetiredModels(later, table).retired).toEqual([
@@ -285,10 +307,10 @@ describe('keepRetiredModels', () => {
       'old-opus-4-1',
     ]);
     const back = tableOf('2027-01-10', ...table.entries);
-    expect(keepRetiredModels(back, table).retired).toEqual([]);
-    expect(keepRetiredModels(fresh, fresh).table.entries).toEqual(
-      fresh.entries,
-    );
+    expect(keepRetiredModels(back, table).retired).toBeUndefined();
+    expect(keepRetiredModels(fresh, fresh)).toEqual(fresh);
+    // a list that took a model back does not leave it marked retired
+    expect('retired' in keepRetiredModels(back, table)).toBe(false);
   });
 });
 

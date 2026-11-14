@@ -545,7 +545,7 @@ describe('what a Codex record shows', () => {
       completed({ type: 'Extension', kind: 'clock.sleep', durationMs: 5000 }),
     ]);
     expect(okSegments(await at(1))).toEqual([
-      { label: 'command', text: 'pwsh -Command pnpm test' },
+      { label: 'command', text: 'pwsh -Command "pnpm test"' },
       { label: 'output', text: 'ALL-OF-IT' },
     ]);
     expect(okSegments(await at(2))).toEqual([
@@ -606,6 +606,132 @@ describe('what a Codex record shows', () => {
         text: JSON.stringify({ durationMs: 5000 }, null, 2),
       },
     ]);
+  });
+
+  it('shows an argv as a line that reads back into the same arguments', async () => {
+    const at = rolloutOf([
+      completed({
+        type: 'CommandExecution',
+        command: ['bash', '-lc', 'cd api && cargo test'],
+      }),
+      completed({
+        type: 'CommandExecution',
+        command: ['git', 'commit', '-m', 'say "hi"', '', 'C:\\repo\\a b'],
+      }),
+      completed({ type: 'CommandExecution', command: 'ls -la | wc -l' }),
+    ]);
+    // joined bare it would read as `bash -lc cd` and then a second command
+    expect(okSegments(await at(1))[0]?.text).toBe(
+      'bash -lc "cd api && cargo test"',
+    );
+    expect(okSegments(await at(2))[0]?.text).toBe(
+      'git commit -m "say \\"hi\\"" "" "C:\\repo\\a b"',
+    );
+    // a command recorded as one string is shown as recorded
+    expect(okSegments(await at(3))[0]?.text).toBe('ls -la | wc -l');
+  });
+
+  it('unwraps the legacy shell output only, and shows any other JSON whole', async () => {
+    const failed = '{"output":"","error":"connection refused"}';
+    const at = rolloutOf([
+      item({
+        type: 'function_call',
+        name: 'shell',
+        call_id: 'c1',
+        arguments: '{}',
+      }),
+      item({
+        type: 'function_call_output',
+        call_id: 'c1',
+        output: '{"output":"ok\\n","metadata":{"exit_code":0}}',
+      }),
+      item({
+        type: 'function_call',
+        name: 'exec',
+        call_id: 'c2',
+        arguments: '{}',
+      }),
+      item({ type: 'function_call_output', call_id: 'c2', output: failed }),
+    ]);
+    expect(okSegments(await at(1))[1]).toEqual({
+      label: 'tool output',
+      text: 'ok\n',
+    });
+    // the error next to an empty `output` is what the reader came for
+    expect(okSegments(await at(3))[1]).toEqual({
+      label: 'tool output',
+      text: failed,
+    });
+  });
+
+  it('does not end a turn at the late completion of an earlier one', async () => {
+    const at = rolloutOf([
+      event({ type: 'task_started', turn_id: 'turn-2' }),
+      event({ type: 'task_complete', turn_id: 'turn-1' }),
+      event({ type: 'turn_aborted', turn_id: 'turn-0' }),
+      message('user', inputText('the prompt of turn two')),
+      event({ type: 'task_complete', turn_id: 'turn-2' }),
+    ]);
+    expect(okSegments(await at(1))).toEqual([
+      { label: 'user', text: 'the prompt of turn two' },
+    ]);
+    // a completion that names no turn is taken as this turn's
+    const unnamed = rolloutOf([
+      event({ type: 'task_started', turn_id: 'turn-2' }),
+      event({ type: 'task_complete' }),
+      message('user', inputText('NOT-THIS-TURN')),
+    ]);
+    expect(labels(await unnamed(1))).toEqual(['turn']);
+  });
+
+  it('names binary data inside a JSON segment and base64 wrapped across lines', async () => {
+    const wrapped = Array.from({ length: 12 }, () => BASE64.slice(0, 76)).join(
+      '\n',
+    );
+    const names = Array.from({ length: 80 }, (_, i) => `module_${i}`).join(
+      '\n',
+    );
+    const at = rolloutOf([
+      completed({
+        type: 'McpToolCall',
+        server: 'files',
+        tool: 'upload',
+        arguments: { name: 'shot.png', data: BASE64, note: 'a screenshot' },
+        result: { content: [{ type: 'text', text: 'stored' }] },
+      }),
+      completed({
+        type: 'Extension',
+        kind: 'image_gen.generation',
+        savedPath: '/home/user/project/out.png',
+        image: { b64_json: `data:image/png;base64,${BASE64}` },
+      }),
+      completed({
+        type: 'CommandExecution',
+        command: 'base64 shot.png',
+        aggregated_output: `${wrapped}\niVBORw0=\n`,
+      }),
+      completed({
+        type: 'CommandExecution',
+        command: 'ls src',
+        aggregated_output: names,
+      }),
+    ]);
+    expect(okSegments(await at(1))[0]).toEqual({
+      label: 'tool call files.upload',
+      text: JSON.stringify(
+        { name: 'shot.png', data: '(not text)', note: 'a screenshot' },
+        null,
+        2,
+      ),
+    });
+    expect(await textOf(at(2))).not.toContain('iVBOR');
+    expect(await textOf(at(2))).toContain('out.png');
+    expect(okSegments(await at(3))[1]).toEqual({
+      label: 'output',
+      text: '(not text)',
+    });
+    // lines of names are text, however many and however free of spaces
+    expect(okSegments(await at(4))[1]?.text).toBe(names);
   });
 
   it('is unavailable, with the reason, for a line it cannot serve', async () => {

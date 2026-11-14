@@ -34,7 +34,8 @@ be named on a documented list, with the reason.
 - GIVEN the bundled pricing snapshot shipped with this change
 - WHEN the model ids found in the committed Codex fixtures are matched
 - THEN every id resolves to an entry whose pattern is that id, or is on the
-  documented list of ids with no published price, which holds
+  documented list of ids with no published price
+  (`MODELS_WITHOUT_PUBLISHED_PRICE` in core), which holds
   `codex-auto-review`
 
 #### Scenario: A Codex variant is not priced as its base model
@@ -59,6 +60,10 @@ holds SHALL take its rates from the list. The size a downloaded price list
 is compared with, to refuse a truncated one, SHALL be the number of models
 the list itself held when the snapshot was built, without the retired ones.
 
+A retired entry SHALL price its own id only, in either spelling of the
+version separator. It SHALL NOT price another id by prefix: an id the list
+never held under that name stays unpriced.
+
 #### Scenario: Model dropped from the list
 - GIVEN a bundled snapshot that prices `claude-opus-4-1` and an upstream
   list that no longer holds it
@@ -77,6 +82,43 @@ the list itself held when the snapshot was built, without the retired ones.
 - WHEN `runray pricing --refresh` downloads a list of 150 usable models
 - THEN the list is accepted, because 150 is over half of the 287 the list
   held at the snapshot
+
+#### Scenario: Unknown id that starts with a retired one
+- GIVEN a snapshot whose retired models include `grok-4` at 3 / 15, and no
+  entry for `grok-4-fast`
+- WHEN a `grok-4-fast` call is priced
+- THEN it has no `costUSD` and `costSource` is `unknown`
+
+### Requirement: A one-word pattern prices numbered variants only
+A pricing pattern that is one bare word SHALL match an id by prefix only
+when the character after the boundary is a digit. A pattern of several
+words keeps the prefix rule as it is.
+
+#### Scenario: Alias that is one word
+- GIVEN a table with the pattern `chat`, which the price list's
+  `chat-latest` converts to
+- WHEN `chat-latest`, `chat-bison-001` and `codestral-2601` against a
+  `codestral` pattern are matched
+- THEN the first and the third resolve to their pattern and the second is
+  unpriced
+
+### Requirement: The unpriced warning does not advise a refresh that cannot help
+A model on the documented list of ids with no published price SHALL be
+named as such in the unpriced-coverage warning. When every unpriced model of
+a build is on that list, the warning SHALL NOT suggest
+`runray pricing --refresh`.
+
+#### Scenario: Only the reviewer is unpriced
+- GIVEN runs whose only unpriced calls are on `codex-auto-review`
+- WHEN the coverage warning is printed
+- THEN it names `codex-auto-review (no published price)`, says a refresh
+  changes nothing, and does not mention `pricing --refresh`
+
+#### Scenario: A model a newer list might hold
+- GIVEN runs with unpriced calls on `codex-auto-review` and on a model the
+  snapshot does not know
+- WHEN the coverage warning is printed
+- THEN it suggests `runray pricing --refresh`
 
 ### Requirement: Suggestions and playbooks address Codex
 Wherever a suggestion or a rule playbook picks its lever by source, a Codex

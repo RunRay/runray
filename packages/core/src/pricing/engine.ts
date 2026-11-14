@@ -29,6 +29,26 @@ export interface PricingTable {
   /** Model-name aliases resolved before matching (e.g. vendor renames). */
   aliases: Record<string, string>;
   entries: PricingEntry[];
+  /**
+   * Patterns of `entries` that the price list no longer holds: models their
+   * provider retired, kept at the rates the list last had for them so that
+   * sessions run on them stay priced. Such an entry prices its own id only
+   * (in either separator spelling), never another id by prefix: its rates
+   * say nothing about a model the list never held under that name.
+   */
+  retired?: readonly string[];
+}
+
+const retiredSets = new WeakMap<PricingTable, ReadonlySet<string>>();
+
+/** The table's retired patterns as a set, built once per table object. */
+function retiredOf(table: PricingTable): ReadonlySet<string> {
+  let set = retiredSets.get(table);
+  if (set === undefined) {
+    set = new Set(table.retired ?? []);
+    retiredSets.set(table, set);
+  }
+  return set;
 }
 
 /** Boundary characters allowed right after a prefix match (dated variants etc.). */
@@ -76,8 +96,16 @@ function prefixHit(
 ): PrefixHit | undefined {
   if (!canon.startsWith(pattern)) return undefined;
   if (!PREFIX_BOUNDARY.has(canon[pattern.length] ?? '')) return undefined;
+  // A pattern of one bare word (`chat`, `codestral`) is a family name only
+  // for its numbered variants (`codestral-2601`). Before another word it is
+  // somebody else's model: `chat-bison` is not OpenAI's `chat` alias.
+  if (BARE_WORD.test(pattern) && !DIGIT.test(canon[pattern.length + 1] ?? ''))
+    return undefined;
   return { entry, length: pattern.length, verbatim };
 }
+
+const BARE_WORD = /^[a-z]+$/;
+const DIGIT = /^\d$/;
 
 /**
  * exact → longest prefix (on a word boundary) → alias, per 05-ARCHITECTURE
@@ -97,6 +125,7 @@ export function matchModel(
   const alias = table.aliases[canon];
   if (alias !== undefined) canon = alias;
   const looseCanon = looseModelKey(canon);
+  const retired = retiredOf(table);
 
   let best: PrefixHit | undefined;
   let looseExact: PricingEntry | undefined;
@@ -108,6 +137,8 @@ export function matchModel(
       looseExact = entry;
       continue;
     }
+    // a retired model prices itself, never a longer id that starts with it
+    if (retired.has(pattern)) continue;
     const hit =
       prefixHit(entry, pattern, canon, true) ??
       prefixHit(entry, loosePattern, looseCanon, false);
@@ -648,6 +679,27 @@ export function repriceRun(
  * from spans, recomputed on demand, never persisted (the frozen RunTotals
  * cannot carry it). The UI mirrors this computation in `ui/lib/coverage.ts`.
  */
+/**
+ * Model ids that agents record and that no provider publishes a price for,
+ * with what each is. Calls on them stay `costSource: 'unknown'` and count
+ * toward the coverage warning; giving one the price of another model would
+ * be a guess, which the cost engine does not make. The list exists so that
+ * the warning can tell such a model from one a newer price list would
+ * price: no refresh changes this. An id is added with its reason.
+ */
+export const MODELS_WITHOUT_PUBLISHED_PRICE: Readonly<Record<string, string>> =
+  {
+    'codex-auto-review': 'the model of the Codex approval reviewer',
+  };
+
+/** True for a model no price list holds (see the list above). */
+export function hasNoPublishedPrice(model: string): boolean {
+  return Object.hasOwn(
+    MODELS_WITHOUT_PUBLISHED_PRICE,
+    canonicalModelName(model),
+  );
+}
+
 export interface UnpricedCoverage {
   llmCalls: number;
   unpricedLlmCalls: number;

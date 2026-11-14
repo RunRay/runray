@@ -32,6 +32,59 @@ function tableOf(
   };
 }
 
+describe('matchModel: what a prefix may price', () => {
+  const entry = (modelPattern: string, input: number) => ({
+    modelPattern,
+    inputPerMTok: input,
+    outputPerMTok: input * 5,
+    cacheReadPerMTok: input / 10,
+    cacheWritePerMTok: input,
+  });
+  const table: PricingTable = {
+    snapshotDate: '2026-11-14',
+    source: 'litellm-snapshot',
+    aliases: {},
+    entries: [
+      entry('chat', 5),
+      entry('codestral', 0.3),
+      entry('mistral-large', 0.5),
+      entry('grok-4', 3),
+      entry('grok-4.3', 1.25),
+    ],
+    retired: ['grok-4'],
+  };
+  const pricedAs = (id: string) =>
+    matchModel(table, id)?.modelPattern ?? 'unpriced';
+
+  it('lets a one-word pattern price its numbered variants and nothing else', () => {
+    expect(pricedAs('chat')).toBe('chat');
+    expect(pricedAs('chat-latest')).toBe('chat');
+    expect(pricedAs('codestral-2601')).toBe('codestral');
+    expect(pricedAs('codestral.2601')).toBe('codestral');
+    // another word after it is another model
+    expect(pricedAs('chat-bison-001')).toBe('unpriced');
+    expect(pricedAs('chat.completions')).toBe('unpriced');
+    expect(pricedAs('codestral-mamba')).toBe('unpriced');
+    expect(pricedAs('chat-')).toBe('unpriced');
+  });
+
+  it('leaves a pattern of several words to price every variant, as before', () => {
+    expect(pricedAs('mistral-large-2601')).toBe('mistral-large');
+    expect(pricedAs('mistral-large-experimental')).toBe('mistral-large');
+  });
+
+  it('lets a retired pattern price its own id only', () => {
+    expect(pricedAs('grok-4')).toBe('grok-4');
+    expect(pricedAs('xai/grok-4')).toBe('grok-4');
+    expect(pricedAs('grok-4.3')).toBe('grok-4.3');
+    expect(pricedAs('grok-4-fast')).toBe('unpriced');
+    expect(pricedAs('grok-4.9')).toBe('unpriced');
+    // the same table with no retired list prices them by prefix
+    const { retired: _retired, ...plain } = table;
+    expect(matchModel(plain, 'grok-4-fast')?.modelPattern).toBe('grok-4');
+  });
+});
+
 describe('suggestedDowngrade (C4)', () => {
   const bundled = bundledPricing();
 

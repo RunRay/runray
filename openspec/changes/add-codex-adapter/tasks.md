@@ -247,7 +247,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
       goes from 249 to 363 entries (114 new, 38 re-priced, 76 retired and
       kept). Two things the design did not foresee, both accepted by the
       maintainer or recorded in D6: the list had dropped 76 ids, which
-      the build script now keeps at their last rates (`RETIRED_MODELS`,
+      the build script now keeps at their last rates (the table's `retired` list,
       spec "A refreshed snapshot keeps retired models"), and a fifth
       golden moved, `claude-code/duplicate-records`, whose model
       `claude-fable-5-1` got an entry of its own ($1.09 to $0.75). The
@@ -328,6 +328,22 @@ directly and the goldens test does not see `fixtures/codex` yet.
       `docs/03-PERSONAS.md`. The changeset is `codex-sessions.md`
       (minor), next to `codex-model-prices.md` from 5.1.
 
+- Review of group 5 (`3865312..HEAD`): nine of ten findings fixed. A
+  retired entry prices its own id only, and a one-word pattern only its
+  numbered variants (`grok-4-fast` was priced as the retired `grok-4`,
+  `chat-bison-001` as `chat`); the retired list moved into the table so
+  the browser's matcher has it. The unpriced warning names a model with no
+  published price and leaves out the refresh advice for it; the list is in
+  core. In transcript slices: only the legacy shell output is unwrapped, a
+  turn's prompt search ends at that turn's own end, an argv keeps its
+  argument bounds, binary data is named inside JSON and when wrapped. The
+  snapshot test no longer pins rates, and the schema test no longer pins
+  the number of goldens. The spec gained three requirements for the pricing
+  rules. Left open: zero-config builds and `--watch` re-parse the whole
+  Codex history (about 13 s on the surveyed machine), which waits for the
+  persistent index; and the same refresh advice in the dashboard
+  (`CoverageNotices.tsx`), which belongs to 7.2.
+
 ## 6. Insights
 
 - [ ] 6.1 A Codex arms in `insights/rules.ts` (T12): `instructionsFile`, the
@@ -351,7 +367,11 @@ directly and the goldens test does not see `fixtures/codex` yet.
       the source id, `codex`, as they do for the other sources. Verify: tests for every scenario of "Codex is
       presented as a named source", including the contrast check the theme
       token tests apply to the other source colours.
-- [ ] 7.2 B [UI → /frontend-design] Per-source hints: Codex wording in
+- [ ] 7.2 B [UI → /frontend-design] Per-source hints (and, from the review
+      of group 5, the unpriced notice in `components/CoverageNotices.tsx`:
+      no "Try runray pricing --refresh" when every unpriced model is on
+      `MODELS_WITHOUT_PUBLISHED_PRICE`, as the CLI warning already does):
+      Codex wording in
       `lib/waste.ts`, the transcript cost note in
       `components/PricingProvenance.tsx`, the sentence in
       `components/WelcomeDialog.tsx` that names the sources read, and a

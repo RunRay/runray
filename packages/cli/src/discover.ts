@@ -10,6 +10,7 @@ import {
   adapters,
   applyInsights,
   createIdentityTable,
+  hasNoPublishedPrice,
   NoSessionYet,
   normalize,
   type PricingTable,
@@ -406,10 +407,25 @@ export function reportUnpricedCoverage(traceFile: TraceFile): void {
     for (const m of c.models) models.add(m);
   }
   if (runsAffected === 0) return;
+  // A refresh helps only with a model a newer price list could hold. For
+  // one that no list holds (Codex's approval reviewer) the advice would
+  // send the user in a circle: refresh, same warning, refresh.
+  const names = [...models].sort();
+  const neverPriced = names.filter(hasNoPublishedPrice);
+  const refreshMayHelp = neverPriced.length < names.length;
+  const listed = names
+    .map((name) =>
+      hasNoPublishedPrice(name) ? `${name} (no published price)` : name,
+    )
+    .join(', ');
   process.stderr.write(
-    `warning: ${calls} llm call(s) across ${runsAffected} run(s) have no price — totals are understated; models: ${[...models].sort().join(', ')}; try \`runray pricing --refresh\`\n`,
+    `warning: ${calls} llm call(s) across ${runsAffected} run(s) have no price — totals are understated; models: ${listed}${refreshMayHelp ? '; try `runray pricing --refresh`' : ''}\n`,
   );
   process.stderr.write(
-    `Unpriced models are listed, never guessed — their spans show tokens without\na dollar figure. Refresh prices with:  runray pricing --refresh\n`,
+    `Unpriced models are listed, never guessed — their spans show tokens without\na dollar figure. ${
+      refreshMayHelp
+        ? 'Refresh prices with:  runray pricing --refresh'
+        : 'No price is published for them, so a refresh changes nothing.'
+    }\n`,
   );
 }

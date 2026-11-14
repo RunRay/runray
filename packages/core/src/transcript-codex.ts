@@ -43,8 +43,41 @@ function str(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined;
 }
 
+const NOT_TEXT = '(not text)';
+
+/**
+ * A long run of base64 with nothing else in it, bare or as a data URL: a
+ * generated image, a screenshot, a file. Shown, it would be a megabyte of
+ * letters that crowds out everything a person can read.
+ */
+const BLOB = /^(?:data:[\w.+-]+\/[\w.+-]+;base64,)?[A-Za-z0-9+/=_-]{512,}$/;
+const BASE64_LINE = /^[A-Za-z0-9+/=_-]+$/;
+
+/** True for base64 in one piece, or wrapped the way mail and PEM wrap it:
+ * lines of one length of at least 60, the last one shorter. */
+function isBlob(text: string): boolean {
+  if (text.length < 512) return false;
+  const body = text.trim();
+  if (BLOB.test(body)) return true;
+  const lines = body.split(/\r?\n/);
+  const width = lines[0]?.length ?? 0;
+  if (lines.length < 2 || width < 60) return false;
+  return lines.every(
+    (line, i) =>
+      BASE64_LINE.test(line) &&
+      (i === lines.length - 1 ? line.length <= width : line.length === width),
+  );
+}
+
+/** JSON for a reader. A value in it that is binary data is named, as a
+ * segment that is nothing else would be (`shown`). */
 function pretty(v: unknown): string {
-  return JSON.stringify(v, null, 2);
+  return JSON.stringify(
+    v,
+    (_key, value: unknown) =>
+      typeof value === 'string' && isBlob(value) ? NOT_TEXT : value,
+    2,
+  );
 }
 
 /** Text as it is, anything else as JSON. */
@@ -76,21 +109,13 @@ function omit(source: Json, keys: readonly string[]): Json {
   return out;
 }
 
-const NOT_TEXT = '(not text)';
 const EMPTY = '(empty)';
-
-/**
- * A long run of base64 with nothing else in it, bare or as a data URL: a
- * generated image, a screenshot, a file. Shown, it would be a megabyte of
- * letters that crowds out everything a person can read.
- */
-const BLOB = /^(?:data:[\w.+-]+\/[\w.+-]+;base64,)?[A-Za-z0-9+/=_-]{512,}$/;
 
 /** A segment as it is shown: text stays, a blob and an empty text are named. */
 function shown(segment: TranscriptSegment): TranscriptSegment {
   const text = segment.text.trim();
   if (text === '') return { label: segment.label, text: EMPTY };
-  return BLOB.test(text) ? { label: segment.label, text: NOT_TEXT } : segment;
+  return isBlob(text) ? { label: segment.label, text: NOT_TEXT } : segment;
 }
 
 /** Keys of a session record that say what the session was, not whose. */
@@ -118,7 +143,9 @@ const NOISE_KEYS = [
 ];
 
 /** What the reader still has to find after the record of the span. */
-type Follow = { kind: 'output'; callId: string } | { kind: 'prompt' };
+type Follow =
+  | { kind: 'output'; callId: string }
+  | { kind: 'prompt'; turnId: string | undefined };
 
 interface Read {
   segments: TranscriptSegment[];
@@ -138,15 +165,33 @@ function sessionSegments(payload: Json): TranscriptSegment[] {
 }
 
 /** What a tool handed back, as text. The older shell tools wrap theirs in
- * `{"output": "...", "metadata": {...}}`; the text inside is the output. */
+ * `{"output": "...", "metadata": {...}}`; the text inside is the output.
+ * Only that form is unwrapped, the one the adapter reads the same way: any
+ * other JSON with an `output` key is shown whole, or what stands next to
+ * the key (an error, say) would be lost. */
 function outputText(output: unknown): string {
   const text = outputTextOf(output);
   if (text === undefined) return NOT_TEXT;
-  if (text.startsWith('{')) {
-    const wrapped = parse(text);
-    if (typeof wrapped?.output === 'string') return wrapped.output;
+  if (typeof output === 'string' && output.startsWith('{')) {
+    const wrapped = parse(output);
+    if (isObj(wrapped?.metadata) && typeof wrapped.output === 'string')
+      return wrapped.output;
   }
   return text;
+}
+
+/** An argv as one line that keeps where each argument ends: an argument
+ * with a space, a quote or nothing in it is quoted. It is for reading, so
+ * a backslash stays one backslash (a Windows path reads as written). */
+function commandLine(argv: readonly unknown[]): string {
+  return argv
+    .map((arg) => {
+      const text = asText(arg);
+      return text !== '' && !/[\s"']/.test(text)
+        ? text
+        : `"${text.replace(/"/g, '\\"')}"`;
+    })
+    .join(' ');
 }
 
 /** An action the harness recorded: one record holds what was asked and what
@@ -155,7 +200,7 @@ function itemSegments(item: Json): TranscriptSegment[] {
   switch (item.type) {
     case 'CommandExecution': {
       const command = Array.isArray(item.command)
-        ? item.command.map((arg) => asText(arg)).join(' ')
+        ? commandLine(item.command)
         : asText(item.command ?? '');
       const output = str(item.aggregated_output) ?? str(item.formatted_output);
       return [
@@ -318,7 +363,7 @@ function readRecord(record: Json): Read | undefined {
       if (payload.type === 'task_started') {
         return {
           segments: [{ label: 'turn', text: pretty(omit(payload, ['type'])) }],
-          follow: { kind: 'prompt' },
+          follow: { kind: 'prompt', turnId: str(payload.turn_id) },
         };
       }
       if (payload.type === 'item_completed' && isObj(payload.item)) {
@@ -418,11 +463,16 @@ export async function readCodexSegments(
       const payload = isObj(record?.payload) ? record.payload : undefined;
       if (record === undefined || payload === undefined) continue;
       if (record.type === 'event_msg') {
-        // the turn is over, or another began: it had no prompt of its own
+        // another turn began, or this one is over: it had no prompt of its
+        // own. The end of some other turn does not end this one: a rollout
+        // can write a late completion for an earlier turn right here.
+        if (payload.type === 'task_started') break;
         if (
-          payload.type === 'task_started' ||
-          payload.type === 'task_complete' ||
-          payload.type === 'turn_aborted'
+          (payload.type === 'task_complete' ||
+            payload.type === 'turn_aborted') &&
+          (follow.turnId === undefined ||
+            payload.turn_id === undefined ||
+            payload.turn_id === follow.turnId)
         )
           break;
       } else if (

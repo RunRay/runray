@@ -10,7 +10,7 @@
  *   pnpm exec biome format --write packages/core/src/pricing/snapshot.ts
  *
  * A model the list no longer has stays in the snapshot at the rates it last
- * had, and is named in RETIRED_MODELS: the list drops a model when its
+ * had, and is named in the table's `retired` list: the list drops a model when its
  * provider retires it, while sessions run on it stay on disk. Pass
  * --drop-retired to leave such models out.
  *
@@ -28,10 +28,9 @@ import {
   LITELLM_PRICING_URL,
   priceListFromText,
 } from '../packages/core/src/pricing/litellm.js';
-import {
-  BUNDLED_PRICING,
-  RETIRED_MODELS,
-} from '../packages/core/src/pricing/snapshot.js';
+import { BUNDLED_PRICING } from '../packages/core/src/pricing/snapshot.js';
+
+const previouslyRetired = BUNDLED_PRICING.retired ?? [];
 
 const res = await fetch(LITELLM_PRICING_URL, {
   signal: AbortSignal.timeout(5 * 60_000),
@@ -48,15 +47,18 @@ const listed = priceListFromText(await res.text(), {
   snapshotDate,
   minEntries: process.argv.includes('--allow-short-list')
     ? 1
-    : Math.ceil((BUNDLED_PRICING.entries.length - RETIRED_MODELS.length) / 2),
+    : Math.ceil(
+        (BUNDLED_PRICING.entries.length - previouslyRetired.length) / 2,
+      ),
   onInvalid: (key, problem) =>
     console.warn(`warning: left out ${key}: ${problem}`),
 });
 
-const { table, retired } = process.argv.includes('--drop-retired')
-  ? { table: listed, retired: [] }
+const table = process.argv.includes('--drop-retired')
+  ? listed
   : keepRetiredModels(listed, BUNDLED_PRICING);
-const newlyRetired = retired.filter((id) => !RETIRED_MODELS.includes(id));
+const retired = table.retired ?? [];
+const newlyRetired = retired.filter((id) => !previouslyRetired.includes(id));
 if (newlyRetired.length > 0) {
   console.log(
     `kept ${newlyRetired.length} model(s) the list no longer has, at their last rates: ${newlyRetired.join(', ')}`,
@@ -98,13 +100,10 @@ export const BUNDLED_PRICING: PricingTable = {
   source: 'litellm-snapshot',
   aliases: {},
   entries: ${literal(table.entries)},
+  // Models the list no longer has. Their rates are the last ones it
+  // published for them, and each prices its own id only.
+  retired: ${literal(retired)},
 };
-
-/**
- * Models in BUNDLED_PRICING that the list no longer has. Their rates are the
- * last ones it published for them.
- */
-export const RETIRED_MODELS: readonly string[] = ${literal(retired)};
 `;
 writeFileSync(target, content, 'utf8');
 console.log(

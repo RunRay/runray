@@ -229,14 +229,35 @@ the current model their id starts with (`mistral-large-2402`, published at
 4 / 12, as today's `mistral-large` at 0.5 / 1.5). RunRay prices sessions
 that are already on disk, so a retired model still has runs to price. The
 build script therefore keeps every entry the list no longer has, at its last
-rates, and names those ids in `RETIRED_MODELS` next to the table
+rates, and names those ids in the table's `retired` list
 (`keepRetiredModels`; signed off on 2026-11-14 when the refresh showed the
 loss). A model the list still has always takes the list's rates.
 `--drop-retired` builds the snapshot without them.
+
+**A retired entry prices its own id only** (review of group 5). Kept as an
+ordinary entry it is also a prefix pattern, and it then prices ids the list
+never held under that name at the rates of a model that is gone:
+`grok-4-fast`, published at 0.2 / 0.5 and not in the snapshot, resolved to
+the retired `grok-4` at 3 / 15. All 76 retired entries did this for an
+unknown id that starts with them. `matchModel` therefore lets a pattern on
+`retired` match exactly, in either separator spelling, and never by
+prefix; such an id is unpriced, which is what a plain refresh would have
+made it. The list is a field of the table, not a constant beside it,
+because the browser prices with the same matcher and must be handed the
+same table.
 *Rejected:* the plain refresh, for the regression above. *Rejected:* a
-marker on each entry: `PricingTable` is also the shape of the user's
-`pricing.json` and of the `/api/pricing` payload, and a list beside the table
-touches neither.
+marker on each entry: every entry of the user's `pricing.json` would carry
+a field that is almost always absent; one optional list on the table says
+the same.
+
+**A one-word pattern prices its numbered variants only.** The converter
+takes `-latest` off a key, so the list's `chat-latest` becomes the pattern
+`chat`, and by the prefix rule every id that starts with `chat-` was
+priced as OpenAI's alias (`chat-bison-001` at 5 / 30). A pattern that is
+one bare word (`chat`, `codestral`, `devstral` in this snapshot) is a
+family name only before a digit: `codestral-2601` is still priced,
+`chat-bison` is not. The rule is in the matcher, so it also holds for a
+table the user refreshed.
 *Cost:* an entry the list removed because it was wrong stays too; nothing
 tells the two apart. And the truncation check of `pricing --refresh`
 compared a download with half the snapshot's length, which retired entries
@@ -922,6 +943,16 @@ filled the size cap with letters. An empty text reads `(empty)`.
 that says so. The compressed file has the same lines, but the run names the
 plain one and a rebuilt view names the right one. Reasons carry an error
 code, never the message: the message holds the path.
+
+From the review of group 5: an output is unwrapped from
+`{"output": …, "metadata": …}` only in that form, the one the adapter reads
+the same way, so a JSON result with `output` next to an error is shown
+whole; a turn's prompt search ends at the end of that turn, by id, since a
+rollout can write a late completion of an earlier turn right after the next
+one starts; an argv is shown with an argument that holds a space in quotes,
+so `bash -lc "cd api && cargo test"` does not read as two commands; and
+binary data is also named inside a JSON segment and when wrapped across
+lines of one width.
 
 Measured: all 1,183 spans of the fixtures give an `ok` slice (5.1 s in all,
 the slowest 17 ms). A sample of 714 spans over the surveyed sessions, one of

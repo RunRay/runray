@@ -323,6 +323,39 @@ describe('reportUnpricedCoverage', () => {
     }
   });
 
+  const warningFor = (models: string[]): string => {
+    const spy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+    try {
+      reportUnpricedCoverage(
+        tf([runShell(models.map((m, i) => llmSpan(`s${i}`, m, true)))]),
+      );
+      return spy.mock.calls.map((call) => String(call[0])).join('');
+    } finally {
+      spy.mockRestore();
+    }
+  };
+
+  it('does not send the user to refresh for a model no price list holds', () => {
+    const text = warningFor(['codex-auto-review']);
+    expect(text).toContain('models: codex-auto-review (no published price)\n');
+    expect(text).toContain(
+      'No price is published for them, so a refresh changes nothing.',
+    );
+    expect(text).not.toContain('pricing --refresh');
+    for (const line of text.split('\n').slice(1))
+      expect(line.length, line).toBeLessThanOrEqual(80);
+  });
+
+  it('still suggests a refresh when one of the models might be in a newer list', () => {
+    const text = warningFor(['codex-auto-review', 'zz-mystery']);
+    expect(text).toContain(
+      'models: codex-auto-review (no published price), zz-mystery; try `runray pricing --refresh`',
+    );
+    expect(text).toContain('Refresh prices with:  runray pricing --refresh');
+  });
+
   it('stays silent when every run is fully priced', () => {
     const spy = vi
       .spyOn(process.stderr, 'write')

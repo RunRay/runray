@@ -48,6 +48,8 @@ const pricingTableSchema = z.looseObject({
       }),
     )
     .min(1, 'no models'),
+  // a refreshed list has none; a copy of the bundled table may
+  retired: z.array(z.string()).optional(),
 });
 
 function describeIssue(error: z.ZodError): string {

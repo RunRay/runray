@@ -1,7 +1,7 @@
 import type { RawRun, RawSpan } from '../adapter.js';
 import type { PricingTable } from './engine.js';
 import { cacheWrite1hTokens, computeCostUSD, matchModel } from './engine.js';
-import { BUNDLED_PRICING, RETIRED_MODELS } from './snapshot.js';
+import { BUNDLED_PRICING } from './snapshot.js';
 
 /**
  * Cost engine (task 2.5, 05-ARCHITECTURE §2.3). Prices llm_call spans from a
@@ -36,8 +36,10 @@ export {
   DEFAULT_REPRICE_RISK,
   downgradeMap,
   effectiveCacheWriteRate,
+  hasNoPublishedPrice,
   looseModelKey,
   MODEL_TIERS,
+  MODELS_WITHOUT_PUBLISHED_PRICE,
   matchModel,
   repriceRun,
   repriceSpans,
@@ -58,7 +60,9 @@ export function bundledPricing(): PricingTable {
  * retires would raise the bar the list has to clear.
  */
 export function bundledListSize(): number {
-  return BUNDLED_PRICING.entries.length - RETIRED_MODELS.length;
+  return (
+    BUNDLED_PRICING.entries.length - (BUNDLED_PRICING.retired?.length ?? 0)
+  );
 }
 
 function priceSpan(span: RawSpan, table: PricingTable): RawSpan {

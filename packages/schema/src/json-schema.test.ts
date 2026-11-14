@@ -84,7 +84,7 @@ describe('generated schema validates instances', () => {
 
   it('validates every golden across full, sanitized, and metadata-only profiles', () => {
     const profileDirs = ['normalized', 'sanitized', 'metadata-only'];
-    let validated = 0;
+    const validated: Record<string, number> = {};
 
     for (const profileDir of profileDirs) {
       const pUrl = new URL(`../../../fixtures/${profileDir}`, import.meta.url);
@@ -112,10 +112,15 @@ describe('generated schema validates instances', () => {
             `Schema validation failed for ${profileDir}/${adapterDir}/${file}`,
           ).toEqual([]);
           expect(valid).toBe(true);
-          validated++;
+          validated[profileDir] = (validated[profileDir] ?? 0) + 1;
         }
       }
     }
-    expect(validated).toBe(57);
+    // Every fixture has a golden in each profile, so the three counts are
+    // one number. It is not written here: a new fixture changes it, in a
+    // commit that holds generated files only.
+    expect(Object.keys(validated).sort()).toEqual([...profileDirs].sort());
+    expect(validated.normalized).toBeGreaterThan(0);
+    expect(new Set(Object.values(validated)).size).toBe(1);
   });
 });

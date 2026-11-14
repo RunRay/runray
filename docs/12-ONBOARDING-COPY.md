@@ -262,6 +262,16 @@ Unpriced models are listed, never guessed — their spans show tokens without
 a dollar figure. Refresh prices with:  runray pricing --refresh
 ```
 
+When every unpriced model is one that no price list holds (the list is
+`MODELS_WITHOUT_PUBLISHED_PRICE` in core; today the Codex approval reviewer,
+`codex-auto-review`), the second sentence is replaced, the warning names the
+model as `codex-auto-review (no published price)` and drops its
+"try `runray pricing --refresh`":
+```
+Unpriced models are listed, never guessed — their spans show tokens without
+a dollar figure. No price is published for them, so a refresh changes nothing.
+```
+
 **f. Contained-failure framing** — prints next to the existing per-candidate discovery
 errors and does **not** consume a hint slot. One candidate failing to parse is expected — a
 locked OpenCode database, a half-written import, another tool's `.jsonl` in a scanned folder
