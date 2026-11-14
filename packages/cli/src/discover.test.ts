@@ -123,7 +123,7 @@ describe('buildTraceFile', () => {
       generatorVersion: '0.1.0',
     });
     expect(candidatesScanned).toBe(1);
-    expect(traceFile.schemaVersion).toBe('0.1.0');
+    expect(traceFile.schemaVersion).toBe('0.2.0');
     expect(traceFile.generator).toEqual({
       name: 'runray',
       version: '0.1.0',
@@ -286,7 +286,7 @@ describe('reportUnpricedCoverage', () => {
     },
   });
   const tf = (runs: Run[]): TraceFile => ({
-    schemaVersion: '0.1.0',
+    schemaVersion: '0.2.0',
     generator: { name: 'runray', version: 't' },
     generatedAt: '2026-07-02T14:00:00Z',
     runs,

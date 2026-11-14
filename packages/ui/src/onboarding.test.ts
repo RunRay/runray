@@ -40,7 +40,7 @@ function stubRun(id: string, costUSD: number): Run {
 
 function stubTraceFile(runs: Run[]): TraceFile {
   return {
-    schemaVersion: '0.1.0',
+    schemaVersion: '0.2.0',
     generator: { name: 'test', version: '0.0.0' },
     generatedAt: '2026-07-07T12:00:00.000Z',
     runs,

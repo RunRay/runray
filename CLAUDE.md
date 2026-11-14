@@ -9,7 +9,7 @@ RunRay — zero-config, local-first observability & token audit for local coding
 1. `openspec/project.md` — conventions and glossary (binding).
 2. `openspec/changes/add-local-trace-viewer/` — the active change: `proposal.md`, `design.md`, spec deltas in `specs/`, and the task list in `tasks.md`. Work one task at a time.
 3. `docs/05-ARCHITECTURE.md` — module boundaries, full CLI spec, insight-rule logic, performance budgets.
-4. `docs/02-DATA-MODEL.md` + `schema/runray.schema.json` — the frozen v0.1 data contract.
+4. `docs/02-DATA-MODEL.md` + `schema/runray.schema.json` — the frozen v0.2 data contract.
 
 ## Current state
 

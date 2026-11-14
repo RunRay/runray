@@ -15,7 +15,7 @@ import {
 } from './server.js';
 
 const traceFile: TraceFile = {
-  schemaVersion: '0.1.0',
+  schemaVersion: '0.2.0',
   generator: { name: 'runray', version: '0.0.0-test' },
   generatedAt: '2026-07-02T13:00:00Z',
   runs: [],

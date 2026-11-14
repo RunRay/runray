@@ -735,7 +735,7 @@ describe('Full sanitize projection', () => {
     expect(scrubbedRuns[1]?.project?.name).toBe('project-2');
 
     const traceFile = {
-      schemaVersion: '0.1.0' as const,
+      schemaVersion: '0.2.0' as const,
       generator: { name: 'runray', version: '0.1.0-test' },
       generatedAt: '2026-08-20T10:00:00.000Z',
       runs: [run1, run2],

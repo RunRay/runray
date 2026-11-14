@@ -19,7 +19,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 1. Contract, reader and fixtures
 
-- [ ] 1.1 A Schema 0.2.0 (D1): add `codex` to `SourceToolSchema` and
+- [x] 1.1 A Schema 0.2.0 (D1): add `codex` to `SourceToolSchema` and
       `codex-jsonl` to `SourceFormatSchema`, set `SCHEMA_VERSION` to `0.2.0`,
       regenerate `schema/runray.schema.json`, move the tests and the example
       trace that pin `0.1.0`, and record the bump in `docs/02-DATA-MODEL.md`

@@ -166,7 +166,7 @@ function loadRuns(): void {
     data: {
       status: 'ready',
       traceFile: {
-        schemaVersion: '0.1.0',
+        schemaVersion: '0.2.0',
         generatedAt: '2026-08-10T12:00:00.000Z',
         runs: RUNS,
       } as TraceFile,
@@ -306,7 +306,7 @@ describe('every surface the unit drives', () => {
       data: {
         status: 'ready',
         traceFile: {
-          schemaVersion: '0.1.0',
+          schemaVersion: '0.2.0',
           generatedAt: '2026-08-10T12:00:00.000Z',
           runs: [SPAN_RUN],
         } as TraceFile,

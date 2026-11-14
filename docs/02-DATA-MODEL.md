@@ -1,4 +1,4 @@
-# RunRay — Data Model (v0.1.0)
+# RunRay — Data Model (v0.2.0)
 
 The internal schema is **the contract** between Track A (CLI/parsers) and Track B (UI). It is authored as zod types in `packages/schema`, from which `schema/runray.schema.json` is generated. The UI never sees raw agent logs — only this format.
 
@@ -11,6 +11,8 @@ The internal schema is **the contract** between Track A (CLI/parsers) and Track 
 5. **Privacy-aware.** Prompt/output text lives only in optional `content` fields that `--redact` nulls out while preserving counts and structure.
 
 > **Versioning note (2026-07):** `content.delegationReason`, `tool.linesAdded`/`linesRemoved` and `totals.codeChanges` were added additively before any code exists, so they fold into v0.1.0 without a bump. Once `packages/schema` lands and v0.1 is frozen (task 1.2), any such addition requires a minor version bump.
+
+> **Versioning note (2026-11), v0.2.0:** `source.tool` gained `codex` and `source.format` gained `codex-jsonl`, for the Codex adapter (change `add-codex-adapter`, design D1). Nothing else in the contract changed: no field, no other enum value and no meaning. A v0.1.0 TraceFile is a valid v0.2.0 document apart from its `schemaVersion` string, and every run in it validates unchanged against the v0.2.0 run schema. No reader checks `schemaVersion` today, so files written by an earlier RunRay still load.
 
 ## Entity overview
 
@@ -33,8 +35,8 @@ TraceFile
 | Field | Type | Notes |
 |---|---|---|
 | `id` | string | Stable hash of source session id(s). |
-| `source.tool` | enum | `claude-code` \| `opencode` \| `otlp` \| `unknown` |
-| `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `otlp-json` |
+| `source.tool` | enum | `claude-code` \| `opencode` \| `codex` \| `otlp` \| `unknown`. `codex` since v0.2.0. |
+| `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `codex-jsonl` \| `otlp-json`. `codex-jsonl` since v0.2.0; it covers plain and zstd-compressed rollouts, because compression is a property of the file and not of the record format. |
 | `source.files[]` | string | Absolute paths read. |
 | `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
 | `title?` | string | Session title if the source provides one. |

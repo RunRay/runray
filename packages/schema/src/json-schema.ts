@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { TraceFileSchema } from './trace-file.js';
+import { SCHEMA_VERSION, TraceFileSchema } from './trace-file.js';
 
-const SCHEMA_ID = 'https://runray.dev/schema/0.1.0/runray.schema.json';
+const SCHEMA_ID = `https://runray.dev/schema/${SCHEMA_VERSION}/runray.schema.json`;
 const SCHEMA_TITLE = 'RunRay TraceFile';
 
 type JsonObject = Record<string, unknown>;

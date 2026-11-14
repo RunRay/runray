@@ -111,7 +111,7 @@ describe('demo', () => {
   it('wraps the goldens in a TraceFile envelope, newest first', () => {
     if (dir === undefined) throw new Error('unreachable');
     const traceFile = loadDemoTraceFile(dir, '0.0.0-test');
-    expect(traceFile.schemaVersion).toBe('0.1.0');
+    expect(traceFile.schemaVersion).toBe('0.2.0');
     expect(traceFile.generator).toEqual({
       name: 'runray',
       version: '0.0.0-test',

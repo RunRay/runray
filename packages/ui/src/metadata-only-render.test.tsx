@@ -53,7 +53,7 @@ const stubMetadataOnlyRun = (id: string, reanchoredInsight?: Insight): Run => {
 };
 
 const stubTraceFile = (run: Run): TraceFile => ({
-  schemaVersion: '0.1.0',
+  schemaVersion: '0.2.0',
   generator: { name: 'runray', version: '0.1.0' },
   generatedAt: '2026-08-10T12:00:00.000Z',
   runs: [run],
