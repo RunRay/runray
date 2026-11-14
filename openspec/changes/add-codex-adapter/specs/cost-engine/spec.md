@@ -139,6 +139,14 @@ generic custom-agent wording.
 - THEN none contains `CLAUDE.md`, `promptCacheTtl`, `opencode` or "your
   agent's"
 
+#### Scenario: The approval reviewer as the expensive subagent
+- GIVEN a Codex run on which `expensive-subagent` fires for the approval
+  reviewer's subagent, `guardian`
+- WHEN the finding is produced
+- THEN the suggestion names `approvals_reviewer`, does not tell the person
+  to give the reviewer a cheaper model, and the finding carries no
+  `estimatedWasteUSD`
+
 #### Scenario: Playbooks have a Codex section
 - GIVEN the generated rule playbooks
 - WHEN they are rendered

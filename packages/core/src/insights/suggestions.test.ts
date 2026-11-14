@@ -15,10 +15,11 @@ import { applyInsights } from './index.js';
  */
 
 /** The sources suggestions distinguish (the schema also knows 'unknown'). */
-type Source = 'claude-code' | 'opencode' | 'otlp';
+type Source = 'claude-code' | 'opencode' | 'codex' | 'otlp';
 const FORMAT: Record<Source, RawRun['source']['format']> = {
   'claude-code': 'claude-jsonl',
   opencode: 'opencode-storage',
+  codex: 'codex-jsonl',
   otlp: 'otlp-json',
 };
 
@@ -186,6 +187,18 @@ describe('retry-loop suggestion picks the lever by tool class', () => {
     expect(suggestionOf(loop('Bash'), 'retry-loop', 'otlp')).toContain(
       'system prompt',
     );
+    // Codex names its command tool differently in every generation
+    for (const name of ['exec_command', 'shell', 'shell_command']) {
+      expect(suggestionOf(loop(name), 'retry-loop', 'codex')).toContain(
+        'in AGENTS.md',
+      );
+    }
+  });
+
+  it('edit: a failing apply_patch on Codex is an edit, not "anything else"', () => {
+    expect(suggestionOf(loop('apply_patch'), 'retry-loop', 'codex')).toMatch(
+      /changed the file under the agent/,
+    );
   });
 
   it('edit: points at the file changing under the agent', () => {
@@ -245,10 +258,17 @@ describe('fixed-context-overhead suggestion', () => {
     expect(s).toContain('only a and z were called in this session');
   });
 
-  it('speaks OpenCode and OTLP', () => {
+  it('speaks OpenCode, Codex and OTLP', () => {
     expect(
       suggestionOf(heavy(), 'fixed-context-overhead', 'opencode'),
     ).toContain('mcp.<name>.enabled: false');
+    const codex = suggestionOf(heavy(), 'fixed-context-overhead', 'codex');
+    expect(codex).toContain('AGENTS.md files');
+    expect(codex).toContain(
+      'enabled = false under [mcp_servers.<name>] in config.toml',
+    );
+    expect(codex).toContain('no MCP server was called in this session');
+    expect(codex).toContain('re-read 4 times');
     expect(suggestionOf(heavy(), 'fixed-context-overhead', 'otlp')).toMatch(
       /^Trim the fixed part of every request/,
     );
@@ -284,6 +304,12 @@ describe('idle-cache-expiry suggestion', () => {
     expect(
       suggestionOf(pair(10), 'idle-cache-expiry', 'opencode'),
     ).not.toContain('promptCacheTtl');
+    // Codex records no cache writes, so the rule never fires on a real
+    // rollout; were a write ever recorded, the copy still holds no
+    // Claude Code setting
+    expect(suggestionOf(pair(10), 'idle-cache-expiry', 'codex')).not.toContain(
+      'promptCacheTtl',
+    );
   });
 });
 
@@ -303,6 +329,13 @@ describe('low-cache-hit suggestion names the cause per source', () => {
     expect(suggestionOf(cold(), 'low-cache-hit', 'opencode')).toContain(
       'provider and model support prompt caching',
     );
+  });
+  it('codex: the causes are named, since cache-prefix-break cannot fire there', () => {
+    const s = suggestionOf(cold(), 'low-cache-hit', 'codex');
+    expect(s).toMatch(/^Codex leaves caching to the provider/);
+    expect(s).toContain('at a task boundary, not mid-session');
+    expect(s).not.toContain('cache-prefix-break');
+    expect(s).toMatch(/this run would have cost ~\$\d/);
   });
   it('otlp: the agent has to mark the prefix', () => {
     expect(suggestionOf(cold(), 'low-cache-hit', 'otlp')).toMatch(
@@ -330,6 +363,40 @@ describe('model and subagent suggestions say where the switch lives', () => {
     expect(
       suggestionOf([root(), opus('l1', 1)], 'model-mismatch', 'otlp'),
     ).not.toContain('/model');
+  });
+
+  // a model of the gpt ladder: Codex sessions do not run on Claude models
+  const flagship = (id: string, sec: number, parentId = 'root') =>
+    llm(id, sec, { model: 'gpt-5.5', cost: 5, input: 10_000, parentId });
+
+  it('model-mismatch on Codex: /model, and the config key for the default', () => {
+    const s = suggestionOf(
+      [root(), flagship('l1', 1)],
+      'model-mismatch',
+      'codex',
+    );
+    expect(s).toContain('on gpt-5.4-mini (/model switches mid-session;');
+    expect(s).toContain('the model key in config.toml');
+    // the Claude Code alias form (`/model sonnet`) is not a Codex command
+    expect(s).not.toMatch(/\/model [a-z]+ switches/);
+  });
+
+  it('expensive-subagent on Codex: the agent file, or the default for spawned agents', () => {
+    const s = suggestionOf(
+      [
+        root(),
+        llm('l0', 1, { cost: 0.05, model: 'gpt-5.5' }),
+        sub('worker', 2),
+        flagship('l1', 3, 'worker'),
+      ],
+      'expensive-subagent',
+      'codex',
+    );
+    expect(s).toContain(
+      'model = "gpt-5.4-mini" in its agent file under ~/.codex/agents',
+    );
+    expect(s).toContain('agents.default_subagent_model in config.toml');
+    expect(s).not.toContain('frontmatter');
   });
 
   it('expensive-subagent: frontmatter in Claude Code, agent config in OpenCode', () => {
@@ -365,6 +432,25 @@ describe('the remaining rules address the person, with the finding in numbers', 
     );
     expect(s).toContain('why Grep kept failing (2 of the 5)');
     expect(s).toContain('CLAUDE.md');
+  });
+
+  it('scattered-tool-failures on Codex: the instructions file is AGENTS.md', () => {
+    const s = suggestionOf(
+      [
+        root(),
+        llm('l1', 0, { cost: 0.2 }),
+        tool('t1', 1, { name: 'exec_command', status: 'error' }),
+        tool('t2', 2, { name: 'exec_command', status: 'error' }),
+        tool('t3', 3, { name: 'apply_patch', status: 'error' }),
+        tool('t4', 4, { name: 'view_image', status: 'error' }),
+        tool('t5', 5, { name: 'web.search', status: 'error' }),
+        llm('l2', 6, { cost: 0.2 }),
+      ],
+      'scattered-tool-failures',
+      'codex',
+    );
+    expect(s).toContain('AGENTS.md');
+    expect(s).not.toContain('CLAUDE.md');
   });
 
   it('dead-end-run: resume when a completed change exists, otherwise fix before rerunning', () => {
@@ -416,6 +502,7 @@ describe('the remaining rules address the person, with the finding in numbers', 
       ),
     ];
     expect(suggestionOf(grow, 'context-bloat')).toContain('/compact');
+    expect(suggestionOf(grow, 'context-bloat', 'codex')).toContain('/compact');
     expect(suggestionOf(grow, 'context-bloat', 'otlp')).toMatch(
       /^Summarize or drop history/,
     );
@@ -642,5 +729,373 @@ describe('expensive-subagent says why there is no saving figure', () => {
       "model: claude-sonnet-5 in the worker agent's frontmatter",
     );
     expect(f?.suggestion).not.toContain('no priced cheaper tier');
+  });
+});
+
+/**
+ * Codex runs (add-codex-adapter T12). The tree is the one the Codex adapter
+ * builds: session → turn → llm_call → tool, a child thread as a `subagent`
+ * under the turn that started it, with turns of its own.
+ */
+describe('Codex runs', () => {
+  const turn = (id: string, second: number, parentId = 'root'): RawSpan =>
+    base(id, { kind: 'turn', name: 'turn', startedAt: ts(second), parentId });
+  const thread = (id: string, second: number, name: string): RawSpan =>
+    base(id, {
+      kind: 'subagent',
+      name: `subagent:${name}`,
+      startedAt: ts(second),
+      parentId: 't1',
+      agent: { name },
+    });
+  /** A Codex call: cached input, never a cache write. */
+  const call = (
+    id: string,
+    second: number,
+    opts: Parameters<typeof llm>[2] = {},
+  ) => llm(id, second, { model: 'gpt-5.5', parentId: 't1', ...opts });
+  const codex = (spans: RawSpan[]) => findings(spans, 'codex');
+  const ruleIds = (spans: RawSpan[]) => codex(spans).map((f) => f.ruleId);
+
+  describe('cache-write rules are silent', () => {
+    it('an idle gap after which the cached input drops to zero fires neither rule', () => {
+      const ids = ruleIds([
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { cacheRead: 50_000, input: 2_000 }),
+        // 30 minutes later the whole context is fresh input again
+        call('l2', 30 * 60, { cacheRead: 0, input: 52_000 }),
+      ]);
+      expect(ids).not.toContain('idle-cache-expiry');
+      expect(ids).not.toContain('cache-prefix-break');
+    });
+
+    it('a collapse with no gap fires neither rule', () => {
+      const ids = ruleIds([
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { cacheRead: 200_000, input: 1_000 }),
+        call('l2', 5, { cacheRead: 1_000, input: 200_000 }),
+      ]);
+      expect(ids).not.toContain('idle-cache-expiry');
+      expect(ids).not.toContain('cache-prefix-break');
+    });
+
+    it('a low hit-rate is still reported, with the Codex suggestion', () => {
+      const f = codex([
+        root(),
+        turn('t1', 0),
+        ...[0, 10, 20, 30, 40].map((sec, i) =>
+          call(`l${i}`, sec, { input: 20_000, cost: 0.1 }),
+        ),
+      ]).find((i) => i.ruleId === 'low-cache-hit');
+      expect(f?.suggestion).toMatch(/^Codex leaves caching to the provider/);
+    });
+
+    it('fixed-context-overhead gives a finite estimate when nothing was written to the cache', () => {
+      const spans = [
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { input: 30_000 }),
+        ...[10, 20, 30, 40].map((sec, i) => call(`m${i}`, sec)),
+      ];
+      const f = codex(spans).find((i) => i.ruleId === 'fixed-context-overhead');
+      expect(f).toBeDefined();
+      const entry = matchModel(bundledPricing(), 'gpt-5.5');
+      if (entry === undefined) throw new Error('gpt-5.5 must be priced');
+      // 10k tokens above the floor: "written" once at the entry's write
+      // rate, which for an OpenAI entry is its input rate, and read 4 times
+      const expected =
+        (10_000 * (entry.cacheWritePerMTok + 4 * entry.cacheReadPerMTok)) / 1e6;
+      expect(Number.isFinite(f?.estimatedWasteUSD)).toBe(true);
+      expect(f?.estimatedWasteUSD).toBeGreaterThanOrEqual(0);
+      expect(f?.estimatedWasteUSD).toBeCloseTo(expected, 6);
+      expect(entry.cacheWritePerMTok).toBe(entry.inputPerMTok);
+    });
+  });
+
+  describe('rules read the tree through turn spans', () => {
+    it('retry-loop bills the call that issued the failures, a turn above them', () => {
+      const fail = (id: string, sec: number) =>
+        tool(id, sec, {
+          name: 'exec_command',
+          status: 'error',
+          targetKey: 'k',
+          parentId: 'l1',
+        });
+      const f = codex([
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { cost: 0.5 }),
+        fail('x1', 1),
+        fail('x2', 2),
+        fail('x3', 3),
+      ]).find((i) => i.ruleId === 'retry-loop');
+      expect(f?.estimatedWasteUSD).toBe(0.5);
+    });
+
+    it('a child thread is its own context: its calls are not the main thread’s', () => {
+      const f = codex([
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { input: 30_000 }),
+        ...[10, 20, 30, 40].map((sec, i) => call(`m${i}`, sec)),
+        thread('child', 50, 'thread_spawn'),
+        turn('ct', 50, 'child'),
+        ...[51, 52, 53].map((sec, i) =>
+          call(`c${i}`, sec, { parentId: 'ct', input: 90_000 }),
+        ),
+      ]).find((i) => i.ruleId === 'fixed-context-overhead');
+      // five calls of the main thread, so four re-reads; the child's three
+      // calls under its own turn are left out
+      expect(f?.suggestion).toContain('re-read 4 times');
+    });
+
+    it('expensive-subagent sums the calls under the child’s turns, and model-mismatch leaves them to it', () => {
+      const all = codex([
+        root(),
+        turn('t1', 0),
+        call('l1', 1, { cost: 4, input: 10_000 }),
+        thread('child', 2, 'thread_spawn'),
+        turn('ct1', 2, 'child'),
+        call('c1', 3, { parentId: 'ct1', cost: 3, input: 10_000 }),
+        turn('ct2', 4, 'child'),
+        call('c2', 5, { parentId: 'ct2', cost: 3, input: 10_000 }),
+      ]);
+      const subagent = all.find((i) => i.ruleId === 'expensive-subagent');
+      expect(subagent?.title).toBe(
+        'Subagent thread_spawn consumed 60% of the run',
+      );
+      expect(subagent?.detail).toContain('subtree cost $6.00');
+      const mismatch = all.find((i) => i.ruleId === 'model-mismatch');
+      expect(mismatch?.detail).toContain(
+        '1 subtree(s) covered by the delegation finding',
+      );
+      // only the main thread's $4 call is repriced
+      expect(mismatch?.estimatedWasteUSD ?? 0).toBeLessThan(4);
+    });
+  });
+
+  describe('the approval reviewer as the expensive subagent', () => {
+    const run = (name: string, model: string, cost?: number) => [
+      root(),
+      turn('t1', 0),
+      call('l1', 1, { cost: 0.05 }),
+      thread('child', 2, name),
+      turn('ct', 2, 'child'),
+      call('c1', 3, {
+        parentId: 'ct',
+        model,
+        input: 10_000,
+        ...(cost === undefined ? {} : { cost }),
+      }),
+    ];
+
+    it('unpriced, as the bundled table leaves it: no finding', () => {
+      expect(ruleIds(run('guardian', 'codex-auto-review'))).not.toContain(
+        'expensive-subagent',
+      );
+    });
+
+    it('priced by an override: names it, claims no saving and no cheaper model', () => {
+      const f = codex(run('guardian', 'codex-auto-review', 5)).find(
+        (i) => i.ruleId === 'expensive-subagent',
+      );
+      expect(f?.title).toBe('Subagent guardian consumed 99% of the run');
+      expect(f?.detail).toContain("Codex's automatic approval reviewer");
+      expect(f?.estimatedWasteUSD).toBeUndefined();
+      expect(f?.suggestion).toMatch(
+        /^guardian is Codex's automatic approval reviewer/,
+      );
+      expect(f?.suggestion).toContain(
+        'approvals_reviewer = "user" in config.toml',
+      );
+      expect(f?.suggestion).not.toContain('cheaper model');
+    });
+
+    it('claims no saving even on a model a cheaper tier exists for', () => {
+      const reviewer = codex(run('guardian', 'gpt-5.5', 5)).find(
+        (i) => i.ruleId === 'expensive-subagent',
+      );
+      expect(reviewer?.estimatedWasteUSD).toBeUndefined();
+      expect(reviewer?.suggestion).not.toContain('gpt-5.4-mini');
+      // the same subtree under any other child keeps its estimate
+      const other = codex(run('thread_spawn', 'gpt-5.5', 5)).find(
+        (i) => i.ruleId === 'expensive-subagent',
+      );
+      expect(other?.estimatedWasteUSD).toBeGreaterThan(0);
+      expect(other?.suggestion).toMatch(/^Give thread_spawn a cheaper model/);
+    });
+
+    it('a subagent called guardian in another source is an ordinary agent', () => {
+      const f = findings(
+        [
+          root(),
+          llm('l0', 1, { cost: 0.05 }),
+          sub('guardian', 2),
+          llm('l1', 3, {
+            model: 'claude-opus-4-8',
+            cost: 5,
+            input: 10_000,
+            parentId: 'guardian',
+          }),
+        ],
+        'claude-code',
+      ).find((i) => i.ruleId === 'expensive-subagent');
+      expect(f?.suggestion).toMatch(/^Give guardian a cheaper model/);
+    });
+  });
+
+  describe('no lever of another source', () => {
+    const failing = (name: string, extra: Parameters<typeof tool>[2] = {}) => [
+      root(),
+      turn('t1', 0),
+      call('l1', 0, { cost: 0.5 }),
+      ...[1, 2, 3].map((sec) =>
+        tool(`x${sec}`, sec, {
+          name,
+          status: 'error',
+          targetKey: 'k',
+          parentId: 'l1',
+          ...extra,
+        }),
+      ),
+    ];
+    const read = (id: string, sec: number) =>
+      tool(id, sec, {
+        name: 'exec_command',
+        targetKey: 'f',
+        targetKind: 'file-read',
+        parentId: 'l1',
+      });
+    const scenarios: RawSpan[][] = [
+      failing('exec_command'),
+      failing('apply_patch'),
+      failing('search', { kind: 'mcp_call', mcpServer: 'notion' }),
+      failing('view_image'),
+      // fixed-context-overhead
+      [
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { input: 30_000 }),
+        ...[10, 20, 30, 40].map((sec, i) => call(`m${i}`, sec)),
+      ],
+      // low-cache-hit
+      [
+        root(),
+        turn('t1', 0),
+        ...[0, 10, 20, 30, 40].map((sec, i) =>
+          call(`l${i}`, sec, { input: 20_000, cost: 0.1 }),
+        ),
+      ],
+      // context-bloat
+      [
+        root(),
+        turn('t1', 0),
+        ...[10_000, 10_000, 10_000, 60_000, 120_000, 120_000, 120_000].map(
+          (input, i) => call(`l${i}`, i * 10, { input }),
+        ),
+      ],
+      // model-mismatch
+      [root(), turn('t1', 0), call('l1', 1, { cost: 5, input: 10_000 })],
+      // expensive-subagent: a spawned thread, and the reviewer
+      ...['thread_spawn', 'guardian'].map((name) => [
+        root(),
+        turn('t1', 0),
+        call('l1', 1, { cost: 0.05 }),
+        thread('child', 2, name),
+        turn('ct', 2, 'child'),
+        call('c1', 3, { parentId: 'ct', cost: 5, input: 10_000 }),
+      ]),
+      // scattered-tool-failures
+      [
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { cost: 0.2 }),
+        ...[
+          'exec_command',
+          'exec_command',
+          'apply_patch',
+          'view_image',
+          'wait',
+        ].map((name, i) =>
+          tool(`x${i}`, i + 1, { name, status: 'error', parentId: 'l1' }),
+        ),
+        call('l2', 6, { cost: 0.2 }),
+      ],
+      // dead-end-run
+      [
+        root(),
+        turn('t1', 0),
+        call('l1', 0, { cost: 1 }),
+        tool('x9', 9, {
+          name: 'exec_command',
+          status: 'error',
+          parentId: 'l1',
+        }),
+      ],
+      // duplicate-read
+      [
+        root(),
+        turn('t1', 0),
+        call('l1', 0),
+        read('r1', 1),
+        read('r2', 2),
+        read('r3', 3),
+      ],
+      // oversized-output
+      [
+        root(),
+        turn('t1', 0),
+        call('l1', 0),
+        tool('x1', 1, {
+          name: 'exec_command',
+          outputBytes: 150_000,
+          parentId: 'l1',
+        }),
+      ],
+    ];
+    const all = scenarios.flatMap((spans) => codex(spans));
+
+    it('covers every rule that can fire on a run with no cache writes', () => {
+      expect([...new Set(all.map((f) => f.ruleId))].sort()).toEqual([
+        'context-bloat',
+        'dead-end-run',
+        'duplicate-read',
+        'expensive-subagent',
+        'fixed-context-overhead',
+        'low-cache-hit',
+        'model-mismatch',
+        'oversized-output',
+        'retry-loop',
+        'scattered-tool-failures',
+      ]);
+    });
+
+    it('no suggestion names a Claude Code or OpenCode lever, nor the custom-agent wording', () => {
+      for (const f of all) {
+        for (const foreign of [
+          'CLAUDE.md',
+          'promptCacheTtl',
+          'opencode',
+          'OpenCode',
+          'Claude Code',
+          "your agent's",
+          'frontmatter',
+          'your agent re-sends',
+        ]) {
+          expect(f.suggestion, f.ruleId).not.toContain(foreign);
+        }
+      }
+    });
+
+    it('a suggestion that names the instructions file names AGENTS.md', () => {
+      const naming = all.filter((f) => f.suggestion?.includes('AGENTS.md'));
+      expect([...new Set(naming.map((f) => f.ruleId))].sort()).toEqual([
+        'fixed-context-overhead',
+        'retry-loop',
+        'scattered-tool-failures',
+      ]);
+    });
   });
 });

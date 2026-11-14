@@ -818,6 +818,40 @@ rate, so the "written once" leg prices as plain input); that `expensive-subagent
 reviewer; and that no rule reading `parentId` directly assumes an
 `llm_call`'s parent is the session or a subagent.
 
+What the three checks found (task 6.1):
+
+- **No cache writes.** The estimate is finite: with a zero write the
+  effective write rate falls back to the entry's own, and nothing divides by
+  the write.
+- **The reviewer.** Its model has no published price, so its subtree costs
+  nothing and the rule cannot fire on it with the bundled table. With a
+  price from an override it would, and the copy would tell the person to
+  put a cheaper model in an agent file that does not exist. On a Codex run
+  the subagent named `guardian` therefore gets copy of its own, which names
+  `approvals_reviewer`, and no cheaper tier is looked up for it, so the
+  finding carries no saving. This is the one place where the source changes
+  more than words; whether the rule fires is unchanged.
+- **`parentId` under turns.** Every rule walks the parent chain to the
+  nearest session or subagent, so a `turn` between a call and its thread
+  changes nothing. Tests pin it for the retry claim, the main-thread scope,
+  the subagent subtree and the delegation exclusion of `model-mismatch`.
+
+Two things outside the list. The command tools of Codex (`exec_command`,
+`shell`, `shell_command`) are on the list of shell tools, or a retry loop on
+a command would get the "interrupt the agent" copy and never name
+`AGENTS.md`. And `low-cache-hit` on Codex cannot send the reader to
+`cache-prefix-break`, which never fires there, so its copy names the causes
+itself. Every lever in the Codex copy was checked against the Codex
+documentation on 2026-11-14: `/model`, `/compact`, the `model` key,
+`mcp_servers.<id>.enabled`, agent files under `~/.codex/agents` with a
+`model` key, `agents.default_subagent_model`, and `approvals_reviewer` with
+the values `user` and `auto_review`.
+
+Not done here: the downgrade ladder for `model-mismatch` and
+`expensive-subagent` knows the `gpt-5` family only, so a Codex session on a
+newer family (`gpt-6-astra` in the fixtures) gets no cheaper-model finding.
+That is the ladder in the pricing engine, not source-specific copy.
+
 ### T13 — No title in this change
 
 A rollout carries no title. Codex keeps thread names in

@@ -43,8 +43,13 @@ import type { Finding, InsightRule, RuleContext, Thresholds } from './index.js';
  * name a lever that person has (a command, a config key, an instructions
  * file), carry the finding's own numbers where they change the decision,
  * and pick the lever by `run.source.tool` — the same problem is fixed in a
- * different place in Claude Code, OpenCode and a custom OTLP agent. Static
- * how-to detail lives in the rule playbooks (`meta.ts`), not here.
+ * different place in Claude Code, OpenCode, Codex and a custom OTLP agent.
+ * Static how-to detail lives in the rule playbooks (`meta.ts`), not here.
+ *
+ * The source picks the WORDS, never the detection (add-codex-adapter T12):
+ * a rule fires on a Codex run by the same thresholds as on any other. Codex
+ * records no cache writes, so the two rules that need one on the second
+ * call (cache-prefix-break, idle-cache-expiry) stay silent there.
  */
 
 function usd(x: number): string {
@@ -65,11 +70,17 @@ function instructionsFile(run: Run): string {
     case 'claude-code':
       return 'CLAUDE.md';
     case 'opencode':
+    case 'codex':
       return 'AGENTS.md';
     default:
       return "your agent's system prompt";
   }
 }
+
+/** The name the Codex adapter gives the approval reviewer's subagent span
+ * (`approvals_reviewer = "auto_review"`). Nobody defines that agent in a
+ * file, so the levers for a custom agent do not apply to it. */
+const CODEX_REVIEWER = 'guardian';
 
 /** "A", "A and B", "A, B and C". */
 function listNames(names: readonly string[]): string {
@@ -93,7 +104,15 @@ function claudeModelAlias(target: string): string | undefined {
 }
 
 type ToolClass = 'shell' | 'edit' | 'mcp' | 'other';
-const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'bash']);
+const SHELL_TOOLS = new Set([
+  'Bash',
+  'PowerShell',
+  'bash',
+  // Codex: the current command tool and the two legacy ones
+  'exec_command',
+  'shell',
+  'shell_command',
+]);
 const EDIT_TOOLS = new Set([
   'Edit',
   'MultiEdit',
@@ -281,7 +300,10 @@ const lowCacheHit: InsightRule = {
 
 /** A low hit-rate has a different cause per source: Claude Code caches on
  * its own (so the prefix must be changing), OpenCode inherits whatever the
- * provider does, a custom agent has to mark the prefix itself. */
+ * provider does, a custom agent has to mark the prefix itself. Codex leaves
+ * caching to the provider too, and its copy cannot point at
+ * cache-prefix-break: that rule needs a cache write, which Codex never
+ * records, so the causes are named here instead. */
 function lowCacheHitSuggestion(
   run: Run,
   targetHitRate: number,
@@ -296,6 +318,8 @@ function lowCacheHitSuggestion(
       return `Claude Code caches automatically, so a hit-rate this low means the prefix kept changing — check this run for cache-prefix-break findings first${tail}.`;
     case 'opencode':
       return `Check that your provider and model support prompt caching — OpenCode adds no cache settings of its own${tail}.`;
+    case 'codex':
+      return `Codex leaves caching to the provider, so a hit-rate this low means the front of the prompt kept changing or the cache lapsed between calls — switch model and connect or drop MCP servers at a task boundary, not mid-session; on a custom model provider, check that it caches prompts at all${tail}.`;
     default:
       return `Mark a stable prefix for caching in your agent's requests (system prompt, tool definitions, early turns)${tail}.`;
   }
@@ -422,6 +446,10 @@ function expensiveSubagentSubtrees(
   );
 }
 
+function isCodexReviewer(run: Run, subagent: Span): boolean {
+  return run.source.tool === 'codex' && subagent.agent?.name === CODEX_REVIEWER;
+}
+
 const expensiveSubagent: InsightRule = {
   id: 'expensive-subagent',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
@@ -431,10 +459,16 @@ const expensiveSubagent: InsightRule = {
       const cost = info.costUSD;
       const share = Math.round((cost / total) * 100);
       const name = info.root.agent?.name ?? info.root.name;
+      // the approval reviewer is the harness's own agent: there is no agent
+      // file to put a cheaper model in, so no cheaper tier is looked up and
+      // no saving is claimed for it (add-codex-adapter T12)
+      const reviewer = isCodexReviewer(run, info.root);
       // quantify via the repricing primitive at the suggested cheaper tier
       const dom = dominantModel(info.llmSpans);
       const sugg =
-        dom === undefined ? undefined : suggestedDowngrade(dom, ctx.pricing);
+        reviewer || dom === undefined
+          ? undefined
+          : suggestedDowngrade(dom, ctx.pricing);
       let saving: number | undefined;
       if (sugg !== undefined) {
         const targets = new Map<string, string>();
@@ -449,8 +483,9 @@ const expensiveSubagent: InsightRule = {
       // "say why" honestly: no-tier-resolves and tier-resolves-but-reprices-
       // no-cheaper are different reasons (unpriced spans, reported costs at
       // or below the target's rates) — the old copy claimed the first in both
-      const noEstimate =
-        sugg === undefined
+      const noEstimate = reviewer
+        ? "It is Codex's automatic approval reviewer, so no cheaper-model saving is estimated."
+        : sugg === undefined
           ? 'No cheaper same-family tier resolves in the pricing table, so no saving estimate is available.'
           : `A cheaper tier (${sugg.target}) resolves, but the subtree's calls could not be repriced cheaper (unpriced or already at/below that rate), so no saving estimate is available.`;
       // where the person sets a subagent's model in this source
@@ -465,6 +500,12 @@ const expensiveSubagent: InsightRule = {
             return target === undefined
               ? `agent.${name}.model in opencode.json`
               : `agent.${name}.model = ${target} in opencode.json`;
+          case 'codex':
+            // the span is named by the kind of subagent, not by the custom
+            // agent's own name, so the file is "its", never `<name>.toml`
+            return target === undefined
+              ? 'model in its agent file under ~/.codex/agents, or agents.default_subagent_model in config.toml'
+              : `model = "${target}" in its agent file under ~/.codex/agents, or agents.default_subagent_model in config.toml`;
           default:
             return target === undefined
               ? `a cheaper model for ${name}`
@@ -480,8 +521,9 @@ const expensiveSubagent: InsightRule = {
             : `${base} At ${sugg?.target} rates the same tokens would have cost ~${usd(saving)} less.`,
         spanIds: [info.root.id],
         ...(saving === undefined ? {} : { estimatedWasteUSD: saving }),
-        suggestion:
-          saving === undefined
+        suggestion: reviewer
+          ? `${name} is Codex's automatic approval reviewer, not an agent you define — its subtree is ${share}% of this run; approvals_reviewer = "user" in config.toml hands the approval prompts back to you.`
+          : saving === undefined
             ? sugg === undefined
               ? `Give ${name} a cheaper model (${how}) — its subtree is ${share}% of this run; no priced cheaper tier resolves for it, so the saving is not estimated.`
               : `Give ${name} a cheaper model (${how}) — a cheaper tier (${sugg.target}) exists, but this subtree's calls could not be repriced cheaper (unpriced, or already at or below that rate), so the saving is not estimated.`
@@ -668,7 +710,9 @@ const modelMismatch: InsightRule = {
           ? ` (/model ${alias} switches mid-session)`
           : run.source.tool === 'opencode'
             ? ' (/models, or the model key in opencode.json)'
-            : '';
+            : run.source.tool === 'codex'
+              ? ' (/model switches mid-session; the model key in config.toml sets the default)'
+              : '';
       findings.push({
         ruleId: 'model-mismatch',
         title: `${modelSpans.length} calls on ${model} could run on ${sugg.target}`,
@@ -928,6 +972,8 @@ function fixedContextSuggestion(
       return `Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (${called}) — ${tail}.`;
     case 'opencode':
       return `Trim what every call carries: AGENTS.md and instructions files, and MCP servers this project does not need (${called}; mcp.<name>.enabled: false) — ${tail}.`;
+    case 'codex':
+      return `Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (${called}; enabled = false under [mcp_servers.<name>] in config.toml) — ${tail}.`;
     default:
       return `Trim the fixed part of every request: system prompt, tool definitions, attachments — ${tail}.`;
   }

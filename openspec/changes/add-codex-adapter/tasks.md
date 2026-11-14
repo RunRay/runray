@@ -346,7 +346,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 6. Insights
 
-- [ ] 6.1 A Codex arms in `insights/rules.ts` (T12): `instructionsFile`, the
+- [x] 6.1 A Codex arms in `insights/rules.ts` (T12): `instructionsFile`, the
       four suggestion switches, and the three checks from T12 (a run with
       no cache-write tokens, reviewer as the expensive subagent, rules that read
       `parentId` under `turn` spans). Verify: `suggestions.test.ts` covers
@@ -354,6 +354,15 @@ directly and the goldens test does not see `fixtures/codex` yet.
       scenario of "Cache-write rules are silent on Codex runs" and
       "Suggestions and playbooks address Codex", and a guard test that
       findings on the non-Codex fixtures are unchanged.
+      Done. The guard is `goldens.test.ts`: after the regeneration the 33
+      goldens of the other sources are byte-identical, and the 21 Codex
+      goldens with a `fixed-context-overhead` finding differ in that one
+      suggestion line. The "Playbooks have a Codex section" scenario is
+      6.2. Beyond the list, and waiting for a decision: a scenario for the
+      reviewer added to the spec (the finding carries no saving for it),
+      and the Codex command tools on the list of shell tools. Found and
+      left: the downgrade ladder knows no family after `gpt-5` (design
+      T12).
 - [ ] 6.2 A Codex in `insights/meta.ts` (`PlaybookSource`, labels, a section
       per rule) and regenerated `docs/08-FINDINGS.md` via
       `pnpm docs:playbooks`. Verify: `playbooks-docs.test.ts` and
