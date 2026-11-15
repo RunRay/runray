@@ -517,10 +517,23 @@ directly and the goldens test does not see `fixtures/codex` yet.
       - Not a finding of this check, noted for the price list: 1,752 calls
         in 50 runs carry no price, the reviewer's model and `unknown` (2 runs
         hold calls with no model recorded).
-- [ ] 8.2 A End-to-end smoke through the real CLI (`packages/cli/src/*-e2e`):
+- [x] 8.2 A End-to-end smoke through the real CLI (`packages/cli/src/*-e2e`):
       `view` and `export` on `fixtures/codex`, with and without `--redact`.
       Verify: the e2e test passes and the redacted export contains no
       string from the unredacted previews.
+      Done: `packages/cli/src/codex-e2e.test.ts` runs both commands through
+      `createProgram()` on the committed Codex fixtures, under a config home
+      of its own. `view` is asked over HTTP for the trace and for a
+      transcript slice: `ok` and previews without the flag; with `--redact`
+      the same run ids and span counts, no preview, no title, no
+      `runray.target`, and the slice answers `redacted`. `export` is read
+      back from both files it writes: the page carries the trace the JSON
+      beside it does, and with `--redact` no preview of the unredacted
+      export is in either file, as written, as JSON or the page escapes it,
+      or inside a longer string. The one seam is a wrapper around the real
+      `startServer` that hands the test the server `view` starts, so it can
+      be closed. The export half is skipped where the UI was not built, as
+      the existing export e2e is.
 
 ## Workflow follow-up
 
