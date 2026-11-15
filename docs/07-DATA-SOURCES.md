@@ -43,6 +43,8 @@ Co odróżnia Codexa od pozostałych źródeł:
 
 Baz SQLite z katalogu `~/.codex` nie czytamy. Są pochodną rolloutów, a Codex pisze do nich co kilka sekund.
 
+Przy dużej historii liczy się czas. Pełne zbudowanie widoku czyta każdy rollout od początku: na maszynie z 250 plikami (67 sesji) trwa to od 15 do 19 sekund. Skracają to `--since` i `--source`. Filtr `--since` patrzy na datę modyfikacji pliku, a kompresja ją odświeża, więc starsza sesja skompresowana niedawno może przez filtr przejść. Świeżej sesji filtr nie odetnie.
+
 ### 4. OTLP (OpenTelemetry), priorytet 4, ścieżka power-user
 Import plików OTLP/JSON. To furtka dla "custom agents" i dla natywnych trace'ów Claude Code (beta). Szczegóły — patrz sekcja niżej.
 

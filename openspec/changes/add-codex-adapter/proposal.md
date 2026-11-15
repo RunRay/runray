@@ -134,7 +134,8 @@ branch in `transcript.ts`, `sanitize/sanitize.ts`, `insights/rules.ts` and
 
 **`packages/ui`**: `lib/model-colors.ts`, `lib/waste.ts`,
 `components/PricingProvenance.tsx`, `components/WelcomeDialog.tsx`,
-`lib/tool-table.ts`. Every UI task is
+`components/CoverageNotices.tsx`, `lib/coverage.ts`, `lib/sources.ts`
+(`lib/tool-table.ts` was reviewed and needed no change). Every UI task is
 `[UI → /frontend-design]` per CLAUDE.md.
 
 **Dependencies**: none added. Decompression uses `node:zlib`, whose zstd

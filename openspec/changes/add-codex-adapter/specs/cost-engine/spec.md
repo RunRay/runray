@@ -60,10 +60,6 @@ holds SHALL take its rates from the list. The size a downloaded price list
 is compared with, to refuse a truncated one, SHALL be the number of models
 the list itself held when the snapshot was built, without the retired ones.
 
-A retired entry SHALL price its own id only, in either spelling of the
-version separator. It SHALL NOT price another id by prefix: an id the list
-never held under that name stays unpriced.
-
 #### Scenario: Model dropped from the list
 - GIVEN a bundled snapshot that prices `claude-opus-4-1` and an upstream
   list that no longer holds it
@@ -71,17 +67,22 @@ never held under that name stays unpriced.
 - THEN `claude-opus-4-1` resolves to an entry of its own id at its earlier
   rates, and is named among the retired models
 
-#### Scenario: Retired dated id next to its current family id
-- GIVEN a snapshot that prices `mistral-large-2402` at 4 / 12 and an
-  upstream list that holds only `mistral-large` at 0.5 / 1.5
-- WHEN the snapshot is rebuilt and a `mistral-large-2402` call is priced
-- THEN the call is priced at 4 / 12, not at the rates of `mistral-large`
-
 #### Scenario: Retired models do not raise the truncation bar
 - GIVEN a bundled snapshot of 363 entries of which 76 are retired
 - WHEN `runray pricing --refresh` downloads a list of 150 usable models
 - THEN the list is accepted, because 150 is over half of the 287 the list
   held at the snapshot
+
+### Requirement: A retired entry prices its own id only
+A retired entry of the bundled pricing table SHALL price its own id only,
+in either spelling of the version separator. It SHALL NOT price another id
+by prefix: an id the list never held under that name stays unpriced.
+
+#### Scenario: Retired dated id next to its current family id
+- GIVEN a snapshot that prices `mistral-large-2402` at 4 / 12 and an
+  upstream list that holds only `mistral-large` at 0.5 / 1.5
+- WHEN the snapshot is rebuilt and a `mistral-large-2402` call is priced
+- THEN the call is priced at 4 / 12, not at the rates of `mistral-large`
 
 #### Scenario: Unknown id that starts with a retired one
 - GIVEN a snapshot whose retired models include `grok-4` at 3 / 15, and no
@@ -161,10 +162,10 @@ generic custom-agent wording.
 
 ### Requirement: A turn stopped at a usage limit is not a dead end
 Codex records a refused request on the turn, with a code, and leaves the
-model calls beneath it `ok`. `dead-end-run` SHALL NOT fire when the step a
-run ended on is a turn whose code is a usage limit, and SHALL NOT fire on a
-turn the person interrupted. A turn that failed for any other reason is a
-dead end as any other failed last step is.
+model calls beneath it `ok`. `dead-end-run` SHALL go by the turn a run
+ended in before the last step inside it: it SHALL NOT fire when that turn's
+code is a usage limit, nor when the person interrupted it, and a turn that
+failed for any other reason is a dead end as any other failed last step is.
 
 #### Scenario: Session ends at the usage limit
 - GIVEN a Codex run whose last span is a turn with status `error` and the
@@ -177,6 +178,19 @@ dead end as any other failed last step is.
 - GIVEN the same run with the code `internal_server_error`
 - WHEN rules are evaluated
 - THEN `dead-end-run` fires and its detail names the code
+
+#### Scenario: The turn that failed did work first
+- GIVEN a Codex run whose last turn has status `error` and the code
+  `internal_server_error`, with a model call and a command beneath it that
+  both went fine
+- WHEN rules are evaluated
+- THEN `dead-end-run` fires on the turn
+
+#### Scenario: Usage limit after a failed command
+- GIVEN a Codex run whose last turn carries `usage_limit_exceeded` and whose
+  last span is a command of that turn that failed
+- WHEN rules are evaluated
+- THEN `dead-end-run` does not fire
 
 ### Requirement: A failed turn is triaged as a failed model call
 Error triage SHALL count a turn with status `error` as a failed model call

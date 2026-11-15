@@ -56,10 +56,6 @@ completed by a later one, the slice SHALL include it: the output handed back
 for a call the model made, and the person's prompt for a turn. With
 redaction on it SHALL return `redacted` without opening the file.
 
-A slice SHALL NOT show the account id, user id, repository URL or commit of
-a session record, nor an account's rate limits, and SHALL name binary data
-(an image, a generated file) instead of showing it.
-
 #### Scenario: Command span
 - GIVEN an unredacted Codex run and a command span
 - WHEN its transcript slice is requested
@@ -80,6 +76,30 @@ a session record, nor an account's rate limits, and SHALL name binary data
 - THEN the response is one segment labelled `user` with the person's text in
   full and none of the harness block
 
+#### Scenario: Turn of the approval reviewer
+- GIVEN a turn span of a reviewer thread, whose first message is the review
+  the harness asked for
+- WHEN its transcript slice is requested
+- THEN that message is shown under a label of its own, not under the
+  person's
+
+#### Scenario: Compressed rollout
+- GIVEN a span whose provenance file is a `.jsonl.zst` rollout
+- WHEN its transcript slice is requested
+- THEN the response is `ok` with the same segments the plain file would give
+
+#### Scenario: Rollout compressed since the build
+- GIVEN a span whose provenance names a `.jsonl` file that has since been
+  replaced by its compressed form
+- WHEN its transcript slice is requested
+- THEN the response is `unavailable` with a reason, not an error
+
+### Requirement: Transcript slices keep identifiers and binary data out
+A transcript slice of a Codex span SHALL NOT show the account id, user id,
+repository URL or commit of a session record, nor an account's rate limits,
+and SHALL name binary data (an image, a generated file) instead of showing
+it, whether the data is the whole of a segment or a run inside its text.
+
 #### Scenario: Session span
 - GIVEN a session record that holds an account id, a user id, a repository
   URL and a commit
@@ -92,13 +112,7 @@ a session record, nor an account's rate limits, and SHALL name binary data
 - WHEN its transcript slice is requested
 - THEN the result segment reads `(not text)` and holds none of the data
 
-#### Scenario: Compressed rollout
-- GIVEN a span whose provenance file is a `.jsonl.zst` rollout
-- WHEN its transcript slice is requested
-- THEN the response is `ok` with the same segments the plain file would give
-
-#### Scenario: Rollout compressed since the build
-- GIVEN a span whose provenance names a `.jsonl` file that has since been
-  replaced by its compressed form
-- WHEN its transcript slice is requested
-- THEN the response is `unavailable` with a reason, not an error
+#### Scenario: Image inside the text a tool handed back
+- GIVEN a call whose output is a string holding JSON with a base64 image
+- WHEN the slice of the call is requested
+- THEN the output segment shows the JSON with the image named, not shown

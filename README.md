@@ -90,7 +90,7 @@ How prices work:
 
 - Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network.
 - A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated. Codex's approval reviewer runs on such a model (`codex-auto-review`): no price is published for it.
-- Costs are computed from the transcript, which makes them a lower bound. Utility calls, unlogged retries and web-search fees never reach the log.
+- Costs are computed from the transcript, which makes them a lower bound: whatever never reaches the log is not counted. For Claude Code and OpenCode that is utility calls, unlogged retries and web-search fees.
 
 ## Privacy
 

@@ -359,14 +359,8 @@ changed exactly one path.
 ### Requirement: Codex child threads nest under their parent
 A rollout that names a parent thread SHALL NOT be a run of its own when its
 parent is among the scanned files. It SHALL appear in the parent's run as one
-`subagent` span, with its own turns and calls beneath, attached to the parent
-turn its first turn names: in its turn attribution, or else, for a child of
-the root thread, as its root turn. A child whose first turn names no turn
-SHALL be attached to the one parent turn that was running when that turn
-began. A child for which no parent turn is found SHALL be attached to its
-parent thread's own span, which for a child of the root thread is the
-session span, with a run warning. The approval reviewer SHALL be named
-`subagent:guardian`.
+`subagent` span, with its own turns and calls beneath. The approval reviewer
+SHALL be named `subagent:guardian`.
 
 #### Scenario: Reviewer thread
 - GIVEN a root rollout and a reviewer rollout naming it as parent and naming
@@ -374,18 +368,6 @@ session span, with a run warning. The approval reviewer SHALL be named
 - WHEN discovery and parsing run
 - THEN there is one run, in which a `subagent:guardian` span hangs from that
   turn and holds the reviewer's `llm_call` spans
-
-#### Scenario: Turn named only as the root turn
-- GIVEN a reviewer rollout whose turn starts carry a root turn id and no turn
-  attribution
-- WHEN its parent is parsed
-- THEN the subagent span hangs from the turn that id names
-
-#### Scenario: Child that names no turn
-- GIVEN a child whose first turn names no turn and began while exactly one
-  turn of its parent was running
-- WHEN the parent is parsed
-- THEN the subagent span hangs from that turn and the run carries no warning
 
 #### Scenario: Reviewer consulted in several turns
 - GIVEN a reviewer thread whose turns name two turns of its parent
@@ -408,6 +390,27 @@ session span, with a run warning. The approval reviewer SHALL be named
 - GIVEN a child rollout whose parent is not among the scanned files
 - WHEN discovery runs
 - THEN the child is a candidate of its own
+
+### Requirement: A Codex child thread hangs on the parent turn it began in
+The `subagent` span of a child thread SHALL be attached to the parent turn
+its first turn names: in its turn attribution, or else, for a child of the
+root thread, as its root turn. A child whose first turn names no turn SHALL
+be attached to the one parent turn that was running when that turn began. A
+child for which no parent turn is found SHALL be attached to its parent
+thread's own span, which for a child of the root thread is the session span,
+with a run warning.
+
+#### Scenario: Turn named only as the root turn
+- GIVEN a reviewer rollout whose turn starts carry a root turn id and no turn
+  attribution
+- WHEN its parent is parsed
+- THEN the subagent span hangs from the turn that id names
+
+#### Scenario: Child that names no turn
+- GIVEN a child whose first turn names no turn and began while exactly one
+  turn of its parent was running
+- WHEN the parent is parsed
+- THEN the subagent span hangs from that turn and the run carries no warning
 
 #### Scenario: Unknown parent turn
 - GIVEN a child whose named parent turn does not exist in the parent rollout

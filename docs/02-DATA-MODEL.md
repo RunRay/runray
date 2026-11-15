@@ -4,7 +4,7 @@ The internal schema is **the contract** between Track A (CLI/parsers) and Track 
 
 ## Design principles
 
-1. **Superset-normalize.** Every source (Claude Code JSONL, OpenCode storage/SQLite, OTLP JSON) maps into one span tree. Source-specific extras go into `attributes` (using OTel GenAI `gen_ai.*` attribute names where a match exists) — we align with the emerging standard without hard-depending on it (GenAI semconv is still Development-stability).
+1. **Superset-normalize.** Every source (Claude Code JSONL, OpenCode storage/SQLite, Codex rollout JSONL, OTLP JSON) maps into one span tree. Source-specific extras go into `attributes` (using OTel GenAI `gen_ai.*` attribute names where a match exists) — we align with the emerging standard without hard-depending on it (GenAI semconv is still Development-stability).
 2. **Derived data is computed, never trusted.** `totals` and `insights` are outputs of the normalizer/insight engine, recomputed from spans. OpenCode stores `cost: 0` in message files, so cost always flows through our pricing engine; `costSource` records whether a number was reported by the source or computed by us.
 3. **Provenance everywhere.** Each span points back to its source file/record. The UI's "show raw" affordance and all debugging depend on it.
 4. **Forward compatibility.** Unknown attributes pass through; `schemaVersion` is SemVer'd independently of the app. Breaking schema changes require a major bump + migration note.
@@ -38,7 +38,7 @@ TraceFile
 | `source.tool` | enum | `claude-code` \| `opencode` \| `codex` \| `otlp` \| `unknown`. `codex` since v0.2.0. |
 | `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `codex-jsonl` \| `otlp-json`. `codex-jsonl` since v0.2.0; it covers plain and zstd-compressed rollouts, because compression is a property of the file and not of the record format. |
 | `source.files[]` | string | Absolute paths read. |
-| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
+| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, `git.branch` of a Codex rollout's first record, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
 | `title?` | string | Session title if the source provides one. |
 | `startedAt` / `endedAt` | ISO 8601 | UTC. |
 | `spans[]` | Span | Ordered by `startedAt`. |
@@ -77,7 +77,7 @@ TraceFile
 | `runray.targetKind` | `file-read` \| `file-write` \| `command` | same | closed |
 | `runray.target` | basename or first command token, at most 80 chars | same | free-form |
 | `runray.mcpDetection` | `name-heuristic` | OpenCode MCP calls classified by name | closed |
-| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`), and every Claude Code hook span whose record names a command. A stop-hook summary carries it only when it names one command or when all its commands ran the same tool | closed |
+| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`, a Codex command), and every Claude Code hook span whose record names a command. A stop-hook summary carries it only when it names one command or when all its commands ran the same tool | closed |
 | `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell and hook spans whose command resolved | closed |
 | `runray.toolSub` | a subcommand from that tool's table (`compose up`, `diff`), or `run` / `script` / `inline` | when present | closed |
 | `runray.toolVia` | the runner the tool was launched through (`npx`, `pnpm exec`, `bash -c`) | when a runner was unwrapped | closed |

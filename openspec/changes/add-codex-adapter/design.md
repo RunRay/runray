@@ -2,7 +2,7 @@
 
 The spec deltas state the *what*; this records the *why*, the rejected
 alternatives and the evidence. Ids `D1`–`D6` are the decisions signed off by
-the maintainer on 2026-11-14; `T1`–`T14` are technical decisions that follow
+the maintainer on 2026-11-14; `T1`–`T15` are technical decisions that follow
 from them.
 
 ## Context
@@ -138,7 +138,7 @@ breakdown and the sanitizer already handle it.
 *Rejected:* flattening calls under the session as the Claude Code adapter
 does. Codex is the only native source that records why a turn stopped
 (`interrupted`, `usage_limit_exceeded`, `server_overloaded`), and a child
-thread's link to its parent is a turn id (T9).
+thread's link to its parent is a turn id (T10).
 
 Cost: runs are one level deeper, so `counts.maxDepth` is one higher than an
 equivalent Claude Code run. Rules that walk ancestors already look through
@@ -636,10 +636,11 @@ argv with no shell in front was not seen apart from the 238 legacy
 `["apply_patch", …]` calls (T9); its program keeps its path unless the path
 holds a space or a backslash and would not read back as one word.
 
-Measured on the 250 rollouts: of 9,488 command spans (8,407 actions, 1,081
-legacy calls) 9,075 resolve to a tool of the registry and 413 are the
-"other command" row, the 238 legacy patches among them; none is left
-unclassified. The tools at the top are `Get-Content`, `git`, `node`, `rg`
+Measured on the 250 rollouts when 3.2 landed: of 9,488 command spans (8,407
+actions, 1,081 legacy calls) 9,075 resolve to a tool of the registry and 413
+are the "other command" row, the 238 legacy patches among them; none is left
+unclassified. Since 3.3 a legacy patch is a span named `apply_patch` and no
+command (T9), so the build of 8.1 counts 9,220 shell calls. The tools at the top are `Get-Content`, `git`, `node`, `rg`
 and `npm`.
 
 The harness table gets the Codex names it lacked. `shell_command` is a
@@ -1043,16 +1044,20 @@ other sources do.
     into the current record shapes on the surveyed machine.
   - Multi-agent subagents: `thread_spawn_edges` was empty. T10 handles any
     `parent_thread_id`, with `agent.name` falling back to the source key.
-  - A call the person declined: no sample. Until one exists it surfaces as
-    whatever status the item carries, not as `cancelled`.
+  - A call the person declined at an approval prompt: no sample of the
+    prompt answered "no". The one form surveyed, an output that starts
+    `aborted by user` (4 `exec` calls), is `cancelled` with
+    `statusReason: user-rejected` (T7).
   - A thread forked or resumed by hand, which may replay history.
-- **[A full build reads everything]** → 57 s for the surveyed machine's 250
-  rollouts, against a few seconds for its other sources. `--since` and
-  `--source` cut it today; the persistent index removes it. The number is
-  measured in 5.5 and stated in the docs, not hidden.
+- **[A full build reads everything]** → 57 s to read the surveyed machine's
+  250 rollouts when this was written; the build as it shipped takes 15 to
+  19 s there (task 8.1), against a few seconds for its other sources.
+  `--since` and `--source` cut it today; the persistent index removes it.
+  The number is stated in `docs/07-DATA-SOURCES.md`, not hidden.
 - **[`--since` over-includes]** → Compression rewrote old files, so their
   mtime is the migration date. The filter can let an old session through; it
-  cannot drop a recent one. Documented, not fixed.
+  cannot drop a recent one. Documented (`docs/07-DATA-SOURCES.md`), not
+  fixed.
 - **[zstd is experimental in Node]** → It is read-only use of a stable
   format behind feature detection; a removal would surface as the D5 error,
   not as wrong data.
@@ -1072,8 +1077,10 @@ other sources do.
 
 ## Migration Plan
 
-Additive. A TraceFile written before the change differs from one written
-after only in `schemaVersion` and, for Codex users, in having Codex runs.
+Additive in what a TraceFile can hold: one written after the change has a
+new `schemaVersion` and, for Codex users, Codex runs. Its numbers are not
+all the same, though: the price list of D6 moves the cost of some runs of
+the other sources, which the changeset states.
 Rollback is reverting the adapter registration; the enum values can stay.
 The persistent run index (planned in `add-persistent-index`) keys its cache
 on the schema version and will rebuild once.

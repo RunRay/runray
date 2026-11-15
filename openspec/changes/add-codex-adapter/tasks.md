@@ -116,8 +116,9 @@ directly and the goldens test does not see `fixtures/codex` yet.
       `adapters/usage.ts` table fixes one dialect per tool name and cannot
       hold Codex), and rows in `tools/registry.ts` for the Codex call names
       the harness table lacks (`shell_command`, `exec`, `wait`, `sleep`,
-      `write_stdin`, `js`, `js_reset`, `request_user_input_async`,
-      `web.search`, `imagegen`), each with the activity "Harness tool
+      `write_stdin`, `request_user_input_async`, `web.search`, `imagegen`;
+      `js` and `js_reset` were listed here too and taken out by the review
+      of group 3), each with the activity "Harness tool
       classification" gives its kind. Verify: tests
       for every scenario of "Codex commands are unwrapped before identity
       capture", including target-key equality with a Claude Code
@@ -551,6 +552,96 @@ directly and the goldens test does not see `fixtures/codex` yet.
   also a word of the export template is looked for in the trace and not in
   the page. The 8.1 note counted all 562 `exec` spans as scripts that ran
   no command; it now gives them by status.
+
+## Final review of the whole change
+
+Five independent readers took one area each over
+`feat/tool-usage-breakdown..05868e7` (ingestion against the spec, the
+parser on input no scenario covers, prices and advice, the command line with
+transcript slices and the scrubber, the UI with the documents). Every
+finding was checked in the code before it was acted on. The common path
+held: fixtures parse twice to the same bytes, token sums equal the recorded
+totals, the 20 calls of `fixtures/codex/simple` match a price worked out by
+hand, the slice endpoint reads no file a request names, and the committed
+fixtures hold nothing real.
+
+Fixed:
+
+- `dead-end-run` goes by the turn a run ended in. It took the last span of
+  the run, and a turn stands before what happened inside it: a failed turn
+  with work beneath it was missed, and the usage-limit exemption held only
+  for a turn with no child, the one shape the test written in the review of
+  group 6 had.
+- Triage counts a declined call only for a tool or MCP call. An interrupted
+  turn was reported as "1 call you declined".
+- A reviewer thread read without its parent keeps the reviewer's name on its
+  session span, and `fixed-context-overhead` leaves such a run out: what it
+  opens with is the transcript handed to it, and the advice was to trim
+  `AGENTS.md`. The `compaction` goldens lose that finding.
+- A transcript slice names binary data inside a text too (an image in the
+  JSON a tool printed, a data URL after a command's lines), and a turn of
+  the reviewer shows the request under `review request`, not `user`.
+- The parser, on a file Codex did not write that way: the thread's and the
+  turns' ids are claimed like every other span's (a response named like its
+  turn was its own parent, and `normalize` never returned); a number too
+  large for a count or an exit code and a time that names no moment are
+  absent instead of failing the run at validation; a completion whose error
+  is a string is `error`; a compressed rollout that gives no text is refused
+  with a reason instead of skipped as a session not begun; no list as long
+  as the file is spread into a call.
+- The scrubber takes a directory with a rollout in it as Codex's without
+  `--source` (it went to the generic walker and came out stamped as
+  scrubbed with a file change's paths in it), and keeps a value under a
+  structural key only when it is one word, a word that opens with a colon,
+  a UTC time or, under `originator`, a name of up to three words. A
+  sentence, a person's name and a `host:port` are scrubbed and reported.
+  The fixture checker uses the same rule; the committed fixtures pass it.
+- Two sentences of advice: on Codex `oversized-output` says to read a range
+  of a file (`offset` and `limit` are parameters of the other agents' read
+  tools), and the `model-limit` playbook no longer speaks of a reset "the
+  message names", since a Codex turn carries a code and no message.
+- Documents: `--source` with `codex` in the CLI section of
+  `docs/05-ARCHITECTURE.md`, three sentences of `docs/02-DATA-MODEL.md`
+  that listed the sources without Codex, the README's list of what a log
+  leaves out (given for Claude Code and OpenCode only, as the UI does), the
+  build time and the `--since` caveat in `docs/07-DATA-SOURCES.md` (design
+  "Risks" said both were documented), and the stale sentences of
+  `design.md`, `proposal.md` and task 3.2.
+- `openspec validate --strict` passes: three requirements over 500
+  characters were each split in two with their scenarios, no sentence
+  dropped. Four scenarios are new and await acceptance with the earlier
+  additions: "The turn that failed did work first", "Usage limit after a
+  failed command", "Image inside the text a tool handed back" and "Turn of
+  the approval reviewer".
+
+Left as it is, for a decision:
+
+- A turn still open when the next one starts stays `in_progress`. The spec
+  names that status for a turn the file ends inside and says nothing of
+  this one, and the corpus has none (0 of 2,405 turns), so there is no
+  sample to choose a status from.
+- A legacy root with work and no turn record is skipped as a session not
+  begun; a child with usage records and no turn is dropped with its tokens;
+  a file that changes token era keeps the later era only. None is in the
+  corpus.
+- A call left unanswered by an aborted turn stays `in_progress` (T7).
+- Discovery stops six directories down and skips `raw` and `node_modules`,
+  where the spec says "at any directory depth".
+- A pricing override older than the bundled table wins without a word, and
+  `pricing --refresh` writes a table without the retired models (D6).
+- An id the table does not hold is priced by prefix, a Codex one included
+  (`gpt-5-codex-mini` as `gpt-5-codex`).
+- `fixed-context-overhead` prices the footprint's first write at the
+  entry's cache-write rate. For 14 entries of the snapshot that is above
+  the input rate (`gpt-6-astra`: 12.5 against 10), where T12 says the two
+  are equal, and Codex records no cache write.
+- `expensive-subagent` can name a dearer model as the cheaper tier when the
+  subagent already runs on a cheap one of the same family.
+- Outside Codex, a `retry-loop` on `multiedit`, `write_file` or a shell
+  tool of another name reads differently since T12 closed the second list.
+- The scrubber keeps numbers everywhere (T14) and a host name that is one
+  word; the slice reader caps a slice after reading the record whole, and
+  five of its fallbacks show a record minus a list of keys.
 
 ## Workflow follow-up
 
