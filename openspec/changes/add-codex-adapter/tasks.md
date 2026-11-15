@@ -470,7 +470,7 @@ directly and the goldens test does not see `fixtures/codex` yet.
 
 ## 8. Integration checks
 
-- [ ] 8.1 A Real-session check on a machine with Codex data: every rollout
+- [x] 8.1 A Real-session check on a machine with Codex data: every rollout
       under the default root parses or is skipped for a documented reason;
       for every root thread the summed tokens equal its recorded thread
       total; `runray view` renders a Codex session with its reviewer
@@ -479,6 +479,44 @@ directly and the goldens test does not see `fixtures/codex` yet.
       54 of them with usage records and all 54 reconciling. Verify: the
       counts (files, runs, skipped with reasons, threads reconciled, seconds
       for a full build) are written into this task when it is ticked.
+      Done on 2026-11-15, on the machine of the design survey, with counters
+      and closed-vocabulary values only (no session text was printed, copied
+      or screenshotted).
+      - Files: 250 rollouts under the default root, all compressed, and no
+        other entry. Detection puts every one in a candidate: 67 candidates,
+        67 root files and 183 child files, none left out.
+      - Runs: the build of `--source codex` gives 67 runs from 67 candidates
+        with 0 errors and no run warning: 34,096 spans, of them 15,053
+        `llm_call`, 14,414 `tool_call`, 2,011 `mcp_call`, 2,404 `turn` and
+        147 `subagent`.
+      - Skipped: 36 child files, each a reviewer thread started and never
+        consulted (no turn; design D2). Read alone they raise `NoSessionYet`;
+        inside their run they add no span and no warning. Nothing else was
+        skipped and no file failed to parse.
+      - Reconciled: all 67 root threads. 54 have usage records and the sum of
+        their calls' tokens equals the recorded thread total; the 13 legacy
+        ones equal the last running total (T4). Of the 147 child threads
+        read, 140 reconcile the same way and 7 start from a total inherited
+        from their parent, with their own sum below it, as T4 says.
+      - Seconds for a full build: 15.3 and 15.7 inside one process
+        (`buildTraceFile`), 16.5 and 18.8 for `runray list --source codex
+        --json` from start to exit. Design T3 measured 57 s for reading the
+        same files.
+      - Seen in `runray view` (zero-config, every source loaded), on a Codex
+        session with reviewer calls: the timeline holds `subagent:guardian`
+        rows with the `codex-auto-review` model, all 147 subagent spans of
+        the build hang on a turn, and the session shows the Codex cost note
+        and the "no price is published" banner. Time & Tools lists programs
+        (`node`, `tsc`, `npm`, `eslint`, `git`, `python`,
+        `Invoke-WebRequest`) as shell rows. Across the build 9,220 shell
+        calls sit in 780 rows (counted per run), 754 of them a program of
+        the registry, and no shell call is unclassified.
+      - `exec` is still a row, and that is the spec's scenario rather than a
+        gap: 562 of the 14,414 tool calls are an `exec` script that ran no
+        recorded command, named `exec` and shown as a built-in in 47 runs.
+      - Not a finding of this check, noted for the price list: 1,752 calls
+        in 50 runs carry no price, the reviewer's model and `unknown` (2 runs
+        hold calls with no model recorded).
 - [ ] 8.2 A End-to-end smoke through the real CLI (`packages/cli/src/*-e2e`):
       `view` and `export` on `fixtures/codex`, with and without `--redact`.
       Verify: the e2e test passes and the redacted export contains no
