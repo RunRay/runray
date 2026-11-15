@@ -74,7 +74,7 @@ const EPOCH = '1970-01-01T00:00:00Z';
 
 /** `YYYY/MM/DD` is three levels under the sessions root; the bound leaves
  * room for a root given a few levels above it (the Codex home, a backup
- * folder) and is the one the other adapters use. */
+ * folder) and is the one the OpenCode and OTLP adapters use. */
 const MAX_DEPTH = 6;
 
 /** The marker record `scripts/scrub-fixture.ts` writes on line one of a

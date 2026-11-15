@@ -638,8 +638,8 @@ What was left for a decision, and what the maintainer decided on
   what-if view read the same function.
 - **Discovery bounds.** The spec states them (six levels, `raw` and
   `node_modules` beneath the root left out) in a requirement of its own. A
-  root the person names is read whatever it is called; the other adapters
-  still skip a root named `raw`.
+  root the person names is read whatever it is called; the OpenCode and
+  OTLP adapters still skip a root named `raw`.
 - **A turn still open when the next one starts**, **a call with no answer**
   and **the rare shapes** stay as they are. Counted again on the surveyed
   machine: no call of 16,430 is `in_progress`, the 20 interrupted turns
@@ -707,6 +707,19 @@ Errors, in both themes. Three things were wrong and are fixed:
 - The explanation of a usage limit said "the message names the reset
   time". A Codex turn carries a code and no message; the sentence is gone
   from the shared text and stays in the Claude Code step that needs it.
+
+A second pass over these changes found three more, fixed the same day.
+The session list drew a model from the priced ones only, so a session with
+the reviewer showed no dot for it and a reviewer thread on its own showed
+no model at all; the list now takes the models from the calls, as the
+dashboard does. The scrubber turned a text nested under an identity key
+into a hash of itself, where before the number fix it was scrubbed as
+text; only the value under the key itself is an id again. And the
+discovery requirement said of the six-level bound "as the other adapters
+do", which holds for OpenCode and OTLP and not for Claude Code; the clause
+is gone. A check of every analysis in core and the UI against the 19
+golden runs, 9 of which hold a child before its parent, found no other
+function whose result depends on that order.
 
 Seen and left: the page is a desktop layout and does not fit a phone
 width, the tool leaderboard's "spend share" is each row against the

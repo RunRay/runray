@@ -54,9 +54,9 @@ SHALL read no file other than rollouts.
 
 ### Requirement: Codex discovery is bounded
 Codex discovery SHALL look for rollouts in a scanned root and in the
-directories up to six levels beneath it, as the other adapters do, and SHALL
-NOT enter a directory named `raw` or `node_modules` beneath the root. The
-root itself SHALL be scanned whatever its name.
+directories up to six levels beneath it, and SHALL NOT enter a directory
+named `raw` or `node_modules` beneath the root. The root itself SHALL be
+scanned whatever its name.
 
 #### Scenario: The dated tree under a Codex home
 - GIVEN a Codex home given as the path, with rollouts under
