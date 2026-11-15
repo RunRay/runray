@@ -784,7 +784,7 @@ describe('scrubCodexRecord', () => {
         id: THREAD,
         cli_version: '0.160.0',
         creator_account_id: 4_815_162_342,
-        creator_user_id: { org: 108, seats: [23, 42] },
+        creator_user_id: { org: 108, seats: [23, 42], owner: 'Alice Kowalska' },
         model_context_window: 272_000,
       }),
       secrets,
@@ -795,6 +795,8 @@ describe('scrubCodexRecord', () => {
     const nested = out.payload.creator_user_id;
     expect(Object.keys(nested)).not.toContain('org');
     expect(JSON.stringify(nested)).not.toMatch(/108|23|42/);
+    // a name beneath the key is text: scrubbed, not hashed into an id
+    expect(JSON.stringify(nested)).not.toMatch(/Alice|Kowalska|anon_/);
     expect(out.ordinal).toBe(7);
     expect(out.payload.model_context_window).toBe(272_000);
   });

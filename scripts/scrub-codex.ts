@@ -376,17 +376,22 @@ function content(value: unknown, ctx: Ctx): unknown {
  * form. A string is the usual anonymous id. A number is the one kind of
  * number that is not kept: an account number is the account, and a hash of
  * it would be found by counting up, so it becomes 0. Anything nested is
- * scrubbed as content with its numbers zeroed the same way.
+ * scrubbed as content, keys and text alike, with its numbers zeroed the
+ * same way: only the value under the key itself is an id, and a name or an
+ * address beneath it must not come out as a hash of itself.
  */
-function identity(value: unknown, ctx: Ctx): unknown {
-  if (typeof value === 'string') return anonId(value);
+function identity(value: unknown, ctx: Ctx, nested = false): unknown {
+  if (typeof value === 'string')
+    return nested ? text(value, ctx) : anonId(value);
   if (typeof value === 'number' || typeof value === 'bigint') return 0;
-  if (Array.isArray(value)) return value.map((item) => identity(item, ctx));
+  if (Array.isArray(value)) {
+    return value.map((item) => identity(item, ctx, true));
+  }
   if (isObject(value)) {
     const out: Json = {};
     const taken = new Set<string>();
     for (const [k, v] of Object.entries(value)) {
-      out[loremKey(k, taken)] = identity(v, ctx);
+      out[loremKey(k, taken)] = identity(v, ctx, true);
     }
     return out;
   }
