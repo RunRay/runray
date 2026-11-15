@@ -360,6 +360,59 @@ describe('effectivePricing', () => {
     expect(effective.table.entries).toHaveLength(bundledCount);
   });
 
+  describe('an override older than the bundled table', () => {
+    const tableDated = (snapshotDate: string) => ({
+      snapshotDate,
+      source: 'litellm-snapshot',
+      aliases: {},
+      entries: [
+        {
+          modelPattern: 'claude-test',
+          inputPerMTok: 5,
+          outputPerMTok: 25,
+          cacheReadPerMTok: 0.5,
+          cacheWritePerMTok: 6.25,
+        },
+      ],
+    });
+    const stored = (snapshotDate: string): string => {
+      const path = join(freshDir(), 'pricing.json');
+      writeFileSync(path, JSON.stringify(tableDated(snapshotDate)));
+      return path;
+    };
+    const bundledDate = bundledPricing().snapshotDate;
+    const dayBefore = new Date(Date.parse(bundledDate) - 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    it('stays in use and is reported once, with the file and both dates', () => {
+      const warn = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+      const path = stored(dayBefore);
+      for (let i = 0; i < 3; i++) {
+        const effective = effectivePricing(path);
+        expect(effective.origin).toBe('user');
+        expect(effective.table.entries).toHaveLength(1);
+      }
+      expect(warn).toHaveBeenCalledTimes(1);
+      const message = String(warn.mock.calls[0]?.[0]);
+      expect(message).toContain(path);
+      expect(message).toContain(dayBefore);
+      expect(message).toContain(bundledDate);
+      // a refreshed list holds no retired model: not the advice to give
+      expect(message).not.toContain('--refresh');
+    });
+
+    it.each([
+      ['of the same date', bundledDate],
+      ['of a later date', '2999-01-01'],
+      ['with a date that is not a day', 'last spring'],
+    ])('says nothing of one %s', (_case, snapshotDate) => {
+      const warn = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+      expect(effectivePricing(stored(snapshotDate)).origin).toBe('user');
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
   it('falls back to the bundled snapshot when the override is missing or invalid', () => {
     vi.spyOn(process.stderr, 'write').mockReturnValue(true);
     expect(effectivePricing(join(dir, 'missing.json')).origin).toBe('bundled');

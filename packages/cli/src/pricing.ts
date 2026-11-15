@@ -88,9 +88,40 @@ export interface EffectivePricing {
   path?: string;
 }
 
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** Overrides already reported as older than the bundled table: a command
+ * resolves its prices several times, and the server on every request. */
+const reportedAsOlder = new Set<string>();
+
+/**
+ * Says, once per file and date, that the override in use is older than the
+ * table this version ships. The override still wins (it is the person's
+ * choice, and may hold rates they negotiated), but without a word a file
+ * left by `--refresh` before an upgrade prices every model the newer table
+ * added by an older entry of a similar name, or not at all.
+ *
+ * It does not advise `--refresh`: a refreshed list holds no retired model,
+ * so the advice would trade one gap for another. Deleting the file is the
+ * step that is always right.
+ */
+function reportOlderOverride(user: PricingTable, path: string): void {
+  const bundled = bundledPricing().snapshotDate;
+  if (!ISO_DAY.test(user.snapshotDate) || !ISO_DAY.test(bundled)) return;
+  if (user.snapshotDate >= bundled) return;
+  const key = `${path}\n${user.snapshotDate}`;
+  if (reportedAsOlder.has(key)) return;
+  reportedAsOlder.add(key);
+  process.stderr.write(
+    `warning: the pricing override ${path} (snapshot ${user.snapshotDate}) is older than the table bundled with this version (${bundled}) and is used in its place; models the bundled table added since are priced by an older entry or not at all. Delete the file to use the bundled table.\n`,
+  );
+}
+
 export function effectivePricing(path = userPricingPath()): EffectivePricing {
   const user = loadUserPricing(path);
-  if (user !== undefined) return { table: user, origin: 'user', path };
+  if (user !== undefined) {
+    reportOlderOverride(user, path);
+    return { table: user, origin: 'user', path };
+  }
   return { table: bundledPricing(), origin: 'bundled' };
 }
 
