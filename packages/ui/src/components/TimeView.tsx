@@ -73,6 +73,7 @@ export function TimeView({
     0;
   const pruned =
     manifest?.profile === 'metadata-only' || manifest?.spansPruned === true;
+  const recordedCalls = run.totals.counts.toolCalls;
   // a selected part narrows the rows; shares keep the run-wide denominator
   const shownRows = useMemo(
     () =>
@@ -221,6 +222,15 @@ export function TimeView({
               report. It was exported with the{' '}
               <code className="font-mono text-text">metadata-only</code>{' '}
               profile, which keeps session totals and drops individual calls.
+            </p>
+          ) : recordedCalls > 0 ? (
+            // the totals count calls that are not here to break down: saying
+            // "no tool calls" would contradict the figure beside the title
+            <p className="max-w-[80ch] text-label text-text-dim">
+              The session's totals count {recordedCalls.toLocaleString('en-US')}{' '}
+              tool {recordedCalls === 1 ? 'call' : 'calls'}, but the calls
+              themselves are not in this report, so tool time cannot be broken
+              down here.
             </p>
           ) : (
             <p className="text-label text-text-dim">

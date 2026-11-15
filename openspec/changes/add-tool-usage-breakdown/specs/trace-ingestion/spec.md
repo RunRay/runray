@@ -126,6 +126,13 @@ produce no span.
 - THEN a zero-duration `hook` span named `Stop` is emitted with status `ok`
   and `runray.hookCount: 3`
 
+#### Scenario: Stop-hook summary that lists fewer commands than it counts
+- GIVEN a stop-hook summary record reporting three hooks and listing the
+  command of one
+- WHEN the transcript is parsed
+- THEN the span carries `runray.hookCount: 3` and no tool identity, because
+  the hooks it does not list may have run anything
+
 #### Scenario: Successful tool hooks leave no trace
 - GIVEN a session whose `PreToolUse` hooks all succeeded and wrote nothing to
   the transcript

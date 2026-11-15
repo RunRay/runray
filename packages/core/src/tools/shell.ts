@@ -31,7 +31,11 @@ export type Pipeline = Stage[];
  */
 export interface ScannedStage {
   words: Stage;
-  /** Indexes into `words`; one shared empty set when no word was quoted. */
+  /**
+   * Indexes into `words`: a word that opened with a quote, and a compact
+   * PowerShell assignment whose value did (`$dir="D:\work"`). One shared
+   * empty set when no word was quoted.
+   */
   quoted: ReadonlySet<number>;
 }
 
@@ -82,7 +86,7 @@ function skipParens(src: string, open: number, ps: boolean): number {
   // `$((1 << 4))` is arithmetic: `<<` shifts, it opens no heredoc
   const heredocsAllowed = !ps && src.charAt(open + 1) !== '(';
   /** Heredocs opened on the current line; their bodies start at its end. */
-  let heredocs: string[] | undefined;
+  let heredocs: Heredoc[] | undefined;
   let depth = 0;
   let i = open;
   while (i < n) {
@@ -104,16 +108,16 @@ function skipParens(src: string, open: number, ps: boolean): number {
       if (src.charAt(i + 2) === '<') {
         i += 2; // here-string
       } else {
-        const [delimiter, after] = heredocDelimiter(src, i + 2);
-        if (delimiter !== '') {
+        const [heredoc, after] = heredocDelimiter(src, i + 2);
+        if (heredoc.delimiter !== '') {
           heredocs ??= [];
-          heredocs.push(delimiter);
+          heredocs.push(heredoc);
         }
         i = after - 1;
       }
     } else if (c === '\n' && heredocs !== undefined) {
       i++;
-      for (const delimiter of heredocs) i = skipHeredoc(src, i, delimiter);
+      for (const heredoc of heredocs) i = skipHeredoc(src, i, heredoc);
       heredocs = undefined;
       continue;
     }
@@ -122,41 +126,80 @@ function skipParens(src: string, open: number, ps: boolean): number {
   return n;
 }
 
+/** A heredoc whose body has not started yet. */
+interface Heredoc {
+  delimiter: string;
+  /** Opened with `<<-`: leading tabs of a line are not part of it. */
+  tabs: boolean;
+}
+
 /**
- * The delimiter a heredoc names and the index just past it, read from the
- * character after `<<`. An empty delimiter means the text names none.
+ * The heredoc opened by the `<<` that ends just before `from`, and the index
+ * just past its delimiter. An empty delimiter means the text names none.
  */
 function heredocDelimiter(
   src: string,
   from: number,
-): [delimiter: string, after: number] {
+): [heredoc: Heredoc, after: number] {
   const n = src.length;
   let j = from;
-  if (src.charAt(j) === '-') j++;
+  const tabs = src.charAt(j) === '-';
+  if (tabs) j++;
   while (src.charAt(j) === ' ' || src.charAt(j) === '\t') j++;
   const quote = src.charAt(j);
   if (quote === "'" || quote === '"') {
     const end = src.indexOf(quote, j + 1);
-    return [src.slice(j + 1, end === -1 ? n : end), end === -1 ? n : end + 1];
+    return [
+      { delimiter: src.slice(j + 1, end === -1 ? n : end), tabs },
+      end === -1 ? n : end + 1,
+    ];
   }
   if (src.charAt(j) === '\\') j++;
   const start = j;
   while (j < n && /[A-Za-z0-9_.-]/.test(src.charAt(j))) j++;
-  return [src.slice(start, j), j];
+  return [{ delimiter: src.slice(start, j), tabs }, j];
 }
 
-/** Index of the line after the heredoc body that `delimiter` closes. */
-function skipHeredoc(src: string, from: number, delimiter: string): number {
+/**
+ * Index of the line after the body that `heredoc` closes; the input's end
+ * when no line closes it. The closing line is the delimiter and nothing
+ * else: an indented `EOF` is still body, and only `<<-` lets tabs (never
+ * spaces) stand before it. A carriage return at the end of a line is the
+ * line ending of a command written on Windows, not part of the line.
+ */
+function skipHeredoc(src: string, from: number, heredoc: Heredoc): number {
   const n = src.length;
   let pos = from;
   while (pos < n) {
     const end = src.indexOf('\n', pos);
-    const line = src.slice(pos, end === -1 ? n : end);
+    let line = src.slice(pos, end === -1 ? n : end);
     pos = end === -1 ? n : end + 1;
-    if (line.trim() === delimiter) return pos;
+    if (line.endsWith('\r')) line = line.slice(0, -1);
+    if (heredoc.tabs) line = line.replace(/^\t+/, '');
+    if (line === heredoc.delimiter) return pos;
   }
   return n;
 }
+
+/**
+ * True when `word`, the open word, is the start of a redirection that the
+ * next `<` or `>` continues: a file descriptor (`2`), `&`, or an operator
+ * already begun (`>`, `2>`). Any other word ends where the operator starts,
+ * so `pytest>out.txt` is the program and a redirection, not one word.
+ */
+function continuesRedirection(word: string): boolean {
+  const last = word.charCodeAt(word.length - 1);
+  // `<` 60, `>` 62
+  if (last === 60 || last === 62 || word === '&') return true;
+  for (let k = 0; k < word.length; k++) {
+    const code = word.charCodeAt(k);
+    if (code < 48 || code > 57) return false;
+  }
+  return true;
+}
+
+/** `$name=` or `$env:NAME+=`, with nothing after the `=` yet. */
+const PS_ASSIGNED = /^\$[A-Za-z_][\w:]*\+?=$/;
 
 /**
  * Split a command into pipelines and stages. Words keep the text of command
@@ -192,7 +235,7 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
   let opensQuoted = false;
   /** The last operator was `|` and nothing has followed it yet. */
   let afterPipe = false;
-  const heredocs: string[] = [];
+  const heredocs: Heredoc[] = [];
 
   const pushStage = () => {
     if (stage.length > 0) {
@@ -244,7 +287,7 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
     if (c === '\n') {
       i++;
       if (heredocs.length > 0) {
-        for (const delimiter of heredocs) i = skipHeredoc(src, i, delimiter);
+        for (const heredoc of heredocs) i = skipHeredoc(src, i, heredoc);
         heredocs.length = 0;
       }
       // `a |` at the end of a line continues on the next one
@@ -273,7 +316,7 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
       continue;
     }
     if (c === "'") {
-      if (!inWord) opensQuoted = true;
+      if (!inWord || (ps && PS_ASSIGNED.test(word))) opensQuoted = true;
       let j = i + 1;
       for (;;) {
         const end = src.indexOf("'", j);
@@ -297,7 +340,7 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
       continue;
     }
     if (c === '"') {
-      if (!inWord) opensQuoted = true;
+      if (!inWord || (ps && PS_ASSIGNED.test(word))) opensQuoted = true;
       let j = i + 1;
       while (j < n) {
         const d = src.charAt(j);
@@ -387,8 +430,8 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
         i += 3;
         continue;
       }
-      const [delimiter, after] = heredocDelimiter(src, i + 2);
-      if (delimiter !== '') heredocs.push(delimiter);
+      const [heredoc, after] = heredocDelimiter(src, i + 2);
+      if (heredoc.delimiter !== '') heredocs.push(heredoc);
       endWord();
       i = after;
       continue;
@@ -427,13 +470,16 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
         continue;
       }
       // PowerShell's call operator stands where a command can start: at the
-      // head of a stage, or after `$x =`. Kept for program resolution.
+      // head of a stage, or after `$x =`, spaced or not (`$x=& "tool.exe"`).
+      // Kept for program resolution.
       const last = stage[stage.length - 1];
       if (
         ps &&
-        !inWord &&
-        (stage.length === 0 || last === '=' || last === '+=')
+        (inWord
+          ? PS_ASSIGNED.test(word)
+          : stage.length === 0 || last === '=' || last === '+=')
       ) {
+        endWord();
         stage.push('&');
         i++;
         continue;
@@ -466,6 +512,11 @@ export function scan(command: string, dialect: ShellDialect): ScannedStage[][] {
       endPipeline();
       i++;
       continue;
+    }
+    // `pytest>out.txt`: the operator ends the program word and opens the
+    // redirection; `2>`, `&>` and `>>` stay one word
+    if ((c === '>' || c === '<') && inWord && !continuesRedirection(word)) {
+      endWord();
     }
     // no branch above took this character: it is part of a word, and so is
     // every plain character after it
@@ -668,14 +719,17 @@ function programName(
  * one as a string, so `$dir = "D:\work"` and a list element on a line of its
  * own (`"src\a.ts",`) hold no program, while `$out = docker ps` holds
  * `docker`. Only the call operator runs a quoted word. Without `quoted` every
- * word is taken as bare, which is how POSIX reads a command name anyway.
+ * word is taken as bare, which is how POSIX reads a command name anyway, and
+ * a compact assignment (`$x=value`) is skipped whole, since its value could
+ * be a string as well as a command.
  */
 export function stageProgram(
   words: readonly string[],
   dialect: ShellDialect,
-  quoted: ReadonlySet<number> = NONE_QUOTED,
+  quoted?: ReadonlySet<number>,
 ): StageProgram | undefined {
   const ps = dialect === 'powershell';
+  const marks = quoted ?? NONE_QUOTED;
   const skip = SKIP_KEYWORDS[dialect];
   const terminal = TERMINAL_KEYWORDS[dialect];
   let i = 0;
@@ -683,7 +737,7 @@ export function stageProgram(
   let lastWrapper: string | undefined;
 
   while (i < words.length) {
-    const word = words[i] as string;
+    let word = words[i] as string;
     const following = words[i + 1];
 
     if (ps && (word === '&' || word === '.')) {
@@ -701,12 +755,26 @@ export function stageProgram(
       continue;
     }
     // an assignment has a `=` in it: most words are settled without a regex
-    if (
-      word.includes('=') &&
-      (ASSIGNMENT.test(word) || (ps && PS_ASSIGNMENT.test(word)))
-    ) {
-      i++;
-      continue;
+    if (word.includes('=')) {
+      if (ASSIGNMENT.test(word)) {
+        i++;
+        continue;
+      }
+      const assigned = ps ? PS_ASSIGNMENT.exec(word) : null;
+      if (assigned !== null) {
+        // `$out=docker ps -q`: PowerShell needs no spaces around `=`, and
+        // what follows it in the same word is where the command starts
+        const value = word.slice(assigned[0].length);
+        // without the marks a quoted value (`$env:CI='true'`) cannot be
+        // told from a command, so the whole word stays an assignment
+        if (value === '' || quoted === undefined) {
+          i++;
+          continue;
+        }
+        // `$dir="D:\work"`: the value opened with a quote, so it is a string
+        if (!called && marks.has(i)) return undefined;
+        word = value;
+      }
     }
     const keyword = ps ? word.toLowerCase() : word;
     if (skip.has(keyword)) {
@@ -717,7 +785,7 @@ export function stageProgram(
     // a string, not a command: an assigned value, a list element, text sent
     // down a pipe. Only the call operator runs a quoted word
     // (`& "C:\tools\x.exe"`)
-    if (ps && !called && quoted.has(i)) return undefined;
+    if (ps && !called && marks.has(i)) return undefined;
 
     const resolved = programName(word, dialect, called);
     if (resolved.kind === 'none') return undefined;

@@ -264,8 +264,20 @@ function resolveTool(
   if (def.shell !== undefined) {
     const shell = def.shell;
     const caseless = shell.dialect === 'powershell';
+    // `cmd /c` and `powershell /NoProfile` take options that start with a
+    // slash. To a POSIX shell such a word is a path: `bash /opt/build.sh -c x`
+    // runs the script, and `-c x` are the script's own arguments
+    const slashOptions =
+      caseless || shell.flags.some((known) => known.startsWith('/'));
     for (let i = 0; i < args.length; i++) {
       const word = args[i] as string;
+      // a redirection can stand anywhere in a command and is no argument:
+      // `bash 2>&1 -c 'pnpm test'` still hands the string to the shell
+      const redirection = redirectionWidth(word);
+      if (redirection > 0) {
+        i += redirection - 1;
+        continue;
+      }
       const flag = word.toLowerCase();
       const hit =
         shell.flags.includes(flag) ||
@@ -286,7 +298,7 @@ function resolveTool(
       if (
         word.startsWith('-') ||
         word.startsWith('+') ||
-        word.startsWith('/')
+        (slashOptions && word.startsWith('/'))
       ) {
         if (def.valueOptions?.includes(caseless ? flag : word) === true) i++;
         continue;

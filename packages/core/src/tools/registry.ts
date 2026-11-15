@@ -245,6 +245,13 @@ const PM_VALUE_OPTIONS = [
   '--cache',
 ];
 
+/**
+ * pnpm's `-w` is `--workspace-root`, a flag that takes no value; npm's is
+ * `--workspace <name>`. With the shared list, `pnpm -w build` lost `build`
+ * to the option and read as a bare pnpm call.
+ */
+const PNPM_VALUE_OPTIONS = PM_VALUE_OPTIONS.filter((option) => option !== '-w');
+
 /** Tools whose behaviour needs more than a name. */
 const RICH: ToolDef[] = [
   // ---- version control -------------------------------------------------
@@ -298,7 +305,7 @@ const RICH: ToolDef[] = [
     label: 'pnpm',
     activity: 'deps',
     scripts: true,
-    valueOptions: PM_VALUE_OPTIONS,
+    valueOptions: PNPM_VALUE_OPTIONS,
     scriptNext: ['run', 'run-script'],
     runnerSubs: ['exec', 'dlx'],
     subs: subs({

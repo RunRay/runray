@@ -54,6 +54,44 @@ const SPLIT: SplitCase[] = [
     expected: [[['cat'], ['grep', 'x']], [['echo', 'done']]],
   },
   {
+    // the closing line is the delimiter and nothing else
+    name: 'an indented delimiter is still heredoc body',
+    command: "cat <<'EOF'\n EOF\npnpm build\nEOF\nls",
+    expected: [[['cat']], [['ls']]],
+  },
+  {
+    name: 'a dash lets tabs stand before the delimiter, never spaces',
+    command: 'cat <<-EOF\n  EOF\ndocker ps\n\t\tEOF\npwd',
+    expected: [[['cat']], [['pwd']]],
+  },
+  {
+    name: 'a delimiter with text after it is still heredoc body',
+    command: 'cat <<EOF\nEOF trailing\ndocker ps\nEOF\npwd',
+    expected: [[['cat']], [['pwd']]],
+  },
+  {
+    name: 'heredoc in a command written with Windows line endings',
+    command: 'cat <<EOF\r\nbody\r\nEOF\r\nls',
+    expected: [[['cat']], [['ls']]],
+  },
+  {
+    // a redirection needs no space before it
+    name: 'redirection glued to the word before it',
+    command:
+      'pytest>out.txt 2>&1 && echo a>>log && sort<in.txt && cmd 2>err &>all',
+    expected: [
+      [['pytest', '>out.txt', '2>&1']],
+      [['echo', 'a', '>>log']],
+      [['sort', '<in.txt']],
+      [['cmd', '2>err', '&>all']],
+    ],
+  },
+  {
+    name: 'redirection glued to a quoted word',
+    command: 'cat "my file">copy.txt',
+    expected: [[['cat', 'my file', '>copy.txt']]],
+  },
+  {
     // the usual way to pass a commit message; its apostrophe closes nothing
     name: 'heredoc inside a quoted command substitution',
     command:
@@ -476,6 +514,27 @@ describe('a quoted PowerShell word', () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it('reads a compact assignment the way it reads a spaced one', () => {
+    // PowerShell needs no spaces around `=`
+    expect(programs('$out=docker ps -q')).toEqual(['docker']);
+    expect(programs('$out= docker ps -q')).toEqual(['docker']);
+    expect(programs('$dir="D:\\work"; Get-ChildItem $dir')).toEqual([
+      undefined,
+      'get-childitem',
+    ]);
+    expect(programs("$env:NODE_ENV='test'")).toEqual([undefined]);
+    expect(programs('$n=5')).toEqual([undefined]);
+    expect(programs('$out=& "C:\\tools\\git.exe" status')).toEqual(['git']);
+  });
+
+  it('skips a compact assignment whole when the marks are not known', () => {
+    // a hook command is read without them: its value could be a string
+    const [stage] = scan("$env:NODE_ENV='test'", 'powershell').flat();
+    expect(stageProgram(stage?.words ?? [], 'powershell')).toBeUndefined();
+    const [next] = scan('$out=docker ps -q', 'powershell').flat();
+    expect(stageProgram(next?.words ?? [], 'powershell')?.name).toBe('ps');
   });
 
   it('still reads a bare word after the assignment as a command', () => {

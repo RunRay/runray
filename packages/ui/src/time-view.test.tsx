@@ -1014,11 +1014,16 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
       source,
     );
 
-  it('labels hook time as failed and cancelled runs only (spec scenario)', () => {
+  it('says which hook runs the rows cover (spec scenario)', () => {
     mount(<TimeView run={session()} />);
     const note = text(q('[data-testid="tools-apart-hooks"]', apart()));
-    expect(note).toContain('Failed and cancelled runs only');
-    expect(note).toContain('a hook that succeeds leaves no record');
+    // runs with a time are the failed and cancelled ones; a turn's Stop
+    // hooks are there too, as a count, whether or not they succeeded
+    expect(note).toContain('Failed and cancelled runs');
+    expect(note).toContain("each turn's Stop hooks as a count");
+    expect(note).toContain(
+      'Any other hook that succeeds leaves no record in the transcript',
+    );
     // the label stands above the rows it is about
     const lines = all('tr', apart()).map((tr) => text(tr));
     expect(lines[0]).toBe('Not part of summed tool time');
@@ -1176,7 +1181,7 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
       'Not part of summed tool time',
       "A delegation contains its agent's own calls, which are counted above.",
       'Exploreagent',
-      "Failed and cancelled runs only: a hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it.",
+      "Failed and cancelled runs, plus each turn's Stop hooks as a count. Any other hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it.",
       'Stophook1 hook run, time not recorded',
       'A question or a plan that waited for your answer.',
       'AskUserQuestionwaits on you',

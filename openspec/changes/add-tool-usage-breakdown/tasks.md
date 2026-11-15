@@ -196,6 +196,16 @@ Hard chains: 1.1→1.2→1.4; 1.3→1.4→1.5; group 1→group 2→2.6; group 2�
       Time view of the demo run in both themes; a screenshot of a real
       session shows private work and was not published.
 
+- [x] 6.3 Bot-review follow-up: ten findings, each verified on the code and
+      fixed with a regression test. Scanner: a heredoc ends only on its
+      delimiter alone, a redirection glued to a word is a word of its own,
+      a compact PowerShell assignment keeps its command. Classifier: a
+      script path before `-c`, a redirection before `-c`, pnpm's `-w`.
+      Aggregation and adapter: a delegation still in progress stays open; a
+      stop-hook summary names a tool only when it lists every hook it
+      counts. View: the hook note names Stop summaries; totals without
+      calls are not called "no tool calls".
+
 ## 7. Fixture with a command skeleton (GATED)
 
 Do not start this group without an explicit go-ahead from the maintainer: it
