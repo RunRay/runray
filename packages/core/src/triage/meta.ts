@@ -110,7 +110,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
     'model-limit': {
       label: 'Usage limit reached',
       explain:
-        'The model call was refused because a plan or session limit was hit; the message names the reset time.',
+        'The model call was refused because a plan or session limit was hit.',
       owner: 'you',
       playbook: {
         causes: [
@@ -133,7 +133,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           ],
         },
         limits: [
-          'RunRay reads the harness message; it cannot see the limit or how much of it is left.',
+          'RunRay reads what the harness recorded of the refusal; it cannot see the limit or how much of it is left.',
         ],
       },
     },

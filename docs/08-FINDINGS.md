@@ -494,7 +494,7 @@ A failed call is not one thing. On real sessions a third of the "errors" are the
 
 #### `model-limit` · Usage limit reached
 
-The model call was refused because a plan or session limit was hit; the message names the reset time.
+The model call was refused because a plan or session limit was hit.
 
 **Why it happens**
 
@@ -522,7 +522,7 @@ The model call was refused because a plan or session limit was hit; the message 
 
 **Out of your hands**
 
-- RunRay reads the harness message; it cannot see the limit or how much of it is left.
+- RunRay reads what the harness recorded of the refusal; it cannot see the limit or how much of it is left.
 
 #### `model-auth` · Not authenticated
 
