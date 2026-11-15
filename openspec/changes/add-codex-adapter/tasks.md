@@ -659,6 +659,59 @@ the earlier additions: "Codex discovery is bounded", "An override older
 than the bundled table is reported", "A suggested cheaper tier costs less"
 and "No write premium where nothing was written", each with its scenarios.
 
+## What the final review did not reach
+
+The five readers did not read how much the tests of commands, file changes
+and MCP calls assert, and nobody looked at the UI in a browser. Both were
+done on 2026-11-15.
+
+**The tests, by mutation.** 78 deliberate defects were put into the
+adapter's code for those three areas, one at a time (a wrapper not
+unwrapped, a count off by one, a field not read), and the adapter's tests
+were run against each. 58 failed a test as they stood. 20 did not, and
+19 of those now fail one: the one word a POSIX shell takes after its
+switch, the switch behind an option with a value and `cmd /k`, the `cmd`
+argument of `exec_command`, a quoted program where `cmd` may be the shell,
+the size and the failure text of a command with only one of its two
+outputs, an action's own end time, the three places a span is kept from
+starting after it ended, the no-newline marker inside a hunk, a hunk side
+with no stated size, a change the adapter cannot read, a script that only
+quotes a patch, the script after a patch, MCP text counted in bytes, and a
+failure whose first text is blank. The twentieth is left: taking the
+`["apply_patch", <patch>]` argv by its own branch or by the script branch
+gives the same span, so no test can tell them apart. No defect was found
+in the adapter itself.
+
+Two questions the reading raised were counted on the surveyed machine and
+changed nothing. An action that carries its call's id is always written
+before the call's output (2,020 of 2,020), which the code that completes
+such a span from the output relies on. A failure whose preview opens with
+the harness line `Script error:` is 2 of about 1,470; the fixtures show it
+more often because their text is scrubbed.
+
+**The UI, in a browser**, on `fixtures/codex`: dashboard, session list,
+overview, timeline with the reviewer subagent, Inspector with transcript
+slices of a session, a subagent and a model call, Time & Tools, Waste,
+Errors, in both themes. Three things were wrong and are fixed:
+
+- The total on a session or subagent row of the timeline left out every
+  span that stands before its parent in the run. The normalizer orders
+  spans that start together by id, so the first model call of a Codex turn
+  often does (`simple` showed `Σ $0.4330 · 9 calls` for a session of
+  $0.7002 and 12 calls). The fold assumed parents come first; it now walks
+  the tree. The goldens of Claude Code and OTLP hold such spans too, so
+  the totals were short there as well.
+- A session none of whose calls has a price (a reviewer thread read on its
+  own) showed `Local / $0.00` as its cost. It shows `Unpriced`; `Local`
+  stays for a session whose calls were all priced at nothing.
+- The explanation of a usage limit said "the message names the reset
+  time". A Codex turn carries a code and no message; the sentence is gone
+  from the shared text and stays in the Claude Code step that needs it.
+
+Seen and left: the page is a desktop layout and does not fit a phone
+width, the tool leaderboard's "spend share" is each row against the
+largest row, and a count of one reads "1 errors". None is of this change.
+
 ## Workflow follow-up
 
 - File the out-of-scope items from `proposal.md` and the unverified variants
