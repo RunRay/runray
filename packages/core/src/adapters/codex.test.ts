@@ -349,6 +349,24 @@ describe('codex detect', () => {
 
     expect((await detect(dir)).map((c) => c.runRef)).toEqual([file]);
   });
+
+  it('reads a root the person named whatever it is called', async () => {
+    for (const name of ['raw', 'node_modules']) {
+      const dir = join(tempDir(), name);
+      const file = rollout(dir, ROOT);
+      // the name still closes a directory beneath it
+      rollout(join(dir, 'raw'), OTHER);
+      expect((await detect(dir)).map((c) => c.runRef)).toEqual([file]);
+    }
+  });
+
+  it('looks six directories beneath the root and no further', async () => {
+    const dir = tempDir();
+    const sixth = join(dir, 'a', 'b', 'c', 'd', 'e', 'f');
+    const file = rollout(sixth, ROOT);
+    rollout(join(sixth, 'g'), OTHER);
+    expect((await detect(dir)).map((c) => c.runRef)).toEqual([file]);
+  });
 });
 
 /** The committed variant folders. `large` is the machine-local perf fixture

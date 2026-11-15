@@ -144,13 +144,15 @@ async function safeReaddir(dir: string) {
   }
 }
 
-/** Rollout files under a root, at any depth (`raw/` trees and node_modules
- * excluded). Symbolic links are not followed: a directory entry that is a
+/** Rollout files in a root and in the directories up to `MAX_DEPTH` levels
+ * beneath it, `raw/` trees and node_modules beneath it left out. The root
+ * is read whatever it is called: a folder the person named is the one they
+ * asked for. Symbolic links are not followed: a directory entry that is a
  * link is neither a directory nor a file here. */
 async function findRollouts(root: string, depth = 0): Promise<string[]> {
   if (depth > MAX_DEPTH) return [];
   const name = basename(root);
-  if (name === 'raw' || name === 'node_modules') return [];
+  if (depth > 0 && (name === 'raw' || name === 'node_modules')) return [];
   const out: string[] = [];
   for (const entry of await safeReaddir(root)) {
     const path = join(root, entry.name);
