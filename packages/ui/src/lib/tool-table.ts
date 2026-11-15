@@ -240,13 +240,14 @@ export function sideRows(rows: readonly ToolRow[]): TableRow[] {
 
 /**
  * What the hook rows cover, said above them (visualizer "Hook durations are
- * partial"). A Claude Code transcript records a hook only when it fails or
- * is cancelled, so its rows are a part of what ran; an imported trace
- * carries the hook spans its exporter wrote.
+ * partial"). A Claude Code transcript records a hook's run only when it
+ * fails or is cancelled, and a turn's Stop hooks together as a count,
+ * whether or not they succeeded. So the rows are a part of what ran; an
+ * imported trace carries the hook spans its exporter wrote.
  */
 export function hookNote(source: string): string {
   return source === 'claude-code'
-    ? "Failed and cancelled runs only: a hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it."
+    ? "Failed and cancelled runs, plus each turn's Stop hooks as a count. Any other hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it."
     : 'A hook runs inside the call that triggered it.';
 }
 
