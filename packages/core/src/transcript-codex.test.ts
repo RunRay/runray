@@ -734,6 +734,87 @@ describe('what a Codex record shows', () => {
     expect(okSegments(await at(4))[1]?.text).toBe(names);
   });
 
+  it('names binary data inside the text a tool handed back', async () => {
+    const at = rolloutOf([
+      // a string that is JSON holding an image
+      item({
+        type: 'function_call',
+        call_id: 'call_1',
+        name: 'view',
+        arguments: '{}',
+      }),
+      item({
+        type: 'function_call_output',
+        call_id: 'call_1',
+        output: JSON.stringify({ kind: 'screenshot', data: BASE64 }),
+      }),
+      // the lines the harness writes, then a data URL
+      item({
+        type: 'function_call',
+        call_id: 'call_2',
+        name: 'shell',
+        arguments: '{}',
+      }),
+      item({
+        type: 'function_call_output',
+        call_id: 'call_2',
+        output: `Exit code: 0
+Wall time: 1 seconds
+Output:
+saved data:image/png;base64,${BASE64} to disk`,
+      }),
+      // an MCP result whose text is JSON holding base64
+      completed({
+        type: 'McpToolCall',
+        server: 'files',
+        tool: 'download',
+        arguments: { name: 'shot.png' },
+        result: {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ name: 'shot.png', b64: BASE64 }),
+            },
+          ],
+        },
+      }),
+    ]);
+    for (const line of [1, 3, 5]) {
+      const text = await textOf(at(line));
+      expect(text).not.toContain('iVBOR');
+      expect(text).toContain('(not text)');
+    }
+    // what stands around the data is still there
+    expect(await textOf(at(1))).toContain('screenshot');
+    expect(okSegments(await at(3))[1]?.text).toContain(
+      'saved (not text) to disk',
+    );
+    expect(await textOf(at(5))).toContain('shot.png');
+  });
+
+  it('a turn of the approval reviewer: the harness asking, not under the person’s label', async () => {
+    const turn = [
+      event({ type: 'task_started', turn_id: 'turn-1' }),
+      message('user', inputText('Review this command before it runs.')),
+      event({ type: 'task_complete', turn_id: 'turn-1' }),
+    ];
+    const head = (source: Json): Json => ({
+      type: 'session_meta',
+      payload: { id: 'thread-1', source },
+    });
+    const reviewer = rolloutOf([
+      head({ subagent: { other: 'guardian' } }),
+      ...turn,
+    ]);
+    expect(okSegments(await reviewer(2))).toEqual([
+      { label: 'review request', text: 'Review this command before it runs.' },
+    ]);
+    const person = rolloutOf([head('cli' as unknown as Json), ...turn]);
+    expect(okSegments(await person(2))).toEqual([
+      { label: 'user', text: 'Review this command before it runs.' },
+    ]);
+  });
+
   it('is unavailable, with the reason, for a line it cannot serve', async () => {
     const at = rolloutOf([
       {

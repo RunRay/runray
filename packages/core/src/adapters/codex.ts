@@ -67,8 +67,6 @@ import { guessShellDialect, shellScriptAttributes } from './usage.js';
  * does not know is skipped without a word, a line that is not JSON is a run
  * warning with its line number, and only a file whose first record is not
  * `session_meta` is refused.
- *
- * Not registered yet (task 5.2), so discovery does not reach it.
  */
 
 const PREVIEW_CHARS = 200;
@@ -98,8 +96,10 @@ function str(v: unknown): string | undefined {
 function num(v: unknown): number | undefined {
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 }
+/** A whole number the schema can hold: `1e23` is an integer to
+ * JavaScript and no exit code. */
 function int(v: unknown): number | undefined {
-  return typeof v === 'number' && Number.isInteger(v) ? v : undefined;
+  return typeof v === 'number' && Number.isSafeInteger(v) ? v : undefined;
 }
 /**
  * One word of the harness's own vocabulary: a reason, an error code, the
@@ -113,10 +113,14 @@ const HARNESS_WORD = /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/;
 function word(v: unknown): string | undefined {
   return typeof v === 'string' && HARNESS_WORD.test(v) ? v : undefined;
 }
-/** A token counter: a whole number, never below zero. */
+/** A token counter: a whole number, never below zero. A value too large
+ * to be a count of anything is not one: it would fail the whole run at
+ * validation, where a counter that is absent costs one call its tokens. */
 function count(v: unknown): number {
   const n = num(v);
-  return n === undefined ? 0 : Math.max(0, Math.round(n));
+  if (n === undefined) return 0;
+  const whole = Math.max(0, Math.round(n));
+  return Number.isSafeInteger(whole) ? whole : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,8 +154,9 @@ async function findRollouts(root: string, depth = 0): Promise<string[]> {
   const out: string[] = [];
   for (const entry of await safeReaddir(root)) {
     const path = join(root, entry.name);
-    if (entry.isDirectory()) out.push(...(await findRollouts(path, depth + 1)));
-    else if (entry.isFile() && isRolloutFileName(entry.name)) out.push(path);
+    if (entry.isDirectory()) {
+      for (const file of await findRollouts(path, depth + 1)) out.push(file);
+    } else if (entry.isFile() && isRolloutFileName(entry.name)) out.push(path);
   }
   return out;
 }
@@ -336,6 +341,9 @@ interface ThreadSummary {
 
 interface TurnState {
   span: RawSpan;
+  /** The id the rollout's records name the turn by. The span's own id is
+   * this one unless another span of the file had it first. */
+  key: string;
   open: boolean;
   /** The turn already has its prompt; later user messages are not it. */
   prompted: boolean;
@@ -384,21 +392,29 @@ interface CallState {
   outcome: CallOutcome | undefined;
 }
 
-const ISO_UTC_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+/** The last millisecond of the year 9999: past it, the ISO form grows a
+ * sign and two digits and is no time the schema accepts. */
+const LAST_ISO_MS = 253_402_300_799_999;
+
+/** Milliseconds since the epoch as ISO-8601, UTC, milliseconds. */
+function isoOf(ms: number): string | undefined {
+  return Number.isFinite(ms) && ms >= 0 && ms <= LAST_ISO_MS
+    ? new Date(ms).toISOString()
+    : undefined;
+}
 
 /**
  * A record's own time in the one form this file works with: ISO-8601, UTC,
- * milliseconds. Codex writes exactly that (all 121,445 surveyed records).
- * Anything else that still parses is converted to it, and anything that
- * does not is no time at all. One form matters because times are compared
- * as strings below: `…00Z` sorts after `…00.500Z`.
+ * milliseconds. Codex writes exactly that (all 121,445 surveyed records),
+ * and such a value comes back unchanged. Anything else that still parses is
+ * converted to it, and anything that does not is no time at all: a value of
+ * the right shape that names no moment (month 13) included. One form
+ * matters because times are compared as strings below: `…00Z` sorts after
+ * `…00.500Z`.
  */
 function timeOf(record: Json): string | undefined {
   const raw = str(record.timestamp);
-  if (raw === undefined) return undefined;
-  if (ISO_UTC_MS.test(raw)) return raw;
-  const ms = Date.parse(raw);
-  return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;
+  return raw === undefined ? undefined : isoOf(Date.parse(raw));
 }
 
 /** The last segment of a working directory, whichever separator it uses:
@@ -550,9 +566,7 @@ function newResponse(floor: string | undefined): ResponseSoFar {
 
 /** A time the harness gives as milliseconds since the epoch. */
 function isoOfMs(ms: number | undefined): string | undefined {
-  if (ms === undefined) return undefined;
-  const date = new Date(ms);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  return ms === undefined ? undefined : isoOf(ms);
 }
 
 /** `{secs, nanos}`, the way the harness writes how long something took. */
@@ -1113,7 +1127,8 @@ function headOf(text: string): OutputHead | undefined {
   if (third.text === 'Output:') pos = third.after;
   return {
     ...(script === undefined ? {} : { script }),
-    ...(exit === undefined ? {} : { exitCode: Number(exit) }),
+    // the text is the tool's own: digits without end are no exit code
+    ...(int(Number(exit)) === undefined ? {} : { exitCode: Number(exit) }),
     ...(wall === undefined ? {} : { wallMs: Number(wall) * 1000 }),
     body: text.slice(pos),
   };
@@ -1247,7 +1262,9 @@ async function emitThread(
   let lastModel: string | undefined;
   const spanIds = new Set<string>();
   /** An id no other span of the file has: the second record to claim one
-   * takes its line into its id. */
+   * takes its line into its id. The thread and its turns claim theirs here
+   * too: a response named like its own turn would otherwise be a span that
+   * is its own parent, which no reader of the tree survives. */
   const uniqueId = (id: string, line: number): string => {
     const spanId = spanIds.has(id) ? `${id}:${line}` : id;
     spanIds.add(spanId);
@@ -1326,7 +1343,7 @@ async function emitThread(
     if (startedAt > endedAt) startedAt = endedAt;
     const model =
       (namedTurnId === undefined ? undefined : modelOfTurn.get(namedTurnId)) ??
-      (turn === undefined ? undefined : modelOfTurn.get(turn.span.id)) ??
+      (turn === undefined ? undefined : modelOfTurn.get(turn.key)) ??
       lastModel ??
       'unknown';
     const durationMs = durationBetween(startedAt, endedAt);
@@ -1389,6 +1406,7 @@ async function emitThread(
       // without one, so the run still has a stable identity
       const threadId =
         str(payload.id) ?? basename(file).replace(/\.jsonl(\.zst)?$/i, '');
+      spanIds.add(threadId);
       const git = isObj(payload.git) ? payload.git : undefined;
       // what the thread is holds whether it is read as a child or, with its
       // parent not scanned, as a run of its own
@@ -1403,7 +1421,14 @@ async function emitThread(
         status: 'ok',
         startedAt: EPOCH, // set once the file is read
         agent: {
-          ...(agent === undefined ? {} : { name: agent }),
+          // a reviewer read with its parent not scanned is a run of its own
+          // and still the reviewer: the rules that leave the reviewer out
+          // of advice a person can act on know it by this name
+          ...(agent !== undefined
+            ? { name: agent }
+            : reviewer
+              ? { name: kind }
+              : {}),
           sessionId: threadId,
         },
         attributes: {},
@@ -1433,7 +1458,7 @@ async function emitThread(
         const id = str(payload.turn_id) ?? `${summary.threadId}:turn:${line}`;
         if (turns.has(id)) continue; // no id is started twice; the first stands
         const span: RawSpan = {
-          id,
+          id: uniqueId(id, line),
           parentId: session.id,
           kind: 'turn',
           name: 'turn',
@@ -1443,7 +1468,13 @@ async function emitThread(
           attributes: {},
           provenance: { file, line },
         };
-        current = { span, open: true, prompted: false, lastClosed: undefined };
+        current = {
+          span,
+          key: id,
+          open: true,
+          prompted: false,
+          lastClosed: undefined,
+        };
         latest = current;
         turns.set(id, current);
         summary.turnSpans.set(id, span);
@@ -1486,6 +1517,10 @@ async function emitThread(
           span.status = 'error';
           const code = errorCodeOf(payload.error);
           if (code !== undefined) span.statusReason = code;
+        } else if (str(payload.error) !== undefined && payload.error !== '') {
+          // an error in a form not surveyed (every one seen is an object):
+          // the turn failed all the same, and its text is not a code
+          span.status = 'error';
         } else {
           span.status = 'ok';
         }
@@ -1630,7 +1665,7 @@ async function emitThread(
       if (model === undefined) continue;
       lastModel = model;
       // a legacy turn_context names no turn: it speaks for the open one
-      const turnId = str(payload.turn_id) ?? current?.span.id;
+      const turnId = str(payload.turn_id) ?? current?.key;
       if (turnId !== undefined) modelOfTurn.set(turnId, model);
     } else if (type === 'token_usage_record') {
       // one per API response, written after the response's items
@@ -1785,7 +1820,15 @@ async function emitThread(
   if (session === undefined || summary === undefined) {
     // an empty file is Codex's own, created and not yet written to; a file
     // with text and no record in it is something else under a rollout name
-    if (!sawText) throw new NoSessionYet('empty Codex rollout');
+    if (!sawText) {
+      // Codex compresses a session it has finished with, never an empty
+      // one: a compressed file that gives no text was cut short, and
+      // dropping it without a word would hide a session that existed
+      if (isCompressedRollout(file)) {
+        throw new NotARollout('the compressed file holds nothing readable');
+      }
+      throw new NoSessionYet('empty Codex rollout');
+    }
     throw new NotARollout('no line of it is a JSON record');
   }
   // A child's span starts with its first turn, not with its file: the
@@ -1808,7 +1851,9 @@ async function emitThread(
   if (!usageEra) {
     // no usage record in the file: a legacy rollout, read from its counter
     summary.llmCalls = legacyCalls.length;
-    ctx.spans.push(...legacyCalls);
+    // one at a time: a spread of a list as long as the file overflows the
+    // call stack past some hundred thousand entries
+    for (const call of legacyCalls) ctx.spans.push(call);
   }
 
   // A call nothing was attributed to is a span of its own, named after the
@@ -2025,8 +2070,8 @@ async function emitChildren(
     }
     threads.set(child.threadId, child);
     children.push(child);
-    ctx.spans.push(...own.spans);
-    ctx.warnings.push(...own.warnings);
+    for (const span of own.spans) ctx.spans.push(span);
+    for (const warning of own.warnings) ctx.warnings.push(warning);
   }
 
   /** The thread a child hangs on, when following parents from it ends at

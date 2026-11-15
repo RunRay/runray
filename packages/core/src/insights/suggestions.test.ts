@@ -281,6 +281,19 @@ describe('fixed-context-overhead suggestion', () => {
     expect(
       suggestionOf(heavy(), 'fixed-context-overhead', 'opencode'),
     ).toContain('mcp.<name>.enabled: false');
+    // a reviewer thread read without its parent: what it opens with is the
+    // transcript handed to it, nothing the person can trim
+    const asReviewer = heavy().map((span) =>
+      span.kind === 'session'
+        ? { ...span, agent: { ...span.agent, name: 'guardian' } }
+        : span,
+    );
+    expect(findings(asReviewer, 'codex').map((f) => f.ruleId)).not.toContain(
+      'fixed-context-overhead',
+    );
+    expect(findings(asReviewer).map((f) => f.ruleId)).toContain(
+      'fixed-context-overhead',
+    );
     const codex = suggestionOf(heavy(), 'fixed-context-overhead', 'codex');
     expect(codex).toContain('AGENTS.md files');
     expect(codex).toContain(
@@ -513,6 +526,16 @@ describe('the remaining rules address the person, with the finding in numbers', 
         'oversized-output',
       ),
     ).toContain('Read returned 150.0k bytes');
+  });
+
+  it("oversized-output: the read tool's own parameters where the agent has them, a range of the file on Codex", () => {
+    const big = [root(), tool('t1', 1, { name: 'Read', outputBytes: 150_000 })];
+    expect(suggestionOf(big, 'oversized-output')).toContain(
+      'slice files with offset and limit',
+    );
+    expect(suggestionOf(big, 'oversized-output', 'codex')).toContain(
+      'read a range of a file instead of the whole of it',
+    );
   });
 
   it('context-bloat: /compact for agents that have it, history trimming for OTLP', () => {
@@ -930,6 +953,58 @@ describe('Codex runs', () => {
       );
       expect(f?.detail).toContain('failing turn (internal_server_error)');
     });
+
+    // What a rollout holds: the turn that failed did work first, so the
+    // last span of the run is a call inside it, not the turn.
+    const endingAfterWork = (
+      reason: string,
+      status: RawSpan['status'] = 'error',
+      lastStep: { status?: RawSpan['status'] } = {},
+    ) => [
+      root(),
+      turn('t1', 0),
+      call('l1', 1, { cost: 12 }),
+      base('t2', {
+        kind: 'turn',
+        name: 'turn',
+        startedAt: ts(600),
+        status,
+        statusReason: reason,
+      }),
+      call('l2', 601, { cost: 8, parentId: 't2' }),
+      tool('c1', 602, { name: 'exec_command', parentId: 'l2', ...lastStep }),
+    ];
+
+    it('a failed turn is the dead end even when its last step went fine', () => {
+      const f = codex(endingAfterWork('internal_server_error')).find(
+        (i) => i.ruleId === 'dead-end-run',
+      );
+      expect(f?.spanIds).toEqual(['t2']);
+      expect(f?.detail).toContain('failing turn (internal_server_error)');
+    });
+
+    it('a usage limit is no dead end even when the last step of its turn failed', () => {
+      expect(
+        ruleIds(
+          endingAfterWork('usage_limit_exceeded', 'error', { status: 'error' }),
+        ),
+      ).not.toContain('dead-end-run');
+    });
+
+    it('an interrupted turn is no dead end even when its last step failed', () => {
+      expect(
+        ruleIds(
+          endingAfterWork('interrupted', 'cancelled', { status: 'error' }),
+        ),
+      ).not.toContain('dead-end-run');
+    });
+
+    it('a turn that went fine and ended on a failed step is one, on that step', () => {
+      const f = codex(endingAfterWork('', 'ok', { status: 'error' })).find(
+        (i) => i.ruleId === 'dead-end-run',
+      );
+      expect(f?.spanIds).toEqual(['c1']);
+    });
   });
 
   describe('the approval reviewer as the expensive subagent', () => {
@@ -1207,6 +1282,9 @@ describe('Codex runs', () => {
           "your agent's",
           'frontmatter',
           'your agent re-sends',
+          // parameters of the other agents' read tools: Codex reads a file
+          // through a command
+          'offset and limit',
         ]) {
           expect(f.suggestion, f.ruleId).not.toContain(foreign);
         }

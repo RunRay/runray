@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { outputTextOf, personText } from './adapters/codex.js';
+import { CODEX_REVIEWER_AGENT } from './adapters/codex-names.js';
 import {
   isCompressedRollout,
   isZstdUnavailable,
@@ -52,6 +53,10 @@ const NOT_TEXT = '(not text)';
  */
 const BLOB = /^(?:data:[\w.+-]+\/[\w.+-]+;base64,)?[A-Za-z0-9+/=_-]{512,}$/;
 const BASE64_LINE = /^[A-Za-z0-9+/=_-]+$/;
+/** The same run inside a longer text: an image in the JSON a tool printed,
+ * a data URL after the lines a command wrote. */
+const BLOB_WITHIN =
+  /(?:data:[\w.+-]+\/[\w.+-]+;base64,)?[A-Za-z0-9+/=_-]{512,}/g;
 
 /** True for base64 in one piece, or wrapped the way mail and PEM wrap it:
  * lines of one length of at least 60, the last one shorter. */
@@ -111,11 +116,16 @@ function omit(source: Json, keys: readonly string[]): Json {
 
 const EMPTY = '(empty)';
 
-/** A segment as it is shown: text stays, a blob and an empty text are named. */
+/** A segment as it is shown: text stays, an empty text is named, and so is
+ * binary data, whether it is all of the segment or a run inside it. */
 function shown(segment: TranscriptSegment): TranscriptSegment {
   const text = segment.text.trim();
   if (text === '') return { label: segment.label, text: EMPTY };
-  return isBlob(text) ? { label: segment.label, text: NOT_TEXT } : segment;
+  if (isBlob(text)) return { label: segment.label, text: NOT_TEXT };
+  const named = segment.text.replace(BLOB_WITHIN, NOT_TEXT);
+  return named === segment.text
+    ? segment
+    : { label: segment.label, text: named };
 }
 
 /** Keys of a session record that say what the session was, not whose. */
@@ -398,6 +408,14 @@ function personSegment(payload: Json): TranscriptSegment | undefined {
     : { label: 'user', text: written.join('\n\n') };
 }
 
+/** The first record says the thread is the approval reviewer's, the way
+ * the adapter reads it (`agentNameOf`). */
+function isReviewerThread(payload: unknown): boolean {
+  const source = isObj(payload) ? payload.source : undefined;
+  const subagent = isObj(source) ? source.subagent : undefined;
+  return isObj(subagent) && subagent.other === CODEX_REVIEWER_AGENT;
+}
+
 function reasonOf(err: unknown, file: string): string {
   if (isZstdUnavailable(err)) return err.message;
   const code = (err as { code?: unknown } | null)?.code;
@@ -422,8 +440,19 @@ export async function readCodexSegments(
     return { unavailable: 'provenance carries no line number' };
   }
   let read: Read | undefined;
+  // The thread is the approval reviewer's: what opens its turns is the
+  // harness asking for a review, which no person wrote.
+  let reviewer = false;
+  let headRead = false;
   try {
     for await (const { line, text } of readRolloutLines(provenance.file)) {
+      if (!headRead && text.includes('session_meta')) {
+        const head = parse(text);
+        if (head?.type === 'session_meta') {
+          headRead = true;
+          reviewer = isReviewerThread(head.payload);
+        }
+      }
       if (line < target) continue;
       if (line === target) {
         const record = parse(text);
@@ -482,7 +511,9 @@ export async function readCodexSegments(
       ) {
         const prompt = personSegment(payload);
         if (prompt !== undefined) {
-          read.segments = [prompt];
+          read.segments = [
+            reviewer ? { label: 'review request', text: prompt.text } : prompt,
+          ];
           break;
         }
       }

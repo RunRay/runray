@@ -125,7 +125,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Switch models with `/models` (or the `model` key in `opencode.json`); provider limits are per model.',
           ],
           codex: [
-            "Wait for the reset the message names, or switch with `/model`; `/usage` shows the account's token usage.",
+            "Wait for the limit to reset, or switch with `/model`; `/usage` shows the account's token usage.",
             'Continue where you were with `codex resume --last`; the rollout is intact.',
           ],
           otlp: [

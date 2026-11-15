@@ -41,9 +41,9 @@ interface FixtureTarget {
   candidate: Candidate;
 }
 
-/** Every registered adapter, and the Codex one, which enters the registry
- * in task 5.2 of `add-codex-adapter`: its fixtures hold these invariants
- * before discovery can reach it. Once registered it is listed once. */
+/** Every registered adapter. The Codex one is named as well: its fixtures
+ * held these invariants before it entered the registry, and it is listed
+ * once now that it has. */
 function adaptersUnderTest(): SourceAdapter[] {
   const byId = new Map<string, SourceAdapter>();
   for (const adapter of [...adapters.all(), codexAdapter]) {

@@ -138,9 +138,15 @@ export function triageRun(run: Run): RunTriage {
   const sameKindByScope = new Map<string, Span[]>();
   let cancelled = 0;
   for (const s of spans) {
-    // "calls you declined": a hook the harness cancelled on a timeout is
-    // not one of them
-    if (s.status === 'cancelled' && s.kind !== 'hook') cancelled++;
+    // "calls you declined": a tool or MCP call. A hook the harness
+    // cancelled on a timeout is not one of them, and neither is a turn the
+    // person interrupted (Codex records that on the turn): stopping the
+    // agent declines no call
+    if (
+      s.status === 'cancelled' &&
+      (s.kind === 'tool_call' || s.kind === 'mcp_call')
+    )
+      cancelled++;
     const scope = scopeOf.get(s.id) ?? s.id;
     if (s.kind === 'llm_call') {
       const list = llmsByScope.get(scope) ?? [];

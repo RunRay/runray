@@ -513,7 +513,7 @@ The model call was refused because a plan or session limit was hit; the message 
 
 *Codex*
 
-- Wait for the reset the message names, or switch with `/model`; `/usage` shows the account's token usage.
+- Wait for the limit to reset, or switch with `/model`; `/usage` shows the account's token usage.
 - Continue where you were with `codex resume --last`; the rollout is intact.
 
 *Custom agent (OTLP)*

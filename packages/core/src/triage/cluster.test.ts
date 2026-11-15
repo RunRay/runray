@@ -490,7 +490,8 @@ describe('triageRun — a failed turn is a failed model call', () => {
     );
     expect(t.modelErrors).toBe(0);
     expect(t.clusters).toHaveLength(0);
-    expect(t.cancelled).toBe(1);
+    // and no call the person declined: they stopped the agent
+    expect(t.cancelled).toBe(0);
   });
 
   it('a failed turn with no code is a model error of no known class, and reads as redacted', () => {

@@ -4331,11 +4331,12 @@ describe('codex child threads', () => {
       kind: 'session',
       parentId: null,
       name: 'session',
-      agent: { sessionId: CHILD },
+      // still the reviewer: the rules that leave the reviewer out of advice
+      // a person can act on know it by this name
+      agent: { sessionId: CHILD, name: 'guardian' },
       // a run of its own starts with its file
       startedAt: at(0),
     });
-    expect(raw.spans[0]?.agent).not.toHaveProperty('name');
   });
 });
 
@@ -5489,5 +5490,160 @@ describe('codex parse on the fixtures', () => {
         ).toBe(true);
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rollouts Codex did not write this way: a corrupt or crafted file costs
+// what it holds and never the build
+// ---------------------------------------------------------------------------
+
+describe('codex rollouts with values no rollout should hold', () => {
+  /** Every span has an id of its own and none is its own ancestor. */
+  const expectATree = (raw: RawRun) => {
+    const ids = raw.spans.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const parentOf = new Map(raw.spans.map((s) => [s.id, s.parentId]));
+    for (const id of ids) {
+      const seen = new Set<string>();
+      for (let up: string | null | undefined = id; up != null; ) {
+        expect(seen.has(up)).toBe(false);
+        seen.add(up);
+        up = parentOf.get(up);
+      }
+    }
+  };
+
+  it('gives a response named like its turn an id of its own', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, TURN_A), // line 3
+      completed(3, TURN_A),
+    ]);
+    expect(turnsOf(raw).map((s) => s.id)).toEqual([TURN_A]);
+    expect(llmCallsOf(raw)[0]).toMatchObject({
+      id: `${TURN_A}:3`,
+      parentId: TURN_A,
+    });
+    expectATree(raw);
+    // the build goes on: a span that is its own parent never ended it
+    expect(normalize(priceRun(raw)).spans).toHaveLength(3);
+  });
+
+  it('gives a turn named like its thread an id of its own, and still finds it by its name', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, ROOT), // line 2
+      turnContext(1, 'gpt-5.2-codex', ROOT),
+      usageRecord(2, ROOT, 'resp_1'),
+      completed(3, ROOT),
+    ]);
+    expect(turnsOf(raw)[0]).toMatchObject({
+      id: `${ROOT}:2`,
+      parentId: ROOT,
+      status: 'ok',
+    });
+    expect(llmCallsOf(raw)[0]).toMatchObject({
+      parentId: `${ROOT}:2`,
+      llm: { model: 'gpt-5.2-codex' },
+    });
+    expectATree(raw);
+  });
+
+  it('reads a number too large to be a count or an exit code as absent', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, 'resp_1', {
+        ...SMALL,
+        input_tokens: 1e300,
+        output_tokens: 2 ** 53,
+      }),
+      functionCall(3, 'call_1', 'shell'),
+      functionOutput(
+        4,
+        'call_1',
+        'Exit code: 99999999999999999999999\nOutput:\n',
+      ),
+      completed(5, TURN_A),
+    ]);
+    expect(llmCallsOf(raw)[0]?.llm?.tokens).toMatchObject({
+      input: 0,
+      output: 0,
+    });
+    const tool = raw.spans.find((s) => s.kind === 'tool_call');
+    expect(tool).toBeDefined();
+    expect(tool?.tool).not.toHaveProperty('exitCode');
+    // what the schema would refuse never reaches it
+    expect(() => normalize(priceRun(raw))).not.toThrow();
+  });
+
+  it('takes a time that names no moment as no time', async () => {
+    const lines = [
+      sessionMeta(0),
+      started(1, TURN_A),
+      usageRecord(2, TURN_A, 'resp_1'),
+      completed(3, TURN_A),
+    ];
+    const noMoment = (line: string, timestamp: string) =>
+      JSON.stringify({ ...JSON.parse(line), timestamp });
+    lines[2] = noMoment(lines[2] ?? '', '2026-13-45T25:61:61.000Z');
+    lines[3] = noMoment(lines[3] ?? '', '+275760-09-13T00:00:00.000Z');
+    const { raw } = await parseLines(lines);
+    // the turn ends where the last record with a time left it
+    expect(turnsOf(raw)[0]).toMatchObject({
+      startedAt: at(1),
+      endedAt: at(1),
+    });
+    for (const span of raw.spans) {
+      for (const time of [span.startedAt, span.endedAt]) {
+        if (time !== undefined) expect(time).toMatch(/^2026-10-13T09:00:0\d/);
+      }
+    }
+    expect(() => normalize(priceRun(raw))).not.toThrow();
+  });
+
+  it('marks a turn completed with an error in any form as failed', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      completed(2, TURN_A, { error: 'stream disconnected before completion' }),
+      started(3, TURN_B),
+      completed(4, TURN_B, { error: '' }),
+    ]);
+    expect(turnsOf(raw)[0]).toMatchObject({ status: 'error' });
+    // free text is no code: nothing of it is kept
+    expect(turnsOf(raw)[0]).not.toHaveProperty('statusReason');
+    expect(JSON.stringify(raw)).not.toContain('stream disconnected');
+    expect(turnsOf(raw)[1]).toMatchObject({ status: 'ok' });
+  });
+
+  it('refuses a compressed rollout that gives no text, where an empty plain one is a session not yet begun', async () => {
+    const dir = tempDir();
+    const text = `${[sessionMeta(0), started(1, TURN_A)].join('\n')}\n`;
+    const whole = zstdCompressSync(Buffer.from(text.repeat(40), 'utf8'));
+    const cut = rollout(dir, ROOT, { zst: true });
+    // inside its first block: the decoder gives nothing and reports nothing
+    writeFileSync(cut, whole.subarray(0, 12));
+    await expect(
+      codexAdapter.parse(candidateOf(cut), { redact: false }),
+    ).rejects.toThrow(
+      'not a Codex rollout: the compressed file holds nothing readable',
+    );
+
+    const empty = rollout(tempDir(), ROOT, { text: '' });
+    await expect(
+      codexAdapter.parse(candidateOf(empty), { redact: false }),
+    ).rejects.toBeInstanceOf(NoSessionYet);
+  });
+
+  it('reads a child thread of more lines than a call can take arguments', async () => {
+    const noise = `${'x\n'.repeat(150_000)}`;
+    const { raw } = await parseThreads(twoTurnRoot(), [
+      [CHILD, `${reviewer(5, { parent: TURN_A }).join('\n')}\n${noise}`],
+    ]);
+    expect(subagentsOf(raw)).toHaveLength(1);
+    expect(raw.warnings).toHaveLength(150_000);
   });
 });

@@ -434,9 +434,9 @@ function expensiveSubagentSubtrees(
 /** The approval reviewer of a Codex run (`approvals_reviewer =
  * "auto_review"`). Nobody defines that agent in a file, so the levers of a
  * custom agent do not apply to it. */
-function isCodexReviewer(run: Run, subagent: Span): boolean {
+function isCodexReviewer(run: Run, thread: Span): boolean {
   return (
-    run.source.tool === 'codex' && subagent.agent?.name === CODEX_REVIEWER_AGENT
+    run.source.tool === 'codex' && thread.agent?.name === CODEX_REVIEWER_AGENT
   );
 }
 
@@ -537,8 +537,31 @@ const deadEndRun: InsightRule = {
     const sessionError = run.spans.find(
       (s) => s.kind === 'session' && s.status === 'error',
     );
+    // The turn the run ended in. Spans come in start order, so a turn
+    // stands before everything that happened inside it: where the last
+    // turn failed, the last span is whatever that turn did last, often a
+    // model call that went fine. Codex records a refused or failed request
+    // on the turn, so the turn is asked before its last step.
+    const byId = new Map(run.spans.map((s) => [s.id, s]));
+    let endedIn: Span | undefined;
+    for (let s = last, hops = 0; s !== undefined && hops < 64; hops++) {
+      if (s.kind === 'turn') {
+        endedIn = s;
+        break;
+      }
+      s = s.parentId === null ? undefined : byId.get(s.parentId);
+    }
+    // a turn the person interrupted is where they stopped it, whatever its
+    // last step was
+    if (sessionError === undefined && endedIn?.status === 'cancelled')
+      return [];
     const terminal =
-      sessionError ?? (last?.status === 'error' ? last : undefined);
+      sessionError ??
+      (endedIn?.status === 'error'
+        ? endedIn
+        : last?.status === 'error'
+          ? last
+          : undefined);
     if (terminal === undefined) return [];
     // a turn the harness stopped at a usage limit is where the session
     // paused, not a step that failed: what came before it stands, and the
@@ -937,6 +960,11 @@ const fixedContextOverhead: InsightRule = {
   id: 'fixed-context-overhead',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
     const cfg = ctx.thresholds.fixedContextOverhead;
+    // A Codex reviewer thread read without its parent is a run of its own.
+    // What it opens with is the transcript the harness handed it, not
+    // instructions, skills or servers the person could trim.
+    const session = run.spans.find((s) => s.kind === 'session');
+    if (session !== undefined && isCodexReviewer(run, session)) return [];
     // scope to the main session: a subagent runs its own fresh context, so its
     // calls neither carry nor re-read the session's opening footprint. Counting
     // them inflated both the footprint owner (llms[0]) and the re-read
@@ -1228,7 +1256,7 @@ const oversizedOutput: InsightRule = {
         detail: `${offenders.length} tool call(s) returned ≥${tok(cfg.minOutputBytes)} bytes (largest: ${top?.name} at ${tok(top?.tool?.outputBytes ?? 0)} bytes); ≈${tok(Math.round(totalBytes / 4))} tokens of tool output entered the context. Output utility is unknowable, so this is an opportunity, never burned waste.`,
         spanIds: offenders.slice(0, cfg.topOffenders).map((s) => s.id),
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion: `Ask for less of it — ${top?.name} returned ${tok(top?.tool?.outputBytes ?? 0)} bytes in one go; slice files with offset and limit, filter command output, and page MCP results before they enter the context.`,
+        suggestion: `Ask for less of it — ${top?.name} returned ${tok(top?.tool?.outputBytes ?? 0)} bytes in one go; ${run.source.tool === 'codex' ? 'read a range of a file instead of the whole of it' : 'slice files with offset and limit'}, filter command output, and page MCP results before they enter the context.`,
       },
     ];
   },
