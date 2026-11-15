@@ -89,7 +89,7 @@
       "spanIds": [
         "01a0b059-e3b9-7a20-87cc-da1f5e28e984"
       ],
-      "estimatedWasteUSD": 0.23792,
+      "estimatedWasteUSD": 0.219037,
       "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (only codex_app was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 7.6k tokens above the floor were re-read 19 times."
     }
   ]
