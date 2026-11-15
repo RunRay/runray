@@ -44,6 +44,19 @@ apply to POSIX shells and to PowerShell.
 - THEN it yields two pipelines, `git commit` with the substitution as one
   word and `pnpm test`, and nothing in the body opens or closes a quote
 
+#### Scenario: Heredoc delimiter stands alone on its line
+- GIVEN a heredoc opened with `<<'EOF'` whose body holds the line ` EOF`,
+  indented by one space, then `pnpm build`, then `EOF`
+- WHEN the command is decomposed
+- THEN the indented line and `pnpm build` are body, and no stage is read
+  from them; only `<<-` lets tabs, never spaces, stand before the delimiter
+
+#### Scenario: Redirection without a space
+- GIVEN the command `pytest>results.txt 2>&1`
+- WHEN it is decomposed
+- THEN the stage's words are `pytest`, `>results.txt` and `2>&1`, and the
+  program is `pytest`
+
 ### Requirement: Program resolution within a stage
 For each stage the system SHALL skip variable assignments, wrapper commands
 and shell control keywords, then take the next word as the program and
@@ -90,6 +103,12 @@ unresolved.
 - WHEN its program is resolved
 - THEN the program is `docker`
 
+#### Scenario: Compact PowerShell assignment
+- GIVEN the PowerShell commands `$out=docker ps -q` and `$dir="D:\work"`
+- WHEN their programs are resolved
+- THEN the first resolves to `docker`, as it does with spaces around `=`,
+  and the second holds no program, because the value opens with a quote
+
 #### Scenario: A lookup is not a call
 - GIVEN the stage `command -v docker`
 - WHEN its program is resolved
@@ -133,6 +152,17 @@ followed to a bounded length.
 - WHEN it is resolved
 - THEN the inner command is decomposed and the tool is `cargo`
 
+#### Scenario: Script path before a command flag
+- GIVEN the stage `bash /opt/build.sh -c 'pnpm test'`
+- WHEN it is resolved
+- THEN the tool is `bash` running the script `build.sh`: the first operand
+  is the script, and `-c` after it belongs to the script
+
+#### Scenario: Redirection before the command flag
+- GIVEN the stage `bash 2>&1 -c 'pnpm test'`
+- WHEN it is resolved
+- THEN the result is the one `bash -c 'pnpm test' 2>&1` gives
+
 ### Requirement: Closed tool registry
 The system SHALL hold a closed registry mapping program names and aliases to a
 tool id, a display label and a default activity. A tool id SHALL only ever be
@@ -175,6 +205,12 @@ their values. A word that is not in the table SHALL NOT be reported.
 - GIVEN the stage `docker compose -f dev.yml up -d`
 - WHEN it is classified
 - THEN the subcommand is `compose up`
+
+#### Scenario: Flag that takes no value
+- GIVEN the stages `pnpm -w build` and `npm -w web run build`
+- WHEN they are classified
+- THEN both run the script `build`: pnpm's `-w` is a flag, npm's takes
+  the workspace name
 
 #### Scenario: Word outside the table
 - GIVEN the stage `git frobnicate ./secret-plan`
@@ -499,6 +535,13 @@ background returns before the agent has finished.
 - WHEN the run is aggregated
 - THEN the three minutes appear only in the agent group, and the subagent's
   tool calls count toward summed tool time once
+
+#### Scenario: A delegation still in progress
+- GIVEN a container call with no recorded result whose subagent has already
+  ended after 60 seconds
+- WHEN usage is aggregated
+- THEN the delegation is counted as one open call and adds no time to any
+  figure
 
 #### Scenario: A delegation launched in the background
 - GIVEN an `Agent` call that returned after 133 milliseconds and whose
