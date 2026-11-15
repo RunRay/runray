@@ -9,7 +9,7 @@ npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
-Needs Node.js 22 or newer.
+Needs Node.js 22.22 or newer.
 
 ![Five steps: npx runray demo, the dashboard with $163 of $484 burned, one session's Waste tab, the leak rail, and a finding with the calls behind it](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/demo.gif)
 
