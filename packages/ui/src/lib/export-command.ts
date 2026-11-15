@@ -1,5 +1,5 @@
 import type { Run } from '@runray/schema';
-import type { RunFilter } from './filter-runs';
+import { EMPTY_FILTER, filterRuns, type RunFilter } from './filter-runs';
 import type { Route } from './router';
 
 export type SanitizeProfile = 'full' | 'sanitized' | 'metadata-only';
@@ -85,10 +85,19 @@ export function exportCommand(
 
   const allCount = ctx.allRuns?.length ?? 0;
   const visibleCount = ctx.visibleRuns?.length ?? allCount;
+  // With a browser-only filter on, the visible runs are not what the command
+  // exports: count the loaded runs the CLI flags themselves keep.
+  const cliCount = hasStoreOnlyFilter
+    ? filterRuns(ctx.allRuns ?? [], {
+        ...EMPTY_FILTER,
+        source: filter?.source ?? null,
+        period: typeof filter?.period === 'number' ? filter.period : null,
+      }).length
+    : visibleCount;
 
   let scopeSentence: string;
   if (hasStoreOnlyFilter) {
-    scopeSentence = `Exports all ${allCount} runs matching CLI flags. Note: active in-browser filters (project, model, day, tool, branch, the since-reset period) have no CLI equivalent and are not applied.`;
+    scopeSentence = `Exports all ${cliCount} run${cliCount === 1 ? '' : 's'} matching CLI flags. Note: active in-browser filters (project, model, day, tool, branch, the since-reset period) have no CLI equivalent and are not applied.`;
   } else if (filter?.source && typeof filter.period === 'number') {
     scopeSentence = `Exports all runs from ${filter.source} in the last ${filter.period} days (${visibleCount} run${visibleCount === 1 ? '' : 's'}).`;
   } else if (filter?.source) {
@@ -102,7 +111,7 @@ export function exportCommand(
   return {
     command: parts.join(' '),
     scopeSentence,
-    runCount: hasStoreOnlyFilter ? allCount : visibleCount,
+    runCount: cliCount,
     hasStoreOnlyFilter,
   };
 }

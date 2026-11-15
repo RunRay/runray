@@ -143,6 +143,27 @@ describe('exportCommand (Task 4.1, visualizer "The rendered command is exact and
       expect(res.scopeSentence).toContain('the since-reset period');
     });
 
+    it('counts the runs the CLI flags keep, not the browser-only window', () => {
+      const opencode: Run = {
+        ...stubRun('r3'),
+        source: { ...stubRun('r3').source, tool: 'opencode' },
+      };
+      const res = exportCommand(
+        {
+          route: DASHBOARD_ROUTE,
+          filter: { ...EMPTY_FILTER, source: 'opencode', period: 'reset' },
+          allRuns: [...runs, opencode],
+          visibleRuns: [],
+        },
+        'full',
+      );
+      expect(res.command).toBe(
+        'runray export -o report.html --source opencode',
+      );
+      expect(res.runCount).toBe(1);
+      expect(res.scopeSentence).toContain('Exports all 1 run matching');
+    });
+
     it('combines --source and --since filters', () => {
       const res = exportCommand(
         {
