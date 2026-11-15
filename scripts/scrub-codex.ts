@@ -32,8 +32,9 @@
  *   unknown). Every key and every string is lorem; numbers, booleans, null
  *   and the nesting survive.
  *
- * Numbers are always kept: token counts, durations and exit codes are the
- * point of the fixture.
+ * Numbers are kept: token counts, durations and exit codes are the point of
+ * the fixture. The one exception is a number under an identity key
+ * (`creator_account_id`, `creator_user_id`), which becomes 0.
  *
  * The CLI wiring (arguments, output paths, the report) lives in
  * scrub-fixture.ts.
@@ -364,6 +365,28 @@ function content(value: unknown, ctx: Ctx): unknown {
     const taken = new Set<string>();
     for (const [k, v] of Object.entries(value)) {
       out[loremKey(k, taken)] = content(v, ctx);
+    }
+    return out;
+  }
+  return value;
+}
+
+/**
+ * A value under an identity key: who the account or the person is, in any
+ * form. A string is the usual anonymous id. A number is the one kind of
+ * number that is not kept: an account number is the account, and a hash of
+ * it would be found by counting up, so it becomes 0. Anything nested is
+ * scrubbed as content with its numbers zeroed the same way.
+ */
+function identity(value: unknown, ctx: Ctx): unknown {
+  if (typeof value === 'string') return anonId(value);
+  if (typeof value === 'number' || typeof value === 'bigint') return 0;
+  if (Array.isArray(value)) return value.map((item) => identity(item, ctx));
+  if (isObject(value)) {
+    const out: Json = {};
+    const taken = new Set<string>();
+    for (const [k, v] of Object.entries(value)) {
+      out[loremKey(k, taken)] = identity(v, ctx);
     }
     return out;
   }
@@ -704,7 +727,7 @@ function structural(value: unknown, key: string | null, ctx: Ctx): unknown {
     } else if (BLOB_KEYS.has(k)) out[k] = blob(v, ctx);
     else if (IDENTITY_KEYS.has(k)) {
       ctx.stats.strings++;
-      out[k] = typeof v === 'string' ? anonId(v) : content(v, ctx);
+      out[k] = identity(v, ctx);
     } else if (k === 'changes' && isObject(v)) out[k] = scrubChanges(v, ctx);
     else if (k === 'git' && isObject(v)) out[k] = scrubGit(v, ctx);
     else if (k === 'source') out[k] = sourceOrText(v, value, ctx);

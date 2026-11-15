@@ -778,6 +778,27 @@ describe('scrubCodexRecord', () => {
     ]);
   });
 
+  it('keeps no number under an identity key, and every other number', () => {
+    const out = scrubCodexRecord(
+      base('session_meta', 7, {
+        id: THREAD,
+        cli_version: '0.160.0',
+        creator_account_id: 4_815_162_342,
+        creator_user_id: { org: 108, seats: [23, 42] },
+        model_context_window: 272_000,
+      }),
+      secrets,
+      newCodexStats(),
+    ) as Loose;
+    expect(out.payload.creator_account_id).toBe(0);
+    // a nested identity is scrubbed as content, keys included
+    const nested = out.payload.creator_user_id;
+    expect(Object.keys(nested)).not.toContain('org');
+    expect(JSON.stringify(nested)).not.toMatch(/108|23|42/);
+    expect(out.ordinal).toBe(7);
+    expect(out.payload.model_context_window).toBe(272_000);
+  });
+
   it('replaces the user and host names wherever they are kept', () => {
     const out = scrubCodexRecord(
       base('response_item', 3, {

@@ -139,7 +139,9 @@ as native JSON next to Codex's own fields:
   sentence, a name of a person and a `host:port` are not structure.
 - **What the scrubber cannot judge stays.** Numbers are kept wherever they
   are, in a payload included, and a single word under a structural key is
-  kept even when it is a host name. Read the result before committing it.
+  kept even when it is a host name. The one number that is not kept is one
+  under an identity key (`creator_account_id`, `creator_user_id`), which
+  becomes 0. Read the result before committing it.
 - **Paths used as keys** (`FileChange.changes`) are canonicalised like path
   values.
 - **Diffs and patches keep their shape.** Marker lines (`*** Update File:`,
