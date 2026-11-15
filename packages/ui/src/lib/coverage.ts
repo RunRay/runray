@@ -5,6 +5,7 @@ import {
   unpricedCoverage,
 } from '@runray/core/pricing';
 import type { Run } from '@runray/schema';
+import { formatUSD } from './format';
 
 /**
  * Unpriced-cost coverage over the visible runs (C7). Per-run numbers come
@@ -45,6 +46,18 @@ export function coverageOf(runs: readonly Run[]): CoverageAggregate {
     runsAffected,
     complete: unpricedLlmCalls === 0,
   };
+}
+
+/**
+ * The cost a header leads with. Zero dollars has two meanings, and they are
+ * not the same figure: every call was priced and cost nothing (a model run
+ * on the machine), or no call had a price at all (a Codex reviewer thread
+ * read on its own runs on a model nobody publishes a price for). The second
+ * is not "$0.00": the cost is not known, and the header says so.
+ */
+export function costHeadline(costUSD: number, runs: readonly Run[]): string {
+  if (costUSD > 0) return formatUSD(costUSD);
+  return coverageOf(runs).complete ? 'Local / $0.00' : 'Unpriced';
 }
 
 /** What the unpriced banner tells the person to do about the gap. */

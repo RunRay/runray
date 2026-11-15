@@ -1,4 +1,5 @@
 import type { Run } from '@runray/schema';
+import { costHeadline } from '../lib/coverage';
 import {
   formatDateTime,
   formatDuration,
@@ -104,9 +105,7 @@ export function RunView({ run, view }: { run: Run; view: RunViewName }) {
               {tokensLead ? `Cost ${AT_API_PRICES}` : 'Cost (USD)'}
             </p>
             <p className="font-mono text-body font-semibold text-on-surface">
-              {run.totals.costUSD.total > 0
-                ? formatUSD(run.totals.costUSD.total)
-                : 'Local / $0.00'}
+              {costHeadline(run.totals.costUSD.total, [run])}
             </p>
           </div>
           <div>
