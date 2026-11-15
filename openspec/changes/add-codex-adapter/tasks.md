@@ -511,9 +511,12 @@ directly and the goldens test does not see `fixtures/codex` yet.
         `Invoke-WebRequest`) as shell rows. Across the build 9,220 shell
         calls sit in 780 rows (counted per run), 754 of them a program of
         the registry, and no shell call is unclassified.
-      - `exec` is still a row, and that is the spec's scenario rather than a
-        gap: 562 of the 14,414 tool calls are an `exec` script that ran no
-        recorded command, named `exec` and shown as a built-in in 47 runs.
+      - `exec` is still a row, and that is the spec rather than a gap: 562
+        of the 14,414 tool calls are a span named `exec`, shown as a
+        built-in in 47 runs. 463 of them are `ok`, a call with no action
+        attributed to it. 95 are `error` and 4 `cancelled` (declined by the
+        person): a call that did nothing recorded, or one that failed or
+        was stopped after commands that did not fail.
       - Not a finding of this check, noted for the price list: 1,752 calls
         in 50 runs carry no price, the reviewer's model and `unknown` (2 runs
         hold calls with no model recorded).
@@ -522,18 +525,32 @@ directly and the goldens test does not see `fixtures/codex` yet.
       Verify: the e2e test passes and the redacted export contains no
       string from the unredacted previews.
       Done: `packages/cli/src/codex-e2e.test.ts` runs both commands through
-      `createProgram()` on the committed Codex fixtures, under a config home
-      of its own. `view` is asked over HTTP for the trace and for a
-      transcript slice: `ok` and previews without the flag; with `--redact`
-      the same run ids and span counts, no preview, no title, no
-      `runray.target`, and the slice answers `redacted`. `export` is read
-      back from both files it writes: the page carries the trace the JSON
-      beside it does, and with `--redact` no preview of the unredacted
-      export is in either file, as written, as JSON or the page escapes it,
-      or inside a longer string. The one seam is a wrapper around the real
-      `startServer` that hands the test the server `view` starts, so it can
-      be closed. The export half is skipped where the UI was not built, as
-      the existing export e2e is.
+      `createProgram()` on the committed Codex fixtures, under a home
+      directory and a config home of its own. `view` is asked over HTTP for
+      the trace and for a transcript slice: `ok` and previews without the
+      flag; with `--redact` the same run ids and span counts, no preview, no
+      title, no free-text attribute, and the slice answers `redacted`.
+      `export` is read back from both files it writes: the page carries the
+      trace the JSON beside it does, and with `--redact` no preview of the
+      unredacted export is in either file, as it is, as JSON or the page
+      escapes it, or inside a longer string. The one seam is a wrapper
+      around the real `startServer` that hands the test the server `view`
+      starts, so it can be closed. The export half is skipped where the UI
+      was not built, as the existing export e2e is.
+- Review of group 8 (`e5c171a..0c432d7`): six findings, all fixed, none in
+  the product's code. The e2e set `XDG_CONFIG_HOME` only, and
+  `runray.config.json` and the price override are read under the home
+  directory: a developer's `"redact": true` would have failed the
+  unredacted tests. It now gives the commands a home of its own and checks
+  that the override took. It fails when a command skipped a candidate
+  (`warning: skipped` on stderr), where one fixture that stopped parsing
+  used to pass. A redacted trace is checked for every free-text attribute
+  (`runray.target`, `runray.toolName`, `runray.toolScript`,
+  `runray.skill`), not for the first alone. The redacted files are searched
+  for a preview in three forms, the JSON one added, and a preview that is
+  also a word of the export template is looked for in the trace and not in
+  the page. The 8.1 note counted all 562 `exec` spans as scripts that ran
+  no command; it now gives them by status.
 
 ## Workflow follow-up
 

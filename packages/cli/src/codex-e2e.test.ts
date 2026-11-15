@@ -1,5 +1,5 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Run, TraceFile } from '@runray/schema';
 import {
@@ -49,28 +49,50 @@ const scratch = () => {
   return dir;
 };
 
-let origXdg: string | undefined;
+// Where the commands look for what a person keeps: `runray.config.json`
+// and the price override under the home directory, the first-run state
+// under the config home.
+const HOME_VARIABLES = ['HOME', 'USERPROFILE', 'XDG_CONFIG_HOME'] as const;
+const origHome = new Map<string, string | undefined>();
 let stdout: string[];
+let stderr: string[];
 beforeEach(() => {
-  // a config home of its own: the commands read the price override and the
-  // first-run state from it, and must find neither on any machine
+  // a home of its own: a config that turns redaction on, a port, a price
+  // override or a first run already seen must not reach these commands
   resetInMemoryState();
-  origXdg = process.env.XDG_CONFIG_HOME;
-  process.env.XDG_CONFIG_HOME = scratch();
+  const home = scratch();
+  for (const name of HOME_VARIABLES) {
+    origHome.set(name, process.env[name]);
+    process.env[name] = home;
+  }
+  expect(homedir()).toBe(home);
   process.exitCode = undefined;
   stdout = [];
+  stderr = [];
   vi.spyOn(console, 'log').mockImplementation((...args) => {
     stdout.push(args.join(' '));
   });
-  vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+    stderr.push(String(chunk));
+    return true;
+  });
 });
 afterEach(async () => {
   for (const server of servers.splice(0)) await server.close();
-  if (origXdg === undefined) delete process.env.XDG_CONFIG_HOME;
-  else process.env.XDG_CONFIG_HOME = origXdg;
+  for (const [name, value] of origHome) {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
   process.exitCode = undefined;
   vi.restoreAllMocks();
 });
+
+/** The command read every session it found: a candidate that fails to
+ * parse is skipped with a warning, and the rest would still be served. */
+function expectNothingSkipped(): void {
+  expect(process.exitCode).toBeUndefined();
+  expect(stderr.join('')).not.toContain('warning: skipped');
+}
 afterAll(() => {
   for (const dir of scratchDirs) rmSync(dir, { recursive: true, force: true });
 });
@@ -102,9 +124,49 @@ function stringsIn(value: unknown, out: string[] = []): string[] {
   return out;
 }
 
+/** A string as JSON writes it. */
+const inJson = (text: string) => JSON.stringify(text).slice(1, -1);
+
 /** A string as the export writes it into the page (`injectGlobal`). */
-const inPage = (text: string) =>
-  JSON.stringify(text).slice(1, -1).replace(/</g, '\\u003c');
+const inPage = (text: string) => inJson(text).replace(/</g, '\\u003c');
+
+/**
+ * Attributes whose value is free text of the session (a file's basename, a
+ * script's or a skill's name) and not an id from a fixed list in core. They
+ * are stamped only without redaction.
+ */
+const FREE_TEXT_ATTRIBUTES = [
+  'runray.target',
+  'runray.toolName',
+  'runray.toolScript',
+  'runray.skill',
+];
+
+/** The free-text attributes the runs carry, as `key` strings. */
+function freeTextKeysOf(runs: readonly Run[]): string[] {
+  const out = new Set<string>();
+  for (const run of runs) {
+    for (const span of run.spans) {
+      for (const key of FREE_TEXT_ATTRIBUTES) {
+        if (span.attributes?.[key] !== undefined) out.add(key);
+      }
+    }
+  }
+  return [...out].sort();
+}
+
+/** A redacted trace holds none of what the unredacted one shows of the
+ * session's text: no preview, no title, no free-text attribute, and no
+ * preview inside any longer string. */
+function expectNoText(data: TraceFile, previews: readonly string[]): void {
+  expect(previewsOf(data.runs)).toEqual([]);
+  expect(freeTextKeysOf(data.runs)).toEqual([]);
+  for (const run of data.runs) expect(run.title).toBeUndefined();
+  const strings = stringsIn(data);
+  for (const preview of previews) {
+    expect(strings.some((text) => text.includes(preview))).toBe(false);
+  }
+}
 
 /** The trace a written report carries. */
 function dataOf(html: string): TraceFile {
@@ -157,7 +219,7 @@ async function view(...flags: string[]): Promise<string> {
     '4390',
     ...flags,
   ]);
-  expect(process.exitCode).toBeUndefined();
+  expectNothingSkipped();
   const url = /http:\/\/127\.0\.0\.1:\d+\//.exec(stdout.join('\n'))?.[0];
   if (url === undefined) throw new Error('view printed no address');
   return url;
@@ -203,6 +265,7 @@ describe('runray view on Codex sessions', () => {
     const data = await traceFileAt(url);
     expectCodexRuns(data.runs);
     expect(previewsOf(data.runs).length).toBeGreaterThan(0);
+    expect(freeTextKeysOf(data.runs)).toContain('runray.target');
     expect(await sliceAt(url, data)).toMatchObject({ status: 'ok' });
   });
 
@@ -220,17 +283,7 @@ describe('runray view on Codex sessions', () => {
     expect(data.runs.map((run) => run.spans.length)).toEqual(
       plain.runs.map((run) => run.spans.length),
     );
-    expect(previewsOf(data.runs)).toEqual([]);
-    const served = stringsIn(data);
-    for (const preview of previews) {
-      expect(served.some((text) => text.includes(preview))).toBe(false);
-    }
-    for (const run of data.runs) {
-      expect(run.title).toBeUndefined();
-      for (const span of run.spans) {
-        expect(span.attributes?.['runray.target']).toBeUndefined();
-      }
-    }
+    expectNoText(data, previews);
     expect(await sliceAt(url, data)).toMatchObject({ status: 'redacted' });
   });
 });
@@ -257,7 +310,7 @@ describe.skipIf(resolveExportTemplate() === undefined)(
         jsonOut,
         ...flags,
       ]);
-      expect(process.exitCode).toBeUndefined();
+      expectNothingSkipped();
       const json = readFileSync(jsonOut, 'utf8');
       return {
         html: readFileSync(out, 'utf8'),
@@ -292,22 +345,17 @@ describe.skipIf(resolveExportTemplate() === undefined)(
         plain.data.runs.map((run) => run.id),
       );
       expect(dataOf(html).runs).toEqual(data.runs);
-      expect(previewsOf(data.runs)).toEqual([]);
+      expectNoText(data, previews);
 
-      // neither file holds a preview: as written, as JSON escapes it, as
-      // the page escapes it, or inside any longer string of the trace
-      const written = stringsIn(data);
+      // and neither file holds a preview as text: as it is, as JSON
+      // escapes it, or as the page escapes it. The page is also the app,
+      // so a preview short enough to be a word of the app's own code is
+      // looked for in the trace alone (above), not in the page.
+      const template = readFileSync(resolveExportTemplate() ?? '', 'utf8');
       for (const preview of previews) {
-        for (const form of [preview, inPage(preview)]) {
-          expect(html).not.toContain(form);
+        for (const form of [preview, inJson(preview), inPage(preview)]) {
           expect(json).not.toContain(form);
-        }
-        expect(written.some((text) => text.includes(preview))).toBe(false);
-      }
-      for (const run of data.runs) {
-        expect(run.title).toBeUndefined();
-        for (const span of run.spans) {
-          expect(span.attributes?.['runray.target']).toBeUndefined();
+          if (!template.includes(form)) expect(html).not.toContain(form);
         }
       }
     });
