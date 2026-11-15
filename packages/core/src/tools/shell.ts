@@ -722,11 +722,17 @@ function programName(
  * word is taken as bare, which is how POSIX reads a command name anyway, and
  * a compact assignment (`$x=value`) is skipped whole, since its value could
  * be a string as well as a command.
+ *
+ * `quotedHeadRuns` is for text that another shell may run (a hook command,
+ * whose dialect is a guess): a quoted word at the head of a stage is then a
+ * program, as it is to cmd. The value of an assignment is still told from a
+ * command by its quote, because only PowerShell writes `$x = …` at all.
  */
 export function stageProgram(
   words: readonly string[],
   dialect: ShellDialect,
   quoted?: ReadonlySet<number>,
+  quotedHeadRuns = false,
 ): StageProgram | undefined {
   const ps = dialect === 'powershell';
   const marks = quoted ?? NONE_QUOTED;
@@ -734,6 +740,8 @@ export function stageProgram(
   const terminal = TERMINAL_KEYWORDS[dialect];
   let i = 0;
   let called = false;
+  /** The words so far were `$x =`: the next one is the value assigned. */
+  let afterAssignment = false;
   let lastWrapper: string | undefined;
 
   while (i < words.length) {
@@ -752,6 +760,7 @@ export function stageProgram(
     }
     if (following === '=' || following === '+=') {
       i += 2; // `$x = cmd` — the right-hand side may still be a command
+      afterAssignment = true;
       continue;
     }
     // an assignment has a `=` in it: most words are settled without a regex
@@ -765,9 +774,14 @@ export function stageProgram(
         // `$out=docker ps -q`: PowerShell needs no spaces around `=`, and
         // what follows it in the same word is where the command starts
         const value = word.slice(assigned[0].length);
+        if (value === '') {
+          i++; // `$x= cmd`: the value is the next word
+          afterAssignment = true;
+          continue;
+        }
         // without the marks a quoted value (`$env:CI='true'`) cannot be
         // told from a command, so the whole word stays an assignment
-        if (value === '' || quoted === undefined) {
+        if (quoted === undefined) {
           i++;
           continue;
         }
@@ -784,8 +798,11 @@ export function stageProgram(
     if (terminal.has(keyword)) return undefined;
     // a string, not a command: an assigned value, a list element, text sent
     // down a pipe. Only the call operator runs a quoted word
-    // (`& "C:\tools\x.exe"`)
-    if (ps && !called && marks.has(i)) return undefined;
+    // (`& "C:\tools\x.exe"`). Where another shell may run the text, only an
+    // assigned value is a string for sure
+    if (ps && !called && marks.has(i) && (afterAssignment || !quotedHeadRuns)) {
+      return undefined;
+    }
 
     const resolved = programName(word, dialect, called);
     if (resolved.kind === 'none') return undefined;

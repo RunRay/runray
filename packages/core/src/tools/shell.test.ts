@@ -530,7 +530,7 @@ describe('a quoted PowerShell word', () => {
   });
 
   it('skips a compact assignment whole when the marks are not known', () => {
-    // a hook command is read without them: its value could be a string
+    // a caller with only the words cannot tell a quoted value from a command
     const [stage] = scan("$env:NODE_ENV='test'", 'powershell').flat();
     expect(stageProgram(stage?.words ?? [], 'powershell')).toBeUndefined();
     const [next] = scan('$out=docker ps -q', 'powershell').flat();
@@ -571,16 +571,42 @@ describe('a quoted PowerShell word', () => {
 
   it('runs when the caller says another shell may read the text', () => {
     // a hook command is read in this dialect whenever it holds a Windows
-    // path, and cmd runs a quoted path as it stands: without the quoted
-    // marks every word is taken as bare
+    // path, and cmd runs a quoted path as it stands
     const [stage] = scan(
       '"C:\\Program Files\\nodejs\\node.exe" format.mjs',
       'powershell',
     ).flat();
-    expect(stageProgram(stage?.words ?? [], 'powershell')?.name).toBe('node');
-    expect(
-      stageProgram(stage?.words ?? [], 'powershell', stage?.quoted),
-    ).toBeUndefined();
+    const words = stage?.words ?? [];
+    expect(stageProgram(words, 'powershell')?.name).toBe('node');
+    expect(stageProgram(words, 'powershell', stage?.quoted, true)?.name).toBe(
+      'node',
+    );
+    expect(stageProgram(words, 'powershell', stage?.quoted)).toBeUndefined();
+  });
+
+  it('still reads an assignment by its quote when another shell may run the text', () => {
+    // only PowerShell writes `$x = …`, so the value's quote settles it there
+    const hookPrograms = (command: string): Array<string | undefined> =>
+      scan(command, 'powershell')
+        .flat()
+        .map(
+          (stage) =>
+            stageProgram(stage.words, 'powershell', stage.quoted, true)?.name,
+        );
+    expect(hookPrograms('$out=docker ps --format "C:\\work"')).toEqual([
+      'docker',
+    ]);
+    expect(hookPrograms('$dir="C:\\work"; node C:\\hooks\\x.mjs')).toEqual([
+      undefined,
+      'node',
+    ]);
+    expect(hookPrograms('$dir = "C:\\work"; node C:\\hooks\\x.mjs')).toEqual([
+      undefined,
+      'node',
+    ]);
+    expect(hookPrograms('$out = & "C:\\tools\\git.exe" status')).toEqual([
+      'git',
+    ]);
   });
 
   it('keeps POSIX as it was: a quoted command name runs', () => {

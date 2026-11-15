@@ -213,6 +213,13 @@ redaction rule as shell tool spans.
   `format.mjs`: the transcript does not say which shell ran the hook, and a
   quoted path is a program to every shell but PowerShell
 
+#### Scenario: Hook command with a compact PowerShell assignment
+- GIVEN a failed hook whose command is `$out=docker ps --format "C:\work"`
+- WHEN the transcript is parsed
+- THEN the hook span carries `runray.tool: "docker"` and the subcommand `ps`:
+  only PowerShell writes an assignment this way, so the command after `=` is
+  kept, while `$dir="C:\work"` assigns a string and runs nothing
+
 ### Requirement: A hook span name holds names only
 A span name is kept under redaction, so the claude-code adapter SHALL take a
 hook span's name from the record only when it is shaped like a hook event,

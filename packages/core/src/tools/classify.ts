@@ -509,8 +509,9 @@ function resolveWords(
   trail: Trail,
   via: string | undefined,
   quoted?: ReadonlySet<number>,
+  quotedWordsRun = false,
 ): Candidate[] {
-  const program = stageProgram(words, dialect, quoted);
+  const program = stageProgram(words, dialect, quoted, quotedWordsRun);
   if (program === undefined) return [];
   if (program.name === undefined) {
     return [
@@ -546,7 +547,8 @@ function candidatesOf(
         dialect,
         trail,
         via,
-        quotedWordsRun ? undefined : stage.quoted,
+        stage.quoted,
+        quotedWordsRun,
       )) {
         out.push(c);
       }
@@ -558,10 +560,13 @@ function candidatesOf(
 export interface ClassifyOptions {
   /**
    * The text may be run by a shell other than the dialect's own, so a quoted
-   * word is never taken for a string. A hook command with a Windows path is
-   * read as PowerShell for its backslashes, yet cmd may be what runs it, and
-   * cmd runs `"C:\Program Files\nodejs\node.exe" format.mjs` as it stands.
-   * A shell nested inside the command is read by its own rules either way.
+   * word at the head of a stage is a program, not a string. A hook command
+   * with a Windows path is read as PowerShell for its backslashes, yet cmd
+   * may be what runs it, and cmd runs
+   * `"C:\Program Files\nodejs\node.exe" format.mjs` as it stands. The value
+   * of an assignment is still read by its quote: `$out=docker ps` runs
+   * docker and `$dir="D:\work"` runs nothing, in a hook as anywhere. A shell
+   * nested inside the command is read by its own rules either way.
    */
   quotedWordsRun?: boolean;
 }

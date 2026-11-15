@@ -543,6 +543,30 @@ describe('a PowerShell string assigned to a variable is not a call', () => {
     ).toMatchObject({ tool: 'pnpm', activity: 'test', also: [] });
   });
 
+  it('keeps the command of a compact assignment when another shell may run the text', () => {
+    // the hook path: a quoted head still runs, an assigned value is still
+    // read by its quote
+    expect(
+      classifyCommand('$out=docker ps --format "C:\\work"', 'powershell', {
+        quotedWordsRun: true,
+      }),
+    ).toMatchObject({ tool: 'docker', sub: 'ps', activity: 'infra' });
+    expect(
+      classifyCommand(
+        '$dir="C:\\work"; node C:\\hooks\\format.mjs',
+        'powershell',
+        {
+          quotedWordsRun: true,
+        },
+      ),
+    ).toMatchObject({
+      tool: 'node',
+      sub: 'script',
+      script: 'format.mjs',
+      also: [],
+    });
+  });
+
   it('reports no program name for the assigned text', () => {
     for (const command of [
       '$file = "package.json"',
