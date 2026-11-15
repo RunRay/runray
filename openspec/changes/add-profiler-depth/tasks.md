@@ -535,3 +535,11 @@ automatically extends its fixture-parameterized equivalence matrix.
       states.
 - [x] 17.4 A+B Docs (05-ARCHITECTURE component tree and store, 11/12
       onboarding hint tables, `limitWindow` in the README) and a changeset.
+- [x] 17.5 B Bot review follow-ups to 17.2: every window boundary is built
+      from its own calendar date and the reset hour, so a reset hour a
+      spring-forward gap skips on one date (02:00 read as 03:00) never
+      carries to the others; with a browser-only filter on, the export
+      dialog counts the loaded runs its `--source` and `--since` flags keep,
+      not every loaded run; the since-reset store test builds its runs in
+      local time, so it holds in every zone. Tests in `limit-window.test.ts`
+      and `export-command.test.ts`.
