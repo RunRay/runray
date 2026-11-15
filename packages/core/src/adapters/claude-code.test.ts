@@ -1500,6 +1500,17 @@ describe('claude-code adapter — hook spans', () => {
       stopSummary('s2', '2026-11-03T10:00:09.600Z', ['bash ~/.claude/done.sh']),
       // a count without commands still says how many ran
       stopSummary('s3', '2026-11-03T10:00:09.700Z', [], { hookCount: 2 }),
+      // fewer commands listed than hooks counted: the rest may have run
+      // anything, so the span names no tool
+      stopSummary('s4', '2026-11-03T10:00:09.800Z', ['node /h/a.mjs'], {
+        hookCount: 3,
+      }),
+      stopSummary(
+        's5',
+        '2026-11-03T10:00:09.900Z',
+        ['node /h/a.mjs', 'node /h/b.mjs'],
+        { hookCount: 5 },
+      ),
     ]);
     const byId = new Map(hooksOf(run).map((s) => [s.id, s]));
     expect(byId.get('s1')?.status).toBe('error');
@@ -1513,6 +1524,8 @@ describe('claude-code adapter — hook spans', () => {
       'runray.hookCount': 1,
     });
     expect(byId.get('s3')?.attributes).toEqual({ 'runray.hookCount': 2 });
+    expect(byId.get('s4')?.attributes).toEqual({ 'runray.hookCount': 3 });
+    expect(byId.get('s5')?.attributes).toEqual({ 'runray.hookCount': 5 });
   });
 
   it('emits nothing for hooks the transcript does not record', async () => {

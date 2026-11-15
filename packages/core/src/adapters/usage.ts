@@ -128,7 +128,10 @@ export function hookCommandAttributes(
  * The payload for a stop-hook summary, one span standing for `hookCount`
  * hook runs. A single command is classified in full. Several commands name
  * a tool only when every one of them ran the same one: a span has one
- * identity, and picking the first hook's would misreport the others.
+ * identity, and picking the first hook's would misreport the others. For
+ * the same reason nothing is named when the record lists fewer commands
+ * than the hooks it counts: the ones it does not list may have run
+ * anything.
  */
 export function hookSummaryAttributes(
   commands: readonly string[],
@@ -137,10 +140,12 @@ export function hookSummaryAttributes(
 ): Record<string, unknown> {
   const classified = commands.map((c) => hookCommandAttributes(c, redact));
   const first = classified[0];
+  const covered = classified.length === hookCount;
   const out: Record<string, unknown> = {};
-  if (first !== undefined && classified.length === 1) {
+  if (covered && first !== undefined && classified.length === 1) {
     Object.assign(out, first);
   } else if (
+    covered &&
     first !== undefined &&
     first[TOOL_ATTR.tool] !== undefined &&
     classified.every(

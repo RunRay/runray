@@ -474,6 +474,27 @@ describe('toolUsage — delegations', () => {
     });
   });
 
+  it('keeps a delegation open while its call is, whatever the agent finished', () => {
+    // the call has no result yet; one of its subagents has already ended
+    const agent = span({ name: 'Agent', ms: null });
+    const subagent = span({
+      kind: 'subagent',
+      name: 'subagent:Explore',
+      parentId: agent.id,
+      agent: { name: 'Explore' },
+      ms: MIN,
+    });
+    const { agents } = toolUsage([agent, subagent]);
+    expect(agents).toMatchObject({ calls: 1, totalMs: 0 });
+    expect(agents.rows[0]).toMatchObject({
+      key: 'Explore',
+      calls: 1,
+      open: 1,
+      totalMs: 0,
+      maxMs: 0,
+    });
+  });
+
   it('ranks a delegation without a recorded subagent as a plain call', () => {
     const usage = toolUsage([span({ name: 'Agent', ms: 2 * MIN })]);
     expect(usage.agents.calls).toBe(0);
