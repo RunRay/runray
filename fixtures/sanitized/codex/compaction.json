@@ -27,6 +27,7 @@
       "durationMs": 0,
       "depth": 0,
       "agent": {
+        "name": "guardian",
         "sessionId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe"
       },
       "attributes": {},
@@ -361,17 +362,5 @@
       "hitRate": 0.7909
     }
   },
-  "insights": [
-    {
-      "id": "i1",
-      "ruleId": "fixed-context-overhead",
-      "severity": "info",
-      "title": "Session starts with a 88.0k-token context footprint",
-      "detail": "The first model call already carried 88.0k input-class tokens (tool definitions, project instructions, attachments); 68.0k tokens above the 20.0k floor were written once and re-read on each of the 5 later calls.",
-      "spanIds": [
-        "resp_03f02be6f87bafd9016aa06e590b7887d2826d75e772e0277c"
-      ],
-      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (no MCP server was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 68.0k tokens above the floor were re-read 5 times."
-    }
-  ]
+  "insights": []
 }
