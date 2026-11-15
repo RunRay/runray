@@ -7,7 +7,7 @@ npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
-Needs Node.js 22 or newer.
+Needs Node.js 22.22 or newer.
 
 ![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
