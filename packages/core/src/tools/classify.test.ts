@@ -166,6 +166,68 @@ describe('runner unwrapping', () => {
       command: 'bash -c "bash -c \\"bash -c \'docker ps\'\\""',
       expect: { tool: 'bash', sub: 'inline' },
     },
+    {
+      // the first operand is the script; `-c` after it is the script's own
+      command: "bash /opt/build.sh -c 'pnpm test'",
+      expect: { tool: 'bash', sub: 'script', script: 'build.sh', also: [] },
+    },
+    {
+      // cmd's options do start with a slash
+      command: 'cmd /d /c "npm run build"',
+      dialect: 'powershell',
+      expect: { tool: 'npm', sub: 'run', script: 'build', via: 'cmd /c' },
+    },
+  ]);
+
+  it('finds the command flag past a redirection', () => {
+    // a redirection can stand anywhere and is no argument of the shell
+    const after = classifyCommand("bash -c 'pnpm test' 2>&1", 'posix');
+    expect(after).toMatchObject({ tool: 'pnpm', activity: 'test' });
+    expect(classifyCommand("bash 2>&1 -c 'pnpm test'", 'posix')).toEqual(after);
+    expect(classifyCommand("bash > out.log -c 'pnpm test'", 'posix')).toEqual(
+      after,
+    );
+  });
+});
+
+describe('review follow-up: words the scanner used to glue or drop', () => {
+  check([
+    {
+      command: 'pytest>results.txt',
+      expect: { tool: 'pytest', activity: 'test' },
+    },
+    {
+      command: 'pnpm build>build.log 2>&1',
+      expect: { tool: 'pnpm', sub: 'run', script: 'build', activity: 'build' },
+    },
+    {
+      // pnpm's `-w` is a flag; npm's takes the workspace name
+      command: 'pnpm -w build',
+      expect: { tool: 'pnpm', sub: 'run', script: 'build', activity: 'build' },
+    },
+    {
+      command: 'pnpm -w add left-pad',
+      expect: { tool: 'pnpm', sub: 'add', activity: 'deps', noScript: true },
+    },
+    {
+      command: 'npm -w web run build',
+      expect: { tool: 'npm', sub: 'run', script: 'build', activity: 'build' },
+    },
+    {
+      command: '$out=docker ps -q',
+      dialect: 'powershell',
+      expect: { tool: 'docker', sub: 'ps', activity: 'infra' },
+    },
+    {
+      command: '$dir="D:\\work"; Get-ChildItem $dir',
+      dialect: 'powershell',
+      expect: { tool: 'get-childitem', activity: 'explore', also: [] },
+    },
+    {
+      // an indented `EOF` does not end the body, so nothing in it runs
+      command: "cat <<'EOF'\n EOF\ndocker run acme\nEOF\nls",
+      expect: { tool: 'cat', also: [] },
+    },
   ]);
 });
 
