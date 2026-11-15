@@ -356,12 +356,28 @@ export interface DowngradeSuggestion {
  * entries). Walks further down when an intermediate stage is missing;
  * models outside every ladder, or already at the bottom, yield nothing.
  * Deterministic, offline — no network, no config.
+ *
+ * The ladder orders stages by capability, and a stage is found by the
+ * model's name, so a lower stage is not always a lower price: a cheap
+ * model of a new generation matches the flagship stage (`gpt-5.6-luna` at
+ * 0.2/1.2 against `gpt-5.4-mini` at 0.75/4.5). Where the model itself is
+ * priced, a stage is taken only when neither its input nor its output rate
+ * is above the model's and at least one is below; otherwise the walk goes
+ * on down. A model with no price of its own has nothing to compare with
+ * and keeps the first stage that resolves.
  */
 export function suggestedDowngrade(
   model: string,
   table: PricingTable,
 ): DowngradeSuggestion | undefined {
   const canon = canonicalModelName(model);
+  const own = matchModel(table, canon);
+  const cheaper = (entry: PricingEntry): boolean =>
+    own === undefined ||
+    (entry.inputPerMTok <= own.inputPerMTok &&
+      entry.outputPerMTok <= own.outputPerMTok &&
+      (entry.inputPerMTok < own.inputPerMTok ||
+        entry.outputPerMTok < own.outputPerMTok));
   for (let f = 0; f < MODEL_TIERS.length; f++) {
     const stages = MODEL_TIERS[f];
     const order = LADDER_ORDER[f];
@@ -376,7 +392,8 @@ export function suggestedDowngrade(
       if (
         entry !== undefined &&
         entry.inputPerMTok > 0 &&
-        entry.outputPerMTok > 0
+        entry.outputPerMTok > 0 &&
+        cheaper(entry)
       ) {
         return { target: next.target, entry };
       }

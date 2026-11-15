@@ -144,6 +144,47 @@ describe('suggestedDowngrade (C4)', () => {
     expect(suggestedDowngrade('claude-opus-4-8', opusOnly)).toBeUndefined();
   });
 
+  it('a lower stage that costs more is not a cheaper tier', () => {
+    // a cheap model of a new generation is found by the flagship stage;
+    // the mini stage below it costs more on both rates, the nano stage on
+    // one of them
+    expect(suggestedDowngrade('gpt-5.6-luna', bundled)).toBeUndefined();
+    expect(suggestedDowngrade('gemini-2.0-flash', bundled)).toBeUndefined();
+    const table = tableOf([
+      ['gpt-5.9', 0.5, 3],
+      ['gpt-5.4-mini', 0.75, 4.5],
+      ['gpt-5.4-nano', 0.2, 1.25],
+    ]);
+    // the walk goes on down to the first stage that is cheaper
+    expect(suggestedDowngrade('gpt-5.9', table)?.target).toBe('gpt-5.4-nano');
+  });
+
+  it('a stage cheaper on one rate and dearer on the other is passed over', () => {
+    const table = tableOf([
+      ['gemini-2.5-pro', 1.25, 10],
+      ['gemini-3.5-flash', 1.5, 9],
+      ['gemini-3.1-flash-lite', 0.25, 1.5],
+    ]);
+    expect(suggestedDowngrade('gemini-2.5-pro', table)?.target).toBe(
+      'gemini-3.1-flash-lite',
+    );
+  });
+
+  it('a stage at the same rates is no saving', () => {
+    const table = tableOf([
+      ['claude-opus-4-8', 5, 25],
+      ['claude-sonnet-5', 5, 25],
+    ]);
+    expect(suggestedDowngrade('claude-opus-4-8', table)).toBeUndefined();
+  });
+
+  it('a model with no price of its own keeps the first stage that resolves', () => {
+    const table = tableOf([['gpt-5.4-mini', 0.75, 4.5]]);
+    expect(suggestedDowngrade('gpt-5.9-unlisted', table)?.target).toBe(
+      'gpt-5.4-mini',
+    );
+  });
+
   it('the returned entry is the effective table match for the target', () => {
     const s = suggestedDowngrade('claude-opus-4-8', bundled);
     expect(s?.entry).toBe(matchModel(bundled, s?.target ?? ''));
