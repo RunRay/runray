@@ -2564,7 +2564,16 @@ describe('codex commands', () => {
   /** The span of one command action with the given `command`. */
   const commandSpan = async (
     argv: unknown,
-    { redact = false, cwd }: { redact?: boolean; cwd?: string } = {},
+    {
+      redact = false,
+      cwd,
+      item = {},
+    }: {
+      redact?: boolean;
+      cwd?: string;
+      /** Fields of the action item other than its command. */
+      item?: Record<string, unknown>;
+    } = {},
   ) => {
     const { raw } = await parseLines(
       [
@@ -2572,7 +2581,7 @@ describe('codex commands', () => {
         started(1, TURN_A),
         toolCall(2, 'call_1'),
         usageRecord(3, TURN_A, 'resp_1'),
-        action(4, TURN_A, command('exec-1', { command: argv }), 3),
+        action(4, TURN_A, command('exec-1', { command: argv, ...item }), 3),
         toolOutput(5, 'call_1'),
         completed(6, TURN_A),
       ],
@@ -2993,9 +3002,187 @@ describe('codex commands', () => {
     });
   });
 
+  it('hands a POSIX shell the one word after its switch, however the switch is spelled', async () => {
+    // `bash -lc cargo test` runs `cargo`; `test` is the name the script
+    // goes by, not an argument of cargo
+    for (const flag of ['-c', '-lc', '-ic']) {
+      const span = await commandSpan(['bash', flag, 'cargo', 'test']);
+      expect(span?.attributes['runray.tool'], flag).toBe('cargo');
+      expect(span?.attributes, flag).not.toHaveProperty('runray.toolSub');
+    }
+  });
+
+  it('finds the switch behind an option that takes a value, and the one that keeps cmd open', async () => {
+    const npm = {
+      'runray.tool': 'npm',
+      'runray.targetKey': targetKeyOf('npm'),
+    };
+    for (const flag of ['-c', '-Command', '-COMMAND']) {
+      const span = await commandSpan([
+        'pwsh',
+        '-ExecutionPolicy',
+        'Bypass',
+        flag,
+        'npm run build',
+      ]);
+      expect(span?.attributes, flag).toMatchObject(npm);
+    }
+    for (const flag of ['/k', '/K', '/c']) {
+      const span = await commandSpan(['cmd.exe', flag, 'npm run build']);
+      expect(span?.attributes, flag).toMatchObject(npm);
+    }
+  });
+
+  it('reads the command of an exec_command call from its cmd argument', async () => {
+    const span = await callSpan('exec_command', {
+      cmd: 'git status',
+      yield_time_ms: 1000,
+    });
+    expect(span).toMatchObject({
+      name: 'exec_command',
+      attributes: {
+        'runray.tool': 'git',
+        'runray.toolSub': 'status',
+        'runray.targetKey': targetKeyOf('git'),
+      },
+    });
+  });
+
+  it('runs a quoted program where cmd may be the shell, and not where PowerShell is named', async () => {
+    const quoted = '"C:\\Program Files\\nodejs\\node.exe" build.mjs';
+    const node = { 'runray.tool': 'node', 'runray.toolSub': 'script' };
+    // handed to cmd, which runs a quoted path
+    expect(
+      (await commandSpan(['cmd.exe', '/c', quoted]))?.attributes,
+    ).toMatchObject(node);
+    // a bare string names no shell, so cmd may be what runs it
+    expect(
+      (
+        await callSpan(
+          'shell_command',
+          { command: quoted },
+          'C:\\work\\billing-portal',
+        )
+      )?.attributes,
+    ).toMatchObject(node);
+    // PowerShell by name: a quoted word alone is a string, not a program
+    const named = await commandSpan(['pwsh.exe', '-Command', quoted]);
+    expect(named?.attributes['runray.tool']).not.toBe('node');
+  });
+
+  it('sizes a command by what the model was shown, or by the whole output where that is all the item has', async () => {
+    const shown = await commandSpan(undefined, {
+      item: { formatted_output: 'zażółć\n', aggregated_output: 'x'.repeat(90) },
+    });
+    expect(shown?.tool?.outputBytes).toBe(Buffer.byteLength('zażółć\n'));
+    expect(shown?.tool?.outputBytes).toBeGreaterThan('zażółć\n'.length);
+    // the older item has the whole output only
+    const whole = await commandSpan(undefined, {
+      item: { formatted_output: undefined, aggregated_output: 'gęś\n' },
+    });
+    expect(whole?.tool?.outputBytes).toBe(Buffer.byteLength('gęś\n'));
+    const none = await commandSpan(undefined, {
+      item: { formatted_output: undefined, aggregated_output: undefined },
+    });
+    expect(none?.tool).not.toHaveProperty('outputBytes');
+  });
+
+  it('previews a failed command from the whole of its output, before what the model was shown', async () => {
+    const failed = await commandSpan(undefined, {
+      item: {
+        status: 'failed',
+        exit_code: 1,
+        aggregated_output: 'error TS2304: Cannot find name vat\n',
+        formatted_output: 'Exit code: 1\nOutput:\nerror TS2304',
+      },
+    });
+    expect(failed).toMatchObject({
+      status: 'error',
+      tool: { isError: true, exitCode: 1 },
+      content: { outputPreview: 'error TS2304: Cannot find name vat\n' },
+    });
+    // nothing but what the model was shown: that is the preview
+    const shownOnly = await commandSpan(undefined, {
+      item: {
+        status: 'failed',
+        aggregated_output: '',
+        formatted_output: 'command timed out',
+      },
+    });
+    expect(shownOnly?.content).toEqual({ outputPreview: 'command timed out' });
+  });
+
+  it('takes the end of an action from its own clock, and never starts it after it ended', async () => {
+    const timed = async (fromSec: number, toSec: number) => {
+      const { raw } = await parseLines([
+        sessionMeta(0),
+        started(1, TURN_A),
+        toolCall(2, 'call_1'),
+        usageRecord(3, TURN_A, 'resp_1'),
+        // written at second 9, whatever the action's own times say
+        rec(9, 'event_msg', {
+          type: 'item_completed',
+          thread_id: ROOT,
+          turn_id: TURN_A,
+          item: command('exec-1', { duration: undefined }),
+          started_at_ms: Date.parse(at(fromSec)),
+          completed_at_ms: Date.parse(at(toSec)),
+        }),
+        toolOutput(10, 'call_1'),
+        completed(11, TURN_A),
+      ]);
+      const span = toolsOf(raw)[0];
+      return [span?.startedAt, span?.endedAt, span?.durationMs];
+    };
+    expect(await timed(4, 6)).toEqual([at(4), at(6), 2000]);
+    // a start after the end is a clock that disagrees with itself
+    expect(await timed(8, 6)).toEqual([at(6), at(6), 0]);
+  });
+
   it('stamps nothing on a call that is not to a shell tool', async () => {
     const plan = await callSpan('update_plan', { command: 'pnpm test' });
     expect(plan).toMatchObject({ name: 'update_plan', attributes: {} });
+  });
+});
+
+describe('codex records whose times run backwards', () => {
+  // A span never starts after it ended: the schema has no negative
+  // duration, and a bar drawn from such a span would run to the left.
+  it('ends a model call no earlier than it began', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      toolCall(2, 'call_1'),
+      usageRecord(3, TURN_A, 'resp_1'),
+      toolOutput(8, 'call_1'),
+      // stamped before the output that its request followed
+      usageRecord(5, TURN_A, 'resp_2'),
+      completed(9, TURN_A),
+    ]);
+    expect(raw.spans.find((s) => s.id === 'resp_2')).toMatchObject({
+      startedAt: at(5),
+      endedAt: at(5),
+      durationMs: 0,
+    });
+    expect(RunSchema.safeParse(normalize(priceRun(raw))).error).toBeUndefined();
+  });
+
+  it('ends a call no earlier than it was made', async () => {
+    const { raw } = await parseLines([
+      sessionMeta(0),
+      started(1, TURN_A),
+      functionCall(5, 'call_1', 'update_plan', { plan: [] }),
+      usageRecord(6, TURN_A, 'resp_1'),
+      // the output is stamped before its call
+      functionOutput(3, 'call_1', 'Plan updated'),
+      completed(7, TURN_A),
+    ]);
+    expect(toolsOf(raw)[0]).toMatchObject({
+      name: 'update_plan',
+      startedAt: at(3),
+      endedAt: at(3),
+      durationMs: 0,
+    });
   });
 });
 
@@ -3157,6 +3344,36 @@ describe('codex MCP calls and extensions', () => {
       expect(JSON.stringify(raw.spans)).not.toContain('team not found');
       expect(JSON.stringify(raw.spans)).not.toContain('tool call failed');
     }
+  });
+
+  it('counts the text an MCP tool returned in bytes, and previews a failure from the first text that says something', async () => {
+    const text = 'zażółć gęślą jaźń';
+    const counted = await only(
+      scripted(
+        mcp('exec-1', {
+          result: { content: [{ type: 'text', text }], isError: false },
+        }),
+      ),
+    );
+    expect(counted.span?.tool?.outputBytes).toBe(Buffer.byteLength(text));
+    expect(counted.span?.tool?.outputBytes).toBeGreaterThan(text.length);
+    const blankFirst = await only(
+      scripted(
+        mcp('exec-1', {
+          status: 'failed',
+          result: {
+            content: [
+              { type: 'text', text: '  \n' },
+              { type: 'text', text: 'Error: team not found' },
+            ],
+            isError: true,
+          },
+        }),
+      ),
+    );
+    expect(blankFirst.span?.content).toEqual({
+      outputPreview: 'Error: team not found',
+    });
   });
 
   it('reads a web search as a span named web.search and keeps the query out', async () => {
@@ -3401,6 +3618,48 @@ describe('codex file changes', () => {
     // no hunk header at all: line by line, headers left out
     expect(await linesOf('--- a/x\n+++ b/x\n-a\n+b\n+c\n')).toEqual([2, 1]);
     expect(await linesOf('')).toEqual([0, 0]);
+    // the no-newline marker inside a hunk is a line of neither side
+    expect(
+      await linesOf('@@ -1 +1 @@\n-a\n\\ No newline at end of file\n+b\n'),
+    ).toEqual([1, 1]);
+    // a side whose size the header leaves out is one line long
+    expect(
+      await linesOf('@@ -1 +0,0 @@\n-a\n-- not a line of this hunk\n'),
+    ).toEqual([0, 1]);
+  });
+
+  it('counts nothing for a change it cannot read, and still names the file', async () => {
+    for (const change of [
+      { type: 'update', move_path: null }, // no diff
+      { type: 'rename', to: 'elsewhere.ts' }, // a kind a later Codex adds
+      null,
+      'changed',
+    ]) {
+      const { span } = await changeSpan(fileChange({ [TOTALS]: change }));
+      expect(span?.tool, JSON.stringify(change)).toEqual({
+        name: 'apply_patch',
+        isError: false,
+        linesAdded: 0,
+        linesRemoved: 0,
+      });
+      expect(span?.attributes['runray.targetKey']).toBe(fileKeyOf(TOTALS));
+    }
+  });
+
+  it('previews a failed change from what the patch tool said went wrong, before what it printed', async () => {
+    const { span } = await changeSpan(
+      fileChange(
+        { [TOTALS]: update('@@ -1 +1,2 @@\n a\n+b\n') },
+        {
+          status: 'failed',
+          stdout: 'Checking src/totals.ts\n',
+          stderr: 'Failed to find expected lines in src/totals.ts\n',
+        },
+      ),
+    );
+    expect(span?.content).toEqual({
+      outputPreview: 'Failed to find expected lines in src/totals.ts\n',
+    });
   });
 
   it('sums the lines over every file of a change, and names no target when there are several', async () => {
@@ -3651,6 +3910,39 @@ describe('codex file changes', () => {
       attributes: { 'runray.tool': 'rg' },
     });
     expect(span?.tool).not.toHaveProperty('linesAdded');
+    // nor is a script that holds a patch's text and names the tool in passing
+    const [quoting] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: [
+          'bash',
+          '-lc',
+          `cat <<'EOF' > notes.txt # for apply_patch later\n${PATCH}\nEOF`,
+        ],
+      }),
+      DONE,
+    );
+    expect(quoting).toMatchObject({
+      name: 'shell',
+      attributes: { 'runray.tool': 'cat' },
+    });
+    expect(quoting?.tool).not.toHaveProperty('linesAdded');
+  });
+
+  it('counts the lines of a legacy patch up to its end, not the script after it', async () => {
+    const [span] = await legacySpans(
+      functionCall(3, 'call_1', 'shell', {
+        command: [
+          'bash',
+          '-lc',
+          `apply_patch <<'EOF'\n${PATCH}\nEOF\n+ git status\n- done`,
+        ],
+      }),
+      DONE,
+    );
+    expect(span).toMatchObject({
+      name: 'apply_patch',
+      tool: { linesAdded: 2, linesRemoved: 1 },
+    });
   });
 
   it('emits one span for a legacy patch call that also has a file change item', async () => {
