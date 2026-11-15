@@ -1658,6 +1658,34 @@ describe('claude-code adapter — hook spans', () => {
     ]);
   });
 
+  it('keeps the command of a compact PowerShell assignment in a hook (spec scenario)', async () => {
+    // the Windows path makes this a PowerShell reading; the program is what
+    // follows `=`, not the word after it
+    const run = await parseLines([
+      ...turn.slice(0, 2),
+      hookError('h1', '2026-11-03T10:00:07.000Z', {
+        command: '$out=docker ps --format "C:\\work"',
+      }),
+      hookError('h2', '2026-11-03T10:00:07.001Z', {
+        command:
+          '$dir="C:\\work"; node C:\\Users\\alex\\.claude\\hooks\\format.mjs',
+      }),
+      ...turn.slice(3),
+    ]);
+    const byId = new Map(hooksOf(run).map((s) => [s.id, s.attributes]));
+    expect(byId.get('h1')).toEqual({
+      'runray.toolActivity': 'infra',
+      'runray.tool': 'docker',
+      'runray.toolSub': 'ps',
+    });
+    expect(byId.get('h2')).toEqual({
+      'runray.toolActivity': 'run',
+      'runray.tool': 'node',
+      'runray.toolSub': 'script',
+      'runray.toolScript': 'format.mjs',
+    });
+  });
+
   it('never lets free text become a span name', async () => {
     const run = await parseLines([
       ...turn.slice(0, 2),

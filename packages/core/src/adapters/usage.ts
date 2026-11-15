@@ -144,7 +144,8 @@ export function hookCommandAttributes(
   const text = command?.trim() ?? '';
   if (text === '' || text === CALLBACK_COMMAND) return {};
   // the dialect is a guess from the text, and cmd runs a quoted path that
-  // PowerShell would take for a string
+  // PowerShell would take for a string. The value of an assignment is still
+  // read by its quote, so `$out=docker ps` keeps its command
   return shellScriptAttributes(text, guessShellDialect(text), true, redact);
 }
 
