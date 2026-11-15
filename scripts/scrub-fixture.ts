@@ -45,6 +45,7 @@ import { hostname, userInfo } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import {
   type CodexScrubResult,
+  holdsRollouts,
   ROLLOUT_FILE,
   scrubCodexFile,
 } from './scrub-codex.js';
@@ -425,7 +426,9 @@ function parseArgs(argv: string[]): Options {
       'usage: pnpm scrub <raw-file|dir|db> [-o <out>] [--source <id>] [--session <ses_id>]',
     );
   if (!source)
-    source = ROLLOUT_FILE.test(basename(input))
+    // a rollout, or a directory with one anywhere in it (the README's own
+    // example is a directory): never the generic walker for those
+    source = holdsRollouts(input)
       ? 'codex'
       : input.endsWith('.jsonl')
         ? 'claude-code'

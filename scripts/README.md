@@ -114,11 +114,11 @@ identity attributes, and lorem's only free-text values.
 
 A Codex rollout (`rollout-<time>-<thread>.jsonl`, or `.jsonl.zst` once Codex
 has compressed it) has its own rules, in `scrub-codex.ts`. The flag is implied
-by the file name; a directory needs it spelled out.
+by the file name, and for a directory by a rollout anywhere beneath it.
 
 ```sh
 pnpm scrub fixtures/codex/simple/raw/rollout-….jsonl
-pnpm scrub fixtures/codex/guardian/raw --source codex   # a root and its reviewer threads
+pnpm scrub fixtures/codex/guardian/raw   # a root and its reviewer threads
 ```
 
 The default-scrub is stricter here than for the other sources, because a
@@ -134,7 +134,12 @@ as native JSON next to Codex's own fields:
   printed on your terminal as `UNKNOWN keys`. That is a new Codex field: add
   it to `KNOWN_KEYS` if the adapter needs it. `GUARDED values` lists
   structural keys whose value did not look like an id or an enum and was
-  scrubbed.
+  scrubbed. Such a value is kept only as one word (a word may open with a
+  colon), a UTC time or, under `originator`, a name of up to three words: a
+  sentence, a name of a person and a `host:port` are not structure.
+- **What the scrubber cannot judge stays.** Numbers are kept wherever they
+  are, in a payload included, and a single word under a structural key is
+  kept even when it is a host name. Read the result before committing it.
 - **Paths used as keys** (`FileChange.changes`) are canonicalised like path
   values.
 - **Diffs and patches keep their shape.** Marker lines (`*** Update File:`,

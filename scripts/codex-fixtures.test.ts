@@ -119,7 +119,11 @@ const STRUCTURAL_KEYS = new Set([
   'other',
   'id',
 ]);
-const STRUCTURAL_VALUE = /^[A-Za-z0-9 _.:+-]{1,80}$/;
+// one word or a UTC time, as the scrubber keeps them (`SAFE_VALUE`)
+const STRUCTURAL_VALUE =
+  /^(?::?[A-Za-z0-9_.+-]{1,80}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z)$/;
+// the client's name, the one such value of several words
+const CLIENT_NAME = /^[A-Za-z0-9_.+-]{1,40}(?: [A-Za-z0-9_.+-]{1,40}){0,2}$/;
 /** A shell wrapper's own flag. Only `cmd` writes a switch with a slash;
  * under any other program `/word` is a path. */
 const ARGV_FLAG = /^-[A-Za-z]{1,24}$/;
@@ -219,7 +223,12 @@ function offendingKeys(
   const label = key === '' ? '(top level)' : key;
   if (typeof value === 'string') {
     if (isClean(value)) return;
-    if (STRUCTURAL_KEYS.has(key) && STRUCTURAL_VALUE.test(value)) return;
+    if (
+      STRUCTURAL_KEYS.has(key) &&
+      (STRUCTURAL_VALUE.test(value) ||
+        (key === 'originator' && CLIENT_NAME.test(value)))
+    )
+      return;
     if (flag?.test(value)) return;
     if (value.startsWith('{') || value.startsWith('[')) {
       try {

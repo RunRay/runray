@@ -38,8 +38,14 @@
  * The CLI wiring (arguments, output paths, the report) lives in
  * scrub-fixture.ts.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import {
+  type Dirent,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { zstdCompressSync } from 'node:zlib';
 import {
   isCompressedRollout,
@@ -140,9 +146,26 @@ const PRESERVE_KEYS = new Set<string>([
   'originator',
 ]);
 
-/** An id, enum, model or version: no path separator, no address, no line
- * break. A preserved key whose value is anything else is scrubbed. */
-const SAFE_VALUE = /^[A-Za-z0-9 _.:+-]{1,80}$/;
+/** An id, enum, model or version: one word, so no space, no path separator
+ * and no line break, or a UTC time. A colon opens a word (`:workspace`, an
+ * id of the harness) or is in a time, and is nowhere else, which keeps a
+ * `host:port` out. A preserved key whose value is anything
+ * else is scrubbed and reported: a sentence the model wrote under `reason`
+ * or a person's name under `name` is not structure. What a word can still
+ * be is a host name (`build.corp.example`); the checklist the scrubber
+ * prints says to read the result. */
+const SAFE_VALUE =
+  /^(?::?[A-Za-z0-9_.+-]{1,80}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z)$/;
+/** The client that started the session, the one preserved value that is a
+ * name of several words (`Codex Desktop`). */
+const CLIENT_NAME = /^[A-Za-z0-9_.+-]{1,40}(?: [A-Za-z0-9_.+-]{1,40}){0,2}$/;
+
+/** True when a value under a preserved key is structure and stays. */
+function isStructuralValue(key: string, value: string): boolean {
+  return (
+    SAFE_VALUE.test(value) || (key === 'originator' && CLIENT_NAME.test(value))
+  );
+}
 
 const PATH_KEYS = new Set<string>([
   'cwd',
@@ -523,7 +546,7 @@ function scrubChanges(changes: Json, ctx: Ctx): Json {
 function preserved(key: string, value: unknown, ctx: Ctx): unknown {
   if (typeof value !== 'string') return structural(value, key, ctx);
   ctx.stats.strings++;
-  if (SAFE_VALUE.test(value)) return redactSecrets(value, ctx.secrets);
+  if (isStructuralValue(key, value)) return redactSecrets(value, ctx.secrets);
   bump(ctx.stats.guardedKeys, key);
   return redactSecrets(scrubText(value), ctx.secrets);
 }
@@ -769,6 +792,30 @@ export function isScrubMarkerLine(line: string): boolean {
 
 /** File names Codex gives a rollout, plain or compressed. */
 export const ROLLOUT_FILE = /^rollout-.*\.jsonl(\.zst)?$/;
+
+/**
+ * True for a rollout file, or a directory with one anywhere beneath it: the
+ * input is Codex's, whatever else the tree holds. The scrubber goes by this
+ * when no `--source` is given. A directory used to fall to the generic
+ * walker, which keeps a value by its key's name and an object's keys as
+ * they are, and stamped the result as scrubbed with the paths of a file
+ * change still in it.
+ */
+export function holdsRollouts(input: string): boolean {
+  if (ROLLOUT_FILE.test(basename(input))) return true;
+  let entries: Dirent[];
+  try {
+    if (!statSync(input).isDirectory()) return false;
+    entries = readdirSync(input, { withFileTypes: true });
+  } catch {
+    return false;
+  }
+  return entries.some((entry) =>
+    entry.isDirectory()
+      ? holdsRollouts(join(input, entry.name))
+      : ROLLOUT_FILE.test(entry.name),
+  );
+}
 
 /**
  * Scrub one rollout file into `output`. The input is read plain or

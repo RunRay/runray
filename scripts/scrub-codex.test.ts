@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 import { readRolloutLines } from '../packages/core/src/rollout-lines.js';
 import {
   BLOB_PLACEHOLDER,
+  holdsRollouts,
   isScrubMarkerLine,
   newCodexStats,
   ROLLOUT_FILE,
@@ -742,6 +743,41 @@ describe('scrubCodexRecord', () => {
     ]);
   });
 
+  it('keeps a word under a structural key and scrubs a sentence, a name of a person or an address there', () => {
+    const stats = newCodexStats();
+    const out = scrubCodexRecord(
+      base('response_item', 2, {
+        type: 'function_call',
+        call_id: 'call_ok',
+        // a person's name, a sentence and an address are not structure
+        name: 'Maria Kowalska',
+        status: 'approved by the release manager',
+        id: 'build7.internal:8443',
+        // these are: a word, a word that opens with a colon, a time
+        model: 'gpt-5.2-codex',
+        role: ':workspace',
+        timestamp: '2026-10-13T09:00:00.000Z',
+      }),
+      secrets,
+      stats,
+    ) as Loose;
+    const text = JSON.stringify(out.payload);
+    for (const kept of ['Maria', 'Kowalska', 'release manager', 'build7']) {
+      expect(text, kept).not.toContain(kept);
+    }
+    expect(out.payload).toMatchObject({
+      call_id: 'call_ok',
+      model: 'gpt-5.2-codex',
+      role: ':workspace',
+      timestamp: '2026-10-13T09:00:00.000Z',
+    });
+    expect([...stats.guardedKeys].sort()).toEqual([
+      ['id', 1],
+      ['name', 1],
+      ['status', 1],
+    ]);
+  });
+
   it('replaces the user and host names wherever they are kept', () => {
     const out = scrubCodexRecord(
       base('response_item', 3, {
@@ -994,6 +1030,33 @@ describe('scrubCodexLines and scrubCodexFile', () => {
       const crossed = join(dir, 'crossed.jsonl');
       await scrubCodexFile(rawPacked, crossed, secrets);
       expect(await read(crossed)).toEqual(plain);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('telling a Codex input from any other', () => {
+  it('knows a rollout by its name, and a directory by a rollout anywhere beneath it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-scrub-source-'));
+    try {
+      const day = join(dir, 'raw', '2026', '10', '13');
+      mkdirSync(day, { recursive: true });
+      const plain = join(day, 'rollout-2026-10-13T09-00-00-thread.jsonl');
+      writeFileSync(plain, '{}');
+      writeFileSync(join(dir, 'notes.jsonl'), '{}');
+      expect(holdsRollouts(plain)).toBe(true);
+      expect(holdsRollouts(`${plain}.zst`)).toBe(true);
+      // the directory form of the README: no file of it is named on the
+      // command line, and it must not go to the generic walker
+      expect(holdsRollouts(join(dir, 'raw'))).toBe(true);
+      expect(holdsRollouts(dir)).toBe(true);
+      expect(holdsRollouts(join(dir, 'notes.jsonl'))).toBe(false);
+      const other = join(dir, 'opencode');
+      mkdirSync(other);
+      writeFileSync(join(other, 'ses_1.json'), '{}');
+      expect(holdsRollouts(other)).toBe(false);
+      expect(holdsRollouts(join(dir, 'absent'))).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
