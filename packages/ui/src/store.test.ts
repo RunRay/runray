@@ -173,9 +173,20 @@ describe('filter slice', () => {
 
   it('the since-reset period takes its window from the view config', () => {
     const traceFile = stubTraceFile(['tue', 'thu']);
-    // a Tuesday run and the Thursday before it (any zone within ±11 h)
-    (traceFile.runs[1] as { startedAt: string }).startedAt =
-      '2026-07-02T12:00:00.000Z';
+    // a Tuesday run and the Thursday before it, in local time so the
+    // weekdays hold in every zone
+    (traceFile.runs[0] as { startedAt: string }).startedAt = new Date(
+      2026,
+      6,
+      7,
+      12,
+    ).toISOString();
+    (traceFile.runs[1] as { startedAt: string }).startedAt = new Date(
+      2026,
+      6,
+      2,
+      12,
+    ).toISOString();
     useAppStore.getState().dataLoaded(traceFile, true);
     useAppStore.getState().setFilter({ period: 'reset' });
     const visible = () =>
