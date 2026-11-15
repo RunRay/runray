@@ -1017,7 +1017,7 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
     expect(note).toContain('Failed and cancelled runs');
     expect(note).toContain("each turn's Stop hooks as a count");
     expect(note).toContain(
-      'Any other hook that succeeds leaves no record in the transcript',
+      'Any other hook that succeeds is not listed: the transcript records no time for it',
     );
     // the label stands above the rows it is about
     const lines = all('tr', apart()).map((tr) => text(tr));
@@ -1156,7 +1156,7 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
       'Not part of summed tool time',
       "A delegation contains its agent's own calls, which are counted above.",
       'Exploreagent',
-      "Failed and cancelled runs, plus each turn's Stop hooks as a count. Any other hook that succeeds leaves no record in the transcript. A tool hook's time is already counted in the call that triggered it.",
+      "Failed and cancelled runs, plus each turn's Stop hooks as a count. Any other hook that succeeds is not listed: the transcript records no time for it. A tool hook's time is already counted in the call that triggered it.",
       'Stophook1 hook run, time not recorded',
       'A question or a plan that waited for your answer.',
       'AskUserQuestionwaits on you',
