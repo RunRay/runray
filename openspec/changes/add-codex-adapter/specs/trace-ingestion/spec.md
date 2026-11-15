@@ -22,9 +22,9 @@ SHALL change with it.
 ### Requirement: Codex rollout discovery
 The Codex adapter SHALL discover sessions with no configuration under
 `$CODEX_HOME/sessions` when `CODEX_HOME` is set and `~/.codex/sessions`
-otherwise, at any directory depth, taking files named `rollout-*.jsonl` and
-`rollout-*.jsonl.zst`. Its default root SHALL be the sessions directory, not
-the Codex home. It SHALL read no file other than rollouts.
+otherwise, taking files named `rollout-*.jsonl` and `rollout-*.jsonl.zst`.
+Its default root SHALL be the sessions directory, not the Codex home. It
+SHALL read no file other than rollouts.
 
 #### Scenario: Zero-config discovery
 - GIVEN rollouts under `~/.codex/sessions/2026/10/13/`
@@ -51,6 +51,33 @@ the Codex home. It SHALL read no file other than rollouts.
 - GIVEN the same thread present as `.jsonl` and as `.jsonl.zst`
 - WHEN discovery runs
 - THEN it yields one candidate, read from the plain file
+
+### Requirement: Codex discovery is bounded
+Codex discovery SHALL look for rollouts in a scanned root and in the
+directories up to six levels beneath it, as the other adapters do, and SHALL
+NOT enter a directory named `raw` or `node_modules` beneath the root. The
+root itself SHALL be scanned whatever its name.
+
+#### Scenario: The dated tree under a Codex home
+- GIVEN a Codex home given as the path, with rollouts under
+  `sessions/2026/10/13/`
+- WHEN the Codex adapter scans it
+- THEN those rollouts are candidates
+
+#### Scenario: Deeper than the bound
+- GIVEN a rollout in a directory seven levels beneath the scanned root
+- WHEN the Codex adapter scans the root
+- THEN that rollout is not a candidate
+
+#### Scenario: Unscrubbed samples beneath the root
+- GIVEN a scanned folder with a rollout in a `raw` directory beneath it
+- WHEN the Codex adapter scans the folder
+- THEN that rollout is not a candidate
+
+#### Scenario: A root named like an excluded directory
+- GIVEN a directory named `raw` given as the path
+- WHEN the Codex adapter scans it
+- THEN the rollouts in it are candidates
 
 ### Requirement: Compressed rollouts
 The Codex adapter SHALL read zstd-compressed rollouts as it reads plain

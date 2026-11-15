@@ -614,34 +614,50 @@ Fixed:
   failed command", "Image inside the text a tool handed back" and "Turn of
   the approval reviewer".
 
-Left as it is, for a decision:
+What was left for a decision, and what the maintainer decided on
+2026-11-15:
 
-- A turn still open when the next one starts stays `in_progress`. The spec
-  names that status for a turn the file ends inside and says nothing of
-  this one, and the corpus has none (0 of 2,405 turns), so there is no
-  sample to choose a status from.
-- A legacy root with work and no turn record is skipped as a session not
-  begun; a child with usage records and no turn is dropped with its tokens;
-  a file that changes token era keeps the later era only. None is in the
-  corpus.
-- A call left unanswered by an aborted turn stays `in_progress` (T7).
-- Discovery stops six directories down and skips `raw` and `node_modules`,
-  where the spec says "at any directory depth".
-- A pricing override older than the bundled table wins without a word, and
-  `pricing --refresh` writes a table without the retired models (D6).
-- An id the table does not hold is priced by prefix, a Codex one included
-  (`gpt-5-codex-mini` as `gpt-5-codex`).
-- `fixed-context-overhead` prices the footprint's first write at the
-  entry's cache-write rate. For 14 entries of the snapshot that is above
-  the input rate (`gpt-6-astra`: 12.5 against 10), where T12 says the two
-  are equal, and Codex records no cache write.
-- `expensive-subagent` can name a dearer model as the cheaper tier when the
-  subagent already runs on a cheap one of the same family.
-- Outside Codex, a `retry-loop` on `multiedit`, `write_file` or a shell
-  tool of another name reads differently since T12 closed the second list.
-- The scrubber keeps numbers everywhere (T14) and a host name that is one
-  word; the slice reader caps a slice after reading the record whole, and
-  five of its fallbacks show a record minus a list of keys.
+- **Pricing override older than the bundled table.** It stays in use and is
+  now reported once per command, with the file and both dates. The warning
+  does not advise `pricing --refresh`, which writes a list without the
+  retired models. Merging the two tables, and a refresh that keeps the
+  retired models, go to the planning board.
+- **Prefix pricing of an id the table does not hold.** Left as it is, for
+  every source; on the planning board.
+- **`fixed-context-overhead` and the cache-write rate.** A session none of
+  whose calls wrote to the cache takes the input rate for the leg that
+  carried the footprint in. Five Codex goldens move by that leg
+  (`simple`: 0.23792 to 0.219037); no golden of another source does. T12 is
+  corrected.
+- **`expensive-subagent` naming a dearer model.** `suggestedDowngrade`
+  takes a stage only when neither rate is above the model's own and one is
+  below, and walks on down otherwise. In the snapshot that ends three
+  suggestions that cost more (`gpt-5.6-luna`, `gemini-2.0-flash` and its
+  dated id) and moves two that cost more on one rate to the stage below
+  (`gemini-2.5-pro`, `gemini-2.5-pro-preview-tts`). `model-mismatch` and the
+  what-if view read the same function.
+- **Discovery bounds.** The spec states them (six levels, `raw` and
+  `node_modules` beneath the root left out) in a requirement of its own. A
+  root the person names is read whatever it is called; the other adapters
+  still skip a root named `raw`.
+- **A turn still open when the next one starts**, **a call with no answer**
+  and **the rare shapes** stay as they are. Counted again on the surveyed
+  machine: no call of 16,430 is `in_progress`, the 20 interrupted turns
+  included, and none of the 36 child files with no turn holds a usage
+  record or a token event. The rule that drops a child with no turn was to
+  be made the root's rule; it was not, because the difference is meant (a
+  usage record before a child's first turn is its parent's, and a test
+  holds that). Design "Risks" lists all of them.
+- **`retry-loop` copy outside Codex.** Accepted; the changeset says so.
+- **Scrubber.** A number under an identity key (`creator_account_id`,
+  `creator_user_id`) becomes 0; every other number stays, and so does a
+  host name that is one word. The slice reader's cap and its five fallbacks
+  go to the planning board.
+
+Four requirements are new with these decisions and await acceptance with
+the earlier additions: "Codex discovery is bounded", "An override older
+than the bundled table is reported", "A suggested cheaper tier costs less"
+and "No write premium where nothing was written", each with its scenarios.
 
 ## Workflow follow-up
 

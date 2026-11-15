@@ -121,6 +121,43 @@ a build is on that list, the warning SHALL NOT suggest
 - WHEN the coverage warning is printed
 - THEN it suggests `runray pricing --refresh`
 
+### Requirement: An override older than the bundled table is reported
+A pricing override whose snapshot date is earlier than the bundled table's
+SHALL stay in use, and the command SHALL say so once on standard error,
+naming the file and both dates. An override of the same date or a later one
+SHALL be used without a message.
+
+#### Scenario: Override written before the upgrade
+- GIVEN an override with the snapshot date `2026-10-06` and a bundled table
+  dated `2026-11-14`
+- WHEN a command resolves its prices more than once
+- THEN the override's rates are used, and one warning names the file,
+  `2026-10-06` and `2026-11-14`
+
+#### Scenario: Override refreshed after the upgrade
+- GIVEN an override dated on or after the bundled table's date
+- WHEN a command resolves its prices
+- THEN nothing is written to standard error on its account
+
+### Requirement: A suggested cheaper tier costs less
+A cheaper same-family tier SHALL be suggested for a priced model only when
+neither its input rate nor its output rate is above the model's and at least
+one is below. Where the next tier down is not, the lookup SHALL go on to the
+tiers beneath it, and a model with none that costs less SHALL get no
+suggestion and no saving estimate.
+
+#### Scenario: Cheap model of a newer generation
+- GIVEN `gpt-5.6-luna` at 0.2 / 1.2, found by name on the flagship stage,
+  with `gpt-5.4-mini` at 0.75 / 4.5 and `gpt-5.4-nano` at 0.2 / 1.25 below
+- WHEN a cheaper tier is looked up for it
+- THEN none is suggested
+
+#### Scenario: Next tier cheaper on one rate only
+- GIVEN a model at 1.25 / 10 whose next tier down is at 1.5 / 9 and whose
+  tier after that is at 0.25 / 1.5
+- WHEN a cheaper tier is looked up for it
+- THEN the tier at 0.25 / 1.5 is suggested
+
 ### Requirement: Suggestions and playbooks address Codex
 Wherever a suggestion or a rule playbook picks its lever by source, a Codex
 run SHALL get Codex levers: `AGENTS.md` as the instructions file, and
@@ -236,3 +273,21 @@ a run.
   carry zero cache-write tokens
 - WHEN the finding is produced
 - THEN `estimatedWasteUSD` is a finite number of zero or more
+
+### Requirement: No write premium where nothing was written
+`fixed-context-overhead` SHALL price the one time a session's opening
+context came in at the model's input rate when no model call of the main
+session recorded a cache write, and at the cache-write rate otherwise. Each
+later call's re-read stays at the cache-read rate.
+
+#### Scenario: Entry whose write rate is above its input rate
+- GIVEN a Codex run on `gpt-6-astra`, priced at 10 for input and 12.5 for a
+  cache write, that trips `fixed-context-overhead` over five calls
+- WHEN the finding is produced
+- THEN the estimate is the tokens above the floor at 10 once and at the
+  cache-read rate four times
+
+#### Scenario: Session that did write to the cache
+- GIVEN the same run with cache-write tokens on its first call
+- WHEN the finding is produced
+- THEN the first leg of the estimate is at the cache-write rate

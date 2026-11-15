@@ -814,16 +814,22 @@ belongs in its own change.
 
 Three checks ride along in the task that adds the Codex arms: that
 `fixed-context-overhead` gives a finite estimate on a run with no cache-write
-tokens (OpenAI entries in the snapshot carry the input rate as their write
-rate, so the "written once" leg prices as plain input); that `expensive-subagent` reads sensibly when the subagent is the
+tokens; that `expensive-subagent` reads sensibly when the subagent is the
 reviewer; and that no rule reading `parentId` directly assumes an
 `llm_call`'s parent is the session or a subagent.
 
 What the three checks found (task 6.1):
 
-- **No cache writes.** The estimate is finite: with a zero write the
-  effective write rate falls back to the entry's own, and nothing divides by
-  the write.
+- **No cache writes.** The estimate is finite: nothing divides by the
+  write. Which rate the "written once" leg takes was settled after the
+  final review. It took the entry's cache-write rate, on the belief that an
+  OpenAI entry carries its input rate there; 14 entries of the snapshot
+  carry more (`gpt-6-astra`: 12.5 against 10), and the estimate of
+  `fixtures/codex/simple` was 8% high for it. A session none of whose calls
+  wrote to the cache now takes the input rate for that leg, which is what
+  the log says it paid. The condition is the data, not the source, so it
+  holds for a session of any agent that caches nothing; no golden of
+  another source moved.
 - **The reviewer.** Its model has no published price, so its subtree costs
   nothing and the rule cannot fire on it with the bundled table. With a
   price from an override it would, and the copy would tell the person to
@@ -1074,6 +1080,34 @@ other sources do.
   warning names the model.
 - **[Tiered pricing]** → The engine has no long-context price tier. Existing
   limitation, shared with OpenCode runs on the same models.
+- **[An override outlives the table it was made for]** → A pricing override
+  wins over the bundled table whatever its age. One older than the bundled
+  table is now reported once per command, with both dates; it is not
+  merged with the newer table, and `pricing --refresh` still writes a list
+  without the retired models. Both are left to a change of their own, on
+  the team's planning board.
+- **[Prefix pricing]** → An id the table does not hold is priced by the
+  longest pattern it starts with, a Codex one included (`gpt-5-codex-mini`
+  as `gpt-5-codex`). The rule predates this change and holds for every
+  source; no model of the surveyed sessions needed it. Left as it is, on
+  the planning board.
+- **[Shapes with no sample]** → Counted again on the surveyed machine after
+  the final review (68 root files, 183 child files, 2,405 turns, 16,430
+  calls); none of these occurs there, and each is left as it is until one
+  does:
+  - A turn still open when the next one starts stays `in_progress`. The
+    spec names that status for a turn the file ends inside.
+  - A call with no answer stays `in_progress` (T7). No call of the 16,430
+    is in that state, the 20 interrupted turns included, so there is
+    nothing to close.
+  - A child thread with no turn is dropped whatever its file holds, where a
+    root with model calls and no turn is kept. The difference is meant: a
+    usage record before a child's first turn is what its parent had
+    reached, and counting it would count the parent's tokens twice. None
+    of the 36 child files with no turn holds a usage record or a token
+    event.
+  - A legacy root with work and no turn record is skipped as a session not
+    begun, and a file that changes token era keeps the later era only.
 
 ## Migration Plan
 

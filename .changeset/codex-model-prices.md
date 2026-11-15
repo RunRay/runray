@@ -10,4 +10,10 @@ Models that have since been retired, such as `claude-opus-4-1`, `claude-sonnet-4
 
 A retired model no longer lends its rates to an unknown model whose name starts with it: `grok-4-fast` was priced as `grok-4`, about 15 times too high, and is now listed as unpriced until the price list holds it.
 
+A price file written by `runray pricing --refresh` before an upgrade still takes the place of the bundled list. When it is older than the bundled list, RunRay now says so once, with both dates, since models the bundled list added later are priced from the older file by a similar name or not at all. Deleting the file returns you to the bundled list.
+
+The advice to move a subagent or a session to a cheaper model no longer names a model that costs more. A cheap model of a new generation, such as `gpt-5.6-luna`, was told to move to `gpt-5.4-mini`, which costs almost four times as much; it now gets no such advice. The same check holds for the model comparison in the dashboard.
+
+The estimate behind "Heavy fixed context" no longer adds a cache-write premium for a session that wrote nothing to the cache, which is every Codex session. For models whose cache-write rate is above their input rate that estimate was too high, by 1 to 8% on our sample sessions.
+
 The warning about unpriced models no longer suggests `runray pricing --refresh` when the only such model is one no price list holds, like Codex's approval reviewer.
