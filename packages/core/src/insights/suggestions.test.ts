@@ -847,14 +847,40 @@ describe('Codex runs', () => {
       expect(f).toBeDefined();
       const entry = matchModel(bundledPricing(), 'gpt-5.5');
       if (entry === undefined) throw new Error('gpt-5.5 must be priced');
-      // 10k tokens above the floor: "written" once at the entry's write
-      // rate, which for an OpenAI entry is its input rate, and read 4 times
+      // 10k tokens above the floor: they came in once as input, since the
+      // session wrote nothing to the cache, and were read 4 times
       const expected =
-        (10_000 * (entry.cacheWritePerMTok + 4 * entry.cacheReadPerMTok)) / 1e6;
+        (10_000 * (entry.inputPerMTok + 4 * entry.cacheReadPerMTok)) / 1e6;
       expect(Number.isFinite(f?.estimatedWasteUSD)).toBe(true);
       expect(f?.estimatedWasteUSD).toBeGreaterThanOrEqual(0);
       expect(f?.estimatedWasteUSD).toBeCloseTo(expected, 6);
-      expect(entry.cacheWritePerMTok).toBe(entry.inputPerMTok);
+    });
+
+    it('fixed-context-overhead charges no write premium where nothing was written', () => {
+      // an entry whose write rate is above its input rate
+      const entry = matchModel(bundledPricing(), 'gpt-6-astra');
+      if (entry === undefined) throw new Error('gpt-6-astra must be priced');
+      expect(entry.cacheWritePerMTok).toBeGreaterThan(entry.inputPerMTok);
+      const overheadOf = (first: Parameters<typeof llm>[2]) =>
+        codex([
+          root(),
+          turn('t1', 0),
+          call('l1', 0, { model: 'gpt-6-astra', ...first }),
+          ...[10, 20, 30, 40].map((sec, i) =>
+            call(`m${i}`, sec, { model: 'gpt-6-astra' }),
+          ),
+        ]).find((i) => i.ruleId === 'fixed-context-overhead')
+          ?.estimatedWasteUSD;
+      const read = 4 * entry.cacheReadPerMTok;
+      expect(overheadOf({ input: 30_000 })).toBeCloseTo(
+        (10_000 * (entry.inputPerMTok + read)) / 1e6,
+        6,
+      );
+      // a session that did write keeps the write rate
+      expect(overheadOf({ input: 10_000, cacheWrite: 20_000 })).toBeCloseTo(
+        (10_000 * (entry.cacheWritePerMTok + read)) / 1e6,
+        6,
+      );
     });
   });
 

@@ -983,12 +983,18 @@ const fixedContextOverhead: InsightRule = {
     // the overhead as cached prefix, and a hypothetical write inherits the
     // TTL the session actually caches at (all-1h session → 1h write), even
     // though the blend ratio comes from a smaller real write.
+    // A session that wrote nothing to the cache paid no write premium for
+    // what it opened with: the tokens came in as plain input. Codex records
+    // no cache write at all, and a price entry's write rate can be above
+    // its input rate (`gpt-6-astra`: 12.5 against 10), so the first leg of
+    // such a session is priced at the input rate (add-codex-adapter T12).
+    const wrote = llms.some((l) => (l.llm?.tokens.cacheWrite ?? 0) > 0);
     const waste =
       entry === undefined
         ? undefined
         : round6(
             (overhead *
-              (spanCacheWriteRate(entry, first) +
+              ((wrote ? spanCacheWriteRate(entry, first) : entry.inputPerMTok) +
                 entry.cacheReadPerMTok * (llms.length - 1))) /
               1e6,
           );
