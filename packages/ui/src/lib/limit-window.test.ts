@@ -87,6 +87,61 @@ describe('windowBounds across a daylight-saving change', () => {
     expect(bounds.b.end - bounds.b.start).toBe(7 * DAY_MS + 3_600_000);
   });
 
+  it('a reset hour the clocks skip on one day stays put on the others', () => {
+    // New York sprang forward on Sun 2017-03-12 at 02:00, so 02:00 that day
+    // reads as 03:00; the Monday-02:00 window holding it began at 02:00
+    const b = inZone('America/New_York', () =>
+      windowBounds('2017-03-12T04:00:00-04:00', {
+        resetDay: 'mon',
+        resetHour: 2,
+      }),
+    );
+    expect(b.start).toBe(Date.parse('2017-03-06T02:00:00-05:00'));
+    expect(b.end).toBe(Date.parse('2017-03-13T02:00:00-04:00'));
+    // a run at 02:30 that Monday is inside its window
+    expect(Date.parse('2017-03-06T02:30:00-05:00')).toBeGreaterThanOrEqual(
+      b.start,
+    );
+  });
+
+  it('a window that starts in the skipped hour is followed and preceded by 02:00 ones', () => {
+    // Sunday 02:00 resets: the 2026-03-08 one falls in New York's gap
+    const cfg = { resetDay: 'sun' as const, resetHour: 2 };
+    const { gap, prev, next } = inZone('America/New_York', () => {
+      const gap = windowBounds('2026-03-09T12:00:00-04:00', cfg);
+      return {
+        gap,
+        prev: previousWindow(gap, cfg),
+        next: windowBounds('2026-03-16T12:00:00-04:00', cfg),
+      };
+    });
+    expect(gap.start).toBe(Date.parse('2026-03-08T03:00:00-04:00'));
+    expect(gap.end).toBe(Date.parse('2026-03-15T02:00:00-04:00'));
+    expect(prev.start).toBe(Date.parse('2026-03-01T02:00:00-05:00'));
+    expect(next.start).toBe(gap.end);
+  });
+
+  it('a 02:00 reset holds every week of a year, the skipped one aside', () => {
+    inZone('America/New_York', () => {
+      for (const resetDay of ['sun', 'mon'] as const) {
+        const cfg = { days: 7, resetDay, resetHour: 2 };
+        const from = Date.parse('2026-01-01T00:00:00Z');
+        for (let t = from; t < from + 365 * DAY_MS; t += 3 * 3_600_000) {
+          const b = windowBounds(new Date(t).toISOString(), cfg);
+          const start = new Date(b.start);
+          const skipped =
+            start.getMonth() === 2 &&
+            start.getDate() === 8 &&
+            start.getHours() === 3;
+          expect(skipped || start.getHours() === 2).toBe(true);
+          expect(t).toBeGreaterThanOrEqual(b.start);
+          expect(t).toBeLessThan(b.end);
+          expect(previousWindow(b, cfg).end).toBe(b.start);
+        }
+      }
+    });
+  });
+
   it('starts on the reset day and hour for every hour of a year', () => {
     inZone('America/New_York', () => {
       const cfg = { days: 7, resetDay: 'thu' as const, resetHour: 14 };

@@ -37,11 +37,19 @@ const DAY_INDEX: Record<NonNullable<LimitWindowConfig['resetDay']>, number> = {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-/** `days` local calendar days after `ms`, keeping the local wall-clock time. */
-function addLocalDays(ms: number, days: number): number {
-  const d = new Date(ms);
-  d.setDate(d.getDate() + days);
-  return d.getTime();
+/**
+ * Local `hour`:00 on the calendar day `offset` days from `day`'s date. Every
+ * boundary is built from its own date and the configured hour, so an hour a
+ * daylight-saving gap pushed forward on one date (02:00 becoming 03:00)
+ * never carries over to another date.
+ */
+function hourOnDay(day: Date, offset: number, hour: number): number {
+  return new Date(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate() + offset,
+    hour,
+  ).getTime();
 }
 
 /** The window containing `anchorIso` (the newest run's startedAt). */
@@ -54,20 +62,20 @@ export function windowBounds(
   const resetHour = cfg.resetHour ?? 0;
   const targetDow = DAY_INDEX[cfg.resetDay ?? 'mon'];
 
-  // most recent resetDay@resetHour at or before the anchor (local time)
-  const ref = new Date(anchor);
-  ref.setHours(resetHour, 0, 0, 0);
-  while (ref.getDay() !== targetDow || ref.getTime() > anchor) {
-    ref.setDate(ref.getDate() - 1);
-  }
+  // the most recent resetDay@resetHour at or before the anchor (local time):
+  // the reset day this week, or a week earlier when its hour is still ahead
+  const day = new Date(anchor);
+  let offset = -((day.getDay() - targetDow + 7) % 7);
+  if (hourOnDay(day, offset, resetHour) > anchor) offset -= 7;
   // step days-long windows forward from the reference to the one holding
   // the anchor (only windows under 7 days take a step). Calendar days, not
   // fixed 24 h, so a daylight-saving change can't shift the reset hour.
-  let start = ref.getTime();
-  let end = addLocalDays(start, days);
+  let start = hourOnDay(day, offset, resetHour);
+  let end = hourOnDay(day, offset + days, resetHour);
   while (end <= anchor) {
+    offset += days;
     start = end;
-    end = addLocalDays(start, days);
+    end = hourOnDay(day, offset + days, resetHour);
   }
   return { start, end };
 }
@@ -78,7 +86,11 @@ export function previousWindow(
   cfg: LimitWindowConfig,
 ): WindowBounds {
   return {
-    start: addLocalDays(bounds.start, -(cfg.days ?? 7)),
+    start: hourOnDay(
+      new Date(bounds.start),
+      -(cfg.days ?? 7),
+      cfg.resetHour ?? 0,
+    ),
     end: bounds.start,
   };
 }
