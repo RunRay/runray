@@ -27,6 +27,21 @@ export function runTokensByModel(run: Run): Record<string, number> {
   return out;
 }
 
+/**
+ * The models a run called, sorted by name. `byModel` holds the priced ones
+ * only, so a model nobody publishes a price for (Codex's approval reviewer)
+ * is taken from the calls themselves: a session that ran on it alone still
+ * has a model.
+ */
+export function runModels(run: Run): string[] {
+  return [
+    ...new Set([
+      ...Object.keys(run.totals.costUSD.byModel),
+      ...Object.keys(runTokensByModel(run)),
+    ]),
+  ].sort();
+}
+
 export interface OverviewTotals {
   costUSD: number;
   wastedUSD: number;
