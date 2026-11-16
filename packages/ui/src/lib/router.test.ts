@@ -104,7 +104,7 @@ describe('time route + filter params (D6/E2)', () => {
     const filter = {
       project: 'shop web',
       source: 'claude-code' as const,
-      periodDays: 7,
+      period: 7,
       model: 'claude-opus-4-8',
       day: '2026-07-07',
       tool: 'webfetch',
@@ -139,8 +139,22 @@ describe('time route + filter params (D6/E2)', () => {
   });
 
   it('invalid period values degrade to null, never NaN', () => {
-    expect(parseFilterParams('#/dashboard?period=abc').periodDays).toBeNull();
-    expect(parseFilterParams('#/dashboard?period=-3').periodDays).toBeNull();
+    expect(parseFilterParams('#/dashboard?period=abc').period).toBeNull();
+    expect(parseFilterParams('#/dashboard?period=-3').period).toBeNull();
+    expect(parseFilterParams('#/dashboard?period=Reset').period).toBeNull();
+  });
+
+  it('the since-reset period reads as period=reset and round-trips', () => {
+    const filter = {
+      ...EMPTY_FILTER,
+      project: 'shop',
+      period: 'reset' as const,
+    };
+    const hash = formatHash(DASHBOARD_ROUTE, filter);
+    expect(hash).toBe('#/dashboard?project=shop&period=reset');
+    expect(parseFilterParams(hash)).toEqual(filter);
+    // a day count still opens its rolling period
+    expect(parseFilterParams('#/dashboard?period=7').period).toBe(7);
   });
 
   it('run routes keep filters across the ? split', () => {

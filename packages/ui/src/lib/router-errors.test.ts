@@ -19,7 +19,7 @@ describe('errors route (error-triage / visualizer "Errors tab")', () => {
         {
           project: 'p',
           source: null,
-          periodDays: 7,
+          period: 7,
           model: null,
           day: null,
           tool: null,

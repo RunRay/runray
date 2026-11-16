@@ -330,7 +330,7 @@ One-shot, dismissible, at most one visible at a time, keyed in
 | `waste-view` | first `#/run/:id/waste` | burned spend vs potential savings under new settings |
 | `what-if` | first `CostView` with `WhatIfPanel` visible | re-price the run against another model |
 | `diff` | second run opened in a session | compare two runs of the same task |
-| `limit-mode` | `limitWindow` configured and first dashboard | % of the reference window, in the unit beside %win (persona B) |
+| `since-reset` | first dashboard with the since-reset period chosen | the period counts from the last usage-limit reset, set under `limitWindow` (persona B) |
 | `coverage` | first `CoverageNotices` render | unpriced models are surfaced, never silently priced |
 | `redact` | first `export` opened from the UI, if any | `--redact` before sharing |
 

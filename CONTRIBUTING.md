@@ -8,7 +8,7 @@ touching parsers, the schema or the cost engine.
 
 ## Setup
 
-Node 22 and pnpm. The pnpm version is pinned in `package.json`, so
+Node 22.22 or newer and pnpm. The pnpm version is pinned in `package.json`, so
 `corepack enable` picks the right one.
 
 ```bash
