@@ -2,6 +2,8 @@ import type { Run, SourceTool } from '@runray/schema';
 import { type ReactNode, useMemo, useState } from 'react';
 import {
   NO_BRANCH,
+  periodLabel,
+  periodLengthDays,
   type RunFilter,
   type SpendTrend,
   spendTrend,
@@ -34,11 +36,12 @@ import {
 } from '../lib/overview';
 import { tourAttr } from '../lib/tour-attr';
 import { AT_API_PRICES, type DisplayUnit, inUnit } from '../lib/unit';
-import { useAppStore } from '../store';
+import { useAppStore, useLimitWindow, useResetLabel } from '../store';
 import { BranchMark } from './BranchMark';
+import { BudgetMeter } from './BudgetMeter';
 import { CacheDial } from './CacheDial';
+import { ContextualHint } from './ContextualHint';
 import { CoverageCaveat } from './CoverageNotices';
-import { LimitStatementLine } from './LimitMode';
 import { EvidenceInline, ruleLabel, SavingsPanel } from './SavingsPanel';
 import { SeverityPill } from './SeverityPill';
 import { ToolRankCard } from './ToolRankCard';
@@ -49,14 +52,6 @@ import { ToolRankCard } from './ToolRankCard';
  * (KPIs) → rhythm (spend by day) → culprits (rankings, waste). Everything
  * derives from the loaded runs — no extra data.
  */
-
-function periodLabel(filter: RunFilter): string {
-  if (filter.day !== null) return filter.day;
-  if (filter.periodDays === 7) return 'last 7 days';
-  if (filter.periodDays === 30) return 'last 30 days';
-  if (filter.periodDays !== null) return `last ${filter.periodDays} days`;
-  return 'all time';
-}
 
 export function Overview({
   runs,
@@ -74,6 +69,8 @@ export function Overview({
   // estimates that only exist in dollars stay in dollars, "at API prices"
   const unit = useAppStore((s) => s.unit);
   const tokensLead = unit === 'tokens';
+  const limitWindow = useLimitWindow();
+  const resetLabel = useResetLabel();
   const totals = useMemo(() => aggregateTotals(runs), [runs]);
   const days = useMemo(() => spendByDay(runs), [runs]);
   const projects = useMemo(() => topProjects(runs, 5, unit), [runs, unit]);
@@ -115,8 +112,8 @@ export function Overview({
   const errors = useMemo(() => errorRate(runs), [runs]);
   const costStats = useMemo(() => sessionCostStats(runs), [runs]);
   const trend = useMemo(
-    () => spendTrend(allRuns, filter, unit),
-    [allRuns, filter, unit],
+    () => spendTrend(allRuns, filter, unit, limitWindow),
+    [allRuns, filter, unit, limitWindow],
   );
   const waste = useMemo(() => wasteByRule(runs), [runs]);
   const worstErr = useMemo(() => worstToolError(runs), [runs]);
@@ -174,8 +171,9 @@ export function Overview({
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div>
             <p className="micro-label text-text-faint">
-              Executive Overview · {periodLabel(filter)} · {totals.sessions}{' '}
-              {totals.sessions === 1 ? 'session' : 'sessions'}
+              Executive Overview ·{' '}
+              {filter.day ?? periodLabel(filter.period, resetLabel)} ·{' '}
+              {totals.sessions} {totals.sessions === 1 ? 'session' : 'sessions'}
             </p>
             {/* keyed by unit: a flip settles the pair in again (unit-swap),
                 so it reads as a change of unit, not of the numbers */}
@@ -221,11 +219,10 @@ export function Overview({
               {trend !== null && (
                 <TrendChip
                   trend={trend}
-                  periodDays={filter.periodDays}
+                  periodDays={periodLengthDays(filter.period, limitWindow)}
                   unit={unit}
                 />
               )}
-              <LimitStatementLine />
               {(totals.linesAdded > 0 || totals.linesRemoved > 0) && (
                 <span className="font-mono text-cache-savings">
                   +{formatTokens(totals.linesAdded)} / −
@@ -233,6 +230,19 @@ export function Overview({
                 </span>
               )}
             </div>
+            {/* the since-reset window's figure is the headline above, so
+                its budget meter sits right under it (E7); a pinned day is
+                not the window, so the meter steps aside like the trend */}
+            {filter.period === 'reset' && filter.day === null && (
+              <div className="mt-3 flex flex-col gap-2">
+                <ContextualHint hintKey="since-reset" />
+                <BudgetMeter
+                  unit={unit}
+                  costUSD={totals.costUSD}
+                  tokens={totals.tokens}
+                />
+              </div>
+            )}
           </div>
 
           <BurnLine days={days} unit={unit} />

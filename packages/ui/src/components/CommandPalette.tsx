@@ -7,12 +7,17 @@ import {
   useRef,
   useState,
 } from 'react';
-import { isFilterActive, projectKey, type RunFilter } from '../lib/filter-runs';
+import {
+  isFilterActive,
+  type Period,
+  projectKey,
+  type RunFilter,
+} from '../lib/filter-runs';
 import { fuzzyScore } from '../lib/fuzzy';
 import { DASHBOARD_ROUTE, type Route, SESSIONS_ROUTE } from '../lib/router';
 import type { Theme } from '../lib/theme';
 import { type DisplayUnit, formatFigure } from '../lib/unit';
-import { useAppStore } from '../store';
+import { useAppStore, useResetLabel } from '../store';
 import { NO_ROOM_TO_WIDEN } from './Inspector';
 
 /**
@@ -48,10 +53,10 @@ interface Command {
   perform(): void;
 }
 
-const PERIODS: { days: number | null; label: string }[] = [
-  { days: 7, label: 'Last 7 days' },
-  { days: 30, label: 'Last 30 days' },
-  { days: null, label: 'All time' },
+const PERIODS: { period: Period | null; label: string }[] = [
+  { period: 7, label: 'Last 7 days' },
+  { period: 30, label: 'Last 30 days' },
+  { period: null, label: 'All time' },
 ];
 
 /**
@@ -71,6 +76,8 @@ function buildCommands(
   isLive?: boolean,
   onClose?: () => void,
   unit: DisplayUnit = 'usd',
+  /** Where the since-reset period starts ("Mon 00:00"), E7. */
+  resetLabel?: string,
 ): Command[] {
   const cmds: Command[] = [];
   const figureOf = (run: Run) =>
@@ -230,14 +237,23 @@ function buildCommands(
         perform: () => setFilter({ source }),
       });
     }
-    for (const period of PERIODS) {
-      if (filter.periodDays === period.days) continue;
+    const periods =
+      resetLabel === undefined
+        ? PERIODS
+        : [
+            ...PERIODS,
+            { period: 'reset' as const, label: `Since ${resetLabel}` },
+          ];
+    for (const { period, label } of periods) {
+      if (filter.period === period) continue;
       cmds.push({
-        id: `filter:period:${period.days ?? 'all'}`,
+        id: `filter:period:${period ?? 'all'}`,
         group: 'Filter',
-        label: `Period: ${period.label}`,
-        keywords: `filter period time ${period.label}`,
-        perform: () => setFilter({ periodDays: period.days }),
+        label: `Period: ${label}`,
+        keywords: `filter period time ${label}${
+          period === 'reset' ? ' reset limit week window quota' : ''
+        }`,
+        perform: () => setFilter({ period }),
       });
     }
   }
@@ -301,6 +317,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
   const inspectorWide = useAppStore((s) => s.ui.inspectorWide);
   const inspectorRoom = useAppStore((s) => s.ui.inspectorRoom);
   const unit = useAppStore((s) => s.unit);
+  const resetLabel = useResetLabel();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -308,7 +325,6 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const runs = data.status === 'ready' ? data.traceFile.runs : NO_RUNS;
   const activeRunId = 'runId' in route ? route.runId : null;
-
   const commands = useMemo(
     () =>
       buildCommands(
@@ -324,6 +340,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
         data.status === 'ready' && data.live,
         onClose,
         unit,
+        resetLabel,
       ),
     [
       runs,
@@ -338,6 +355,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
       data,
       onClose,
       unit,
+      resetLabel,
     ],
   );
 
