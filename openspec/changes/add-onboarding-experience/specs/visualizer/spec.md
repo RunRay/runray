@@ -141,7 +141,7 @@ Onboarding dialogs and popovers SHALL trap focus, expose an accessible dialog ro
 - THEN step transitions are instantaneous and every step remains operable
 
 ### Requirement: Contextual first-time hints
-The system SHALL show one-shot dismissible hints, at most one visible at a time, on first encounter with: the time view's wall-clock decomposition, the what-if repricing panel, comparing two runs, limit-based units when a limit window is configured, unpriced-model coverage notices, and redaction before export. Each hint SHALL be dismissible with an accessibly named control and SHALL not reappear once dismissed. Hints for the limit window SHALL express tokens and share of limit rather than a currency amount.
+The system SHALL show one-shot dismissible hints, at most one visible at a time, on first encounter with: the time view's wall-clock decomposition, the what-if repricing panel, comparing two runs, the period that starts at the last usage-limit reset, unpriced-model coverage notices, and redaction before export. Each hint SHALL be dismissible with an accessibly named control and SHALL not reappear once dismissed. The since-reset hint SHALL say where the reset day and hour are set and SHALL state no currency amount.
 
 #### Scenario: One hint at a time
 - GIVEN two hint triggers fire in the same view
@@ -153,10 +153,12 @@ The system SHALL show one-shot dismissible hints, at most one visible at a time,
 - WHEN its trigger condition occurs again in the same browser
 - THEN the hint does not reappear
 
-#### Scenario: Limit-mode hint avoids currency
-- GIVEN a configured limit window
-- WHEN the limit-mode hint renders
-- THEN it describes tokens and share of limit and states no currency amount
+#### Scenario: Since-reset hint names its setting
+- GIVEN the person chooses the since-reset period for the first time
+- WHEN the since-reset hint renders
+- THEN it says the period counts from the last reset, names `limitWindow` in
+  `runray.config.json` as the place to change it, and states no currency
+  amount
 
 ### Requirement: Empty state reports the roots that were checked
 When the dashboard renders with zero runs in live mode, the existing empty state SHALL additionally list the discovery roots the CLI checked with their verdicts, supplied over the view-configuration endpoint. The empty state SHALL be reachable in normal use — reached whenever the user asks for a dashboard despite having no sessions — and not only after runs roll off during a watch session. This list SHALL be live-mode only and SHALL NEVER be present in an exported report. When no checked roots were supplied, the existing empty state SHALL render unchanged rather than showing an empty list.

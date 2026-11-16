@@ -12,7 +12,6 @@ import { computeTimeRange } from '../lib/waterfall';
 import { useAppStore } from '../store';
 import { CacheDial } from './CacheDial';
 import { CoverageBanner } from './CoverageNotices';
-import { LimitSuffix } from './LimitMode';
 import { NestedTreemap } from './NestedTreemap';
 import { PricingProvenance, TranscriptCostNote } from './PricingProvenance';
 
@@ -227,10 +226,6 @@ function Hero({ run }: { run: Run }) {
               ? formatTokens(totals.tokens.total)
               : formatUSD(totals.costUSD.total)}
           </p>
-          <LimitSuffix
-            valueUSD={totals.costUSD.total}
-            tokens={totals.tokens.total}
-          />
         </div>
         {tokensLead ? (
           <HeroStat label={`cost ${AT_API_PRICES}`}>
