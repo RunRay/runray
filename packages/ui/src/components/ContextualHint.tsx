@@ -7,7 +7,7 @@ export type HintKey =
   | 'waste-view'
   | 'what-if'
   | 'diff'
-  | 'limit-mode'
+  | 'since-reset'
   | 'coverage'
   | 'redact';
 
@@ -21,8 +21,8 @@ export const HINT_COPY: Record<HintKey, string> = {
   'what-if':
     'Re-price this session against another model. Calculations stay on this machine.',
   diff: 'Two runs of the same task? Compare them with: runray diff <runA> <runB>',
-  'limit-mode':
-    'Shows how much of your reference window this period used, in the unit beside %win. An estimate, not a provider quota.',
+  'since-reset':
+    'Counts from the last reset of your usage limit. Set its day and hour under limitWindow in runray.config.json.',
   coverage:
     'Unpriced models show token counts without dollar figures. Costs are never guessed.',
   redact:
@@ -141,7 +141,7 @@ export function ContextualHint({ hintKey }: ContextualHintProps) {
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss hint"
-        className="shrink-0 text-text-faint hover:text-text focus:outline-none"
+        className="shrink-0 rounded-control px-1 text-text-faint transition-colors duration-150 ease-out hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-brass active:bg-bg"
       >
         ✕
       </button>

@@ -1,12 +1,11 @@
-import type { Run } from '@runray/schema';
-
 /**
- * Limit-window math (E1): an OPT-IN display layer for subscription users —
- * "% of my reference window", never a provider quota. Every computation
- * anchors to the NEWEST RUN's timestamp, never `Date.now()`, so an
- * exported file renders the same percentages forever (the same
- * determinism rule the period filter follows). Reset boundaries are local
- * wall-clock: a user's "resets Thursday 14:00" is a local fact.
+ * Usage-limit window math (E7): the window behind the since-reset period
+ * and the budget meter. A user-configured window, never a provider quota.
+ * Every computation anchors to the NEWEST RUN's start, never `Date.now()`,
+ * so an exported file renders the same window forever (the determinism rule
+ * the rolling periods follow). Reset boundaries are local wall-clock: a
+ * user's "resets Thursday 14:00" is a local fact, and it stays 14:00 across
+ * a daylight-saving change.
  */
 
 export interface LimitWindowConfig {
@@ -26,7 +25,6 @@ export interface WindowBounds {
   end: number;
 }
 
-const DAY_MS = 86_400_000;
 const DAY_INDEX: Record<NonNullable<LimitWindowConfig['resetDay']>, number> = {
   sun: 0,
   mon: 1,
@@ -37,7 +35,24 @@ const DAY_INDEX: Record<NonNullable<LimitWindowConfig['resetDay']>, number> = {
   sat: 6,
 };
 
-/** The window containing `anchorIso` (newest run's endedAt ?? startedAt). */
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * Local `hour`:00 on the calendar day `offset` days from `day`'s date. Every
+ * boundary is built from its own date and the configured hour, so an hour a
+ * daylight-saving gap pushed forward on one date (02:00 becoming 03:00)
+ * never carries over to another date.
+ */
+function hourOnDay(day: Date, offset: number, hour: number): number {
+  return new Date(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate() + offset,
+    hour,
+  ).getTime();
+}
+
+/** The window containing `anchorIso` (the newest run's startedAt). */
 export function windowBounds(
   anchorIso: string,
   cfg: LimitWindowConfig,
@@ -47,64 +62,51 @@ export function windowBounds(
   const resetHour = cfg.resetHour ?? 0;
   const targetDow = DAY_INDEX[cfg.resetDay ?? 'mon'];
 
-  // most recent resetDay@resetHour at or before the anchor (local time)
-  const ref = new Date(anchor);
-  ref.setHours(resetHour, 0, 0, 0);
-  while (ref.getDay() !== targetDow || ref.getTime() > anchor) {
-    ref.setDate(ref.getDate() - 1);
+  // the most recent resetDay@resetHour at or before the anchor (local time):
+  // the reset day this week, or a week earlier when its hour is still ahead
+  const day = new Date(anchor);
+  let offset = -((day.getDay() - targetDow + 7) % 7);
+  if (hourOnDay(day, offset, resetHour) > anchor) offset -= 7;
+  // step days-long windows forward from the reference to the one holding
+  // the anchor (only windows under 7 days take a step). Calendar days, not
+  // fixed 24 h, so a daylight-saving change can't shift the reset hour.
+  let start = hourOnDay(day, offset, resetHour);
+  let end = hourOnDay(day, offset + days, resetHour);
+  while (end <= anchor) {
+    offset += days;
+    start = end;
+    end = hourOnDay(day, offset + days, resetHour);
   }
-  // step days-length windows forward from the reference to the one
-  // containing the anchor (covers days < 7; for days >= 7 steps = 0)
-  const steps = Math.floor((anchor - ref.getTime()) / (days * DAY_MS));
-  const start = ref.getTime() + steps * days * DAY_MS;
-  return { start, end: start + days * DAY_MS };
+  return { start, end };
 }
 
-export interface WindowSpend {
-  costUSD: number;
-  tokens: number;
-  runs: number;
-}
-
-/** Runs bucketed into the window by startedAt (same convention as spendByDay). */
-export function windowSpend(
-  runs: readonly Run[],
+/** The window immediately before `bounds`, the same length in days. */
+export function previousWindow(
   bounds: WindowBounds,
-): WindowSpend {
-  let costUSD = 0;
-  let tokens = 0;
-  let count = 0;
-  for (const run of runs) {
-    const t = Date.parse(run.startedAt);
-    if (t < bounds.start || t >= bounds.end) continue;
-    costUSD += run.totals.costUSD.total;
-    tokens += run.totals.tokens.total;
-    count += 1;
-  }
-  return { costUSD, tokens, runs: count };
-}
-
-/**
- * Share of the window's reference denominator: the configured budget when
- * present, else spend-to-date (and then a TOTAL figure must not be framed
- * against itself — callers phrase that slot as "$X spent this window").
- * Undefined when no meaningful denominator exists.
- */
-export function limitShare(
-  value: number,
-  spend: WindowSpend,
   cfg: LimitWindowConfig,
-  unit: 'usd' | 'tokens' = 'usd',
-): number | undefined {
-  const denominator =
-    unit === 'usd'
-      ? (cfg.budgetUSD ?? spend.costUSD)
-      : (cfg.budgetTokens ?? spend.tokens);
-  if (denominator <= 0) return undefined;
-  return value / denominator;
+): WindowBounds {
+  return {
+    start: hourOnDay(
+      new Date(bounds.start),
+      -(cfg.days ?? 7),
+      cfg.resetHour ?? 0,
+    ),
+    end: bounds.start,
+  };
 }
 
-/** True when the config carries an explicit budget (denominator ≠ self). */
-export function hasBudget(cfg: LimitWindowConfig): boolean {
-  return (cfg.budgetUSD ?? 0) > 0 || (cfg.budgetTokens ?? 0) > 0;
+/** "Mon 00:00": the local weekday and time a window starts. */
+export function windowStartLabel(bounds: WindowBounds): string {
+  const d = new Date(bounds.start);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${WEEKDAYS[d.getDay()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** The budget in `unit`, when one is configured (the meter's gate). */
+export function budgetIn(
+  cfg: LimitWindowConfig | undefined,
+  unit: 'usd' | 'tokens',
+): number | undefined {
+  const budget = unit === 'usd' ? cfg?.budgetUSD : cfg?.budgetTokens;
+  return budget !== undefined && budget > 0 ? budget : undefined;
 }
