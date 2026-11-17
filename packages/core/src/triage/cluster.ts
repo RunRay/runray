@@ -109,7 +109,9 @@ export function triageRun(run: Run): RunTriage {
   const sameKindByScope = new Map<string, Span[]>();
   let cancelled = 0;
   for (const s of spans) {
-    if (s.status === 'cancelled') cancelled++;
+    // "calls you declined": a hook the harness cancelled on a timeout is
+    // not one of them
+    if (s.status === 'cancelled' && s.kind !== 'hook') cancelled++;
     const scope = scopeOf.get(s.id) ?? s.id;
     if (s.kind === 'llm_call') {
       const list = llmsByScope.get(scope) ?? [];

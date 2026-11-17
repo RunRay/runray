@@ -27,6 +27,10 @@
     "./waste": {
       "types": "./dist/waste/index.d.ts",
       "import": "./dist/waste/index.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "import": "./dist/tools/index.js"
     }
   },
   "files": [

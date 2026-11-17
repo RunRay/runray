@@ -60,6 +60,18 @@ describe('formatDuration', () => {
     expect(formatDuration(154_000)).toBe('2m 34s');
     expect(formatDuration(3_900_000)).toBe('1h 5m');
   });
+
+  it('never shows a part rounded up to a full larger unit', () => {
+    // 119.6 s used to read "1m 60s"
+    expect(formatDuration(119_600)).toBe('2m 0s');
+    expect(formatDuration(119_400)).toBe('1m 59s');
+    expect(formatDuration(59_600)).toBe('1m 0s');
+    expect(formatDuration(59_400)).toBe('59s');
+    expect(formatDuration(999.6)).toBe('1.0s');
+    expect(formatDuration(9_960)).toBe('10s');
+    expect(formatDuration(3_599_600)).toBe('1h 0m');
+    expect(formatDuration(3_599_400)).toBe('59m 59s');
+  });
 });
 
 describe('formatClock', () => {

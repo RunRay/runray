@@ -287,6 +287,36 @@ describe('repriceRun / repriceSpans (C5, C8)', () => {
     expect(r.safeDeltaUSD).toBe(main?.deltaUSD);
   });
 
+  it('a failed hook does not make its subtree risky', () => {
+    const steps = [
+      root(),
+      sub('worker', 1),
+      llm('l1', 2, { parentId: 'worker', cost: 1.0 }),
+      tool('t1', 3, { parentId: 'worker' }),
+      llm('l2', 4, { cost: 1.0 }),
+    ];
+    const hooks = [
+      span('h1', {
+        kind: 'hook',
+        name: 'PostToolUse:Edit',
+        status: 'error',
+        parentId: 't1',
+        startedAt: ts(3),
+      }),
+      span('h2', {
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        status: 'error',
+        startedAt: ts(4),
+      }),
+    ];
+    const plain = repriceRun(mk(steps), bundled);
+    const withHooks = repriceRun(mk([...steps, ...hooks]), bundled);
+    expect(withHooks.subtrees.map((c) => c.flags)).toEqual([[], []]);
+    expect(withHooks.subtrees).toEqual(plain.subtrees);
+    expect(withHooks.safeDeltaUSD).toBe(plain.safeDeltaUSD);
+  });
+
   it('long-context flag fires on input+cacheRead threshold', () => {
     const run = mk([
       root(),

@@ -172,6 +172,30 @@ describe('triageRun — clusters, reaction cost, recovery', () => {
     expect(t.reactionUSD).toBe(0.8);
   });
 
+  it('keeps hook spans out of every count', () => {
+    const hooks = [
+      base({
+        id: 'h1',
+        parentId: 'e1',
+        kind: 'hook',
+        name: 'PostToolUse:Bash',
+        status: 'error',
+        statusReason: 'exit 1',
+        startedAt: at(1.2),
+      }),
+      // cancelled by the harness on a timeout: not a call the person declined
+      base({
+        id: 'h2',
+        kind: 'hook',
+        name: 'UserPromptSubmit',
+        status: 'cancelled',
+        statusReason: 'timeout',
+        startedAt: at(0.5),
+      }),
+    ];
+    expect(triageRun(run([...spans, ...hooks]))).toEqual(triageRun(run(spans)));
+  });
+
   it('records recovery per occurrence and an outcome per cluster', () => {
     const t = triageRun(run(spans));
     const path = t.clusters.find((c) => c.classId === 'path-not-found');

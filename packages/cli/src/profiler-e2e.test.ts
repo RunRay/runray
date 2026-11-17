@@ -1,5 +1,14 @@
-import { readFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { bundledPricing } from '@runray/core';
+import type { TraceFile } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import { buildTraceFile } from './discover.js';
 import { injectGlobal, injectTraceData } from './export.js';
@@ -95,6 +104,155 @@ describe('server endpoints (profiler depth)', () => {
     } finally {
       await server.close();
     }
+  });
+});
+
+describe('tool usage reaches the viewer payload (add-tool-usage-breakdown)', () => {
+  const SESSION = 'sess-e2e-tools';
+  const CALLS = [
+    {
+      id: 'tu_docker',
+      command: 'docker compose -f dev.yml up -d',
+      background: true,
+    },
+    { id: 'tu_build', command: 'git add -A && pnpm build', background: false },
+    { id: 'tu_own', command: 'acme-deploy --prod eu-west', background: false },
+  ];
+
+  /** A Claude Code project directory holding one transcript, built inline:
+   * committed fixtures keep filler words where commands were. */
+  function writeSession(): string {
+    const dir = mkdtempSync(join(tmpdir(), 'runray-e2e-tools-'));
+    const project = join(dir, 'proj');
+    mkdirSync(project, { recursive: true });
+    const lines: unknown[] = [
+      {
+        type: 'user',
+        uuid: 'u0',
+        sessionId: SESSION,
+        timestamp: '2026-11-11T10:00:00Z',
+        cwd: '/home/user/project/x',
+        message: { role: 'user', content: 'ship it' },
+      },
+      {
+        type: 'assistant',
+        uuid: 'a1',
+        parentUuid: 'u0',
+        sessionId: SESSION,
+        timestamp: '2026-11-11T10:00:01Z',
+        cwd: '/home/user/project/x',
+        message: {
+          id: 'msg_e2e',
+          role: 'assistant',
+          model: 'claude-sonnet-4-6',
+          stop_reason: 'tool_use',
+          usage: { input_tokens: 100, output_tokens: 5 },
+          content: CALLS.map((call) => ({
+            type: 'tool_use',
+            id: call.id,
+            name: 'Bash',
+            input: {
+              command: call.command,
+              ...(call.background ? { run_in_background: true } : {}),
+            },
+          })),
+        },
+      },
+      ...CALLS.map((call, index) => ({
+        type: 'user',
+        uuid: `r${index}`,
+        sessionId: SESSION,
+        timestamp: `2026-11-11T10:00:${String(10 + index * 10).padStart(2, '0')}Z`,
+        message: {
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: call.id,
+              content: [{ type: 'text', text: 'ok' }],
+            },
+          ],
+        },
+      })),
+    ];
+    writeFileSync(
+      join(project, `${SESSION}.jsonl`),
+      `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`,
+    );
+    return dir;
+  }
+
+  async function served(redact: boolean, basePort: number) {
+    const dir = writeSession();
+    try {
+      const { traceFile } = await buildTraceFile({
+        paths: [dir],
+        redact,
+        generatorVersion: 'e2e',
+      });
+      const server = await startServer({
+        getTraceFile: async () => traceFile,
+        basePort,
+      });
+      try {
+        const res = await fetch(new URL('/api/tracefile', server.url));
+        expect(res.status).toBe(200);
+        const body = await res.text();
+        const payload = JSON.parse(body) as TraceFile;
+        const attributes = (id: string) =>
+          payload.runs[0]?.spans.find((s) => s.id === id)?.attributes;
+        return { body, attributes };
+      } finally {
+        await server.close();
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('serves resolved tool identity and none of the command text', async () => {
+    const { body, attributes } = await served(false, 4363);
+    expect(attributes('tu_docker')).toMatchObject({
+      'runray.toolActivity': 'infra',
+      'runray.tool': 'docker',
+      'runray.toolSub': 'compose up',
+      'runray.toolFlags': ['background'],
+    });
+    expect(attributes('tu_build')).toMatchObject({
+      'runray.toolActivity': 'build',
+      'runray.tool': 'pnpm',
+      'runray.toolSub': 'run',
+      'runray.toolsAlso': ['git'],
+      'runray.toolScript': 'build',
+    });
+    expect(attributes('tu_own')).toMatchObject({
+      'runray.toolActivity': 'other',
+      'runray.toolName': 'acme-deploy',
+    });
+    // arguments, paths and option values never reach the payload
+    expect(body).not.toContain('dev.yml');
+    expect(body).not.toContain('eu-west');
+    expect(body).not.toContain('--prod');
+  });
+
+  it('keeps registry identity and drops free-form names under --redact', async () => {
+    const { body, attributes } = await served(true, 4364);
+    expect(attributes('tu_docker')).toMatchObject({
+      'runray.tool': 'docker',
+      'runray.toolSub': 'compose up',
+      'runray.toolFlags': ['background'],
+    });
+    expect(attributes('tu_build')).toMatchObject({
+      'runray.tool': 'pnpm',
+      'runray.toolsAlso': ['git'],
+    });
+    expect(attributes('tu_build')).not.toHaveProperty('runray.toolScript');
+    expect(attributes('tu_own')).toMatchObject({
+      'runray.toolActivity': 'other',
+    });
+    expect(attributes('tu_own')).not.toHaveProperty('runray.tool');
+    expect(body).not.toContain('acme-deploy');
+    expect(body).not.toContain('runray.toolName');
   });
 });
 

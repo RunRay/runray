@@ -373,6 +373,64 @@ describe('dead-end-run', () => {
       clean.insights.filter((i) => i.ruleId === 'dead-end-run'),
     ).toHaveLength(0);
   });
+
+  const hook = (
+    id: string,
+    second: number,
+    status: RawSpan['status'],
+    name = 'Stop',
+  ): RawSpan =>
+    base(id, {
+      kind: 'hook',
+      name,
+      status,
+      startedAt: ts(second),
+      endedAt: ts(second),
+      durationMs: 0,
+    });
+
+  it('does not take a failed hook after a clean finish for a dead end', () => {
+    const run = applyInsights(
+      mkRun([
+        root(),
+        llm('l1', 1, { cost: 2 }),
+        tool('b1', 2, { parentId: 'l1' }),
+        hook('h1', 4, 'error', 'PostToolUse:Edit'),
+      ]),
+    );
+    expect(run.insights.filter((i) => i.ruleId === 'dead-end-run')).toEqual([]);
+    expect(run.totals.costUSD.wastedEstimate).toBe(0);
+  });
+
+  it('still flags a failed last call when a hook ran after it', () => {
+    const run = applyInsights(
+      mkRun([
+        root(),
+        llm('l1', 1, { cost: 0.5 }),
+        tool('b1', 2, { status: 'error', parentId: 'l1' }),
+        hook('h1', 4, 'ok'),
+      ]),
+    );
+    const finding = run.insights.find((i) => i.ruleId === 'dead-end-run');
+    // the finding points at the call, not at the hook that followed it
+    expect(finding?.spanIds).toEqual(['b1']);
+    expect(finding?.estimatedWasteUSD).toBe(0.5);
+  });
+
+  it('reads the same with and without trailing hook spans', () => {
+    const steps = [
+      root(),
+      llm('l1', 1, { cost: 0.5 }),
+      tool('b1', 2, { status: 'error', parentId: 'l1' }),
+    ];
+    const findings = (spans: RawSpan[]) =>
+      applyInsights(mkRun(spans)).insights.filter(
+        (i) => i.ruleId === 'dead-end-run',
+      );
+    expect(
+      findings([...steps, hook('h1', 3, 'error'), hook('h2', 4, 'cancelled')]),
+    ).toEqual(findings(steps));
+  });
 });
 
 describe('applyInsights', () => {

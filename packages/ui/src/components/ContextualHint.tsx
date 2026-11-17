@@ -13,7 +13,7 @@ export type HintKey =
 
 export const HINT_COPY: Record<HintKey, string> = {
   'time-view':
-    'Clock time, not the sum of spans. Shows where the session was stuck waiting.',
+    'Clock time, not the sum of spans. Shows where the session waited: on the model, on tools, or on you.',
   'errors-view':
     'Grouped by who can fix it. Most failed commands are the agent exploring; broken tools are real bugs.',
   'waste-view':

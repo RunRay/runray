@@ -187,7 +187,8 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
       active: view === 'timeline',
     },
     {
-      label: 'Time',
+      // the route stays `time`: links saved before the rename keep working
+      label: 'Time & Tools',
       route: { view: 'time', runId },
       active: view === 'time',
     },
@@ -236,7 +237,11 @@ function ViewTabs({ run, view }: { run: Run; view: RunViewName }) {
           href={toHash(route)}
           aria-current={active ? 'page' : undefined}
           title={badge?.title}
-          className={`px-3 py-1 text-label transition-colors duration-150 ease-out ${
+          // px-2.5, not px-3: with "Time & Tools" the five labels need 467 px
+          // at the wider padding and the bar has 452 px when the session
+          // list and the Inspector are both open at a 1366 px window, so two
+          // labels wrapped onto a second line
+          className={`px-2.5 py-1 text-label transition-colors duration-150 ease-out ${
             active
               ? 'bg-surface-variant text-on-surface font-semibold'
               : 'bg-surface text-on-surface-variant hover:bg-surface-variant/40 hover:text-on-surface active:bg-bg-deep-gray'

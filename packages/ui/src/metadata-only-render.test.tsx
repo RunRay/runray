@@ -107,8 +107,42 @@ describe('Degraded render paths for metadata-only payload (Tasks 5.2, 5.3)', () 
     );
 
     expect(html).toContain('wall-clock');
-    expect(html).toContain('Turn and tool breakdowns are omitted under the');
+    // visualizer "Tool usage degraded states": the activity bar and the
+    // tool table are replaced by an empty state that names the profile
+    expect(html).toContain(
+      'Tool time by activity and the tool table are left out of this',
+    );
     expect(html).toContain('metadata-only');
+    expect(html).toContain('drops individual calls');
+    expect(html).not.toContain('aria-label="Tool time by activity"');
+    expect(html).not.toContain('aria-label="Tools"');
+    // not the state of a session that simply ran no tools
+    expect(html).not.toContain('made no tool calls');
+  });
+
+  it('TimeView tells a session without tool calls from a pruned report', () => {
+    const stub = stubMetadataOnlyRun('r1');
+    const noTools: typeof stub = {
+      ...stub,
+      totals: {
+        ...stub.totals,
+        counts: { ...stub.totals.counts, toolCalls: 0 },
+      },
+    };
+    const html = renderToStaticMarkup(<TimeView run={noTools} />);
+    expect(html).toContain('This session made no tool calls');
+    expect(html).not.toContain('metadata-only');
+  });
+
+  it('TimeView never says "no tool calls" when the totals count some', () => {
+    // three calls in the totals, no call spans, and no manifest to say why
+    const html = renderToStaticMarkup(
+      <TimeView run={stubMetadataOnlyRun('r1')} />,
+    );
+    expect(html).not.toContain('made no tool calls');
+    expect(html).toContain('totals count 3 tool calls');
+    expect(html).toContain('the calls themselves are not in this report');
+    expect(html).not.toContain('aria-label="Tools"');
   });
 
   it('Inspector explains the profile instead of an empty panel or a misleading zero (Task 5.2)', () => {

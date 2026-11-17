@@ -14,6 +14,7 @@ import { loadSqlite, type SqliteDatabase } from '../sqlite.js';
 import { stripBom } from '../text.js';
 import { errorPreview, isUserRejection } from './error-preview.js';
 import { toolTargetAttributes } from './target.js';
+import { toolUsageSpanAttributes } from './usage.js';
 
 /**
  * OpenCode adapter (task 2.3). Three storage eras behind one facade
@@ -629,6 +630,7 @@ function emitBundle(
           : {}),
         attributes: {
           ...toolTargetAttributes('opencode', toolName, input, ctx.redact),
+          ...toolUsageSpanAttributes('opencode', toolName, input, ctx.redact),
           ...(mcpServer === undefined
             ? {}
             : { 'runray.mcpDetection': 'name-heuristic' }),

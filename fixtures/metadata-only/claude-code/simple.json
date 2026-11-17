@@ -57,7 +57,7 @@
       "toolCalls": 13,
       "toolErrors": 0,
       "subagents": 0,
-      "maxDepth": 2
+      "maxDepth": 3
     },
     "cache": {
       "hitRate": 0.9873

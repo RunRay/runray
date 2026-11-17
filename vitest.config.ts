@@ -48,6 +48,9 @@ export default defineConfig({
       '@tracepulse/core/waste': fileURLToPath(
         new URL('./packages/core/src/waste/index.ts', import.meta.url),
       ),
+      '@runray/core/tools': fileURLToPath(
+        new URL('./packages/core/src/tools/index.ts', import.meta.url),
+      ),
       '@runray/core': fileURLToPath(
         new URL('./packages/core/src/index.ts', import.meta.url),
       ),
