@@ -510,3 +510,36 @@ automatically extends its fixture-parameterized equivalence matrix.
       the other rankings, since 16.1 removed the Resource Breakdown's own
       Tokens | Spend switch it read; its spec line says so. Test in
       `overview.test.ts`.
+
+## 17. Since-reset period
+
+- [x] 17.1 A+B Spec first (spec: visualizer "Since-reset period and budget
+      meter" replaces "Limit-window display mode"; "Global run filters" and
+      "Display unit" amended; cli "Limit window configuration" amended;
+      add-onboarding-experience "Contextual first-time hints" amended;
+      design E7, E1 superseded, E6 amended). Added 2026-10-29.
+- [x] 17.2 B The since-reset period replaces limit mode:
+      `RunFilter.period` is a day count or `'reset'`, `period=reset` in
+      the hash, bounds from `windowBounds` anchored to the newest run's
+      start (now stepped in calendar days, so a daylight-saving change can't
+      move the reset hour), the trend against the previous window of the
+      same length; the period filter, the palette, the overview and savings
+      labels, and the export command learn it. The `%win` toggle, popover
+      and Cost hero suffix go, and the `runray.limitMode` and
+      `runray.limitWindow` keys are deleted on load.
+- [x] 17.3 B [UI → /frontend-design] The budget meter on the overview
+      spend statement (its track spans the larger of the budget and the use,
+      so an overrun runs past a budget tick in the overspend colour; the live
+      viewer names the config key when the unit has no budget) and the
+      `since-reset` hint, whose dismiss control gains focus and active
+      states.
+- [x] 17.4 A+B Docs (05-ARCHITECTURE component tree and store, 11/12
+      onboarding hint tables, `limitWindow` in the README) and a changeset.
+- [x] 17.5 B Bot review follow-ups to 17.2: every window boundary is built
+      from its own calendar date and the reset hour, so a reset hour a
+      spring-forward gap skips on one date (02:00 read as 03:00) never
+      carries to the others; with a browser-only filter on, the export
+      dialog counts the loaded runs its `--source` and `--since` flags keep,
+      not every loaded run; the since-reset store test builds its runs in
+      local time, so it holds in every zone. Tests in `limit-window.test.ts`
+      and `export-command.test.ts`.

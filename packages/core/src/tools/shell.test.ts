@@ -54,6 +54,44 @@ const SPLIT: SplitCase[] = [
     expected: [[['cat'], ['grep', 'x']], [['echo', 'done']]],
   },
   {
+    // the closing line is the delimiter and nothing else
+    name: 'an indented delimiter is still heredoc body',
+    command: "cat <<'EOF'\n EOF\npnpm build\nEOF\nls",
+    expected: [[['cat']], [['ls']]],
+  },
+  {
+    name: 'a dash lets tabs stand before the delimiter, never spaces',
+    command: 'cat <<-EOF\n  EOF\ndocker ps\n\t\tEOF\npwd',
+    expected: [[['cat']], [['pwd']]],
+  },
+  {
+    name: 'a delimiter with text after it is still heredoc body',
+    command: 'cat <<EOF\nEOF trailing\ndocker ps\nEOF\npwd',
+    expected: [[['cat']], [['pwd']]],
+  },
+  {
+    name: 'heredoc in a command written with Windows line endings',
+    command: 'cat <<EOF\r\nbody\r\nEOF\r\nls',
+    expected: [[['cat']], [['ls']]],
+  },
+  {
+    // a redirection needs no space before it
+    name: 'redirection glued to the word before it',
+    command:
+      'pytest>out.txt 2>&1 && echo a>>log && sort<in.txt && cmd 2>err &>all',
+    expected: [
+      [['pytest', '>out.txt', '2>&1']],
+      [['echo', 'a', '>>log']],
+      [['sort', '<in.txt']],
+      [['cmd', '2>err', '&>all']],
+    ],
+  },
+  {
+    name: 'redirection glued to a quoted word',
+    command: 'cat "my file">copy.txt',
+    expected: [[['cat', 'my file', '>copy.txt']]],
+  },
+  {
     // the usual way to pass a commit message; its apostrophe closes nothing
     name: 'heredoc inside a quoted command substitution',
     command:
@@ -478,6 +516,27 @@ describe('a quoted PowerShell word', () => {
     ]);
   });
 
+  it('reads a compact assignment the way it reads a spaced one', () => {
+    // PowerShell needs no spaces around `=`
+    expect(programs('$out=docker ps -q')).toEqual(['docker']);
+    expect(programs('$out= docker ps -q')).toEqual(['docker']);
+    expect(programs('$dir="D:\\work"; Get-ChildItem $dir')).toEqual([
+      undefined,
+      'get-childitem',
+    ]);
+    expect(programs("$env:NODE_ENV='test'")).toEqual([undefined]);
+    expect(programs('$n=5')).toEqual([undefined]);
+    expect(programs('$out=& "C:\\tools\\git.exe" status')).toEqual(['git']);
+  });
+
+  it('skips a compact assignment whole when the marks are not known', () => {
+    // a caller with only the words cannot tell a quoted value from a command
+    const [stage] = scan("$env:NODE_ENV='test'", 'powershell').flat();
+    expect(stageProgram(stage?.words ?? [], 'powershell')).toBeUndefined();
+    const [next] = scan('$out=docker ps -q', 'powershell').flat();
+    expect(stageProgram(next?.words ?? [], 'powershell')?.name).toBe('ps');
+  });
+
   it('still reads a bare word after the assignment as a command', () => {
     expect(programs('$out = docker ps -q')).toEqual(['docker']);
     expect(programs('$files = Get-ChildItem -Recurse')).toEqual([
@@ -512,16 +571,42 @@ describe('a quoted PowerShell word', () => {
 
   it('runs when the caller says another shell may read the text', () => {
     // a hook command is read in this dialect whenever it holds a Windows
-    // path, and cmd runs a quoted path as it stands: without the quoted
-    // marks every word is taken as bare
+    // path, and cmd runs a quoted path as it stands
     const [stage] = scan(
       '"C:\\Program Files\\nodejs\\node.exe" format.mjs',
       'powershell',
     ).flat();
-    expect(stageProgram(stage?.words ?? [], 'powershell')?.name).toBe('node');
-    expect(
-      stageProgram(stage?.words ?? [], 'powershell', stage?.quoted),
-    ).toBeUndefined();
+    const words = stage?.words ?? [];
+    expect(stageProgram(words, 'powershell')?.name).toBe('node');
+    expect(stageProgram(words, 'powershell', stage?.quoted, true)?.name).toBe(
+      'node',
+    );
+    expect(stageProgram(words, 'powershell', stage?.quoted)).toBeUndefined();
+  });
+
+  it('still reads an assignment by its quote when another shell may run the text', () => {
+    // only PowerShell writes `$x = …`, so the value's quote settles it there
+    const hookPrograms = (command: string): Array<string | undefined> =>
+      scan(command, 'powershell')
+        .flat()
+        .map(
+          (stage) =>
+            stageProgram(stage.words, 'powershell', stage.quoted, true)?.name,
+        );
+    expect(hookPrograms('$out=docker ps --format "C:\\work"')).toEqual([
+      'docker',
+    ]);
+    expect(hookPrograms('$dir="C:\\work"; node C:\\hooks\\x.mjs')).toEqual([
+      undefined,
+      'node',
+    ]);
+    expect(hookPrograms('$dir = "C:\\work"; node C:\\hooks\\x.mjs')).toEqual([
+      undefined,
+      'node',
+    ]);
+    expect(hookPrograms('$out = & "C:\\tools\\git.exe" status')).toEqual([
+      'git',
+    ]);
   });
 
   it('keeps POSIX as it was: a quoted command name runs', () => {

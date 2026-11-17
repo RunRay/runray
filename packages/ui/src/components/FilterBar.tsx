@@ -1,7 +1,12 @@
 import type { SourceTool } from '@runray/schema';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { isFilterActive, NO_BRANCH, projectKey } from '../lib/filter-runs';
-import { useAppStore } from '../store';
+import {
+  isFilterActive,
+  NO_BRANCH,
+  type Period,
+  projectKey,
+} from '../lib/filter-runs';
+import { useAppStore, useResetLabel } from '../store';
 import { BranchName } from './BranchMark';
 
 /**
@@ -10,20 +15,31 @@ import { BranchName } from './BranchMark';
  * active filter is its own chip — brass state on the trigger plus a
  * dedicated ✕ — and "Reset" clears everything. Options derive from ALL
  * loaded runs, never the filtered subset (a filter must not hide its own
- * alternatives).
+ * alternatives). The last period starts at the usage-limit reset (E7) and
+ * names its real start, from the `limitWindow` config.
  */
 
-const PERIODS: { key: number | null; label: string }[] = [
+const ROLLING_PERIODS: { key: number | null; label: string }[] = [
   { key: null, label: 'All time' },
   { key: 30, label: 'Last 30 days' },
   { key: 7, label: 'Last 7 days' },
 ];
+
+/** The period filter's choices, the since-reset one labelled by its start. */
+export function periodOptions(
+  resetLabel: string | undefined,
+): { key: Period | null; label: string }[] {
+  return resetLabel === undefined
+    ? ROLLING_PERIODS
+    : [...ROLLING_PERIODS, { key: 'reset', label: `Since ${resetLabel}` }];
+}
 
 export function FilterBar() {
   const data = useAppStore((s) => s.data);
   const filter = useAppStore((s) => s.filter);
   const setFilter = useAppStore((s) => s.setFilter);
   const clearFilter = useAppStore((s) => s.clearFilter);
+  const resetLabel = useResetLabel();
 
   const runs = data.status === 'ready' ? data.traceFile.runs : [];
   const projects = useMemo(
@@ -67,14 +83,16 @@ export function FilterBar() {
       />
       <Dropdown
         label="Period"
-        options={PERIODS.map((p) => ({
+        options={periodOptions(resetLabel).map((p) => ({
           key: p.key === null ? '' : String(p.key),
           label: p.label,
         }))}
-        activeKey={filter.periodDays === null ? '' : String(filter.periodDays)}
+        activeKey={filter.period === null ? '' : String(filter.period)}
         defaultKey=""
         onSelect={(key) =>
-          setFilter({ periodDays: key === '' ? null : Number(key) })
+          setFilter({
+            period: key === '' ? null : key === 'reset' ? 'reset' : Number(key),
+          })
         }
       />
       {/* Drill-down dimensions have no dropdown — they surface as chips. */}

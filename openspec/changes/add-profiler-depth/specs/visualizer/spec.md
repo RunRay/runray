@@ -43,7 +43,9 @@ action.
 The system SHALL provide project, source, period, model, day, and tool
 filters that narrow the visible runs client-side across every view; active
 filters SHALL be visible and individually clearable; a period filter SHALL
-anchor to the newest loaded run. The active filter state SHALL be encoded in
+anchor to the newest loaded run. A period is either a rolling number of days
+or the since-reset period ("Since-reset period and budget meter"), encoded as
+`period=<days>` or `period=reset`. The active filter state SHALL be encoded in
 the URL hash in the canonical parameter order
 `project, source, period, model, day, tool` so a copied link restores the
 same filtered view, in the live viewer and in exported files; filter-only
@@ -54,6 +56,12 @@ SHALL parse exactly as before.
 - GIVEN a project and 7-day period filter are active
 - WHEN the user copies the URL and opens it in a new tab
 - THEN the same filters are active and the same runs are visible
+
+#### Scenario: The since-reset period is shareable
+- GIVEN the since-reset period is active
+- WHEN the user copies the URL and opens it in a new tab
+- THEN the since-reset period is active, and a link carrying `period=7`
+  still opens the last 7 days
 
 #### Scenario: Old links keep working
 - GIVEN a bookmark to `#/run/<id>/timeline` created before this change
@@ -269,54 +277,68 @@ files; export SHALL work offline in exported single files.
 - WHEN the sessions CSV is downloaded
 - THEN no prompt-derived text appears in any column
 
-### Requirement: Limit-window display mode
-The system SHALL provide an opt-in display mode that additionally expresses
-selected cost figures as a percentage of a user-configured reference window
-(window length, reset day and hour, optional USD or token budget); the mode
-SHALL be off by default, its window SHALL anchor to the newest loaded run
-rather than the current clock so exports render stably, every percentage
-SHALL be labelled as an estimate, and the percentage framing SHALL appear
-only on the overview spend statement, the wasted KPI, and the run cost
-hero — never on every figure. Percentages SHALL be taken in the active
-display unit: dollars against the USD budget, tokens against the token
-budget, both of which the in-UI settings SHALL let the person set. Without
-a budget in the active unit the spend statement SHALL state the window's
-own spend or tokens, never as a share of itself.
+### Requirement: Since-reset period and budget meter
+The system SHALL offer, beside the rolling periods of the period filter, a
+period that starts at the most recent reset of a usage window configured in
+`limitWindow` (window length in days, reset day and hour; 7 days from
+Monday 00:00 when nothing is configured), labelled with the weekday and
+time it starts. Like the rolling periods it SHALL anchor to the newest
+loaded run rather than the current clock, so an exported file renders the
+same slice on every open; every overview figure, ranking and chart SHALL
+follow it, and the trend SHALL compare it with the window of the same
+length immediately before it. While that period is active, no single day is
+pinned, and a budget is configured in the active display unit (`budgetUSD`
+for dollars, `budgetTokens` for tokens), the overview spend statement SHALL
+show one meter of the visible runs' spend or tokens against that budget,
+labelled as an estimate. No other percentage of a window or budget SHALL
+appear anywhere. The window and the budgets SHALL be set in the
+configuration file only; the UI SHALL keep no setting of its own for them.
+In the live viewer, the since-reset period without a budget in the active
+unit SHALL name the configuration key that sets one.
 
-#### Scenario: Percentage of window spend
-- GIVEN a configured 7-day window with runs inside it and limit mode toggled
-  on
-- WHEN the overview renders
-- THEN the spend statement carries a secondary line stating the estimated
-  share of the window's spend-to-date
+#### Scenario: The period starts at the reset
+- GIVEN a `limitWindow` with reset day `thu` and reset hour 14, and a newest
+  run that started on a Saturday
+- WHEN the person opens the period filter
+- THEN it offers "Since Thu 14:00", and choosing it narrows every view to
+  the runs that started at or after that Thursday 14:00
 
-#### Scenario: Budget as denominator
-- GIVEN a configured window with `budgetUSD` set
-- WHEN limit mode is on
-- THEN percentages are computed against the budget instead of spend-to-date
-
-#### Scenario: Off by default
-- GIVEN a limit window is configured but the toggle has never been used
-- WHEN any view renders
-- THEN no percentage-of-window figures appear
+#### Scenario: Default window
+- GIVEN no `limitWindow` block
+- WHEN the person opens the period filter
+- THEN it offers "Since Mon 00:00", a 7-day window from Monday 00:00
 
 #### Scenario: Deterministic in exports
-- GIVEN an exported file opened on two different days
-- WHEN the overview renders with limit mode on
-- THEN the window bounds and percentages are identical on both opens
-
-#### Scenario: Token budget in token mode
-- GIVEN a configured window with `budgetTokens` set, limit mode on, and the
-  display unit set to tokens
+- GIVEN an exported file opened on two different days with the since-reset
+  period in its link
 - WHEN the overview renders
-- THEN the spend statement gives the window's tokens of the token budget
-  with the estimated share, and the run cost hero's suffix is a share of
-  the same token budget
+- THEN the window bounds, the figures and the meter are identical on both
+  opens
+
+#### Scenario: Trend against the previous window
+- GIVEN the since-reset period over a 7-day window, and at least two runs in
+  the 7 days before it
+- WHEN the overview renders
+- THEN the trend compares the window with those 7 days
+
+#### Scenario: The meter follows the display unit
+- GIVEN `budgetTokens` of 500M and no `budgetUSD`, the since-reset period,
+  and 382M tokens across the visible runs
+- WHEN the overview renders in token mode
+- THEN the spend statement shows 382M of 500M tokens, about 77% used,
+  labelled as an estimate, with a bar
+- AND after a switch to dollars the meter is gone and the statement names
+  `budgetUSD` as the key that would set one
+
+#### Scenario: No budget, no percentage
+- GIVEN no budget in the active unit
+- WHEN any view renders, in any period
+- THEN no percentage of a window or a budget appears
 
 ### Requirement: Display unit
 The system SHALL let the person choose the unit the headline figures lead
-with, dollars or tokens, from a control in the top bar beside the limit
-mode toggle and from the command palette; the choice SHALL default to
+with, dollars or tokens, from a control in the top bar and from the
+command palette; the choice SHALL default to
 dollars and persist across reloads the way the theme does. In token mode
 the overview spend statement, burn line, key indicators, resource
 rankings, cross-run tool ranking, run preview, spend-by-day chart and

@@ -7,8 +7,8 @@ import { formatTokensCompact, formatUSD } from './format';
  * no figure is recomputed. Estimates that exist only in dollars (waste,
  * savings, what-if) stay in dollars and read "at API prices" in token mode,
  * because a cache or model-choice estimate is a price difference with no
- * token count behind it. Independent of limit mode (E1), which sets its
- * percentages in whichever unit is active.
+ * token count behind it. The since-reset budget meter (E7) measures against
+ * the budget in whichever unit is active.
  */
 export type DisplayUnit = 'usd' | 'tokens';
 
