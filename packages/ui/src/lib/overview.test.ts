@@ -391,6 +391,79 @@ describe('worstToolError', () => {
     expect(worstToolError(runs)).toEqual({ name: 'Bash', count: 2 });
     expect(worstToolError([stubRun({ id: 'c' })])).toBeNull();
   });
+
+  // stamped the way the adapters stamp a classified shell call
+  const shell = (
+    harness: string,
+    tool: string | undefined,
+    activity: string,
+    isError = true,
+  ): Span => ({
+    ...toolSpan(harness, isError),
+    attributes: {
+      'runray.toolActivity': activity,
+      ...(tool === undefined ? {} : { 'runray.tool': tool }),
+    },
+  });
+
+  it('names the program a shell failure ran, not the shell', () => {
+    const runs = [
+      stubRun({
+        id: 'a',
+        spans: [
+          shell('Bash', 'pnpm', 'test'),
+          shell('Bash', 'pnpm', 'build'),
+          shell('Bash', 'git', 'vcs'),
+          shell('Bash', 'docker', 'infra'),
+          shell('Bash', 'pnpm', 'test', false),
+        ],
+      }),
+      // the same program under another harness shell counts together
+      stubRun({ id: 'b', spans: [shell('PowerShell', 'pnpm', 'test')] }),
+    ];
+    expect(worstToolError(runs)).toEqual({ name: 'pnpm', count: 3 });
+  });
+
+  it('counts programs outside the registry as one "other command"', () => {
+    const runs = [
+      stubRun({
+        id: 'a',
+        spans: [
+          shell('Bash', undefined, 'other'),
+          shell('Bash', undefined, 'other'),
+          shell('Bash', 'git', 'vcs'),
+        ],
+      }),
+    ];
+    expect(worstToolError(runs)).toEqual({ name: 'other command', count: 2 });
+  });
+
+  it('keeps the harness name for shell calls recorded before classification', () => {
+    const runs = [
+      stubRun({
+        id: 'a',
+        spans: [
+          toolSpan('Bash', true),
+          toolSpan('Bash', true),
+          shell('Bash', 'git', 'vcs'),
+        ],
+      }),
+    ];
+    expect(worstToolError(runs)).toEqual({ name: 'Bash', count: 2 });
+  });
+
+  it('breaks a tie by name, whatever the order of the runs', () => {
+    const spans = [
+      shell('Bash', 'git', 'vcs'),
+      shell('Bash', 'docker', 'infra'),
+    ];
+    const one = worstToolError([stubRun({ id: 'a', spans })]);
+    const other = worstToolError([
+      stubRun({ id: 'a', spans: [...spans].reverse() }),
+    ]);
+    expect(one).toEqual({ name: 'docker', count: 1 });
+    expect(other).toEqual(one);
+  });
 });
 
 describe('mostExpensiveCall', () => {
