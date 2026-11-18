@@ -1,6 +1,6 @@
-import { createReadStream, statSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { createInterface } from 'node:readline';
+import { readLines } from './lines.js';
 import { isSqliteUnavailable, loadSqlite } from './sqlite.js';
 
 /**
@@ -126,33 +126,32 @@ async function readClaudeSlice(
   if (provenance.line === undefined) {
     return unavailable('provenance carries no line number');
   }
-  let stream: ReturnType<typeof createReadStream>;
-  try {
-    statSync(provenance.file);
-    stream = createReadStream(provenance.file, { encoding: 'utf8' });
-  } catch (err) {
-    return unavailable(
+  const sourceUnavailable = (err: unknown) =>
+    unavailable(
       `source log unavailable: ${err instanceof Error ? err.message : String(err)}`,
     );
-  }
-  const rl = createInterface({ input: stream, crlfDelay: Infinity });
-  let lineNo = 0;
   try {
-    for await (const line of rl) {
-      lineNo += 1;
-      if (lineNo !== provenance.line) continue;
-      rl.close();
+    statSync(provenance.file);
+  } catch (err) {
+    return sourceUnavailable(err);
+  }
+  try {
+    // The same reader the adapter numbered the lines with — provenance.line
+    // only means something while both count lines the same way. Returning
+    // from the loop ends the iteration, which closes the file.
+    for await (const { line, text } of readLines(provenance.file)) {
+      if (line !== provenance.line) continue;
       try {
-        const record: unknown = JSON.parse(line);
+        const record: unknown = JSON.parse(text);
         if (!isObj(record)) return unavailable('record is not an object');
         return capSegments(claudeRecordSegments(record));
       } catch {
         return unavailable(`line ${provenance.line} is not valid JSON`);
       }
     }
-  } finally {
-    rl.close();
-    stream.close();
+  } catch (err) {
+    // the file vanished or became unreadable between the stat and the read
+    return sourceUnavailable(err);
   }
   return unavailable(`line ${provenance.line} is beyond the end of the file`);
 }
