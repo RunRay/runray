@@ -1,3 +1,4 @@
+import { identityContext, toolIdentity } from '@runray/core/tools';
 import type { Run, Span } from '@runray/schema';
 import { computeTimeRange, spanEndMs, spanStartMs } from './waterfall';
 
@@ -8,8 +9,10 @@ import { computeTimeRange, spanEndMs, spanStartMs } from './waterfall';
  * time and is reported separately as a parallelism factor. Categories, in
  * precedence order per elementary interval: any llm active → model wait
  * (the model is what you are billed to wait for), else any tool active →
- * tool execution, else a gap — at or above the idle threshold → idle,
- * below → coordination.
+ * tool execution, else a call that waits on the person active → waiting,
+ * else a gap — at or above the idle threshold → idle, below →
+ * coordination. A tool that runs while a question is pending is execution:
+ * the person waiting is not what the session was doing.
  */
 
 /**
@@ -22,7 +25,21 @@ import { computeTimeRange, spanEndMs, spanStartMs } from './waterfall';
  */
 export const DEFAULT_IDLE_GAP_MS = 60_000;
 
-export type TimeCategory = 'model' | 'tool' | 'coordination' | 'idle';
+export type TimeCategory =
+  | 'model'
+  | 'tool'
+  | 'waiting'
+  | 'coordination'
+  | 'idle';
+
+/** Display order: what the session did, then what nobody did. */
+export const TIME_CATEGORIES: readonly TimeCategory[] = [
+  'model',
+  'tool',
+  'waiting',
+  'coordination',
+  'idle',
+];
 
 export interface TimeSegment {
   category: TimeCategory;
@@ -36,21 +53,29 @@ export interface TimeBreakdown {
   wallClockMs: number;
   /**
    * Σ active-interval durations ÷ their covered wall-clock — "×1.8
-   * parallel". 1 when nothing overlaps or nothing ran.
+   * parallel". 1 when nothing overlaps or nothing ran. Model and tool work
+   * only: waiting on the person is nobody working.
    */
   parallelism: number;
 }
 
 const TOOL_KINDS = new Set<Span['kind']>(['tool_call', 'mcp_call', 'hook']);
 
+type Active = 'llm' | 'tool' | 'wait';
+
 interface Interval {
   start: number;
   end: number;
-  llm: boolean;
+  kind: Active;
 }
 
-/** Closed intervals only — in-progress spans contribute zero length. */
+/**
+ * Closed intervals only — in-progress spans contribute zero length. A tool
+ * call whose resolved activity is "human" (a question to the person, a
+ * plan awaiting approval) is waiting, not execution.
+ */
 function activeIntervals(run: Run): Interval[] {
+  const context = identityContext(run.spans);
   const out: Interval[] = [];
   for (const span of run.spans) {
     const isLlm = span.kind === 'llm_call';
@@ -58,7 +83,12 @@ function activeIntervals(run: Run): Interval[] {
     const start = spanStartMs(span);
     const end = spanEndMs(span);
     if (end <= start) continue;
-    out.push({ start, end, llm: isLlm });
+    const kind: Active = isLlm
+      ? 'llm'
+      : toolIdentity(span, context)?.activity === 'human'
+        ? 'wait'
+        : 'tool';
+    out.push({ start, end, kind });
   }
   return out;
 }
@@ -72,14 +102,13 @@ export function timeBreakdown(
 
   // Event sweep: instead of rescanning every interval per elementary segment
   // (O(segments·intervals) — a main-thread stall at the 10k-span scale), emit
-  // +1/-1 llm/tool events at each interval's clamped bounds and walk the
+  // +1/-1 events per kind at each interval's clamped bounds and walk the
   // boundaries maintaining active counts. O(n log n), identical segmentation.
   const boundaries = new Set<number>([range.start, range.end]);
-  const events = new Map<number, { llm: number; tool: number }>();
-  const bump = (t: number, llm: number, tool: number) => {
-    const e = events.get(t) ?? { llm: 0, tool: 0 };
-    e.llm += llm;
-    e.tool += tool;
+  const events = new Map<number, Record<Active, number>>();
+  const bump = (t: number, kind: Active, delta: number) => {
+    const e = events.get(t) ?? { llm: 0, tool: 0, wait: 0 };
+    e[kind] += delta;
     events.set(t, e);
   };
   for (const i of intervals) {
@@ -88,32 +117,34 @@ export function timeBreakdown(
     boundaries.add(s);
     boundaries.add(e);
     if (e <= s) continue;
-    bump(s, i.llm ? 1 : 0, i.llm ? 0 : 1);
-    bump(e, i.llm ? -1 : 0, i.llm ? 0 : -1);
+    bump(s, i.kind, 1);
+    bump(e, i.kind, -1);
   }
   const points = [...boundaries].sort((a, b) => a - b);
 
   const raw: TimeSegment[] = [];
-  let llmCount = 0;
-  let toolCount = 0;
+  const active: Record<Active, number> = { llm: 0, tool: 0, wait: 0 };
   for (let p = 1; p < points.length; p++) {
     const start = points[p - 1] as number;
     const end = points[p] as number;
     // apply events at the segment's start before classifying it
     const ev = events.get(start);
     if (ev !== undefined) {
-      llmCount += ev.llm;
-      toolCount += ev.tool;
+      active.llm += ev.llm;
+      active.tool += ev.tool;
+      active.wait += ev.wait;
     }
     if (end <= start) continue;
     const category: TimeCategory =
-      llmCount > 0
+      active.llm > 0
         ? 'model'
-        : toolCount > 0
+        : active.tool > 0
           ? 'tool'
-          : end - start >= idleGapMs
-            ? 'idle'
-            : 'coordination';
+          : active.wait > 0
+            ? 'waiting'
+            : end - start >= idleGapMs
+              ? 'idle'
+              : 'coordination';
     const prev = raw[raw.length - 1];
     if (
       prev !== undefined &&
@@ -129,12 +160,16 @@ export function timeBreakdown(
   const totals: Record<TimeCategory, number> = {
     model: 0,
     tool: 0,
+    waiting: 0,
     coordination: 0,
     idle: 0,
   };
   for (const seg of raw) totals[seg.category] += seg.end - seg.start;
 
-  const activeSum = intervals.reduce((acc, i) => acc + (i.end - i.start), 0);
+  const activeSum = intervals.reduce(
+    (acc, i) => (i.kind === 'wait' ? acc : acc + (i.end - i.start)),
+    0,
+  );
   const covered = totals.model + totals.tool;
   return {
     segments: raw,
@@ -186,14 +221,13 @@ function collectDurations(run: Run, byName: Map<string, number[]>): void {
   }
 }
 
-/** Slowest tools of one run, p95-first (stable ties by name). */
-export function toolDurationStats(run: Run): ToolDurationStat[] {
-  const byName = new Map<string, number[]>();
-  collectDurations(run, byName);
-  return statsFromDurations(byName);
-}
-
-/** Cross-run merge for the dashboard By-tool card's duration column. */
+/**
+ * Cross-run merge for the dashboard By-tool card's duration column, keyed
+ * by harness tool name, p95-first (stable ties by name). The per-run view
+ * no longer keys by harness name: the Time tab lists tools by resolved
+ * identity through `@runray/core/tools`. This one stays until the card
+ * moves to tool ids in its own change.
+ */
 export function toolDurationStatsAcrossRuns(
   runs: readonly Run[],
 ): ToolDurationStat[] {

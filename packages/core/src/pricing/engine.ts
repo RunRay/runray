@@ -577,7 +577,10 @@ export function repriceRun(
       s.kind === 'subagent' ? s.id : (owner.get(s.id) ?? null),
     );
     if (cell === undefined) continue;
-    if (s.status === 'error') cell.flags.add('errors');
+    // errors inside a subtree mean its work was hard, which is what makes a
+    // cheaper model a risk there. A failed hook is the harness's own script
+    // failing next to that work, and says nothing about it.
+    if (s.status === 'error' && s.kind !== 'hook') cell.flags.add('errors');
     if (s.kind === 'tool_call' || s.kind === 'mcp_call') cell.toolCalls += 1;
     if (s.kind === 'llm_call' && s.llm !== undefined) {
       cell.llmCalls += 1;

@@ -456,6 +456,26 @@
       }
     },
     {
+      "id": "61f0bb5b-eed6-4700-974b-406b9ace2a4a",
+      "parentId": "toolu_01TsgVSxFJoo4kjjkvHUBqCQ",
+      "kind": "hook",
+      "name": "incididunt",
+      "status": "error",
+      "statusReason": "exit 49",
+      "startedAt": "2026-07-04T22:17:56.503Z",
+      "endedAt": "2026-07-04T22:17:56.845Z",
+      "durationMs": 342,
+      "depth": 3,
+      "attributes": {
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
+      },
+      "provenance": {
+        "file": "fixtures/claude-code/simple/simple.jsonl",
+        "line": 56
+      }
+    },
+    {
       "id": "msg_015SVztbMdquBXFhKmNGY4GY",
       "parentId": "055e1023-9744-4675-a703-df3c948974da",
       "kind": "llm_call",
@@ -688,7 +708,7 @@
       "toolCalls": 13,
       "toolErrors": 0,
       "subagents": 0,
-      "maxDepth": 2
+      "maxDepth": 3
     },
     "cache": {
       "hitRate": 0.9873

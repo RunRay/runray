@@ -23,6 +23,7 @@ import {
   normalize,
   priceRun,
 } from '../packages/core/src/index.js';
+import { classifyCommand } from '../packages/core/src/tools/index.js';
 import { ensureLargeFixture } from './synth-large.js';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -85,6 +86,40 @@ bench.add('full pipeline large (parse→price→normalize→insights)', async ()
 bench.add('full pipeline subagents (committed, ~1.4k spans)', async () => {
   await fullPipeline(subagentsCandidate);
 });
+// tool-usage classification (add-tool-usage-breakdown 1.5): one bounded pass
+// per shell span, so it must stay negligible next to the parse itself
+const TYPICAL_COMMANDS = [
+  'cd apps/web && pnpm exec vitest run 2>&1 | tail -20',
+  'git add -A && git commit -m "fix: retry; then && done" && git push',
+  'docker compose -f dev.yml up -d && docker ps',
+  'grep -rn "TODO" src | head -40',
+  'npx tsc --noEmit -p packages/core',
+  'until curl -sf localhost:3000/health; do sleep 2; done',
+  "cat <<'EOF' > notes.md\nline one\nline two && docker run x\nEOF",
+  'DATABASE_URL=postgres://x sudo timeout 30 psql -c "select 1"',
+  'bash -lc "cd api && cargo test --workspace"',
+  'Get-ChildItem -Recurse | Where-Object { $_.Length -gt 1 } | Select-Object -First 5',
+];
+const HUGE_COMMAND =
+  'echo "$(git log | wc -l)" && pnpm build | tee log; '.repeat(20_000);
+// the worst case inside the cap: every word hands the rest to the next
+// resolution. Unwrapping must stay linear in the words; the 1 MB entry
+// cannot show that, since only its first 8 kB of ordinary commands are read
+const RUNNER_CHAIN = 'pnpm exec '.repeat(900);
+bench.add('classify 10k shell commands', () => {
+  for (let i = 0; i < 10_000; i++) {
+    classifyCommand(
+      TYPICAL_COMMANDS[i % TYPICAL_COMMANDS.length] as string,
+      i % 10 === 9 ? 'powershell' : 'posix',
+    );
+  }
+});
+bench.add('classify one 1 MB command', () => {
+  classifyCommand(HUGE_COMMAND, 'posix');
+});
+bench.add('classify an 8 kB runner chain', () => {
+  classifyCommand(RUNNER_CHAIN, 'posix');
+});
 await bench.run();
 
 const rssPeak = await peakRssMb(() => fullPipeline(largeCandidate));
@@ -102,6 +137,18 @@ const pipelineLargeMs = meanMs(
 );
 const subagentsMs = meanMs('full pipeline subagents (committed, ~1.4k spans)');
 const mbPerSec = largeMb / (parseMs / 1000);
+// The classification entries are short CPU-bound loops measured three times:
+// one collector pause in one iteration moves their mean by a third. The
+// median says what the code costs.
+const medianMs = (name: string): number => {
+  const task = bench.tasks.find((t) => t.name === name);
+  const median = task?.result?.latency.p50;
+  if (median === undefined) throw new Error(`no result for bench '${name}'`);
+  return median;
+};
+const classifyBatchMs = medianMs('classify 10k shell commands');
+const classifyHugeMs = medianMs('classify one 1 MB command');
+const classifyChainMs = medianMs('classify an 8 kB runner chain');
 
 const templatePath = join(
   repoRoot,
@@ -132,6 +179,24 @@ const rows: [string, string, string, boolean][] = [
     `${(subagentsMs / 1000).toFixed(2)} s`,
     '< 2 s incl. render at 2k spans',
     subagentsMs < 2000,
+  ],
+  [
+    'classify 10k shell commands',
+    `${classifyBatchMs.toFixed(1)} ms`,
+    '< 250 ms (25 µs per span)',
+    classifyBatchMs < 250,
+  ],
+  [
+    'classify one 1 MB command',
+    `${classifyHugeMs.toFixed(2)} ms`,
+    '< 5 ms (reads 8 kB)',
+    classifyHugeMs < 5,
+  ],
+  [
+    'classify an 8 kB runner chain',
+    `${classifyChainMs.toFixed(2)} ms`,
+    '< 5 ms (linear in the words)',
+    classifyChainMs < 5,
   ],
   ['peak RSS on large', `${rssPeak.toFixed(0)} MB`, '< 500 MB', rssPeak < 500],
   [

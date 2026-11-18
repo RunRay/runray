@@ -1,4 +1,5 @@
 import { CACHE_WRITE_1H_ATTR } from './pricing/engine.js';
+import { CLOSED_TOOL_ATTRS } from './tools/attributes.js';
 
 /**
  * The span attribute keys that may survive redaction and the sanitized
@@ -13,8 +14,13 @@ import { CACHE_WRITE_1H_ATTR } from './pricing/engine.js';
 /**
  * Reserved `runray.*` keys and their legacy `tracepulse.*` spellings that
  * carry no content: a target's hash and kind, the MCP heuristic marker, and
- * the 1-hour cache-write token count. `runray.target` (a basename) is not
- * here, and neither is any other key an emitter might stamp with the prefix.
+ * the 1-hour cache-write token count. The closed-vocabulary tool-usage keys
+ * (`runray.tool`, `runray.toolSub`, `runray.toolActivity`, `runray.toolVia`,
+ * `runray.toolsAlso`, `runray.toolFlags`, `runray.hookCount`) are here too:
+ * their values come from fixed lists in core and are validated against those
+ * lists at ingestion. `runray.target` (a basename) is not here, nor are the
+ * free-form tool-usage keys (`runray.toolName`, `runray.toolScript`,
+ * `runray.skill`), nor any other key an emitter might stamp with the prefix.
  */
 const RESERVED_METADATA_KEYS: ReadonlySet<string> = new Set([
   'runray.targetKey',
@@ -24,6 +30,7 @@ const RESERVED_METADATA_KEYS: ReadonlySet<string> = new Set([
   'tracepulse.targetKind',
   'tracepulse.mcpDetection',
   CACHE_WRITE_1H_ATTR,
+  ...CLOSED_TOOL_ATTRS,
 ]);
 
 /**

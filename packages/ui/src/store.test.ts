@@ -1,7 +1,13 @@
 import type { TraceFile } from '@runray/schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EMPTY_FILTER } from './lib/filter-runs';
-import { selectActiveRun, selectVisibleRuns, useAppStore } from './store';
+import {
+  dropRetiredLimitKeys,
+  RETIRED_LIMIT_KEYS,
+  selectActiveRun,
+  selectVisibleRuns,
+  useAppStore,
+} from './store';
 
 const initial = useAppStore.getInitialState();
 
@@ -140,11 +146,11 @@ describe('store actions', () => {
 describe('filter slice', () => {
   it('setFilter merges patches; clearFilter resets wholesale', () => {
     useAppStore.getState().setFilter({ project: 'alpha' });
-    useAppStore.getState().setFilter({ periodDays: 7 });
+    useAppStore.getState().setFilter({ period: 7 });
     expect(useAppStore.getState().filter).toEqual({
       ...EMPTY_FILTER,
       project: 'alpha',
-      periodDays: 7,
+      period: 7,
     });
     useAppStore.getState().clearFilter();
     expect(useAppStore.getState().filter).toEqual(EMPTY_FILTER);
@@ -163,6 +169,35 @@ describe('filter slice', () => {
       'r1',
       'r2',
     ]);
+  });
+
+  it('the since-reset period takes its window from the view config', () => {
+    const traceFile = stubTraceFile(['tue', 'thu']);
+    // a Tuesday run and the Thursday before it, in local time so the
+    // weekdays hold in every zone
+    (traceFile.runs[0] as { startedAt: string }).startedAt = new Date(
+      2026,
+      6,
+      7,
+      12,
+    ).toISOString();
+    (traceFile.runs[1] as { startedAt: string }).startedAt = new Date(
+      2026,
+      6,
+      2,
+      12,
+    ).toISOString();
+    useAppStore.getState().dataLoaded(traceFile, true);
+    useAppStore.getState().setFilter({ period: 'reset' });
+    const visible = () =>
+      selectVisibleRuns(useAppStore.getState()).map((r) => r.id);
+    // no config: 7 days from Monday 00:00, the Thursday is the week before
+    expect(visible()).toEqual(['tue']);
+    // resets on Wednesdays: that Thursday is inside the window
+    useAppStore
+      .getState()
+      .viewConfigLoaded({ limitWindow: { resetDay: 'wed' } });
+    expect(visible()).toEqual(['tue', 'thu']);
   });
 
   it('selectVisibleRuns is empty while data is loading', () => {
@@ -288,5 +323,42 @@ describe('inspector focus (Activity | Finding)', () => {
     expect(useAppStore.getState().selection.focus).toBe('insight');
     useAppStore.getState().routeChanged({ view: 'timeline', runId: 'r3' });
     expect(useAppStore.getState().selection.focus).toBe('span');
+  });
+});
+
+describe('retired limit-mode keys (E7)', () => {
+  it('are deleted, not migrated, and other keys are left alone', () => {
+    const items = new Map<string, string>([
+      ['runray.limitMode', 'on'],
+      ['runray.limitWindow', '{"budgetUSD":50}'],
+      ['tracepulse.limitMode', 'on'],
+      ['tracepulse.limitWindow', '{}'],
+      ['runray.unit', 'tokens'],
+    ]);
+    const saved = globalThis.localStorage;
+    globalThis.localStorage = {
+      removeItem: (key: string) => items.delete(key),
+    } as unknown as Storage;
+    try {
+      dropRetiredLimitKeys();
+    } finally {
+      globalThis.localStorage = saved;
+    }
+    expect([...items.keys()]).toEqual(['runray.unit']);
+    expect(RETIRED_LIMIT_KEYS).toHaveLength(4);
+  });
+
+  it('a storage that throws is not an error', () => {
+    const saved = globalThis.localStorage;
+    globalThis.localStorage = {
+      removeItem: () => {
+        throw new Error('SecurityError');
+      },
+    } as unknown as Storage;
+    try {
+      expect(() => dropRetiredLimitKeys()).not.toThrow();
+    } finally {
+      globalThis.localStorage = saved;
+    }
   });
 });
