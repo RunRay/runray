@@ -1,15 +1,17 @@
 # RunRay
 
-RunRay reads the session logs that Claude Code and OpenCode already keep on your disk and shows you what each session cost, what part of that money bought nothing, and what to change next time. It runs locally on your machine and makes no outbound network requests by default.
+**A profiler for coding-agent sessions.** Open one Claude Code or OpenCode session and see which turns burned money and what to change next time.
+
+RunRay reads the session logs the agents already keep on your disk. It runs locally on your machine and makes no outbound network requests by default.
 
 ```bash
 npx runray demo   # a scrubbed sample session, no agent data needed
 npx runray view   # your own sessions
 ```
 
-Needs Node.js 22 or newer.
+Needs Node.js 22.22 or newer.
 
-![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
+![Five steps: npx runray demo, the dashboard with $163 of $484 burned, one session's Waste tab, the leak rail, and a finding with the calls behind it](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/demo.gif)
 
 **Status: alpha.** Everything on this page works in `runray@0.1.0-alpha.6`. It is an alpha because the log formats it reads are undocumented and change with every agent release, so some session somewhere will parse oddly. When one does, [open an issue](https://github.com/RunRay/runray/issues) with your `runray --version` and the agent that wrote the log.
 
@@ -22,6 +24,23 @@ RunRay works one session at a time and answers a different question: where did t
 > "Bash failed three times in a row and the retries cost $0.09" is something you can fix.
 > "138k tokens" is not.
 
+## How it compares
+
+Several tools read the same log files. They answer different questions, and plenty of people run more than one.
+
+| Tool | The question it answers | Scope |
+|---|---|---|
+| [ccusage](https://github.com/ryoppippi/ccusage) | How many tokens and dollars did I use per day, week, month or session? | Totals, across many agent CLIs |
+| [codeburn](https://github.com/getagentseal/codeburn) | Where does my spend go across tools, projects and tasks, and which config or habit wastes tokens over a month? | 40+ tools, a desktop app, `optimize` can apply config fixes for you |
+| [claude-devtools](https://github.com/matt1398/claude-devtools) | What happened in this Claude Code transcript, and what filled the context? | One session, read as a transcript |
+| RunRay | Inside this one session, which turns burned money, how much, and who can fix it? | One session, audited by twelve rules. Claude Code, OpenCode, OTLP import |
+
+RunRay stays inside one session. Every finding points at the spans that caused it and carries its own amount, placed on the session's clock, so you can see when a cache prefix broke and what that cost. Failed tool calls are sorted by who can act on them. Money already burned and savings a different setup would bring are never added into one number. `runray export <run-id> -o report.html` writes one run as a single HTML file for a pull request. Without a run id the file holds every discovered run, so take the id from `runray list --json` first. What `--anonymize` strips and what it leaves is under [Privacy](#privacy).
+
+It also does less. It reads three sources, has no menu bar app and no quota view, and never edits your config. If you want a monthly total or a cleanup of unused MCP servers, the tools above do that well.
+
+This table reflects each project's README in November 2026.
+
 ## What you get
 
 | Tab | What it shows |
@@ -32,7 +51,9 @@ RunRay works one session at a time and answers a different question: where did t
 | **Time & Tools** | Where the wall clock went: model wait, tool execution, waiting on you, coordination, idle gaps. Tool time by kind of work and by the program behind each shell call. |
 | **Waste** | What the session burned and what it could have saved, each burn placed on the session's clock over the context size it happened in. |
 | **Errors** | Failed calls grouped by who can act on them, with the error text and what to do in your tool. |
-| **Report** | `runray export -o report.html` writes one HTML file that opens from disk, for a pull request or a Slack thread. `--anonymize` makes it safe to hand over. |
+| **Report** | `runray export <run-id> -o report.html` writes one run as an HTML file that opens from disk, for a pull request or a Slack thread. Without the id it writes every discovered run. `--anonymize` strips prompt text and pseudonymizes paths; [Privacy](#privacy) lists what stays. |
+
+![The dashboard: total spend, burned spend, cache hit-rate, tool errors, and the top three things to change](https://raw.githubusercontent.com/RunRay/runray/main/docs/images/dashboard.png)
 
 ### Waste
 
@@ -104,13 +125,15 @@ Offline by default. The local server binds to 127.0.0.1 only and sends zero tele
 
 All of it happens in core before serialization, never as a UI-side filter. `runray export` asks for confirmation before it writes an unredacted file.
 
+Path scrubbing covers the fields that hold a path or a project name: the project, the branch and the transcript files. Span names are kept as the source wrote them. For Claude Code and OpenCode those are tool, model and subagent names, and an MCP tool name carries its server's name. An OTLP emitter can put anything in a span name, a local path included, and that text stays in the report with or without the flags. Read a report built from OTLP traces before you share it.
+
 ## Commands
 
 | Command | What it does |
 |---|---|
 | `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
 | `runray list [path] --json` | The same discovery as a machine-readable list. |
-| `runray export [path\|runId] -o report.html` | One self-contained HTML file. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
+| `runray export [path\|runId] -o report.html` | One self-contained HTML file. Without a run id it holds every discovered run. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
 | `runray demo` | The dashboard on a bundled, scrubbed sample. |
 | `runray diff <runA> <runB>` | Two runs side by side: cost, tokens, errors, alignment. `--json` prints the diff for scripts. |
 | `runray pricing [--refresh]` | Show the pricing snapshot, or fetch a current one. |
@@ -127,6 +150,22 @@ Thresholds for the rules live in `runray.config.json`, read from the current dir
   }
 }
 ```
+
+The same file can describe a subscription's usage limit. The dashboard's period filter then offers the window since your last reset, such as "Since Thu 14:00", and a budget in the unit the figures lead with shows how much of it that window used. Every field is optional. Without the block, the window runs 7 days from Monday 00:00 local time, and no budget is shown:
+
+```json
+{
+  "limitWindow": {
+    "days": 7,
+    "resetDay": "thu",
+    "resetHour": 14,
+    "budgetTokens": 500000000,
+    "budgetUSD": 300
+  }
+}
+```
+
+Anthropic doesn't publish subscription limits in tokens or dollars, so a budget is your own estimate, and the dashboard labels it as one.
 
 ## Compared with usage trackers
 

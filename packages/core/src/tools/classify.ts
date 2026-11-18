@@ -264,8 +264,20 @@ function resolveTool(
   if (def.shell !== undefined) {
     const shell = def.shell;
     const caseless = shell.dialect === 'powershell';
+    // `cmd /c` and `powershell /NoProfile` take options that start with a
+    // slash. To a POSIX shell such a word is a path: `bash /opt/build.sh -c x`
+    // runs the script, and `-c x` are the script's own arguments
+    const slashOptions =
+      caseless || shell.flags.some((known) => known.startsWith('/'));
     for (let i = 0; i < args.length; i++) {
       const word = args[i] as string;
+      // a redirection can stand anywhere in a command and is no argument:
+      // `bash 2>&1 -c 'pnpm test'` still hands the string to the shell
+      const redirection = redirectionWidth(word);
+      if (redirection > 0) {
+        i += redirection - 1;
+        continue;
+      }
       const flag = word.toLowerCase();
       const hit =
         shell.flags.includes(flag) ||
@@ -286,7 +298,7 @@ function resolveTool(
       if (
         word.startsWith('-') ||
         word.startsWith('+') ||
-        word.startsWith('/')
+        (slashOptions && word.startsWith('/'))
       ) {
         if (def.valueOptions?.includes(caseless ? flag : word) === true) i++;
         continue;
@@ -497,8 +509,9 @@ function resolveWords(
   trail: Trail,
   via: string | undefined,
   quoted?: ReadonlySet<number>,
+  quotedWordsRun = false,
 ): Candidate[] {
-  const program = stageProgram(words, dialect, quoted);
+  const program = stageProgram(words, dialect, quoted, quotedWordsRun);
   if (program === undefined) return [];
   if (program.name === undefined) {
     return [
@@ -534,7 +547,8 @@ function candidatesOf(
         dialect,
         trail,
         via,
-        quotedWordsRun ? undefined : stage.quoted,
+        stage.quoted,
+        quotedWordsRun,
       )) {
         out.push(c);
       }
@@ -546,10 +560,13 @@ function candidatesOf(
 export interface ClassifyOptions {
   /**
    * The text may be run by a shell other than the dialect's own, so a quoted
-   * word is never taken for a string. A hook command with a Windows path is
-   * read as PowerShell for its backslashes, yet cmd may be what runs it, and
-   * cmd runs `"C:\Program Files\nodejs\node.exe" format.mjs` as it stands.
-   * A shell nested inside the command is read by its own rules either way.
+   * word at the head of a stage is a program, not a string. A hook command
+   * with a Windows path is read as PowerShell for its backslashes, yet cmd
+   * may be what runs it, and cmd runs
+   * `"C:\Program Files\nodejs\node.exe" format.mjs` as it stands. The value
+   * of an assignment is still read by its quote: `$out=docker ps` runs
+   * docker and `$dir="D:\work"` runs nothing, in a hook as anywhere. A shell
+   * nested inside the command is read by its own rules either way.
    */
   quotedWordsRun?: boolean;
 }

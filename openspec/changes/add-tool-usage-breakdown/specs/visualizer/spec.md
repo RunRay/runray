@@ -132,7 +132,9 @@ source cannot provide SHALL be shown as unavailable, never as zero.
 #### Scenario: Hook durations are partial
 - GIVEN a run with hook spans from a Claude Code transcript
 - WHEN the hook rows render
-- THEN their time is labelled as covering failed and cancelled runs only
+- THEN their time is labelled as covering failed and cancelled runs only,
+  and the label says that a turn's Stop hooks appear as a count, whether or
+  not they succeeded
 
 #### Scenario: Source that records every hook run
 - GIVEN an imported run whose hook spans come from its exporter
@@ -208,6 +210,13 @@ SHALL show an explanatory empty state.
 - WHEN the tool table renders
 - THEN `docker` is listed by name and the other program appears in an "other
   command" row with no name
+
+#### Scenario: Totals without calls
+- GIVEN a report whose totals count three tool calls, with no call span in
+  it and no manifest that says why
+- WHEN the Time view renders
+- THEN it says the calls are not in the report, and does not say the session
+  made no tool calls
 
 #### Scenario: Metadata-only report
 - GIVEN a metadata-only report

@@ -126,6 +126,13 @@ produce no span.
 - THEN a zero-duration `hook` span named `Stop` is emitted with status `ok`
   and `runray.hookCount: 3`
 
+#### Scenario: Stop-hook summary that lists fewer commands than it counts
+- GIVEN a stop-hook summary record reporting three hooks and listing the
+  command of one
+- WHEN the transcript is parsed
+- THEN the span carries `runray.hookCount: 3` and no tool identity, because
+  the hooks it does not list may have run anything
+
 #### Scenario: Successful tool hooks leave no trace
 - GIVEN a session whose `PreToolUse` hooks all succeeded and wrote nothing to
   the transcript
@@ -205,6 +212,13 @@ redaction rule as shell tool spans.
 - THEN the hook span carries `runray.tool: "node"` and the script name
   `format.mjs`: the transcript does not say which shell ran the hook, and a
   quoted path is a program to every shell but PowerShell
+
+#### Scenario: Hook command with a compact PowerShell assignment
+- GIVEN a failed hook whose command is `$out=docker ps --format "C:\work"`
+- WHEN the transcript is parsed
+- THEN the hook span carries `runray.tool: "docker"` and the subcommand `ps`:
+  only PowerShell writes an assignment this way, so the command after `=` is
+  kept, while `$dir="C:\work"` assigns a string and runs nothing
 
 ### Requirement: A hook span name holds names only
 A span name is kept under redaction, so the claude-code adapter SHALL take a

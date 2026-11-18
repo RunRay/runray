@@ -172,16 +172,19 @@ function closedDuration(span: Span): number | undefined {
 /**
  * How long a delegation ran. A call that launches its agent in the
  * background returns at once, so the subagent span it contains can outlast
- * it; the longer of the two is the delegation.
+ * it; the longer of the two is the delegation. A call with no recorded end
+ * is still open, whatever its agent has finished: it stays a call without a
+ * time.
  */
 function delegationDuration(
   span: Span,
   context: IdentityContext,
 ): number | undefined {
   let longest = closedDuration(span);
+  if (longest === undefined) return undefined;
   for (const sub of context.subagents.get(span.id) ?? []) {
     const d = closedDuration(sub);
-    if (d !== undefined && (longest === undefined || d > longest)) longest = d;
+    if (d !== undefined && d > longest) longest = d;
   }
   return longest;
 }

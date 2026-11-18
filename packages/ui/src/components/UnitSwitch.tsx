@@ -16,9 +16,8 @@ const OPTIONS: { unit: DisplayUnit; label: string; title: string }[] = [
 ];
 
 /**
- * TopBar unit switch (E6): which unit the headline figures lead with. Sits
- * beside the %win toggle and speaks its visual language — the chosen unit
- * takes the same brass tint as an enabled limit mode.
+ * TopBar unit switch (E6): which unit the headline figures lead with. The
+ * chosen unit takes the brass tint of an active control.
  */
 export function UnitSwitch() {
   const unit = useAppStore((s) => s.unit);
