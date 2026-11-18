@@ -1,4 +1,4 @@
-import { OTHER_COMMAND_KEY } from '@runray/core/tools';
+import { labelActivity, OTHER_COMMAND_KEY } from '@runray/core/tools';
 import {
   ERROR_OWNER_META,
   type ErrorCluster,
@@ -29,11 +29,6 @@ export function runTriage(run: Run): RunTriage {
   return t;
 }
 
-/** Subcommands that say how a program was started, not what it did. */
-const GENERIC_SUBS: ReadonlySet<string> = new Set(['run', 'script', 'inline']);
-/** Activities that add nothing after a name (`python script · run`). */
-const VAGUE_ACTIVITIES: ReadonlySet<string> = new Set(['run', 'other']);
-
 export interface ClusterToolName {
   /** `pnpm run`, `git push`, an MCP tool without its server, `Edit`. */
   name: string;
@@ -45,22 +40,23 @@ export interface ClusterToolName {
 
 /**
  * How a cluster's tool reads. A cluster of shell failures names the program
- * it ran, with the activity where the name alone does not say what the call
- * did and the activity does (`pnpm run · test`, `other command · build`,
- * but `git push`, `tsc` and `python script`), and the harness tool as a
- * tag; `mcp__<server>__<tool>` reads as the tool with the server beside it.
+ * it ran and the harness tool as a tag, with the activity beside the name
+ * whenever it is not the one the name alone implies (`pnpm run · test`,
+ * `project script · build`, `node · test`, `other command · build`, but
+ * `git push`, `cargo test` and `python script`). Triage keys the cluster on
+ * the activity too, so two clusters of one program never read the same.
+ * `mcp__<server>__<tool>` reads as the tool with the server beside it.
  */
 export function clusterToolName(
   cluster: Pick<ErrorCluster, 'tool' | 'program' | 'mcpServer'>,
 ): ClusterToolName {
   const { program, mcpServer, tool } = cluster;
   if (program !== undefined) {
-    // `pnpm run` and `other command` need the activity to say what ran;
-    // `git push` and `tsc` say it themselves
-    const sayActivity =
-      !VAGUE_ACTIVITIES.has(program.activity) &&
-      (program.key === OTHER_COMMAND_KEY ||
-        (program.sub !== undefined && GENERIC_SUBS.has(program.sub)));
+    const implied =
+      program.key === OTHER_COMMAND_KEY
+        ? 'other'
+        : labelActivity(program.key, program.sub);
+    const sayActivity = program.activity !== implied;
     return {
       name: program.label,
       ...(sayActivity ? { qualifier: program.activity } : {}),

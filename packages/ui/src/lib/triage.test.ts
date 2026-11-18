@@ -1,3 +1,9 @@
+import {
+  classifyCommand,
+  OTHER_COMMAND_KEY,
+  OTHER_COMMAND_LABEL,
+  toolLabel,
+} from '@runray/core/tools';
 import type { Run, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import {
@@ -169,45 +175,98 @@ describe('formatOffset', () => {
 });
 
 describe('clusterToolName', () => {
-  const shell = (key: string, label: string, activity: string, sub?: string) =>
-    clusterToolName({
+  // a cluster's program as triage builds it from a classified command
+  const named = (command: string) => {
+    const c = classifyCommand(command, 'posix');
+    const key = c.tool ?? OTHER_COMMAND_KEY;
+    const label =
+      c.tool === undefined ? OTHER_COMMAND_LABEL : toolLabel(c.tool);
+    return clusterToolText({
       tool: 'Bash',
       mcpServer: undefined,
       program: {
         key,
-        label,
-        activity,
-        ...(sub === undefined ? {} : { sub }),
-      } as never,
+        label: c.sub === undefined ? label : `${label} ${c.sub}`,
+        activity: c.activity,
+        ...(c.sub === undefined ? {} : { sub: c.sub }),
+      },
     });
+  };
 
-  it('adds the activity only where the name does not say what ran', () => {
-    expect(shell('pnpm', 'pnpm run', 'test', 'run')).toEqual({
-      name: 'pnpm run',
-      qualifier: 'test',
-      tag: 'Bash',
-    });
-    expect(shell('other-command', 'other command', 'build')).toEqual({
-      name: 'other command',
-      qualifier: 'build',
-      tag: 'Bash',
-    });
-    expect(shell('git', 'git push', 'vcs', 'push')).toEqual({
-      name: 'git push',
-      tag: 'Bash',
-    });
-    expect(shell('tsc', 'tsc', 'check')).toEqual({ name: 'tsc', tag: 'Bash' });
+  it('adds the activity only where the name alone does not imply it', () => {
+    expect(
+      [
+        'pnpm run test',
+        'pnpm run build',
+        'pnpm run foo',
+        'npm run-script test',
+        'deno task test',
+        'deno task foo',
+        './test.sh',
+        './build.sh',
+        './foo.sh',
+        'node --test',
+        'node --check x.js',
+        'node x.js',
+        'python foo.py',
+        'make test',
+        'make foo',
+        'git push',
+        'cargo test',
+        'docker compose up',
+        'mytool',
+      ].map(named),
+    ).toEqual([
+      'pnpm run · test',
+      'pnpm run · build',
+      'pnpm run',
+      'npm run-script · test',
+      'deno task · test',
+      'deno task',
+      'project script · test',
+      'project script · build',
+      'project script',
+      'node · test',
+      'node · check',
+      'node script',
+      'python script',
+      'make run · test',
+      'make run',
+      'git push',
+      'cargo test',
+      'docker compose up',
+      'other command',
+    ]);
   });
 
-  it('leaves out an activity that adds nothing', () => {
-    expect(shell('python', 'python script', 'run', 'script')).toEqual({
-      name: 'python script',
-      tag: 'Bash',
-    });
-    expect(shell('other-command', 'other command', 'other')).toEqual({
-      name: 'other command',
-      tag: 'Bash',
-    });
+  it('never gives two clusters of one program and subcommand the same name', () => {
+    // every pair here shares tool and subcommand and differs in activity,
+    // so triage keeps it apart; the names must keep it apart too
+    const pairs = [
+      ['pnpm run test', 'pnpm run foo'],
+      ['deno task test', 'deno task foo'],
+      ['./test.sh', './foo.sh'],
+      ['node --test', 'node --check x.js'],
+      ['make test', 'make foo'],
+    ];
+    for (const [a, b] of pairs) {
+      expect(named(a as string)).not.toBe(named(b as string));
+    }
+  });
+
+  it('tags the harness tool', () => {
+    expect(
+      clusterToolName({
+        tool: 'Bash',
+        mcpServer: undefined,
+        program: {
+          key: 'git',
+          label: 'git push',
+          sub: 'push',
+          activity: 'vcs',
+        },
+      }),
+    ).toEqual({ name: 'git push', tag: 'Bash' });
   });
 
   it('reads an MCP tool without its server prefix, the server beside it', () => {

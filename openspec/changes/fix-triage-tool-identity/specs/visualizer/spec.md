@@ -18,10 +18,12 @@ the failure text, one control per occurrence that selects the span and
 opens the Timeline Explorer on it, the findings that cite the cluster (each
 opening the finding), and the class playbook for the run's own source.
 For a cluster that carries a program, the tool SHALL read as the program's
-label, followed by its activity when the label does not name the work (the
-subcommand is `run`, `script` or `inline`, or the program is outside the
-registry) and the activity is neither `run` nor `other`, with the harness
-tool name as a tag; the failure ticks on the time axis SHALL name it the same way. The
+label, followed by its activity whenever that differs from the activity
+the label alone implies (the registry's activity for the tool and
+subcommand, or a script's fallback; `other` for a program outside the
+registry), so two clusters of one program and subcommand never read the
+same; the harness tool name SHALL show as a tag, and the failure ticks on
+the time axis SHALL name it the same way. The
 playbook's actions SHALL show for owners you, tooling, model and
 unclassified, and for agent slips only when the cluster repeated or never
 recovered; expected feedback SHALL show only its explanation, and its group
