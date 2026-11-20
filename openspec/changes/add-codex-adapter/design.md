@@ -187,6 +187,14 @@ the runtime has, and a native one would repeat the install problems that made
 *Rejected:* raising `engines` to `>=22.15`. It would block installs for
 people who never touch Codex.
 
+Since this was decided the floor moved for another reason: `develop` took
+chokidar 6, which needs Node 22.22, and the package now declares that.
+Every supported runtime therefore has the decoder, and the texts a person
+reads (README, the first-run help, the changeset) no longer name 22.15 as
+a floor of its own. The detection stays: `engines` is a warning to npm, so
+the package can still be started on an older 22.x, and there a compressed
+rollout is skipped with the message, as above.
+
 ### D6 — Refresh the snapshot, keep Codex ids, never alias
 
 The bundled snapshot is dated 2026-08-18 and has no entry for the newest

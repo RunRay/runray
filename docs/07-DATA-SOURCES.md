@@ -32,7 +32,7 @@ Każdy wątek to jeden plik, który Codex nazywa rolloutem:
 `~/.codex/sessions/RRRR/MM/DD/rollout-<czas>-<id-wątku>.jsonl`
 (na Windows: `%USERPROFILE%\.codex\sessions\...`; katalog domowy Codexa zmienia zmienna `CODEX_HOME`).
 
-Starsze pliki Codex sam kompresuje do `.jsonl.zst`. Oba warianty czyta ten sam czytnik. Plik skompresowany wymaga Node 22.15 lub nowszego, bo dopiero od tej wersji Node ma wbudowany dekoder zstd. Na starszym Node taki plik jest pomijany z komunikatem, który podaje potrzebną wersję, a zwykłe pliki ładują się normalnie.
+Starsze pliki Codex sam kompresuje do `.jsonl.zst`. Oba warianty czyta ten sam czytnik. Dekoder zstd jest wbudowany w Node od wersji 22.15, a RunRay wymaga Node 22.22, więc niczego nie trzeba doinstalowywać. Uruchomiony mimo to na starszym Node pomija taki plik z komunikatem, który podaje potrzebną wersję, a zwykłe pliki ładują się normalnie.
 
 Jeden rekord na linię. Z rekordów bierzemy tury (od `task_started` do `task_complete`), zużycie tokenów każdej odpowiedzi modelu (`token_usage_record`), wywołania narzędzi przez model oraz to, co harness faktycznie wykonał (`item_completed`: polecenie, zmiana pliku, wywołanie MCP).
 

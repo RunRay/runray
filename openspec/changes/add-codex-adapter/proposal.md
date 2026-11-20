@@ -139,9 +139,11 @@ branch in `transcript.ts`, `sanitize/sanitize.ts`, `insights/rules.ts` and
 `[UI → /frontend-design]` per CLAUDE.md.
 
 **Dependencies**: none added. Decompression uses `node:zlib`, whose zstd
-support needs Node 22.15 or later; the package declares `>=22`. On an older
-22.x a compressed rollout is skipped with one message naming the version,
-and plain rollouts load.
+support needs Node 22.15 or later. The package declared `>=22` when this
+was written and declares `>=22.22` since `develop` moved to chokidar 6, so
+every supported runtime has it. Run below that floor all the same, a
+compressed rollout is skipped with one message naming the version, and
+plain rollouts load.
 
 **Fixtures and goldens**: new `fixtures/codex/<variant>` from scrubbed real
 rollouts and their goldens in the three profiles. Existing goldens hold a

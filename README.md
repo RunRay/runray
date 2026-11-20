@@ -104,7 +104,7 @@ RunRay does not instrument anything and runs no collector. It reads what the age
 |---|---|---|
 | Claude Code | `~/.claude/projects/**/*.jsonl` | Subagent sidechains included. Records a desktop bridge session re-appends are deduplicated. |
 | OpenCode | file storage, `opencode.db` (opened read-only), `opencode export` JSON | OpenCode stores `cost: 0`, so the cost engine prices every call from token counts. |
-| Codex | `~/.codex/sessions/**/rollout-*.jsonl`, also once Codex has compressed them to `.jsonl.zst` | Approval-reviewer threads show as subagents of the turn that consulted them. Codex records no cost, so every call is priced from token counts. Compressed rollouts need Node 22.15 or newer. |
+| Codex | `~/.codex/sessions/**/rollout-*.jsonl`, also once Codex has compressed them to `.jsonl.zst` | Approval-reviewer threads show as subagents of the turn that consulted them. Codex records no cost, so every call is priced from token counts. |
 | OTLP/JSON | exported OpenTelemetry traces | For custom agents and Claude Code's native traces. Import only, best effort. |
 
 How prices work:

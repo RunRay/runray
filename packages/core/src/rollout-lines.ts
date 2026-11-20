@@ -17,8 +17,9 @@ import { stripBom } from './text.js';
  * the file is neither read nor decompressed.
  *
  * Decompression is `node:zlib`, not a dependency. Its zstd support arrived
- * in Node 22.15.0 and the package supports Node 22 from 22.0, so it is
- * feature-detected: on an older runtime a compressed rollout fails with one
+ * in Node 22.15.0. The package asks for 22.22, which has it, but `engines`
+ * is a warning to npm and no more, so the decoder is still feature-detected:
+ * on a runtime below 22.15 a compressed rollout fails with one
  * `ZstdUnavailableError` and plain rollouts read as before.
  *
  * Two behaviours of that decoder shape the code below (observed on Node

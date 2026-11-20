@@ -171,7 +171,7 @@ OpenCode
 
 Codex
   Nothing to configure. Any session writes a rollout under ~/.codex/sessions
-  (or $CODEX_HOME/sessions). Compressed rollouts need Node 22.15 or newer.
+  (or $CODEX_HOME/sessions).
   Run:  codex "explain this repo"      then:  runray view
 
 Other agents (Cursor, custom pipelines)
