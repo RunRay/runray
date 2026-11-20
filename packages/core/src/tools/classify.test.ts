@@ -3,6 +3,7 @@ import { TOOL_ATTR } from './attributes.js';
 import {
   type Classification,
   classifyCommand,
+  labelActivity,
   toolUsageAttributes,
 } from './classify.js';
 import {
@@ -986,5 +987,52 @@ describe('closed vocabulary, by construction', () => {
       'runray.toolSub': 'run',
       'runray.toolVia': 'pnpm exec',
     });
+  });
+});
+
+describe('labelActivity', () => {
+  it('is the activity a call gets when nothing after its label tells more', () => {
+    for (const command of [
+      'pnpm run foo',
+      'pnpm foo',
+      'npm run-script foo',
+      'deno task foo',
+      './foo.sh',
+      'node x.js',
+      'node -e 1',
+      'python foo.py',
+      'make foo',
+      'make',
+      'git push',
+      'cargo test',
+      'cargo build',
+      'docker compose up',
+      'gh pr create',
+      'tsc',
+    ]) {
+      const c = classifyCommand(command, 'posix');
+      expect(c.tool, command).toBeDefined();
+      expect(labelActivity(c.tool as string, c.sub), command).toBe(c.activity);
+    }
+  });
+
+  it('differs where a script name or a flag told more', () => {
+    for (const command of [
+      'pnpm run test',
+      'npm run-script build',
+      'deno task test',
+      './test.sh',
+      'node --test',
+      'make test',
+    ]) {
+      const c = classifyCommand(command, 'posix');
+      expect(labelActivity(c.tool as string, c.sub), command).not.toBe(
+        c.activity,
+      );
+    }
+  });
+
+  it('knows nothing of an id outside the registry', () => {
+    expect(labelActivity('no-such-tool')).toBeUndefined();
   });
 });

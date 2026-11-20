@@ -166,3 +166,54 @@ describe('ErrorsView', () => {
     expect(html).toContain('#/run/run1');
   });
 });
+
+describe('ErrorsView — a shell failure names the program it ran', () => {
+  const MISSING = 'bash: x: command not found';
+  const sh = (
+    id: string,
+    s: number,
+    status: Span['status'],
+    attributes: Record<string, unknown>,
+  ) =>
+    span({
+      id,
+      name: 'Bash',
+      status,
+      startedAt: at(s),
+      endedAt: at(s + 0.5),
+      durationMs: 500,
+      attributes,
+      tool: { name: 'Bash', isError: status === 'error' },
+      ...(status === 'error' ? { content: { outputPreview: MISSING } } : {}),
+    });
+  const PNPM_TEST = {
+    'runray.toolActivity': 'test',
+    'runray.tool': 'pnpm',
+    'runray.toolSub': 'run',
+  };
+  const GIT_PUSH = {
+    'runray.toolActivity': 'vcs',
+    'runray.tool': 'git',
+    'runray.toolSub': 'push',
+  };
+  const LS = { 'runray.toolActivity': 'explore', 'runray.tool': 'ls' };
+  const fixture = run([
+    sh('e1', 10, 'error', PNPM_TEST),
+    sh('ok1', 11, 'ok', LS),
+    sh('e2', 20, 'error', GIT_PUSH),
+  ]);
+
+  it('reads as the program, with the activity where the label does not say it and the harness tool as a tag', () => {
+    const html = renderToStaticMarkup(<ErrorsView run={fixture} />);
+    expect(html).toContain('title="pnpm run · test, run through Bash"');
+    expect(html).toContain('title="git push, run through Bash"');
+    expect(html).toContain('>Bash</span>');
+    expect(html).toContain('0h00 · pnpm run · test · ');
+  });
+
+  it('does not count another program as the tool coming back', () => {
+    const html = renderToStaticMarkup(<ErrorsView run={fixture} />);
+    expect(html).not.toContain('next call ok');
+    expect(html.split('no later call').length - 1).toBe(2);
+  });
+});
