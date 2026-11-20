@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://runray.dev/schema/0.1.0/runray.schema.json",
+  "$id": "https://runray.dev/schema/0.2.0/runray.schema.json",
   "title": "RunRay TraceFile",
   "type": "object",
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "const": "0.1.0"
+      "const": "0.2.0"
     },
     "generator": {
       "type": "object",
@@ -55,6 +55,7 @@
               "enum": [
                 "claude-code",
                 "opencode",
+                "codex",
                 "otlp",
                 "unknown"
               ]
@@ -66,6 +67,7 @@
                 "opencode-storage",
                 "opencode-sqlite",
                 "opencode-export",
+                "codex-jsonl",
                 "otlp-json"
               ]
             },

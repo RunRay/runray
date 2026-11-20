@@ -1,6 +1,9 @@
 # Normalize line endings
 * text=auto eol=lf
 
+# Compressed Codex rollouts are binary: never line-ending converted or diffed
+*.zst binary
+
 # Golden fixtures are byte-stable — flag accidental CRLF/whitespace churn
 fixtures/normalized/** -text
 schema/*.json text eol=lf

@@ -27,7 +27,13 @@ function redactRunText(run: Run): Run {
       content = {
         delegationReason: null,
       };
-    } else if (span.kind === 'turn' && tool === 'otlp') {
+    } else if (span.kind === 'llm_call' && tool === 'codex') {
+      // a redacted Codex parse gives every model call a null output preview
+      // and no prompt preview: the prompt belongs to the turn
+      content = {
+        outputPreview: null,
+      };
+    } else if (span.kind === 'turn' && (tool === 'otlp' || tool === 'codex')) {
       content = {
         promptPreview: null,
       };

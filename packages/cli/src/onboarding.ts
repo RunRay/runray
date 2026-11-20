@@ -71,15 +71,20 @@ OpenCode
   both the legacy file storage and the newer SQLite store.
   Installed somewhere non-standard? runray view <that folder>
 
+Codex
+  Nothing to configure. Any session writes a rollout under ~/.codex/sessions
+  (or $CODEX_HOME/sessions).
+  Run:  codex "explain this repo"      then:  runray view
+
 Other agents (Cursor, custom pipelines)
   No on-disk session logs to read. Export OTLP/JSON with an OTel Collector
   file exporter, then:  runray view <that file>
 
-All three are read locally. RunRay makes no network calls.
+All four are read locally. RunRay makes no network calls.
 `;
 
 export function formatCustomPathFailure(pathStr: string): string {
-  return `Nothing readable in ${pathStr}.\n\nExpected one of: Claude Code JSONL, an OpenCode store, or OTLP/JSON.\nTry the parent folder, or a single session file directly.\n`;
+  return `Nothing readable in ${pathStr}.\n\nExpected one of: Claude Code JSONL, an OpenCode store, Codex rollouts, or\nOTLP/JSON.\nTry the parent folder, or a single session file directly.\n`;
 }
 
 // A Windows path carries backslashes — JSON's escape character — and often
@@ -160,7 +165,7 @@ export async function runWizard(
         {
           value: 'guides',
           label: 'Show setup guides',
-          hint: 'Claude Code · OpenCode · OTLP',
+          hint: 'Claude Code · OpenCode · Codex · OTLP',
         },
         {
           value: 'path',

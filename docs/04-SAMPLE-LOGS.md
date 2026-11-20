@@ -44,6 +44,25 @@ opencode export <sessionID> > fixtures/opencode/export-json/simple.json
 
 Custom dir override: `OPENCODE_DATA_DIR` (also comma-separated archive roots).
 
+## 2a. Codex (native rollouts)
+
+Codex keeps one file per thread, a "rollout", and needs no setup:
+```bash
+ls ~/.codex/sessions/2026/10/13/   # rollout-<time>-<thread id>.jsonl, later .jsonl.zst
+```
+The root is `$CODEX_HOME/sessions` when `CODEX_HOME` is set. Codex compresses older
+rollouts in place with zstd, so one folder holds both forms. A thread started
+by Codex itself (the approval reviewer) is a file of its own that names its
+parent in `session_meta.parent_thread_id`; a fixture of a root with reviewer
+threads is several files.
+
+Scrub with `pnpm scrub <rollout> -o fixtures/codex/<variant>/<same name>`. The
+Codex rules are stricter than the default (keys are scrubbed too, unknown
+fields are reported and dropped): `scripts/README.md`. The set, the capture
+recipe and the shapes nobody has captured yet: `fixtures/codex/README.md`.
+`scripts/codex-fixtures.test.ts` checks every committed Codex fixture on each
+test run.
+
 ## 3. OTLP (priority 3 — power-user path)
 
 Claude Code native traces (beta) with subagent nesting. Tracing is built in —
@@ -76,7 +95,11 @@ fixture. Full recipe: `fixtures/otlp/README.md`.
 | opencode storage (files) | ☐ | ☐ | ☐ | — |
 | opencode sqlite | ☐ | ☐ | — | — |
 | opencode export json | ☐ | — | — | — |
+| codex rollouts (jsonl, jsonl.zst) | ☐ + `zstd` | ☐ `guardian` | ☐ | — |
 | otlp json | ☐ | ☐ | — | — |
+
+Codex has two more variants with no column here: `legacy` (the formats before
+code mode) and `compaction`.
 
 Plus `fixtures/normalized/` — golden outputs of the normalizer for every cell above (generated once adapters exist; snapshot-tested forever).
 

@@ -56,7 +56,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool_use",
-        "costUSD": 0.160857
+        "costUSD": 0.097732
       },
       "content": {
         "promptPreview": null,
@@ -116,7 +116,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool_use",
-        "costUSD": 0.137001
+        "costUSD": 0.071968
       },
       "content": {
         "promptPreview": null,
@@ -179,7 +179,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool_use",
-        "costUSD": 0.389317
+        "costUSD": 0.293912
       },
       "content": {
         "promptPreview": null,
@@ -258,7 +258,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool_use",
-        "costUSD": 0.406153
+        "costUSD": 0.286518
       },
       "content": {
         "promptPreview": null,
@@ -304,10 +304,10 @@
       "total": 485415
     },
     "costUSD": {
-      "total": 1.093328,
-      "wastedEstimate": 0.227544,
+      "total": 0.75013,
+      "wastedEstimate": 0.236526,
       "byModel": {
-        "claude-fable-5-1": 1.093328
+        "claude-fable-5-1": 0.75013
       }
     },
     "counts": {
@@ -332,8 +332,8 @@
         "msg_011CegSWZhXg6JSVkzEdPNnQ",
         "msg_011CegtkqZgmNHGvDQhcRxWN"
       ],
-      "estimatedWasteUSD": 0.227544,
-      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium, and every further call in this context costs $0.01 in cache reads alone."
+      "estimatedWasteUSD": 0.236526,
+      "suggestion": "Compact before a long break, or start the next task in a new session — resuming after 344 minutes re-wrote 12.0k tokens at the write premium."
     }
   ]
 }

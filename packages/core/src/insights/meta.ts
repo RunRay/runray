@@ -20,11 +20,12 @@ export type RuleClass = 'waste' | 'opportunity';
  * spelled out here so this module stays import-free; `otlp` speaks to the
  * author of a custom agent.
  */
-export type PlaybookSource = 'claude-code' | 'opencode' | 'otlp';
+export type PlaybookSource = 'claude-code' | 'opencode' | 'codex' | 'otlp';
 
 export const PLAYBOOK_SOURCES: readonly PlaybookSource[] = [
   'claude-code',
   'opencode',
+  'codex',
   'otlp',
 ];
 
@@ -32,8 +33,12 @@ export const PLAYBOOK_SOURCES: readonly PlaybookSource[] = [
 export const PLAYBOOK_SOURCE_LABEL: Readonly<Record<PlaybookSource, string>> = {
   'claude-code': 'Claude Code',
   opencode: 'OpenCode',
+  codex: 'Codex',
   otlp: 'Custom agent (OTLP)',
 };
+
+/** Codex keeps its settings in one file; playbooks name it once in full. */
+const CODEX_CONFIG = '`~/.codex/config.toml`';
 
 /**
  * The static "how to fix" behind a rule: what produces the finding, the
@@ -86,6 +91,12 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
           'Write the missing fact into `AGENTS.md` so the next session starts with it.',
           'For a failing MCP server, set `mcp.<name>.enabled: false` in `opencode.json` until it is fixed.',
         ],
+        codex: [
+          'Interrupt the turn as soon as the same call fails twice; every further attempt re-bills the whole context.',
+          'Write the missing fact into `AGENTS.md`, for example `Shell is PowerShell 5.1: no && chaining`, so the next session starts with it.',
+          `For an MCP server that keeps failing, set \`enabled = false\` under \`[mcp_servers.<name>]\` in ${CODEX_CONFIG} until it is fixed; \`/mcp\` lists what is connected.`,
+          'For a command that must never run, a `prefix_rule` with `decision = "forbidden"` in a `.rules` file under `~/.codex/rules/` blocks it without a prompt (rules are marked experimental).',
+        ],
         otlp: [
           'Stop retrying the same call after two failures and surface the error to the person instead.',
           'Put the environment facts the agent keeps rediscovering into its system prompt.',
@@ -113,6 +124,11 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
         opencode: [
           'Check that the provider you use supports prompt caching for the model; OpenCode adds no cache options of its own.',
+        ],
+        codex: [
+          'Change the model (`/model`) and the set of MCP servers at a task boundary, not in the middle of one: caching is on the provider side, both sit at the front of the prompt, and a change there leaves nothing to serve from cache.',
+          'Continue a session with `codex resume` instead of pasting its history into a new one.',
+          'With a `model_provider` other than `openai`, check that the provider caches prompts for the model at all.',
         ],
         otlp: [
           'Mark a stable prefix for caching in every request: system prompt, tool definitions, then the conversation, in that order.',
@@ -144,6 +160,11 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
           'Run `/compact` (alias `/summarize`) at a checkpoint; start a new task with `/new`.',
           'Set `compaction.prune: true` in `opencode.json` so old tool outputs are dropped automatically.',
         ],
+        codex: [
+          'Run `/compact` at a natural checkpoint; start the next task with `/new`.',
+          `\`model_auto_compact_token_limit\` in ${CODEX_CONFIG} sets the context size at which Codex compacts on its own.`,
+          '`tool_output_token_limit` caps how much of each tool output stays in the history.',
+        ],
         otlp: [
           'Summarize or drop tool results once the step that needed them is done; keep only the conclusion in the history.',
         ],
@@ -172,6 +193,12 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
           "Set `agent.<name>.model` in `opencode.json`, or `model:` in the agent's markdown frontmatter.",
           'Use `small_model` for lightweight work such as titles and summaries.',
         ],
+        codex: [
+          "Set `model` in the agent's file under `~/.codex/agents/`, or `.codex/agents/` for a project agent.",
+          `\`agents.default_subagent_model\` in ${CODEX_CONFIG} sets the model of every spawned agent that names none.`,
+          'Give the subagent a narrower task, or point it at the files it needs, so it does not explore the whole repository.',
+          'A subagent called `guardian` is the automatic approval reviewer, not an agent you define: `approvals_reviewer = "user"` hands the approval prompts back to you.',
+        ],
         otlp: [
           'Route delegated, low-risk work to a cheaper model and keep the strong model for planning and review.',
         ],
@@ -189,7 +216,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
     playbook: {
       causes: [
         'The last thing the agent did failed and nothing recovered from it: a command that errored, a session closed right after.',
-        'In headless runs (`claude -p`, CI) an error at the end means the whole run produced nothing.',
+        'In headless runs (`claude -p`, `codex exec`, CI) an error at the end means the whole run produced nothing.',
       ],
       actions: {
         'claude-code': [
@@ -198,6 +225,10 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
         opencode: [
           'Resume with `opencode -c` (or `--session <id>`) and deal with the failing step first.',
+        ],
+        codex: [
+          'Continue with `codex resume --last` and deal with the failing step first; everything up to the last completed change is intact.',
+          'For a `codex exec` run in CI, surface the failing step in the job log and rerun the job after fixing it.',
         ],
         otlp: [
           'Return the error to the caller instead of ending the run silently, and make the failed step the first thing the next run sees.',
@@ -224,6 +255,11 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
         opencode: [
           'Switch with `/models` in the TUI, or set `model` in `opencode.json`; `opencode run --model <provider/model>` for one-off runs.',
+        ],
+        codex: [
+          'Switch mid-session with `/model` for mechanical stretches, and back for design and debugging.',
+          `Set \`model\` in ${CODEX_CONFIG} for the default, or start one session on a cheaper model with \`codex --model <id>\`.`,
+          '`model_reasoning_effort` is a second lever on the same model: a lower effort spends fewer reasoning tokens. The estimate does not cover it.',
         ],
         otlp: [
           'Route by task: a cheaper model for classification, extraction and formatting; the strong model where errors are costly.',
@@ -255,6 +291,10 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
           'Enable the MCP servers you need before starting; toggling `mcp.<name>.enabled` re-writes the prefix.',
           '`/compact` at a checkpoint and `/new` per task; `compaction.prune: true` keeps the history small.',
         ],
+        codex: [
+          'RunRay does not report this finding on Codex sessions: the rule needs a cache write on the second call, and a rollout records none.',
+          'The habit holds all the same: connect MCP servers and pick the model before the long part of the work, and `/compact` at a checkpoint.',
+        ],
         otlp: [
           'Order every request as system prompt, tools, history, and never change the earlier parts once the session runs.',
         ],
@@ -284,6 +324,10 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
           'Before a long break, `/compact` (alias `/summarize`); start the next task with `/new` instead of resuming a large session.',
           "There is no cache TTL setting in OpenCode; the provider's default applies.",
         ],
+        codex: [
+          'RunRay does not report this finding on Codex sessions: the rule needs a cache write after the pause, and a rollout records none.',
+          'Before a long break, `/compact`; start the next task with `/new` instead of resuming a large session.',
+        ],
         otlp: [
           'Use the 1-hour cache TTL for sessions that pause, and compact the history before an expected idle period.',
         ],
@@ -300,7 +344,7 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
     class: 'opportunity',
     playbook: {
       causes: [
-        'Everything the first call already carries is paid on every call: the system prompt, `CLAUDE.md` and imported files, skill and memory listings, MCP tool definitions, attachments.',
+        'Everything the first call already carries is paid on every call: the system prompt, the instructions file (`CLAUDE.md`, `AGENTS.md`) and what it imports, skill and memory listings, MCP tool definitions, attachments.',
       ],
       actions: {
         'claude-code': [
@@ -311,6 +355,11 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         opencode: [
           'Keep `AGENTS.md` and the files under `instructions` short.',
           'Set `mcp.<name>.enabled: false` for servers a project does not use, or restrict tools per agent with the `tools` map.',
+        ],
+        codex: [
+          'Keep the `AGENTS.md` files short: Codex joins the global one with every one on the path from the project root to the working directory, up to `project_doc_max_bytes` (32 KiB by default).',
+          `Set \`enabled = false\` under \`[mcp_servers.<name>]\` in ${CODEX_CONFIG} for servers a project does not use, or narrow a server with \`enabled_tools\` and \`disabled_tools\`.`,
+          'Switch off a skill you do not use with a `skills.config` entry that sets `enabled = false`.',
         ],
         otlp: [
           'Trim the system prompt and tool definitions; move rarely used tools behind a lookup step.',
@@ -338,6 +387,9 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         opencode: [
           'Nothing to configure; keep files the agent needs repeatedly short.',
         ],
+        codex: [
+          'Nothing to configure; keep files the agent needs repeatedly short, or split them so each read costs less.',
+        ],
         otlp: [
           'Cache tool results by file and content hash so an unchanged file is served from memory.',
         ],
@@ -363,6 +415,10 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
         opencode: [
           'Put the fixes into `AGENTS.md`; use the `permission` block per agent to deny calls that should never run.',
+        ],
+        codex: [
+          'Start with the tool that failed most and put the fix into `AGENTS.md`: the right path, the right command, the tools that are not available.',
+          `If the failures are the sandbox refusing a command, \`/permissions\` changes what Codex may do without asking; \`sandbox_workspace_write.network_access = true\` in ${CODEX_CONFIG} lets commands reach the network.`,
         ],
         otlp: [
           'Log the error text with each failure and feed the recurring ones back into the system prompt.',
@@ -390,6 +446,10 @@ export const RULE_META: Readonly<Record<string, RuleMeta>> = {
         ],
         opencode: [
           'Keep outputs small at the source: filtered commands, targeted reads; `compaction.prune: true` drops old outputs later.',
+        ],
+        codex: [
+          `\`tool_output_token_limit\` in ${CODEX_CONFIG} caps how much of each tool output Codex keeps in the history.`,
+          'Put a rule in `AGENTS.md` for the command that produced it, for example `never print whole files; pipe long output through head`.',
         ],
         otlp: [
           'Truncate or paginate tool results before they enter the context and keep the full result on disk for the agent to page through.',

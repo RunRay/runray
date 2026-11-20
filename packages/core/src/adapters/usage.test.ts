@@ -13,7 +13,12 @@ import { claudeCodeAdapter } from './claude-code.js';
 import { opencodeAdapter } from './opencode.js';
 import { otlpAdapter } from './otlp.js';
 import { toolTargetAttributes } from './target.js';
-import { claudeCommandOutcome, toolUsageSpanAttributes } from './usage.js';
+import {
+  claudeCommandOutcome,
+  guessShellDialect,
+  shellScriptAttributes,
+  toolUsageSpanAttributes,
+} from './usage.js';
 
 /**
  * Tool usage capture (trace-ingestion delta of add-tool-usage-breakdown:
@@ -153,6 +158,59 @@ describe('toolUsageSpanAttributes', () => {
     expect(run({ timedOut: true })).toEqual(['timeout']);
     expect(run({})).toBeUndefined();
     expect(run(undefined)).toBeUndefined();
+  });
+});
+
+describe('a script whose dialect belongs to the call (Codex)', () => {
+  it('guesses the dialect from a Windows path in the text', () => {
+    expect(guessShellDialect('C:\\tools\\node.exe build.mjs')).toBe(
+      'powershell',
+    );
+    expect(guessShellDialect('Get-Content .\\notes.md')).toBe('powershell');
+    expect(guessShellDialect('pnpm test')).toBe('posix');
+    // a backslash that escapes, not one that separates
+    expect(guessShellDialect('echo a\\ b')).toBe('posix');
+  });
+
+  it('classifies in the dialect it is given, like the tool table does', () => {
+    expect(shellScriptAttributes(COMPOUND, 'posix', false, false)).toEqual(
+      toolUsageSpanAttributes(
+        'claude-code',
+        'Bash',
+        { command: COMPOUND },
+        false,
+      ),
+    );
+    expect(shellScriptAttributes(ALSO, 'powershell', false, true)).toEqual(
+      toolUsageSpanAttributes(
+        'claude-code',
+        'PowerShell',
+        { command: ALSO },
+        true,
+      ),
+    );
+    expect(shellScriptAttributes('', 'posix', false, false)).toEqual({
+      [TOOL_ATTR.activity]: 'other',
+    });
+  });
+
+  it('runs a quoted program path only when the dialect was guessed', () => {
+    const quoted = '"C:\\Program Files\\nodejs\\node.exe" build.mjs';
+    // cmd may be what runs the script, and cmd runs the quoted path
+    expect(
+      shellScriptAttributes(quoted, 'powershell', true, false)[TOOL_ATTR.tool],
+    ).toBe('node');
+    // PowerShell, named by the wrapper, takes it for a string
+    expect(
+      shellScriptAttributes(quoted, 'powershell', false, false),
+    ).not.toHaveProperty(TOOL_ATTR.tool);
+  });
+
+  it('leaves the free-form names out under redaction', () => {
+    const open = shellScriptAttributes(UNKNOWN, 'posix', false, false);
+    const redacted = shellScriptAttributes(UNKNOWN, 'posix', false, true);
+    expect(open[TOOL_ATTR.name]).toBe('acme-deploy');
+    expect(redacted).toEqual({ [TOOL_ATTR.activity]: 'other' });
   });
 });
 

@@ -1,0 +1,1663 @@
+{
+  "id": "run_784e137fcba4af72",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl"
+    ]
+  },
+  "project": {
+    "name": "nostrudxdolorxtempor",
+    "path": "/home/user/project/mag/nostrudxdolorxtempor",
+    "gitBranch": "enimxsedxenim"
+  },
+  "startedAt": "2025-10-20T17:08:36.114Z",
+  "endedAt": "2025-10-20T17:22:02.661Z",
+  "durationMs": 806547,
+  "spans": [
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:36.114Z",
+      "endedAt": "2025-10-20T17:22:02.661Z",
+      "durationMs": 806547,
+      "depth": 0,
+      "agent": {
+        "sessionId": "019a0298-17a7-77f2-ae33-e7000f622a61"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 2
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:15",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:36.117Z",
+      "endedAt": "2025-10-20T17:08:50.508Z",
+      "durationMs": 14391,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 862,
+          "output": 117,
+          "cacheRead": 5888,
+          "cacheWrite": 0,
+          "reasoning": 512
+        },
+        "costSource": "computed",
+        "costUSD": 0.008104
+      },
+      "content": {
+        "outputPreview": "consectetur labore ipsum tempor sed sed quis amet tempor ipsum minim lorem veniam labore tempor aliquip sed ipsum quis amet i"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 19
+      }
+    },
+    {
+      "id": "rollout-3",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:36.117Z",
+      "endedAt": "2025-10-20T17:08:36.117Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": "nostrud enim consectetur ame\n\naliqua tempor\nenim aliquip sed aliquip\nelit magna aliquip ipsum minim tempor quis magn\nincididunt aliquip eni\naliquip aliqua l\n\nadipiscing incididunt qu\ntempor minim magn"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 5
+      }
+    },
+    {
+      "id": "rollout-5",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:36.117Z",
+      "endedAt": "2025-10-20T17:13:17.453Z",
+      "durationMs": 281336,
+      "depth": 1,
+      "content": {
+        "promptPreview": "nostrud enim consectetur ame\n\naliqua tempor\nenim aliquip sed aliquip\nelit magna aliquip ipsum minim tempor quis magn\nincididunt aliquip eni\naliquip aliqua l\n\nadipiscing incididunt qu\ntempor enim conse"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 9
+      }
+    },
+    {
+      "id": "call_g5wSfYdZ9rFoGBrIdGyAjjYs",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:15",
+      "kind": "tool_call",
+      "name": "update_plan",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:50.509Z",
+      "endedAt": "2025-10-20T17:08:50.510Z",
+      "durationMs": 1,
+      "depth": 3,
+      "tool": {
+        "name": "update_plan",
+        "isError": false,
+        "outputBytes": 12
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 20
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:22",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:08:50.510Z",
+      "endedAt": "2025-10-20T17:08:53.319Z",
+      "durationMs": 2809,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 125,
+          "output": 159,
+          "cacheRead": 7296,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.002658
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 25
+      }
+    },
+    {
+      "id": "call_Jbq13LbVRu2wmi4Vn3xqXuPT",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:22",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "error",
+      "startedAt": "2025-10-20T17:09:08.091Z",
+      "endedAt": "2025-10-20T17:09:08.491Z",
+      "durationMs": 400,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 2429
+      },
+      "content": {
+        "outputPreview": "tempor sed minim\r\nadipiscing ipsum labore amet labore magna incididunt aliqua ipsum dolor nos\r\nsed magna a\r\ntempor ipsum quis adipiscing sed magna ipsum aliquip aliquip incid\r\nelit incididunt s\r\nadipi"
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 25
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:27",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:08.491Z",
+      "endedAt": "2025-10-20T17:09:15.109Z",
+      "durationMs": 6618,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 2401,
+          "output": 147,
+          "cacheRead": 5888,
+          "cacheWrite": 0,
+          "reasoning": 192
+        },
+        "costSource": "computed",
+        "costUSD": 0.007127
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 31
+      }
+    },
+    {
+      "id": "call_jNnwAh6PFLUCac0UljxNDWSR",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:27",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:21.907Z",
+      "endedAt": "2025-10-20T17:09:24.607Z",
+      "durationMs": 2700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 10265
+      },
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command",
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 31
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:34",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:24.607Z",
+      "endedAt": "2025-10-20T17:09:32.019Z",
+      "durationMs": 7412,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 6495,
+          "output": 46,
+          "cacheRead": 5888,
+          "cacheWrite": 0,
+          "reasoning": 192
+        },
+        "costSource": "computed",
+        "costUSD": 0.011235
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 38
+      }
+    },
+    {
+      "id": "call_UMiEaRKBDOojiekZT0iuByTf",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:34",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:40.600Z",
+      "endedAt": "2025-10-20T17:09:41.300Z",
+      "durationMs": 700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 200
+      },
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 38
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:41",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:41.300Z",
+      "endedAt": "2025-10-20T17:09:46.385Z",
+      "durationMs": 5085,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 244,
+          "output": 64,
+          "cacheRead": 12544,
+          "cacheWrite": 0,
+          "reasoning": 128
+        },
+        "costSource": "computed",
+        "costUSD": 0.003793
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 45
+      }
+    },
+    {
+      "id": "call_N438Fgrb8vylkVEUGmwNFFQa",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:41",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:49.450Z",
+      "endedAt": "2025-10-20T17:09:50.050Z",
+      "durationMs": 600,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 0
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 45
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:47",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:09:50.050Z",
+      "endedAt": "2025-10-20T17:09:54.015Z",
+      "durationMs": 3965,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 983,
+          "output": 55,
+          "cacheRead": 12032,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.003283
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 51
+      }
+    },
+    {
+      "id": "call_RZ6uJoLn3mQ3tloLmc8Ni29y",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:47",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:01.428Z",
+      "endedAt": "2025-10-20T17:10:02.028Z",
+      "durationMs": 600,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 51
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:54",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:02.028Z",
+      "endedAt": "2025-10-20T17:10:11.401Z",
+      "durationMs": 9373,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 185,
+          "output": 76,
+          "cacheRead": 12928,
+          "cacheWrite": 0,
+          "reasoning": 256
+        },
+        "costSource": "computed",
+        "costUSD": 0.005167
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 58
+      }
+    },
+    {
+      "id": "call_owo9RHx9BcfmpaB1zRBRJvMi",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:54",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:17.249Z",
+      "endedAt": "2025-10-20T17:10:17.949Z",
+      "durationMs": 700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1800
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 58
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:61",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:17.949Z",
+      "endedAt": "2025-10-20T17:10:23.477Z",
+      "durationMs": 5528,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 480,
+          "output": 48,
+          "cacheRead": 13312,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.002744
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 65
+      }
+    },
+    {
+      "id": "call_ycnUbP8E47iQXzIsupskHUYx",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:61",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:22.979Z",
+      "endedAt": "2025-10-20T17:10:23.679Z",
+      "durationMs": 700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1934
+      },
+      "attributes": {
+        "runray.targetKey": "0e3f84d5b5622bbc",
+        "runray.targetKind": "command",
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 65
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:70",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:23.679Z",
+      "endedAt": "2025-10-20T17:10:38.396Z",
+      "durationMs": 14717,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 815,
+          "output": 70,
+          "cacheRead": 13824,
+          "cacheWrite": 0,
+          "reasoning": 448
+        },
+        "costSource": "computed",
+        "costUSD": 0.007927
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 74
+      }
+    },
+    {
+      "id": "call_mNWHkKJvRxTw0GT3KzQNjvK7",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:70",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "error",
+      "startedAt": "2025-10-20T17:10:42.969Z",
+      "endedAt": "2025-10-20T17:10:43.669Z",
+      "durationMs": 700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 482
+      },
+      "content": {
+        "outputPreview": "enim ipsum sed tempor dolor dolor veniam enim quis minim tempor quis aliquip adipiscing dolor veniam adipiscing sed lor\r\nmagna c\r\nelit enim incidi\r\nconsectetur dolor veniam aliquip aliqua labore tempo"
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 74
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:76",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:43.669Z",
+      "endedAt": "2025-10-20T17:10:46.107Z",
+      "durationMs": 2438,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 1226,
+          "output": 65,
+          "cacheRead": 14080,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.003943
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 79
+      }
+    },
+    {
+      "id": "call_tjKWMF9ZLRMiJ7CAv5amAzyW",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:76",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:49.492Z",
+      "endedAt": "2025-10-20T17:10:50.192Z",
+      "durationMs": 700,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 9928
+      },
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 79
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:84",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:10:50.192Z",
+      "endedAt": "2025-10-20T17:10:59.370Z",
+      "durationMs": 9178,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 2267,
+          "output": 187,
+          "cacheRead": 15232,
+          "cacheWrite": 0,
+          "reasoning": 256
+        },
+        "costSource": "computed",
+        "costUSD": 0.009168
+      },
+      "content": {
+        "outputPreview": "amet aliquip nostrud dolor sit elit amet enim sed magna minim consectetur magna elit labore dolor amet lorem temp"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 88
+      }
+    },
+    {
+      "id": "call_9kmMO75LXyUJmoeqDJDaWttp",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:84",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:03.367Z",
+      "endedAt": "2025-10-20T17:11:04.467Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 51,
+        "linesAdded": 5,
+        "linesRemoved": 3
+      },
+      "attributes": {
+        "runray.targetKey": "f3f50efc470fff8a",
+        "runray.targetKind": "file-write",
+        "runray.target": "magna.html"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 89
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:91",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:04.467Z",
+      "endedAt": "2025-10-20T17:11:08.404Z",
+      "durationMs": 3937,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 848,
+          "output": 213,
+          "cacheRead": 17152,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.005334
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 94
+      }
+    },
+    {
+      "id": "call_KrlLJf2U5iLhWSf7INrtWNLM",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:91",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:25.668Z",
+      "endedAt": "2025-10-20T17:11:26.768Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 50,
+        "linesAdded": 12,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4a807b91ba609701",
+        "runray.targetKind": "file-write",
+        "runray.target": "sedxa.css"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 94
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:97",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:26.768Z",
+      "endedAt": "2025-10-20T17:11:36.034Z",
+      "durationMs": 9266,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 1098,
+          "output": 108,
+          "cacheRead": 17152,
+          "cacheWrite": 0,
+          "reasoning": 320
+        },
+        "costSource": "computed",
+        "costUSD": 0.007797
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 101
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:104",
+      "parentId": "rollout-5",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:36.129Z",
+      "endedAt": "2025-10-20T17:11:47.102Z",
+      "durationMs": 10973,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 166,
+          "output": 219,
+          "cacheRead": 18560,
+          "cacheWrite": 0,
+          "reasoning": 256
+        },
+        "costSource": "computed",
+        "costUSD": 0.007278
+      },
+      "content": {
+        "outputPreview": "minim nostrud tempor enim veniam amet magna veniam consectetur lorem \n\nipsum ipsum \ntempor adipiscing quis magna adipiscing lor\nsit incididunt adipiscing sit adipiscing amet consectetur quis aliqua in"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 108
+      }
+    },
+    {
+      "id": "call_g2CtpRIyw7FNS4Jiy9WOrLkb",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:97",
+      "kind": "tool_call",
+      "name": "update_plan",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:11:36.129Z",
+      "endedAt": "2025-10-20T17:11:36.129Z",
+      "durationMs": 0,
+      "depth": 3,
+      "tool": {
+        "name": "update_plan",
+        "isError": false,
+        "outputBytes": 12
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 101
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:119",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:13:17.453Z",
+      "endedAt": "2025-10-20T17:14:11.444Z",
+      "durationMs": 53991,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 11169,
+          "output": 85,
+          "cacheRead": 5760,
+          "cacheWrite": 0,
+          "reasoning": 2368
+        },
+        "costSource": "computed",
+        "costUSD": 0.039211
+      },
+      "content": {
+        "outputPreview": "sit lorem incididunt enim veniam amet enim minim elit adipiscing quis elit veniam dolor consectetur enim veniam labore tempor lorem aliqua adipiscing tempor consectetur incididu"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 123
+      }
+    },
+    {
+      "id": "rollout-105",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:13:17.453Z",
+      "endedAt": "2025-10-20T17:19:25.937Z",
+      "durationMs": 368484,
+      "depth": 1,
+      "content": {
+        "promptPreview": "nostrud enim consectetur ame\n\naliqua tempor\nenim aliquip sed aliquip\nelit magna aliquip ipsum minim tempor quis magn\nincididunt aliquip eni\naliquip aliqua l\n\nadipiscing incididunt qu\nincididunt aliqui"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 111
+      }
+    },
+    {
+      "id": "call_XWWSXxNzYRBDQnFt6H7RsR4k",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:119",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:14:11.404Z",
+      "endedAt": "2025-10-20T17:14:12.004Z",
+      "durationMs": 600,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 5176
+      },
+      "attributes": {
+        "runray.targetKey": "b626edd3511d1cd3",
+        "runray.targetKind": "command",
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 124
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:136",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:14:12.004Z",
+      "endedAt": "2025-10-20T17:16:17.113Z",
+      "durationMs": 125109,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 2671,
+          "output": 289,
+          "cacheRead": 19200,
+          "cacheWrite": 0,
+          "reasoning": 6016
+        },
+        "costSource": "computed",
+        "costUSD": 0.068789
+      },
+      "content": {
+        "outputPreview": "aliquip minim aliquip consectetur minim magna nostrud labore aliquip ipsum aliqua sit consectetur enim elit dolor incididunt labore veniam tempor lorem adipiscing nostrud tempor"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 140
+      }
+    },
+    {
+      "id": "call_my838onjb5AlctGhDzH9ErFZ",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:136",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:16:41.567Z",
+      "endedAt": "2025-10-20T17:16:42.367Z",
+      "durationMs": 800,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 574
+      },
+      "attributes": {
+        "runray.targetKey": "0606febe907fe10e",
+        "runray.targetKind": "command",
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 141
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:144",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:16:42.367Z",
+      "endedAt": "2025-10-20T17:16:54.184Z",
+      "durationMs": 11817,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 1144,
+          "output": 161,
+          "cacheRead": 27264,
+          "cacheWrite": 0,
+          "reasoning": 192
+        },
+        "costSource": "computed",
+        "costUSD": 0.008368
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 148
+      }
+    },
+    {
+      "id": "call_lAPQqa7kdkn65Y7g9VMpB4g2",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:144",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:16:57.711Z",
+      "endedAt": "2025-10-20T17:16:58.811Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 50,
+        "linesAdded": 6,
+        "linesRemoved": 2
+      },
+      "attributes": {
+        "runray.targetKey": "4a807b91ba609701",
+        "runray.targetKind": "file-write",
+        "runray.target": "sedxa.css"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 148
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:151",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:16:58.811Z",
+      "endedAt": "2025-10-20T17:17:06.365Z",
+      "durationMs": 7554,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 517,
+          "output": 57,
+          "cacheRead": 28288,
+          "cacheWrite": 0,
+          "reasoning": 64
+        },
+        "costSource": "computed",
+        "costUSD": 0.005392
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 155
+      }
+    },
+    {
+      "id": "call_V6WxusjFc3bJezJnkajO48yI",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:151",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:06.414Z",
+      "endedAt": "2025-10-20T17:17:07.014Z",
+      "durationMs": 600,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 0
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 155
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:157",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:07.014Z",
+      "endedAt": "2025-10-20T17:17:13.658Z",
+      "durationMs": 6644,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 696,
+          "output": 56,
+          "cacheRead": 28288,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.004966
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 161
+      }
+    },
+    {
+      "id": "call_kK0kebfL8NNhxLwN5h8Um9Fb",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:157",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:39.364Z",
+      "endedAt": "2025-10-20T17:17:39.864Z",
+      "durationMs": 500,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 0
+      },
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 161
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:163",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:39.864Z",
+      "endedAt": "2025-10-20T17:17:45.242Z",
+      "durationMs": 5378,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 154,
+          "output": 50,
+          "cacheRead": 28928,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.004309
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 167
+      }
+    },
+    {
+      "id": "call_PknuCTBnfoFtlfJeTzbGLw6Q",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:163",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:54.506Z",
+      "endedAt": "2025-10-20T17:17:55.006Z",
+      "durationMs": 500,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 182
+      },
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 167
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:171",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:17:55.006Z",
+      "endedAt": "2025-10-20T17:18:10.737Z",
+      "durationMs": 15731,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 267,
+          "output": 171,
+          "cacheRead": 29056,
+          "cacheWrite": 0,
+          "reasoning": 384
+        },
+        "costSource": "computed",
+        "costUSD": 0.009516
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 175
+      }
+    },
+    {
+      "id": "call_qUcKmdeFolnacQNITIAgG0sq",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:171",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:18:14.578Z",
+      "endedAt": "2025-10-20T17:18:15.178Z",
+      "durationMs": 600,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 62
+      },
+      "attributes": {
+        "runray.targetKey": "b1aaca441475334b",
+        "runray.targetKind": "command",
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 175
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:179",
+      "parentId": "rollout-105",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:18:15.178Z",
+      "endedAt": "2025-10-20T17:18:24.267Z",
+      "durationMs": 9089,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 652,
+          "output": 250,
+          "cacheRead": 29312,
+          "cacheWrite": 0,
+          "reasoning": 64
+        },
+        "costSource": "computed",
+        "costUSD": 0.007619
+      },
+      "content": {
+        "outputPreview": "sed sit veniam sed ipsum incididunt ipsum minim i\n\nveniam amet si\nveniam amet adipiscing incididunt dol\naliquip enim ipsum sit dolor elit incididunt sed amet ipsum ipsum sed veniam minim quis labore c"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 183
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:194",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:19:25.937Z",
+      "endedAt": "2025-10-20T17:20:07.896Z",
+      "durationMs": 41959,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 5399,
+          "output": 200,
+          "cacheRead": 16000,
+          "cacheWrite": 0,
+          "reasoning": 1536
+        },
+        "costSource": "computed",
+        "costUSD": 0.026109
+      },
+      "content": {
+        "outputPreview": "consectetur quis incididunt incididunt adipiscing elit elit quis enim magna magna nostrud nostrud labore labore quis labore minim enim sed nostrud tempor aliqua aliquip aliquip el"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 198
+      }
+    },
+    {
+      "id": "rollout-178",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:19:25.937Z",
+      "endedAt": "2025-10-20T17:22:02.661Z",
+      "durationMs": 156724,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 186
+      }
+    },
+    {
+      "id": "call_aMo260KQ6CfF5WBdqnoNIIGL",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:194",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "error",
+      "startedAt": "2025-10-20T17:20:07.896Z",
+      "endedAt": "2025-10-20T17:20:07.897Z",
+      "durationMs": 1,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": true,
+        "outputBytes": 243
+      },
+      "content": {
+        "outputPreview": "dolor quis elit magna sed sit veniam enim magna veniam labore incididunt incididunt amet tempor quis adipiscing ipsum cons\naliquip enim tempor minim sed nostrud \nsed incididunt lorem ipsum tempor aliq"
+      },
+      "attributes": {
+        "runray.targetKey": "613369a96b75bcb9",
+        "runray.targetKind": "file-write",
+        "runray.target": "adipiscingxl.svg"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 199
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:202",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:20:07.897Z",
+      "endedAt": "2025-10-20T17:20:14.737Z",
+      "durationMs": 6840,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 1108,
+          "output": 66,
+          "cacheRead": 22144,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.004813
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 206
+      }
+    },
+    {
+      "id": "call_j3WfmbhbCD6jJNSkSiXpQsIU",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:202",
+      "kind": "tool_call",
+      "name": "shell",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:20:37.643Z",
+      "endedAt": "2025-10-20T17:20:38.443Z",
+      "durationMs": 800,
+      "depth": 3,
+      "tool": {
+        "name": "shell",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 5176
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 206
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:209",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:20:38.443Z",
+      "endedAt": "2025-10-20T17:20:47.878Z",
+      "durationMs": 9435,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 2624,
+          "output": 158,
+          "cacheRead": 23168,
+          "cacheWrite": 0,
+          "reasoning": 128
+        },
+        "costSource": "computed",
+        "costUSD": 0.009036
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 213
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:219",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:20:47.878Z",
+      "endedAt": "2025-10-20T17:21:20.809Z",
+      "durationMs": 32931,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 950,
+          "output": 195,
+          "cacheRead": 25216,
+          "cacheWrite": 0,
+          "reasoning": 640
+        },
+        "costSource": "computed",
+        "costUSD": 0.01269
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 223
+      }
+    },
+    {
+      "id": "call_GHYLIbMj0OWJlC9e2TX8Basx",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:209",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "error",
+      "startedAt": "2025-10-20T17:20:47.878Z",
+      "endedAt": "2025-10-20T17:20:47.878Z",
+      "durationMs": 0,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": true,
+        "outputBytes": 243
+      },
+      "content": {
+        "outputPreview": "dolor quis elit magna sed sit veniam enim magna veniam labore incididunt incididunt amet tempor quis adipiscing ipsum cons\naliquip enim tempor minim sed nostrud \nsed incididunt lorem ipsum tempor aliq"
+      },
+      "attributes": {
+        "runray.targetKey": "613369a96b75bcb9",
+        "runray.targetKind": "file-write",
+        "runray.target": "adipiscingxl.svg"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 213
+      }
+    },
+    {
+      "id": "call_3xW9c1quAC32hL5Il5GcuO3U",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:219",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:21:23.624Z",
+      "endedAt": "2025-10-20T17:21:24.724Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 50,
+        "linesAdded": 8,
+        "linesRemoved": 5
+      },
+      "attributes": {
+        "runray.targetKey": "4a807b91ba609701",
+        "runray.targetKind": "file-write",
+        "runray.target": "sedxa.css"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 223
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:225",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:21:24.724Z",
+      "endedAt": "2025-10-20T17:21:34.839Z",
+      "durationMs": 10115,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 847,
+          "output": 161,
+          "cacheRead": 26240,
+          "cacheWrite": 0,
+          "reasoning": 128
+        },
+        "costSource": "computed",
+        "costUSD": 0.007229
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 229
+      }
+    },
+    {
+      "id": "call_tOtkxa4Y1jkszfBmlty7ixBx",
+      "parentId": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:225",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:21:53.737Z",
+      "endedAt": "2025-10-20T17:21:54.837Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 50,
+        "linesAdded": 4,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4a807b91ba609701",
+        "runray.targetKind": "file-write",
+        "runray.target": "sedxa.css"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 229
+      }
+    },
+    {
+      "id": "019a0298-17a7-77f2-ae33-e7000f622a61:tokens:232",
+      "parentId": "rollout-178",
+      "kind": "llm_call",
+      "name": "gpt-5",
+      "status": "ok",
+      "startedAt": "2025-10-20T17:21:54.837Z",
+      "endedAt": "2025-10-20T17:22:02.532Z",
+      "durationMs": 7695,
+      "depth": 2,
+      "llm": {
+        "provider": "unknown",
+        "model": "gpt-5",
+        "tokens": {
+          "input": 1203,
+          "output": 192,
+          "cacheRead": 26240,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.006704
+      },
+      "content": {
+        "outputPreview": "ipsum dolor adipiscing sed sed veniam consectetur minim amet quis aliqua dolor te\n\nveniam amet si\namet quis aliqua labore lorem elit \nmagna dolor lorem elit sit consectetur \nmagna nostrud la\nincididun"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2025-10-20T19-08-33-019a0298-17a7-77f2-ae33-e7000f622a61.jsonl",
+        "line": 235
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 47596,
+      "output": 3665,
+      "cacheRead": 506880,
+      "cacheWrite": 0,
+      "reasoning": 14080,
+      "total": 572221
+    },
+    "costUSD": {
+      "total": 0.300309,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5": 0.300309
+      }
+    },
+    "counts": {
+      "llmCalls": 28,
+      "toolCalls": 25,
+      "toolErrors": 4,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.9142
+    },
+    "codeChanges": {
+      "linesAdded": 35,
+      "linesRemoved": 10
+    }
+  },
+  "insights": []
+}

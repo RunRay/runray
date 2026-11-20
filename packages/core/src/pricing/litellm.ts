@@ -1,5 +1,9 @@
 import { stripBom } from '../text.js';
-import type { PricingEntry, PricingTable } from './engine.js';
+import {
+  canonicalModelName,
+  type PricingEntry,
+  type PricingTable,
+} from './engine.js';
 
 /**
  * Pure conversion of LiteLLM's price list into our PricingTable. No network
@@ -19,6 +23,15 @@ export const DEFAULT_PRICING_PROVIDERS: readonly string[] = [
   'deepseek',
   'mistral',
 ];
+
+/**
+ * Modes of the list that hold models a coding agent talks to. `responses`
+ * is where the list files the OpenAI models served only by the Responses
+ * API: the Codex family, the `-pro` models and deep research. Left out,
+ * each of them is priced by the prefix rule as the shorter id it starts
+ * with (`gpt-5.1-codex-mini` as `gpt-5.1`, five times its published rates).
+ */
+const PRICED_MODES: ReadonlySet<string> = new Set(['chat', 'responses']);
 
 const RATE_FIELDS = [
   'input_cost_per_token',
@@ -55,13 +68,6 @@ function rateProblem(value: unknown): string | undefined {
   return undefined;
 }
 
-function canonicalKey(key: string): string {
-  return key
-    .toLowerCase()
-    .replace(/^[a-z0-9_.-]+\//, '')
-    .replace(/-latest$/, '');
-}
-
 function perMTok(perToken: unknown, fallback: number): number {
   if (typeof perToken !== 'number' || !Number.isFinite(perToken))
     return fallback;
@@ -71,8 +77,9 @@ function perMTok(perToken: unknown, fallback: number): number {
 export interface ConvertOptions {
   snapshotDate: string;
   providers?: readonly string[];
-  /** Called for each chat model of a known provider that is left out
-   * because a published rate is unusable (negative, absurd, not a number). */
+  /** Called for each chat or responses model of a known provider that is
+   * left out because a published rate is unusable (negative, absurd, not a
+   * number). */
   onInvalid?: (key: string, problem: string) => void;
 }
 
@@ -87,7 +94,8 @@ export function convertLitellmPricing(
   >();
   for (const [key, value] of Object.entries(raw)) {
     if (!isEntry(value)) continue;
-    if (value.mode !== 'chat') continue;
+    if (typeof value.mode !== 'string' || !PRICED_MODES.has(value.mode))
+      continue;
     if (
       typeof value.litellm_provider !== 'string' ||
       !providers.has(value.litellm_provider)
@@ -108,7 +116,8 @@ export function convertLitellmPricing(
       continue;
     }
 
-    const pattern = canonicalKey(key);
+    // the same form a model id from a log is matched in
+    const pattern = canonicalModelName(key);
     const hadPrefix = key.includes('/');
     const input = perMTok(value.input_cost_per_token, 0);
     const write5m = perMTok(value.cache_creation_input_token_cost, input);
@@ -146,6 +155,41 @@ export function convertLitellmPricing(
     aliases: {},
     entries,
   };
+}
+
+/**
+ * Adds to a freshly converted table the models of `previous` that the list
+ * no longer has, at the rates they last had, and names them in the table's
+ * `retired` list.
+ *
+ * The list drops a model once its provider retires it, but sessions run on
+ * it stay on disk. Without its entry such a session is unpriced, or priced
+ * by the prefix rule as whatever current model its id starts with. A model
+ * the list still has is always taken from the list. A retired entry prices
+ * its own id only (`matchModel`): kept as an ordinary entry it would also
+ * price every unknown id that starts with it, at rates of a model that is
+ * gone.
+ *
+ * Used by the snapshot build script. `runray pricing --refresh` does not
+ * call it: the user's override replaces the bundled table whole.
+ */
+export function keepRetiredModels(
+  fresh: PricingTable,
+  previous: PricingTable,
+): PricingTable {
+  const listed = new Set(fresh.entries.map((e) => e.modelPattern));
+  const kept = previous.entries.filter((e) => !listed.has(e.modelPattern));
+  const entries = [...fresh.entries, ...kept].sort((a, b) =>
+    a.modelPattern < b.modelPattern ? -1 : 1,
+  );
+  const { retired: _wasRetired, ...table } = fresh;
+  return kept.length === 0
+    ? { ...table, entries }
+    : {
+        ...table,
+        entries,
+        retired: kept.map((e) => e.modelPattern).sort(),
+      };
 }
 
 /** A price list that converts to fewer models than the caller expects. */

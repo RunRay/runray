@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import {
+  bundledListSize,
   bundledPricing,
   LITELLM_PRICING_URL,
   PriceListTooShortError,
@@ -47,6 +48,8 @@ const pricingTableSchema = z.looseObject({
       }),
     )
     .min(1, 'no models'),
+  // a refreshed list has none; a copy of the bundled table may
+  retired: z.array(z.string()).optional(),
 });
 
 function describeIssue(error: z.ZodError): string {
@@ -85,9 +88,40 @@ export interface EffectivePricing {
   path?: string;
 }
 
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** Overrides already reported as older than the bundled table: a command
+ * resolves its prices several times, and the server on every request. */
+const reportedAsOlder = new Set<string>();
+
+/**
+ * Says, once per file and date, that the override in use is older than the
+ * table this version ships. The override still wins (it is the person's
+ * choice, and may hold rates they negotiated), but without a word a file
+ * left by `--refresh` before an upgrade prices every model the newer table
+ * added by an older entry of a similar name, or not at all.
+ *
+ * It does not advise `--refresh`: a refreshed list holds no retired model,
+ * so the advice would trade one gap for another. Deleting the file is the
+ * step that is always right.
+ */
+function reportOlderOverride(user: PricingTable, path: string): void {
+  const bundled = bundledPricing().snapshotDate;
+  if (!ISO_DAY.test(user.snapshotDate) || !ISO_DAY.test(bundled)) return;
+  if (user.snapshotDate >= bundled) return;
+  const key = `${path}\n${user.snapshotDate}`;
+  if (reportedAsOlder.has(key)) return;
+  reportedAsOlder.add(key);
+  process.stderr.write(
+    `warning: the pricing override ${path} (snapshot ${user.snapshotDate}) is older than the table bundled with this version (${bundled}) and is used in its place; models the bundled table added since are priced by an older entry or not at all. Delete the file to use the bundled table.\n`,
+  );
+}
+
 export function effectivePricing(path = userPricingPath()): EffectivePricing {
   const user = loadUserPricing(path);
-  if (user !== undefined) return { table: user, origin: 'user', path };
+  if (user !== undefined) {
+    reportOlderOverride(user, path);
+    return { table: user, origin: 'user', path };
+  }
   return { table: bundledPricing(), origin: 'bundled' };
 }
 
@@ -95,7 +129,7 @@ export interface RefreshResult {
   path: string;
   entries: number;
   snapshotDate: string;
-  /** Chat models left out because a published rate was unusable. */
+  /** Models left out because a published rate was unusable. */
   skipped: Array<{ model: string; problem: string }>;
 }
 
@@ -217,14 +251,16 @@ async function fetchPriceList(
  * The reply is untrusted: it is size- and time-capped, then parsed,
  * shape-checked and converted by `priceListFromText` (which drops models
  * with unusable rates), and must hold at least half as many models as the
- * bundled snapshot unless `allowShortList` is set. Only then is the
- * override replaced, atomically; any failure leaves it untouched.
+ * list held when the bundled snapshot was built unless `allowShortList` is
+ * set. Only then is the override replaced, atomically; any failure leaves
+ * it untouched.
  */
 export async function refreshPricing(
   options: {
     path?: string;
     fetchImpl?: typeof fetch;
-    /** Accept a list under half the bundled snapshot's size (never empty). */
+    /** Accept a list under half the size it had at the bundled snapshot
+     * (never empty). */
     allowShortList?: boolean;
     limits?: Partial<DownloadLimits>;
   } = {},
@@ -237,7 +273,7 @@ export async function refreshPricing(
     ...options.limits,
   });
 
-  const bundled = bundledPricing().entries.length;
+  const bundled = bundledListSize();
   const skipped: RefreshResult['skipped'] = [];
   let table: PricingTable;
   try {
@@ -251,7 +287,7 @@ export async function refreshPricing(
     if (err.models === 0)
       throw new Error('the price list has no usable models');
     throw new Error(
-      `the price list has only ${err.models} usable models, under half of the ${bundled} in the bundled snapshot, so it looks truncated. If LiteLLM really dropped those models, run \`runray pricing --refresh --allow-short-list\`.`,
+      `the price list has only ${err.models} usable models, under half of the ${bundled} the list held when this version was built, so it looks truncated. If LiteLLM really dropped those models, run \`runray pricing --refresh --allow-short-list\`.`,
     );
   }
 

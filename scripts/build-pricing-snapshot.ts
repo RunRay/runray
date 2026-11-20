@@ -7,6 +7,12 @@
  * a generated TypeScript module. Re-run to refresh prices:
  *
  *   pnpm pricing:snapshot
+ *   pnpm exec biome format --write packages/core/src/pricing/snapshot.ts
+ *
+ * A model the list no longer has stays in the snapshot at the rates it last
+ * had, and is named in the table's `retired` list: the list drops a model when its
+ * provider retires it, while sessions run on it stay on disk. Pass
+ * --drop-retired to leave such models out.
  *
  * Output: packages/core/src/pricing/snapshot.ts (committed, generated).
  */
@@ -18,28 +24,46 @@ import {
 } from '../packages/core/src/pricing/engine.js';
 import {
   DEFAULT_PRICING_PROVIDERS,
+  keepRetiredModels,
   LITELLM_PRICING_URL,
   priceListFromText,
 } from '../packages/core/src/pricing/litellm.js';
 import { BUNDLED_PRICING } from '../packages/core/src/pricing/snapshot.js';
+
+const previouslyRetired = BUNDLED_PRICING.retired ?? [];
 
 const res = await fetch(LITELLM_PRICING_URL, {
   signal: AbortSignal.timeout(5 * 60_000),
 });
 if (!res.ok) throw new Error(`fetch failed: ${res.status} ${res.statusText}`);
 
-// Same checks as `runray pricing --refresh`: a list under half the current
-// snapshot is refused as truncated, since a tiny snapshot would also lower
-// the bar for every user refresh. Pass --allow-short-list to accept it.
+// Same checks as `runray pricing --refresh`: a list under half of what the
+// list held at the last snapshot is refused as truncated, since a tiny
+// snapshot would also lower the bar for every user refresh. Retired models
+// are not counted: they are ours, not the list's. Pass --allow-short-list
+// to accept a short list.
 const snapshotDate = new Date().toISOString().slice(0, 10);
-const table = priceListFromText(await res.text(), {
+const listed = priceListFromText(await res.text(), {
   snapshotDate,
   minEntries: process.argv.includes('--allow-short-list')
     ? 1
-    : Math.ceil(BUNDLED_PRICING.entries.length / 2),
+    : Math.ceil(
+        (BUNDLED_PRICING.entries.length - previouslyRetired.length) / 2,
+      ),
   onInvalid: (key, problem) =>
     console.warn(`warning: left out ${key}: ${problem}`),
 });
+
+const table = process.argv.includes('--drop-retired')
+  ? listed
+  : keepRetiredModels(listed, BUNDLED_PRICING);
+const retired = table.retired ?? [];
+const newlyRetired = retired.filter((id) => !previouslyRetired.includes(id));
+if (newlyRetired.length > 0) {
+  console.log(
+    `kept ${newlyRetired.length} model(s) the list no longer has, at their last rates: ${newlyRetired.join(', ')}`,
+  );
+}
 
 // tier-ladder targets must stay resolvable, or suggestedDowngrade degrades
 // to "no suggestion" — surface it at refresh time, not at a user's runtime
@@ -58,6 +82,11 @@ for (const stages of MODEL_TIERS) {
   }
 }
 
+const literal = (value: unknown) =>
+  JSON.stringify(value, null, 2)
+    .replace(/"([a-zA-Z][a-zA-Z0-9]*)":/g, '$1:')
+    .replace(/"/g, "'");
+
 const target = fileURLToPath(
   new URL('../packages/core/src/pricing/snapshot.ts', import.meta.url),
 );
@@ -70,12 +99,13 @@ export const BUNDLED_PRICING: PricingTable = {
   snapshotDate: '${table.snapshotDate}',
   source: 'litellm-snapshot',
   aliases: {},
-  entries: ${JSON.stringify(table.entries, null, 2)
-    .replace(/"([a-zA-Z][a-zA-Z0-9]*)":/g, '$1:')
-    .replace(/"/g, "'")},
+  entries: ${literal(table.entries)},
+  // Models the list no longer has. Their rates are the last ones it
+  // published for them, and each prices its own id only.
+  retired: ${literal(retired)},
 };
 `;
 writeFileSync(target, content, 'utf8');
 console.log(
-  `wrote ${target} (${table.entries.length} entries, snapshot ${table.snapshotDate})`,
+  `wrote ${target} (${table.entries.length} entries, ${retired.length} of them retired, snapshot ${table.snapshotDate})`,
 );

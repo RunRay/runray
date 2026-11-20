@@ -44,6 +44,40 @@ describe('error-class registry', () => {
     }
   });
 
+  it('no Codex section names a lever of another source', () => {
+    for (const id of ERROR_CLASS_IDS) {
+      for (const line of ERROR_CLASS_META[id].playbook.actions.codex) {
+        for (const foreign of [
+          'CLAUDE.md',
+          'claude ',
+          '.claude/',
+          'opencode',
+          'OpenCode',
+          'Claude Code',
+          'preview_',
+        ]) {
+          expect(line, `${id}: "${line}"`).not.toContain(foreign);
+        }
+      }
+    }
+  });
+
+  it('the lines every source reads name no file of one source', () => {
+    for (const id of ERROR_CLASS_IDS) {
+      const { causes, limits } = ERROR_CLASS_META[id].playbook;
+      for (const line of [...causes, ...limits]) {
+        for (const own of [
+          'CLAUDE.md',
+          '.claude/',
+          'opencode.json',
+          '.codex/',
+        ]) {
+          expect(line, `${id}: "${line}"`).not.toContain(own);
+        }
+      }
+    }
+  });
+
   it('puts the person first and noise last', () => {
     expect(ERROR_OWNER_ORDER[0]).toBe('you');
     expect(ERROR_OWNER_ORDER[ERROR_OWNER_ORDER.length - 1]).toBe('unknown');

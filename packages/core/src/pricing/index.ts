@@ -36,8 +36,10 @@ export {
   DEFAULT_REPRICE_RISK,
   downgradeMap,
   effectiveCacheWriteRate,
+  hasNoPublishedPrice,
   looseModelKey,
   MODEL_TIERS,
+  MODELS_WITHOUT_PUBLISHED_PRICE,
   matchModel,
   repriceRun,
   repriceSpans,
@@ -48,6 +50,19 @@ export {
 
 export function bundledPricing(): PricingTable {
   return BUNDLED_PRICING;
+}
+
+/**
+ * How many models the price list itself held when the bundled snapshot was
+ * built. The snapshot is longer: it also keeps the models the list has
+ * since dropped (see `keepRetiredModels`). A fresh download is compared
+ * with this number, not with the snapshot's length, or every model the list
+ * retires would raise the bar the list has to clear.
+ */
+export function bundledListSize(): number {
+  return (
+    BUNDLED_PRICING.entries.length - (BUNDLED_PRICING.retired?.length ?? 0)
+  );
 }
 
 function priceSpan(span: RawSpan, table: PricingTable): RawSpan {

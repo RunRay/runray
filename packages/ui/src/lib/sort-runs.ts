@@ -5,6 +5,7 @@
  */
 
 import type { Run } from '@runray/schema';
+import { runModels } from './overview';
 
 export type SortKey =
   | 'date'
@@ -25,7 +26,7 @@ const getters: Record<SortKey, (run: Run) => string | number | undefined> = {
   date: (r) => Date.parse(r.startedAt),
   project: (r) => r.project?.name?.toLowerCase(),
   title: (r) => r.title?.toLowerCase(),
-  models: (r) => Object.keys(r.totals.costUSD.byModel).length,
+  models: (r) => runModels(r).length,
   duration: (r) => r.durationMs,
   tokens: (r) => r.totals.tokens.total,
   cost: (r) => r.totals.costUSD.total,

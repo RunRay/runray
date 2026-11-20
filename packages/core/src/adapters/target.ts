@@ -62,9 +62,12 @@ function strField(input: unknown, field: string): string | undefined {
   return typeof v === 'string' && v.length > 0 ? v : undefined;
 }
 
+/** The sources whose tools have a row here. */
+export type TargetSource = 'claude-code' | 'opencode' | 'codex';
+
 /** kind + which input field carries the target, per source tool name. */
 const TOOL_MAP: Record<
-  'claude-code' | 'opencode',
+  TargetSource,
   Record<string, { kind: TargetKind; fields: string[] }>
 > = {
   'claude-code': {
@@ -89,11 +92,25 @@ const TOOL_MAP: Record<
     // intervening writes on OpenCode runs. Revisit if the tool schema gains a
     // path field.
   },
+  codex: {
+    // A Codex command is an argv that starts with its shell
+    // (`pwsh.exe -Command <script>`). The adapter takes the script out of
+    // the wrapper and passes it as `command`, so the identity is the
+    // script's first token, as for the shell tools above, and never the
+    // wrapper. `exec_command` is a harness action; `shell` and
+    // `shell_command` are the calls of the era before actions were recorded.
+    exec_command: { kind: 'command', fields: ['command'] },
+    shell: { kind: 'command', fields: ['command'] },
+    shell_command: { kind: 'command', fields: ['command'] },
+    // a file change, when it changed exactly one path (the adapter passes
+    // none otherwise)
+    apply_patch: { kind: 'file-write', fields: ['path'] },
+  },
 };
 
 /** Extract the normalized target of one tool invocation, if recognized. */
 export function extractToolTarget(
-  source: 'claude-code' | 'opencode',
+  source: TargetSource,
   toolName: string,
   input: unknown,
 ): ToolTarget | undefined {
@@ -132,7 +149,7 @@ export function extractToolTarget(
  * modes, display token only unredacted; `{}` for unrecognized tools.
  */
 export function toolTargetAttributes(
-  source: 'claude-code' | 'opencode',
+  source: TargetSource,
   toolName: string,
   input: unknown,
   redact: boolean,

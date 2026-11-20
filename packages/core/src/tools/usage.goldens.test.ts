@@ -49,7 +49,13 @@ const goldens: Golden[] = PROFILES.flatMap((profile) => {
 });
 
 /** Tools that wait on the person, by name: the test's own copy of the rule. */
-const HUMAN_TOOLS = new Set(['AskUserQuestion', 'ExitPlanMode', 'question']);
+const HUMAN_TOOLS = new Set([
+  'AskUserQuestion',
+  'ExitPlanMode',
+  'question',
+  // Codex: a question put to the person while the turn goes on
+  'request_user_input_async',
+]);
 
 function isCall(span: Span): boolean {
   return span.kind === 'tool_call' || span.kind === 'mcp_call';

@@ -1,0 +1,66 @@
+{
+  "id": "run_38fb52e9bb6055f3",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-08T17:58:22.879Z",
+  "endedAt": "2026-09-08T17:58:22.879Z",
+  "durationMs": 0,
+  "spans": [
+    {
+      "id": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 0,
+      "agent": {
+        "name": "guardian",
+        "sessionId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 147410,
+      "output": 384,
+      "cacheRead": 557568,
+      "cacheWrite": 0,
+      "reasoning": 314,
+      "total": 705676
+    },
+    "costUSD": {
+      "total": 0,
+      "wastedEstimate": 0,
+      "byModel": {}
+    },
+    "counts": {
+      "llmCalls": 6,
+      "toolCalls": 0,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.7909
+    }
+  },
+  "insights": []
+}

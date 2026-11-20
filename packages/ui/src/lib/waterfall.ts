@@ -209,9 +209,14 @@ export function subagentRails(
 
 /**
  * Subtree economics rollup (D3): cost/tokens/llm-call count of every span's
- * subtree, one O(n) reverse pass — normalizer order guarantees parents
- * precede children, so a reverse walk folds each span into its parent after
- * its own subtree is complete. Cost counts priced spans only (the same
+ * subtree, in O(n): the spans are walked down from the roots, and that walk
+ * read backwards folds each span into its parent after its own subtree is
+ * complete. The order the spans arrive in is not relied on. The normalizer
+ * sorts by start time and then by id, so a child that starts in the same
+ * millisecond as its parent can stand before it (the first model call of a
+ * Codex turn does, and so do spans of the other sources), and a fold over
+ * the list as it came left such a child out of every total above its
+ * parent. Cost counts priced spans only (the same
  * `costSource !== 'unknown'` convention as core rollups); excluded calls
  * surface as `unpricedCalls` so badges stay honest ("Σ $4.12 · +2
  * unpriced"). Waterfall container rows (subagent, session) render these —
@@ -230,22 +235,14 @@ export function subtreeRollups(
   spans: readonly Span[],
 ): Map<string, SubtreeRollup> {
   const rollups = new Map<string, SubtreeRollup>();
-  const indexById = new Map<string, number>();
-  for (let i = 0; i < spans.length; i++) {
-    const span = spans[i];
-    if (span) indexById.set(span.id, i);
-  }
-  const get = (id: string): SubtreeRollup => {
-    const existing = rollups.get(id);
-    if (existing !== undefined) return existing;
-    const fresh = { costUSD: 0, unpricedCalls: 0, tokens: 0, llmCalls: 0 };
-    rollups.set(id, fresh);
-    return fresh;
-  };
-  for (let i = spans.length - 1; i >= 0; i--) {
-    const span = spans[i];
-    if (!span) continue;
-    const own = get(span.id);
+  const byId = new Map<string, Span>();
+  for (const span of spans) byId.set(span.id, span);
+  // every span's own figures, and who hangs on whom
+  const childrenOf = new Map<string, string[]>();
+  const walk: string[] = [];
+  for (const span of byId.values()) {
+    const own = { costUSD: 0, unpricedCalls: 0, tokens: 0, llmCalls: 0 };
+    rollups.set(span.id, own);
     if (span.kind === 'llm_call' && span.llm !== undefined) {
       own.llmCalls += 1;
       const t = span.llm.tokens;
@@ -254,13 +251,31 @@ export function subtreeRollups(
       if (span.llm.costSource === 'unknown') own.unpricedCalls += 1;
       else own.costUSD += span.llm.costUSD ?? 0;
     }
-    if (span.parentId !== null && indexById.has(span.parentId)) {
-      const parent = get(span.parentId);
-      parent.costUSD += own.costUSD;
-      parent.unpricedCalls += own.unpricedCalls;
-      parent.tokens += own.tokens;
-      parent.llmCalls += own.llmCalls;
+    if (span.parentId !== null && byId.has(span.parentId)) {
+      const siblings = childrenOf.get(span.parentId);
+      if (siblings === undefined) childrenOf.set(span.parentId, [span.id]);
+      else siblings.push(span.id);
+    } else walk.push(span.id); // a root: the walk starts here
+  }
+  // down from the roots: a span is reached after its parent, always
+  for (let i = 0; i < walk.length; i++) {
+    for (const child of childrenOf.get(walk[i] as string) ?? []) {
+      walk.push(child);
     }
+  }
+  // and back up: each span into its parent, its own subtree already whole
+  for (let i = walk.length - 1; i >= 0; i--) {
+    const span = byId.get(walk[i] as string);
+    const own = rollups.get(walk[i] as string);
+    if (span === undefined || own === undefined || span.parentId === null) {
+      continue;
+    }
+    const parent = rollups.get(span.parentId);
+    if (parent === undefined) continue;
+    parent.costUSD += own.costUSD;
+    parent.unpricedCalls += own.unpricedCalls;
+    parent.tokens += own.tokens;
+    parent.llmCalls += own.llmCalls;
   }
   // display rounding once, at the boundary
   for (const rollup of rollups.values()) {

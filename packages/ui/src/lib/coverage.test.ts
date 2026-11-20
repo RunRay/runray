@@ -1,6 +1,6 @@
 import type { Run, Span } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
-import { coverageOf } from './coverage';
+import { costHeadline, coverageOf } from './coverage';
 
 function llmSpan(id: string, model: string, unpriced: boolean): Span {
   return {
@@ -71,5 +71,24 @@ describe('coverageOf', () => {
     const c = coverageOf([run('a', [llmSpan('1', 'm', false)])]);
     expect(c.complete).toBe(true);
     expect(c.models).toEqual([]);
+  });
+});
+
+describe('costHeadline', () => {
+  const priced = run('a', [llmSpan('1', 'm', false)]);
+  const unpriced = run('b', [llmSpan('2', 'codex-auto-review', true)]);
+
+  it('gives the dollars when there are any', () => {
+    expect(costHeadline(1.5, [priced, unpriced])).toBe('$1.50');
+  });
+
+  it('calls zero dollars local only when every call had a price', () => {
+    expect(costHeadline(0, [priced])).toBe('Local / $0.00');
+    expect(costHeadline(0, [])).toBe('Local / $0.00');
+  });
+
+  it('says a cost nobody could price is unpriced, not zero', () => {
+    expect(costHeadline(0, [unpriced])).toBe('Unpriced');
+    expect(costHeadline(0, [priced, unpriced])).toBe('Unpriced');
   });
 });

@@ -33,7 +33,7 @@ function devTraceFile(): Plugin {
         res.setHeader('content-type', 'application/json');
         res.end(
           JSON.stringify({
-            schemaVersion: '0.1.0',
+            schemaVersion: '0.2.0',
             generator: { name: 'runray-ui-dev', version: '0.0.0' },
             generatedAt: new Date().toISOString(),
             runs,

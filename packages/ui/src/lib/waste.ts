@@ -7,6 +7,7 @@ import {
 } from '@runray/core/waste';
 import type { Run } from '@runray/schema';
 import { formatTokensCompact, formatUSD } from './format';
+import { agentSource } from './sources';
 
 /**
  * UI-side access to the core waste grouping (waste-grouping capability).
@@ -59,9 +60,15 @@ export function wasteBadge(run: Run): WasteBadge | null {
 
 /** Where the person records facts for the next session, per source. */
 export function instructionsFile(source: string): string {
-  if (source === 'claude-code') return 'CLAUDE.md';
-  if (source === 'opencode') return 'AGENTS.md';
-  return 'the system prompt';
+  const agent = agentSource(source);
+  if (agent === undefined) return 'the system prompt';
+  switch (agent) {
+    case 'claude-code':
+      return 'CLAUDE.md';
+    case 'opencode':
+    case 'codex':
+      return 'AGENTS.md';
+  }
 }
 
 export const tok = formatTokensCompact;
@@ -99,7 +106,18 @@ function wording(
   source: string,
 ): { what: string; lever: string } {
   const usd = formatUSD(g.usd);
-  const custom = source !== 'claude-code' && source !== 'opencode';
+  // a custom agent is worded for whoever builds it; Claude Code and
+  // OpenCode share the habits below, which name nothing only one of them has
+  const agent = agentSource(source);
+  const custom = agent === undefined;
+  // What core's playbook puts first for this source. The words of a lever
+  // that names a command of one agent live there and nowhere else.
+  const first = playbookActions(g.ruleId, source)[0] ?? '';
+  // Codex records no cache writes, so the two cache rules cannot fire on a
+  // Codex run and the playbook says so. Should such a group reach this tab
+  // all the same, the lead repeats the playbook: it does not advise a
+  // threshold nobody measured for Codex.
+  const cacheLever = (own: string) => (agent === 'codex' ? first : own);
   switch (g.ruleId) {
     case 'cache-prefix-break': {
       const shapes = g.shapes ?? {};
@@ -110,7 +128,7 @@ function wording(
         // evidence that did not resolve (a trimmed export): no shape to word
         return {
           what: `${plural(g.count, 'cache break')} re-wrote already-cached content at the write premium, costing ${usd}.`,
-          lever: playbookActions(g.ruleId, source)[0] ?? '',
+          lever: first,
         };
       }
       if (history.usd >= front.usd && history.usd >= compaction.usd) {
@@ -127,31 +145,38 @@ function wording(
               : ` while the context sat between ${tok(lo)} and ${tok(hi)} tokens`;
         return {
           what: `${plural(history.count, 'time')} the conversation was re-written at the write premium${range}, costing ${formatUSD(history.usd)}.`,
-          lever: custom
-            ? 'Keep the history you re-send under ~200k tokens by summarizing or dropping what is no longer needed.'
-            : '`/compact` before the context passes ~200k, or a new session per task, would have kept it.',
+          lever: cacheLever(
+            custom
+              ? 'Keep the history you re-send under ~200k tokens by summarizing or dropping what is no longer needed.'
+              : '`/compact` before the context passes ~200k, or a new session per task, would have kept it.',
+          ),
         };
       }
       if (front.usd >= compaction.usd) {
         return {
           what: `${plural(front.count, 'time')} the front of the prompt changed mid-session and the whole prefix was rewritten, costing ${formatUSD(front.usd)}.`,
-          lever: custom
-            ? 'Never change the system prompt or the tool list once a session runs.'
-            : 'Connect MCP servers and switch model or settings at a task boundary, not mid-session.',
+          lever: cacheLever(
+            custom
+              ? 'Never change the system prompt or the tool list once a session runs.'
+              : 'Connect MCP servers and switch model or settings at a task boundary, not mid-session.',
+          ),
         };
       }
       return {
         what: `${plural(compaction.count, 'compaction')} each wrote a new prefix, costing ${formatUSD(compaction.usd)}.`,
-        lever:
+        lever: cacheLever(
           'Compact earlier, while there is less to summarize, or start a new session per task.',
+        ),
       };
     }
     case 'idle-cache-expiry':
       return {
         what: `${plural(g.count, 'idle gap')} let the cache expire; resuming re-wrote the prefix, costing ${usd}.`,
-        lever: custom
-          ? 'Use the 1-hour cache TTL and compact the history before an expected pause.'
-          : '`/compact` before a long break, or start the next task in a new session.',
+        lever: cacheLever(
+          custom
+            ? 'Use the 1-hour cache TTL and compact the history before an expected pause.'
+            : '`/compact` before a long break, or start the next task in a new session.',
+        ),
       };
     case 'retry-loop':
       return {
@@ -166,12 +191,8 @@ function wording(
     case 'dead-end-run':
       return {
         what: `The session ended on a failure; calls after the last completed change yielded nothing, costing ${usd}.`,
-        lever:
-          source === 'claude-code'
-            ? 'Resume with `claude --continue` and deal with the failing step first.'
-            : source === 'opencode'
-              ? 'Resume with `opencode -c` and deal with the failing step first.'
-              : 'Return the error to the caller and make the failed step the first thing the next run sees.',
+        // how to pick the session up again is a command of the agent
+        lever: first,
       };
     case 'duplicate-read':
       return {
@@ -181,7 +202,7 @@ function wording(
     default:
       return {
         what: `${g.label}, costing ${usd}.`,
-        lever: playbookActions(g.ruleId, source)[0] ?? '',
+        lever: first,
       };
   }
 }

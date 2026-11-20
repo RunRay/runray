@@ -123,7 +123,7 @@ describe('buildTraceFile', () => {
       generatorVersion: '0.1.0',
     });
     expect(candidatesScanned).toBe(1);
-    expect(traceFile.schemaVersion).toBe('0.1.0');
+    expect(traceFile.schemaVersion).toBe('0.2.0');
     expect(traceFile.generator).toEqual({
       name: 'runray',
       version: '0.1.0',
@@ -286,7 +286,7 @@ describe('reportUnpricedCoverage', () => {
     },
   });
   const tf = (runs: Run[]): TraceFile => ({
-    schemaVersion: '0.1.0',
+    schemaVersion: '0.2.0',
     generator: { name: 'runray', version: 't' },
     generatedAt: '2026-07-02T14:00:00Z',
     runs,
@@ -321,6 +321,39 @@ describe('reportUnpricedCoverage', () => {
       spy.mockRestore();
       outSpy.mockRestore();
     }
+  });
+
+  const warningFor = (models: string[]): string => {
+    const spy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation(() => true);
+    try {
+      reportUnpricedCoverage(
+        tf([runShell(models.map((m, i) => llmSpan(`s${i}`, m, true)))]),
+      );
+      return spy.mock.calls.map((call) => String(call[0])).join('');
+    } finally {
+      spy.mockRestore();
+    }
+  };
+
+  it('does not send the user to refresh for a model no price list holds', () => {
+    const text = warningFor(['codex-auto-review']);
+    expect(text).toContain('models: codex-auto-review (no published price)\n');
+    expect(text).toContain(
+      'No price is published for them, so a refresh changes nothing.',
+    );
+    expect(text).not.toContain('pricing --refresh');
+    for (const line of text.split('\n').slice(1))
+      expect(line.length, line).toBeLessThanOrEqual(80);
+  });
+
+  it('still suggests a refresh when one of the models might be in a newer list', () => {
+    const text = warningFor(['codex-auto-review', 'zz-mystery']);
+    expect(text).toContain(
+      'models: codex-auto-review (no published price), zz-mystery; try `runray pricing --refresh`',
+    );
+    expect(text).toContain('Refresh prices with:  runray pricing --refresh');
   });
 
   it('stays silent when every run is fully priced', () => {

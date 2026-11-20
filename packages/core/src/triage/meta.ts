@@ -110,7 +110,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
     'model-limit': {
       label: 'Usage limit reached',
       explain:
-        'The model call was refused because a plan or session limit was hit; the message names the reset time.',
+        'The model call was refused because a plan or session limit was hit.',
       owner: 'you',
       playbook: {
         causes: [
@@ -124,12 +124,16 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Switch models with `/models` (or the `model` key in `opencode.json`); provider limits are per model.',
           ],
+          codex: [
+            "Wait for the limit to reset, or switch with `/model`; `/usage` shows the account's token usage.",
+            'Continue where you were with `codex resume --last`; the rollout is intact.',
+          ],
           otlp: [
             'Surface provider limit responses to the person instead of retrying blindly.',
           ],
         },
         limits: [
-          'RunRay reads the harness message; it cannot see the limit or how much of it is left.',
+          'RunRay reads what the harness recorded of the refusal; it cannot see the limit or how much of it is left.',
         ],
       },
     },
@@ -146,6 +150,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           ],
           opencode: [
             'Re-authenticate the provider with `opencode auth login` and resume with `opencode -c`.',
+          ],
+          codex: [
+            'Run `codex login` (`codex login status` shows the current state), then continue with `codex resume --last`.',
           ],
           otlp: ['Return the authentication failure to the caller.'],
         },
@@ -164,6 +171,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Nothing on your side: Claude Code retries. A run of them is worth a look at status.claude.com before retrying by hand.',
           ],
           opencode: [
+            'Nothing on your side beyond a retry; check the provider status page if it keeps happening.',
+          ],
+          codex: [
             'Nothing on your side beyond a retry; check the provider status page if it keeps happening.',
           ],
           otlp: ['Retry with backoff and log the status code.'],
@@ -187,6 +197,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Rephrase or drop the flagged content; for an image, re-read the file another way or at a smaller size.',
           ],
           opencode: ['Rephrase or drop the content the provider refused.'],
+          codex: ['Rephrase or drop the content the provider refused.'],
           otlp: ['Log the refusal reason and return it to the caller.'],
         },
         limits: ['The provider does not say which part was flagged.'],
@@ -203,6 +214,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Read the message in the Inspector; the transcript keeps it.',
           ],
           opencode: ['Read the message in the Inspector.'],
+          codex: ['Read the message in the Inspector; the rollout keeps it.'],
           otlp: ['Record the error message on the span status.'],
         },
         limits: ['Without the text (redacted sessions) the class is a guess.'],
@@ -225,6 +237,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Pause format-on-save while the agent edits; keep line endings stable.',
           ],
+          codex: [
+            'Once is the model; several times on one file is the file changing under it. Pause format-on-save or the watcher while the agent works, so `apply_patch` finds the lines it expects.',
+          ],
           otlp: ['Re-read before editing when the previous edit missed.'],
         },
         limits: [NOTHING_TO_DO],
@@ -240,6 +255,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
         actions: {
           'claude-code': [NOTHING_TO_DO],
           opencode: [NOTHING_TO_DO],
+          codex: [NOTHING_TO_DO],
           otlp: ['Keep the read-before-write check; it is cheap.'],
         },
         limits: ['The retry costs one model call.'],
@@ -261,6 +277,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Nothing per event; a correct example in `AGENTS.md` if one tool keeps rejecting.',
           ],
+          codex: [
+            'Nothing per event; a correct example in `AGENTS.md` if one tool keeps rejecting.',
+          ],
           otlp: ['Return the validation message verbatim; the model uses it.'],
         },
         limits: ['Each rejection costs one model call to correct.'],
@@ -276,6 +295,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
         actions: {
           'claude-code': [NOTHING_TO_DO],
           opencode: [NOTHING_TO_DO],
+          codex: [NOTHING_TO_DO],
           otlp: ['Make the precondition part of the error message.'],
         },
         limits: ['Each refusal costs one model call.'],
@@ -297,6 +317,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Nothing per event; a repo map in `AGENTS.md` if the same path keeps failing.',
           ],
+          codex: [
+            'Nothing per event; a short repo map in `AGENTS.md` if the same path keeps failing across sessions.',
+          ],
           otlp: ['Give the agent a file listing before it guesses.'],
         },
         limits: ['Corrected on the next call in most sessions.'],
@@ -311,6 +334,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
         actions: {
           'claude-code': [NOTHING_TO_DO],
           opencode: [NOTHING_TO_DO],
+          codex: [NOTHING_TO_DO],
           otlp: ['Return the stack trace; the model fixes its own script.'],
         },
         limits: ['Each attempt costs one model call.'],
@@ -332,6 +356,10 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           ],
           opencode: [
             'Put the shell fact into `AGENTS.md`; the `permission` block can deny a command pattern outright.',
+          ],
+          codex: [
+            'Put the shell fact into `AGENTS.md`, for example `Shell is PowerShell 5.1: no && chaining`.',
+            'For a pattern you never want run, a `prefix_rule` with `decision = "forbidden"` in a `.rules` file under `~/.codex/rules/` blocks it without a prompt (rules are marked experimental).',
           ],
           otlp: ['State the shell and its limits in the system prompt.'],
         },
@@ -357,6 +385,10 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Install it, or note in `AGENTS.md` what is not available.',
           ],
+          codex: [
+            'Install it, or write into `AGENTS.md` that it is not available and what to use instead.',
+            'If the sandbox is what refuses the command, `/permissions` sets what Codex may do without asking; `sandbox_mode` in `~/.codex/config.toml` is the default for new sessions.',
+          ],
           otlp: ['List the available tools in the system prompt.'],
         },
         limits: ['RunRay cannot tell an uninstalled tool from a PATH problem.'],
@@ -369,7 +401,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
       owner: 'you',
       playbook: {
         causes: [
-          'A skill or plugin is not installed, a tool is disabled in this context, or `.claude/launch.json` is missing.',
+          'A skill or plugin is not installed, a tool is disabled in this context, or the launch configuration the agent looked for is missing.',
         ],
         actions: {
           'claude-code': [
@@ -378,6 +410,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           ],
           opencode: [
             'Enable the tool in the `tools` map or the MCP server with `mcp.<name>.enabled` in `opencode.json`.',
+          ],
+          codex: [
+            'Check what is connected with `/mcp`; a server with `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` offers no tools.',
           ],
           otlp: ['Advertise only the tools that exist.'],
         },
@@ -396,6 +431,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Stop the process the message names, or change the `port` in `.claude/launch.json`.',
           ],
           opencode: ['Free the port or change it in the project config.'],
+          codex: ['Free the port or change it in the project config.'],
           otlp: ['Pick a free port before starting the server.'],
         },
         limits: ['Nothing the agent can do without you.'],
@@ -412,6 +448,10 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Check the address or the service; if the agent must not fetch it, `permissions.deny` for `WebFetch` stops the attempts.',
           ],
           opencode: ['Check the address or the service.'],
+          codex: [
+            'Check the address or the service.',
+            'A command that cannot reach the network at all is usually the sandbox: `sandbox_workspace_write.network_access = true` in `~/.codex/config.toml` allows outbound access.',
+          ],
           otlp: ['Return the status code to the model.'],
         },
         limits: ['RunRay sees the status, not the response.'],
@@ -433,6 +473,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Interrupt (Esc) when the same step fails twice; each retry re-bills the context.',
           ],
           opencode: ['Restart the browser tool or the MCP server behind it.'],
+          codex: ['Restart the browser tool or the MCP server behind it.'],
           otlp: ['Cap retries on timeouts and surface them.'],
         },
         limits: [
@@ -457,6 +498,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Serve local files; check the origin allowlist of the browser tool.',
           ],
+          codex: [
+            'Serve local files; check the origin allowlist of the browser tool.',
+          ],
           otlp: ['Validate the URL before navigating.'],
         },
         limits: ['The refusal is a policy of the pane, not a bug in the page.'],
@@ -476,6 +520,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
           opencode: [
             'Set `mcp.<name>.enabled: false` in `opencode.json` until the server is fixed.',
           ],
+          codex: [
+            'Check the server with `/mcp`; set `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` until it is fixed.',
+          ],
           otlp: ['Log the server response with the span.'],
         },
         limits: ['Under `--redact` every MCP failure lands here.'],
@@ -493,6 +540,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
         actions: {
           'claude-code': ['Nothing. This is the agent working.'],
           opencode: ['Nothing. This is the agent working.'],
+          codex: ['Nothing. This is the agent working.'],
           otlp: ['Nothing; do not count it as a failure of the run.'],
         },
         limits: [
@@ -514,6 +562,9 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
             'Nothing per event. Read the text if the same command keeps failing.',
           ],
           opencode: ['Nothing per event.'],
+          codex: [
+            'Nothing per event. Read the text if the same command keeps failing.',
+          ],
           otlp: ['Record the exit code on the span.'],
         },
         limits: [
@@ -530,6 +581,7 @@ export const ERROR_CLASS_META: Readonly<Record<ErrorClassId, ErrorClassMeta>> =
         actions: {
           'claude-code': ['Read the text in the Inspector.'],
           opencode: ['Read the text in the Inspector.'],
+          codex: ['Read the text in the Inspector.'],
           otlp: ['Put the error message on the span status so it can be read.'],
         },
         limits: ['Under `--redact` every non-MCP tool failure lands here.'],

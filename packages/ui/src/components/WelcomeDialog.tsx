@@ -1,5 +1,26 @@
+import type { Run } from '@runray/schema';
 import { useEffect, useRef } from 'react';
+import { agentNames } from '../lib/sources';
 import { useAppStore } from '../store';
+
+/** "A", "A and B", "A, B, and C". */
+function listNames(names: readonly string[]): string {
+  if (names.length <= 2) return names.join(' and ');
+  return `${names.slice(0, -1).join(', ')}, and ${names.at(-1)}`;
+}
+
+/**
+ * The sentence that says whose logs these sessions came from (§4.1): the
+ * agents the loaded runs belong to, never a fixed list, so a machine with
+ * Codex sessions only is not told about Claude Code. Runs of no agent RunRay
+ * reads natively (an OTLP import) get the sentence without a name.
+ */
+export function logsRead(runs: readonly Run[]): string {
+  const names = agentNames(runs);
+  return names.length === 0
+    ? 'RunRay read the traces your agents already wrote.'
+    : `RunRay read the logs ${listNames(names)} already wrote.`;
+}
 
 /**
  * Welcome dialog (§4.1 / §4.1b): native <dialog> with focus trap,
@@ -29,7 +50,7 @@ export function WelcomeDialog() {
 
   const body = isSample
     ? 'Real structure, no real prompts or paths. Everything below works the same on your own sessions when you run "runray view".'
-    : 'RunRay read the logs Claude Code and OpenCode already wrote. Inspect execution time, stalled tools, and subagent branches. It requires no collector or account.';
+    : `${logsRead(data.status === 'ready' ? data.traceFile.runs : [])} Inspect execution time, stalled tools, and subagent branches. It requires no collector or account.`;
 
   const privacy =
     'Everything stays local. No network calls or telemetry; this dashboard runs on 127.0.0.1 for this browser only.';

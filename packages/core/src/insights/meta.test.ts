@@ -65,4 +65,38 @@ describe('rule metadata registry', () => {
     );
     expect(playbookActions('no-such-rule', 'claude-code')).toEqual([]);
   });
+
+  it('a Codex run reads the Codex section, not the custom-agent one', () => {
+    expect(PLAYBOOK_SOURCES).toContain('codex');
+    expect(playbookActions('retry-loop', 'codex')).toBe(
+      RULE_META['retry-loop']?.playbook.actions.codex,
+    );
+  });
+
+  it('no Codex section names a lever of another source', () => {
+    for (const [id, meta] of Object.entries(RULE_META)) {
+      for (const line of meta.playbook.actions.codex) {
+        for (const foreign of [
+          'CLAUDE.md',
+          'claude ',
+          '.claude/',
+          'opencode',
+          'OpenCode',
+          'Claude Code',
+          'promptCacheTtl',
+          "your agent's",
+        ]) {
+          expect(line, `${id}: "${line}"`).not.toContain(foreign);
+        }
+      }
+    }
+  });
+
+  it('the two cache-write rules say they are not reported on Codex', () => {
+    for (const id of ['cache-prefix-break', 'idle-cache-expiry']) {
+      expect(RULE_META[id]?.playbook.actions.codex[0], id).toMatch(
+        /^RunRay does not report this finding on Codex sessions/,
+      );
+    }
+  });
 });

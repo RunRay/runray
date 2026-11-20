@@ -86,7 +86,12 @@ export function mkRun(
     id: 'run_time',
     source: {
       tool: source as Run['source']['tool'],
-      format: source === 'otlp' ? 'otlp-json' : 'claude-jsonl',
+      format:
+        source === 'otlp'
+          ? 'otlp-json'
+          : source === 'codex'
+            ? 'codex-jsonl'
+            : 'claude-jsonl',
       files: [],
     },
     startedAt: at(0),
@@ -1031,6 +1036,26 @@ describe('hook rows (visualizer "Hook durations are partial")', () => {
     const note = text(q('[data-testid="tools-apart-hooks"]', apart()));
     expect(note).toBe('A hook runs inside the call that triggered it.');
     expect(text(apart())).not.toContain('Failed and cancelled');
+  });
+
+  // add-codex-adapter, "Per-source hints cover Codex": a rollout carries no
+  // hook spans, so the table has nothing to say about hooks
+  it('shows no hook rows and no hook note for a Codex run', () => {
+    mount(
+      <TimeView
+        run={mkRun(
+          [
+            shell('pnpm test', 0, 4 * SEC),
+            span({ name: 'apply_patch', start: 5 * SEC, ms: SEC }),
+          ],
+          MIN,
+          'codex',
+        )}
+      />,
+    );
+    expect(text(table())).toContain('pnpm');
+    expect(all('[data-testid="tools-apart-hooks"]', table())).toHaveLength(0);
+    expect(text(table())).not.toMatch(/hook/i);
   });
 
   it('shows a turn summary as a count without a time, never as zero', () => {

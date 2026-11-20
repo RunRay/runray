@@ -3,7 +3,7 @@
   "version": "0.1.0-alpha.6",
   "type": "module",
   "license": "MIT",
-  "description": "A profiler for coding-agent sessions. See which turns of a Claude Code or OpenCode session burned money and what to change. Local, no telemetry.",
+  "description": "A profiler for coding-agent sessions. See which turns of a Claude Code, OpenCode or Codex session burned money and what to change. Local, no telemetry.",
   "keywords": [
     "claude-code",
     "opencode",

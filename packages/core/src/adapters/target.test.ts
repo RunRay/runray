@@ -136,3 +136,38 @@ describe('PowerShell commands (Claude Code on Windows)', () => {
     expect(a?.display).toBe('git');
   });
 });
+
+describe('Codex commands and file changes', () => {
+  it('hash the script the adapter took out of its shell wrapper, like any shell tool', () => {
+    for (const tool of ['exec_command', 'shell', 'shell_command']) {
+      const target = extractToolTarget('codex', tool, { command: 'pnpm test' });
+      expect(target?.kind, tool).toBe('command');
+      expect(target?.key, tool).toBe(
+        extractToolTarget('claude-code', 'PowerShell', { command: 'pnpm test' })
+          ?.key,
+      );
+      expect(target?.display, tool).toBe('pnpm');
+    }
+  });
+
+  it('give a file change of one path the identity of that file', () => {
+    const patch = extractToolTarget('codex', 'apply_patch', {
+      path: 'C:\\work\\app\\src\\totals.ts',
+    });
+    expect(patch?.kind).toBe('file-write');
+    expect(patch?.key).toBe(
+      extractToolTarget('claude-code', 'Edit', {
+        file_path: 'C:/work/app/src/totals.ts',
+      })?.key,
+    );
+    expect(extractToolTarget('codex', 'apply_patch', {})).toBeUndefined();
+  });
+
+  it('know no other Codex tool', () => {
+    for (const tool of ['exec', 'wait', 'web.search', 'view_image', 'Bash']) {
+      expect(
+        extractToolTarget('codex', tool, { command: 'ls' }),
+      ).toBeUndefined();
+    }
+  });
+});

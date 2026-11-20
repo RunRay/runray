@@ -1,0 +1,784 @@
+{
+  "id": "run_e331cc1bf0c51be6",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl"
+    ]
+  },
+  "project": {
+    "name": "adipis",
+    "path": "/home/user/project/mag/adipis",
+    "gitBranch": "adip"
+  },
+  "startedAt": "2026-08-09T19:44:33.361Z",
+  "endedAt": "2026-08-09T20:02:06.899Z",
+  "durationMs": 1053538,
+  "spans": [
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:33.361Z",
+      "endedAt": "2026-08-09T20:02:06.899Z",
+      "durationMs": 1053538,
+      "depth": 0,
+      "agent": {
+        "sessionId": "019fe80c-3325-72f0-959c-71169810f351"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 2
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:15",
+      "parentId": "019fe80e-34c6-7fd0-ae12-75b4758777fe",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:33.361Z",
+      "endedAt": "2026-08-09T19:45:35.478Z",
+      "durationMs": 62117,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 16517,
+          "output": 198,
+          "cacheRead": 5504,
+          "cacheWrite": 0,
+          "reasoning": 88
+        },
+        "costSource": "computed",
+        "costUSD": 0.093917
+      },
+      "content": {
+        "outputPreview": "adipiscing nostrud tempor sed adipiscing sed consectetur amet consectetur elit aliquip consectetur dolor adipiscing lorem enim sit quis dolor aliqua sed consectetur"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 12
+      }
+    },
+    {
+      "id": "019fe80e-34c6-7fd0-ae12-75b4758777fe",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:33.361Z",
+      "endedAt": "2026-08-09T19:46:34.298Z",
+      "durationMs": 120937,
+      "depth": 1,
+      "content": {
+        "promptPreview": "amet labore labore no\ndolor adipiscing quis aliqua aliqua dolor ipsum nostrud sed ven\n\nlabore incididunt amet consectetur aliquip \nadipiscing aliquip aliqua enim aliqua quis\nquis minim lorem elit mini"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 3
+      }
+    },
+    {
+      "id": "call_xXRAmFTZmCDSHzLxrhOEDdLd",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:15",
+      "kind": "tool_call",
+      "name": "view_image",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:42.150Z",
+      "endedAt": "2026-08-09T19:45:35.478Z",
+      "durationMs": 53328,
+      "depth": 3,
+      "tool": {
+        "name": "view_image",
+        "isError": false,
+        "outputBytes": 231
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 14
+      }
+    },
+    {
+      "id": "call_0uIaaKLsvwanqP0g5kXy8tzg",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:15",
+      "kind": "tool_call",
+      "name": "shell_command",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:43.250Z",
+      "endedAt": "2026-08-09T19:45:35.450Z",
+      "durationMs": 52200,
+      "depth": 3,
+      "tool": {
+        "name": "shell_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 24404
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 13
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:22",
+      "parentId": "019fe80e-34c6-7fd0-ae12-75b4758777fe",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:45:35.478Z",
+      "endedAt": "2026-08-09T19:46:17.018Z",
+      "durationMs": 41540,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 6868,
+          "output": 377,
+          "cacheRead": 20864,
+          "cacheWrite": 0,
+          "reasoning": 65
+        },
+        "costSource": "computed",
+        "costUSD": 0.058032
+      },
+      "content": {
+        "outputPreview": "sed amet sed amet elit consectetur veniam quis enim sit ipsum aliqua veniam veniam elit consectetur ipsum amet amet amet tempor adipiscing minim dolor quis aliqua enim magna nostrud lorem labore aliqu"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 20
+      }
+    },
+    {
+      "id": "call_Qy2erW7qYIU3FGZVTWs6SW45",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:22",
+      "kind": "tool_call",
+      "name": "image_gen.generation",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:45:45.072Z",
+      "endedAt": "2026-08-09T19:46:16.963Z",
+      "durationMs": 31891,
+      "depth": 3,
+      "tool": {
+        "name": "image_gen.generation",
+        "isError": false,
+        "outputBytes": 514
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 22
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:29",
+      "parentId": "019fe80e-34c6-7fd0-ae12-75b4758777fe",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:46:17.018Z",
+      "endedAt": "2026-08-09T19:46:28.722Z",
+      "durationMs": 11704,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 2977,
+          "output": 248,
+          "cacheRead": 27264,
+          "cacheWrite": 0,
+          "reasoning": 247
+        },
+        "costSource": "computed",
+        "costUSD": 0.043367
+      },
+      "content": {
+        "outputPreview": "veniam tempor adipiscing tempor enim enim consectetur sed consectetur quis tempor elit lorem elit sit enim amet ipsum ipsum labore aliquip elit veniam amet nostrud adipiscing enim veniam magn"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 28
+      }
+    },
+    {
+      "id": "call_viBj59yZfxW4Usb60m9CLQtT",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:29",
+      "kind": "tool_call",
+      "name": "shell_command",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:46:27.622Z",
+      "endedAt": "2026-08-09T19:46:28.722Z",
+      "durationMs": 1100,
+      "depth": 3,
+      "tool": {
+        "name": "shell_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 272
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 29
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:33",
+      "parentId": "019fe80e-34c6-7fd0-ae12-75b4758777fe",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:46:28.722Z",
+      "endedAt": "2026-08-09T19:46:34.258Z",
+      "durationMs": 5536,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 1501,
+          "output": 136,
+          "cacheRead": 29312,
+          "cacheWrite": 0,
+          "reasoning": 86
+        },
+        "costSource": "computed",
+        "costUSD": 0.028821
+      },
+      "content": {
+        "outputPreview": "ipsum veniam consectetur minim adipiscing sed adipi\n\nadipiscing aliqua sed amet minim labore ipsum magna dolor aliquip labore aliqu\n\nincididunt aliqua lorem dolor quis labore amet dolor amet veniam\n\ns"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 34
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:51",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:26.861Z",
+      "endedAt": "2026-08-09T19:49:44.334Z",
+      "durationMs": 17473,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 10164,
+          "output": 179,
+          "cacheRead": 20864,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.082102
+      },
+      "content": {
+        "outputPreview": "tempor consectetur quis magna nostrud consectetur sed sed labore enim sed minim lorem magna adipiscing minim quis aliqua lorem sed veniam sit elit consectetur veniam consectetur nostrud sit"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 48
+      }
+    },
+    {
+      "id": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:26.861Z",
+      "endedAt": "2026-08-09T19:51:32.162Z",
+      "durationMs": 125301,
+      "depth": 1,
+      "content": {
+        "promptPreview": "labore aliquip elit s\nminim aliqua veniam lorem enim elit venia\nnostrud magna lorem veniam lorem adi\naliquip aliqua enim incididunt lorem nostrud aliquip adipiscing dolor consectetur consectetur aliqu"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 38
+      }
+    },
+    {
+      "id": "call_Rkfe4CNQ0sOZ5fW5OkHHEGa2",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:51",
+      "kind": "tool_call",
+      "name": "view_image",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:41.453Z",
+      "endedAt": "2026-08-09T19:49:44.328Z",
+      "durationMs": 2875,
+      "depth": 3,
+      "tool": {
+        "name": "view_image",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 50
+      }
+    },
+    {
+      "id": "call_LyG6ER0px1dj99JMTgU97HEL",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:51",
+      "kind": "tool_call",
+      "name": "shell_command",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:41.728Z",
+      "endedAt": "2026-08-09T19:49:43.028Z",
+      "durationMs": 1300,
+      "depth": 3,
+      "tool": {
+        "name": "shell_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 24403
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 49
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:58",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:44.334Z",
+      "endedAt": "2026-08-09T19:50:17.929Z",
+      "durationMs": 33595,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 8257,
+          "output": 382,
+          "cacheRead": 30720,
+          "cacheWrite": 0,
+          "reasoning": 126
+        },
+        "costSource": "computed",
+        "costUSD": 0.071885
+      },
+      "content": {
+        "outputPreview": "adipiscing ipsum sed minim minim adipiscing veniam tempor consectetur aliqua magna elit adipiscing amet minim sit minim amet sit nostrud aliqua sit nostrud tempor quis sit amet dolor tempor aliquip in"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 56
+      }
+    },
+    {
+      "id": "call_IzAXXYhswpdgiOkZgY3Z6I2h",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:58",
+      "kind": "tool_call",
+      "name": "image_gen.generation",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:49:55.486Z",
+      "endedAt": "2026-08-09T19:50:17.822Z",
+      "durationMs": 22336,
+      "depth": 3,
+      "tool": {
+        "name": "image_gen.generation",
+        "isError": false,
+        "outputBytes": 514
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 58
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:66",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:50:17.929Z",
+      "endedAt": "2026-08-09T19:50:48.430Z",
+      "durationMs": 30501,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 3665,
+          "output": 587,
+          "cacheRead": 37888,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.070359
+      },
+      "content": {
+        "outputPreview": "aliquip veniam dolor minim tempor sed minim labore labore lorem sed nostrud quis tempor incididunt magna dolor lorem ipsum quis lorem enim quis consectetur labore aliqua amet veniam labore sit sit ips"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 65
+      }
+    },
+    {
+      "id": "call_lrBDSMJ2kwTf6OsBOotdZF4a",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:66",
+      "kind": "tool_call",
+      "name": "shell_command",
+      "status": "error",
+      "startedAt": "2026-08-09T19:50:39.601Z",
+      "endedAt": "2026-08-09T19:50:48.401Z",
+      "durationMs": 8800,
+      "depth": 3,
+      "tool": {
+        "name": "shell_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 949
+      },
+      "content": {
+        "outputPreview": "enim minim ipsum elit sit enim amet magna ipsum minim quis tempor enim elit elit amet magna dolor tempor adipiscing tem\r\nadipiscing incididunt ipsum incididunt labore amet quis amet lorem labore incid"
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 66
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:72",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:50:48.430Z",
+      "endedAt": "2026-08-09T19:50:51.967Z",
+      "durationMs": 3537,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 2722,
+          "output": 81,
+          "cacheRead": 40192,
+          "cacheWrite": 0,
+          "reasoning": 34
+        },
+        "costSource": "computed",
+        "costUSD": 0.037156
+      },
+      "content": {
+        "outputPreview": "quis consectetur labore amet incididunt aliqua lorem aliquip aliqua quis amet tempor elit minim aliqua incididunt lorem aliqua minim incididunt magna tempor ipsum enim adipisci"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 71
+      }
+    },
+    {
+      "id": "call_cdXlMYGO71Q36pr4Xni9dT8L",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:72",
+      "kind": "tool_call",
+      "name": "load_workspace_dependencies",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:50:51.830Z",
+      "endedAt": "2026-08-09T19:50:51.966Z",
+      "durationMs": 136,
+      "depth": 3,
+      "tool": {
+        "name": "load_workspace_dependencies",
+        "isError": false,
+        "outputBytes": 1105
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 72
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:76",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:50:51.967Z",
+      "endedAt": "2026-08-09T19:51:14.150Z",
+      "durationMs": 22183,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 728,
+          "output": 420,
+          "cacheRead": 42624,
+          "cacheWrite": 0,
+          "reasoning": 19
+        },
+        "costSource": "computed",
+        "costUSD": 0.038122
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 76
+      }
+    },
+    {
+      "id": "call_wU7c0F4znldx6rqazEFu72OV",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:76",
+      "kind": "tool_call",
+      "name": "shell_command",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:51:03.227Z",
+      "endedAt": "2026-08-09T19:51:14.127Z",
+      "durationMs": 10900,
+      "depth": 3,
+      "tool": {
+        "name": "shell_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 532
+      },
+      "attributes": {
+        "runray.targetKey": "f0d4bb326b8f2209",
+        "runray.targetKind": "command",
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
+      },
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 76
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:82",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:51:14.150Z",
+      "endedAt": "2026-08-09T19:51:19.927Z",
+      "durationMs": 5777,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 1350,
+          "output": 108,
+          "cacheRead": 42624,
+          "cacheWrite": 0,
+          "reasoning": 84
+        },
+        "costSource": "computed",
+        "costUSD": 0.033822
+      },
+      "content": {
+        "outputPreview": "sed consectetur lorem sed consectetur labore sed consectetur elit minim elit ipsum aliqua lorem elit elit enim ipsum labore minim tempor labore veniam lorem aliqua aliquip ad"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 81
+      }
+    },
+    {
+      "id": "call_mb2OrsqkYuw2z58AsrDCaqae",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351:tokens:82",
+      "kind": "tool_call",
+      "name": "view_image",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:51:18.727Z",
+      "endedAt": "2026-08-09T19:51:19.925Z",
+      "durationMs": 1198,
+      "depth": 3,
+      "tool": {
+        "name": "view_image",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 82
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:88",
+      "parentId": "019fe812-b07a-7a22-8cda-c63ff30198da",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:51:19.927Z",
+      "endedAt": "2026-08-09T19:51:32.104Z",
+      "durationMs": 12177,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 2431,
+          "output": 133,
+          "cacheRead": 43648,
+          "cacheWrite": 0,
+          "reasoning": 449
+        },
+        "costSource": "computed",
+        "costUSD": 0.051439
+      },
+      "content": {
+        "outputPreview": "adipiscing enim nostrud veniam minim aliqua aliqui\n\nmagna sit quis labore amet sit sit amet lorem labore ipsum aliquip quis sed sit adipiscing minim sed s\n\nipsum dolor lorem sed aliqua quis nostrud mi"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 89
+      }
+    },
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351:tokens:97",
+      "parentId": "019fe81e-2e78-7903-940a-fa62bc78a615",
+      "kind": "llm_call",
+      "name": "gpt-5.5",
+      "status": "ok",
+      "startedAt": "2026-08-09T20:02:00.138Z",
+      "endedAt": "2026-08-09T20:02:06.858Z",
+      "durationMs": 6720,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-5.5",
+        "tokens": {
+          "input": 14197,
+          "output": 162,
+          "cacheRead": 30720,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.091205
+      },
+      "content": {
+        "outputPreview": "incididunt aliqua nostrud consectetur aliquip magna aliqua elit sit dolor amet aliqua aliqua aliqua incididunt consectetur i\n\nveniam dolor incididunt magna sed minim tempo\n\nmagna sit quis labore amet "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 98
+      }
+    },
+    {
+      "id": "019fe81e-2e78-7903-940a-fa62bc78a615",
+      "parentId": "019fe80c-3325-72f0-959c-71169810f351",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-08-09T20:02:00.138Z",
+      "endedAt": "2026-08-09T20:02:06.899Z",
+      "durationMs": 6761,
+      "depth": 1,
+      "content": {
+        "promptPreview": "minim enim amet labore adi"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/legacy/rollout-2026-08-09T21-42-21-019fe80c-3325-72f0-959c-71169810f351.jsonl",
+        "line": 93
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 71377,
+      "output": 3011,
+      "cacheRead": 372224,
+      "cacheWrite": 0,
+      "reasoning": 2230,
+      "total": 448842
+    },
+    "costUSD": {
+      "total": 0.700227,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5.5": 0.700227
+      }
+    },
+    "counts": {
+      "llmCalls": 12,
+      "toolCalls": 11,
+      "toolErrors": 1,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8391
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "fixed-context-overhead",
+      "severity": "info",
+      "title": "Session starts with a 22.0k-token context footprint",
+      "detail": "The first model call already carried 22.0k input-class tokens (tool definitions, project instructions, attachments); 2.0k tokens above the 20.0k floor were written once and re-read on each of the 11 later calls.",
+      "spanIds": [
+        "019fe80c-3325-72f0-959c-71169810f351:tokens:15"
+      ],
+      "estimatedWasteUSD": 0.021221,
+      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (no MCP server was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 2.0k tokens above the floor were re-read 11 times."
+    }
+  ]
+}

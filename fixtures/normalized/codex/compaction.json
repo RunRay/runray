@@ -1,0 +1,348 @@
+{
+  "id": "run_38fb52e9bb6055f3",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl"
+    ]
+  },
+  "project": {
+    "name": "minimxquisxnos",
+    "path": "/home/user/project/mag/minimxquisxnos",
+    "gitBranch": "adip"
+  },
+  "startedAt": "2026-09-08T17:58:22.879Z",
+  "endedAt": "2026-09-08T17:58:22.879Z",
+  "durationMs": 0,
+  "spans": [
+    {
+      "id": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 0,
+      "agent": {
+        "name": "guardian",
+        "sessionId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a082b2-9042-7193-9a20-04266b4ab758",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 23
+      }
+    },
+    {
+      "id": "01a082c1-cc7e-7e40-951a-89de8f911109",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 34
+      }
+    },
+    {
+      "id": "01a082c2-dba2-7be2-b07f-436668788aea",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 45
+      }
+    },
+    {
+      "id": "01a082c3-5360-7872-9f86-7082d4062608",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 57
+      }
+    },
+    {
+      "id": "01a082c4-17f2-7740-984e-6de35a033454",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 68
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa06e590b7887d2826d75e772e0277c",
+      "parentId": "rollout-3",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 83153,
+          "output": 83,
+          "cacheRead": 4864,
+          "cacheWrite": 0,
+          "reasoning": 64
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "labore sed veniam magna aliquip aliquip quis enim veniam ipsum minim minim consectetur elit adipiscing labore aliquip dolor labore minim elit consectetur incididunt veniam aliqua ipsum aliquip nostrud"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 16
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa06f40cf5487d2ad0f78a77920b32c",
+      "parentId": "01a082b2-9042-7193-9a20-04266b4ab758",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 9229,
+          "output": 58,
+          "cacheRead": 87808,
+          "cacheWrite": 0,
+          "reasoning": 28
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "ipsum ipsum veniam labore lorem enim quis magna minim lorem consectetur tempor nostrud incididunt adipiscing enim incididunt ipsum adipiscing veniam adipiscing labore ipsum dolor magna enim sit aliqui"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 29
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa07327c6fc87d28943e04839f14cf6",
+      "parentId": "01a082c1-cc7e-7e40-951a-89de8f911109",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 14455,
+          "output": 70,
+          "cacheRead": 96000,
+          "cacheWrite": 0,
+          "reasoning": 137
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis dolor nostrud sed tempor lorem sed enim adipiscing minim labore sit adipiscing tempor adipiscing tempor dolor nostrud enim amet lorem sed incididunt dolor tempor minim ipsum minim minim magna ven"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 40
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa0736d3a7487d2b18c42c46f59770b",
+      "parentId": "01a082c2-dba2-7be2-b07f-436668788aea",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 13358,
+          "output": 64,
+          "cacheRead": 110336,
+          "cacheWrite": 0,
+          "reasoning": 41
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "incididunt nostrud quis consectetur consectetur quis lorem adipiscing ipsum amet labore lorem quis dolor dolor quis aliqua minim magna dolor magna veniam aliqua elit quis consectetur minim magna venia"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 51
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa0738c0a6c87d282483126ca2ed292",
+      "parentId": "01a082c3-5360-7872-9f86-7082d4062608",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 14284,
+          "output": 55,
+          "cacheRead": 122624,
+          "cacheWrite": 0,
+          "reasoning": 34
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis labore labore labore consectetur nostrud enim magna ipsum minim magna lorem dolor dolor consectetur aliquip sed lorem consectetur sed quis aliquip lorem quis tempor adipiscing aliquip adipiscing "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 63
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa073bda3d087d2948a3efbb2fbe6a9",
+      "parentId": "01a082c4-17f2-7740-984e-6de35a033454",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 12931,
+          "output": 54,
+          "cacheRead": 135936,
+          "cacheWrite": 0,
+          "reasoning": 10
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "amet tempor dolor sit minim incididunt elit amet ipsum magna labore enim consectetur adipiscing quis ipsum magna lorem lorem magna dolor elit quis sed adipiscing consectetur dolor magna nostrud lorem "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 74
+      }
+    },
+    {
+      "id": "rollout-3",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/compaction/rollout-2026-09-08T19-58-22-01a0822b-c830-75c2-bf8e-c2efe8916ffe.jsonl",
+        "line": 6
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 147410,
+      "output": 384,
+      "cacheRead": 557568,
+      "cacheWrite": 0,
+      "reasoning": 314,
+      "total": 705676
+    },
+    "costUSD": {
+      "total": 0,
+      "wastedEstimate": 0,
+      "byModel": {}
+    },
+    "counts": {
+      "llmCalls": 6,
+      "toolCalls": 0,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.7909
+    }
+  },
+  "insights": []
+}

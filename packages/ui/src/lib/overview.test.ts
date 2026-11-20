@@ -8,6 +8,7 @@ import {
   largestCallTokens,
   mcpShare,
   mostExpensiveCall,
+  runModels,
   runTokensByModel,
   savingsSummary,
   sessionCostStats,
@@ -136,6 +137,45 @@ function stubInsight(
     ...(wasteUSD !== undefined && { estimatedWasteUSD: wasteUSD }),
   };
 }
+
+describe('runModels', () => {
+  const unpriced = (id: string, model: string): Span => {
+    const span = llmSpan(id, 0);
+    return {
+      ...span,
+      llm: {
+        provider: 'openai',
+        model,
+        tokens: { input: 900, output: 100, cacheRead: 0, cacheWrite: 0 },
+        costSource: 'unknown',
+      },
+    };
+  };
+
+  it('names a model that has tokens and no price next to the priced ones', () => {
+    const run = stubRun({
+      id: 'r1',
+      byModel: { 'gpt-6-astra': 2 },
+      spans: [unpriced('review', 'codex-auto-review')],
+    });
+    expect(runModels(run)).toEqual(['codex-auto-review', 'gpt-6-astra']);
+  });
+
+  it('gives a session that ran on an unpriced model alone that model', () => {
+    const run = stubRun({
+      id: 'r1',
+      spans: [
+        unpriced('a', 'codex-auto-review'),
+        unpriced('b', 'codex-auto-review'),
+      ],
+    });
+    expect(runModels(run)).toEqual(['codex-auto-review']);
+  });
+
+  it('is empty for a session with no model call', () => {
+    expect(runModels(stubRun({ id: 'r1' }))).toEqual([]);
+  });
+});
 
 describe('aggregateTotals', () => {
   it('sums cost, waste, tokens, and code changes across runs', () => {

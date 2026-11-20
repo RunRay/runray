@@ -45,10 +45,10 @@
       "total": 687828
     },
     "costUSD": {
-      "total": 0.413477,
+      "total": 0.578864,
       "wastedEstimate": 0,
       "byModel": {
-        "gpt-5.3-codex": 0.413477
+        "gpt-5.3-codex": 0.578864
       }
     },
     "counts": {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Zod source of truth for the TraceFile contract (frozen v0.1).
+ * Zod source of truth for the TraceFile contract (frozen v0.2).
  * `schema/runray.schema.json` at the repo root is generated from this file
  * (see `json-schema.ts`); CI fails on drift. Any semantic change here is a
  * schema change and requires a version bump plus a human decision — see
@@ -11,11 +11,12 @@ import { z } from 'zod';
  * stays stable and reviewable.
  */
 
-export const SCHEMA_VERSION = '0.1.0';
+export const SCHEMA_VERSION = '0.2.0';
 
 export const SourceToolSchema = z.enum([
   'claude-code',
   'opencode',
+  'codex',
   'otlp',
   'unknown',
 ]);
@@ -25,6 +26,7 @@ export const SourceFormatSchema = z.enum([
   'opencode-storage',
   'opencode-sqlite',
   'opencode-export',
+  'codex-jsonl',
   'otlp-json',
 ]);
 

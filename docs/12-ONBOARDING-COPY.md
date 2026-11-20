@@ -107,7 +107,7 @@ What would you like to do?
 | label | hint |
 |---|---|
 | `Open the sample session` | `recommended, nothing to install` |
-| `Show setup guides` | `Claude Code · OpenCode · OTLP` |
+| `Show setup guides` | `Claude Code · OpenCode · Codex · OTLP` |
 | `Point at a folder` | `logs live somewhere else` |
 | `Open the dashboard anyway` | `empty, but it explains itself` |
 | `Exit` | `show me where you looked` |
@@ -138,6 +138,7 @@ No agent sessions found.
 Checked:
   ~/.claude/projects                                    missing
   ~/.local/share/opencode                               missing
+  ~/.codex/sessions                                     missing
 
 RunRay reads logs coding agents already write. There is nothing to set
 up. Two ways forward:
@@ -168,11 +169,16 @@ OpenCode
   both the legacy file storage and the newer SQLite store.
   Installed somewhere non-standard? runray view <that folder>
 
+Codex
+  Nothing to configure. Any session writes a rollout under ~/.codex/sessions
+  (or $CODEX_HOME/sessions).
+  Run:  codex "explain this repo"      then:  runray view
+
 Other agents (Cursor, custom pipelines)
   No on-disk session logs to read. Export OTLP/JSON with an OTel Collector
   file exporter, then:  runray view <that file>
 
-All three are read locally. RunRay makes no network calls.
+All four are read locally. RunRay makes no network calls.
 ```
 
 ### §3.6 Custom path found nothing (wizard option 3)
@@ -180,7 +186,8 @@ All three are read locally. RunRay makes no network calls.
 ```
 Nothing readable in <path>.
 
-Expected one of: Claude Code JSONL, an OpenCode store, or OTLP/JSON.
+Expected one of: Claude Code JSONL, an OpenCode store, Codex rollouts, or
+OTLP/JSON.
 Try the parent folder, or a single session file directly.
 ```
 
@@ -255,6 +262,16 @@ Unpriced models are listed, never guessed — their spans show tokens without
 a dollar figure. Refresh prices with:  runray pricing --refresh
 ```
 
+When every unpriced model is one that no price list holds (the list is
+`MODELS_WITHOUT_PUBLISHED_PRICE` in core; today the Codex approval reviewer,
+`codex-auto-review`), the second sentence is replaced, the warning names the
+model as `codex-auto-review (no published price)` and drops its
+"try `runray pricing --refresh`":
+```
+Unpriced models are listed, never guessed — their spans show tokens without
+a dollar figure. No price is published for them, so a refresh changes nothing.
+```
+
 **f. Contained-failure framing** — prints next to the existing per-candidate discovery
 errors and does **not** consume a hint slot. One candidate failing to parse is expected — a
 locked OpenCode database, a half-written import, another tool's `.jsonl` in a scanned folder
@@ -287,10 +304,15 @@ Count from `traceFile.runs.length`. Singular form: `One session was already on t
 
 **Body:**
 ```
-RunRay read the logs Claude Code and OpenCode already wrote.
+RunRay read the logs Claude Code and Codex already wrote.
 Inspect execution time, stalled tools, and subagent branches.
 It requires no collector or account.
 ```
+The first sentence names the agents the loaded sessions came from, in the order Claude Code,
+OpenCode, Codex: `Codex` alone, `Claude Code and Codex`, `Claude Code, OpenCode, and Codex`.
+It never lists an agent that has no session in the view. When no session came from one of
+these agents (an OTLP import), the sentence is `RunRay read the traces your agents already
+wrote.`
 
 **Privacy line** (own block, quieter type, the mechanism *is* the reassurance):
 ```
@@ -470,6 +492,7 @@ the existing hint, when the CLI supplied checked roots:
 Looked in:
   ~/.claude/projects           missing
   ~/.local/share/opencode      missing
+  ~/.codex/sessions            missing
 ```
 
 Live mode only. Never in exports (plan constraint 6).

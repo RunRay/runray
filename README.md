@@ -1,6 +1,6 @@
 # RunRay
 
-**A profiler for coding-agent sessions.** Open one Claude Code or OpenCode session and see which turns burned money and what to change next time.
+**A profiler for coding-agent sessions.** Open one Claude Code, OpenCode or Codex session and see which turns burned money and what to change next time.
 
 RunRay reads the session logs the agents already keep on your disk. It runs locally on your machine and makes no outbound network requests by default.
 
@@ -33,7 +33,7 @@ Several tools read the same log files. They answer different questions, and plen
 | [ccusage](https://github.com/ryoppippi/ccusage) | How many tokens and dollars did I use per day, week, month or session? | Totals, across many agent CLIs |
 | [codeburn](https://github.com/getagentseal/codeburn) | Where does my spend go across tools, projects and tasks, and which config or habit wastes tokens over a month? | 40+ tools, a desktop app, `optimize` can apply config fixes for you |
 | [claude-devtools](https://github.com/matt1398/claude-devtools) | What happened in this Claude Code transcript, and what filled the context? | One session, read as a transcript |
-| RunRay | Inside this one session, which turns burned money, how much, and who can fix it? | One session, audited by twelve rules. Claude Code, OpenCode, OTLP import |
+| RunRay | Inside this one session, which turns burned money, how much, and who can fix it? | One session, audited by twelve rules. Claude Code, OpenCode, Codex, OTLP import |
 
 RunRay stays inside one session. Every finding points at the spans that caused it and carries its own amount, placed on the session's clock, so you can see when a cache prefix broke and what that cost. Failed tool calls are sorted by who can act on them. Money already burned and savings a different setup would bring are never added into one number. `runray export <run-id> -o report.html` writes one run as a single HTML file for a pull request. Without a run id the file holds every discovered run, so take the id from `runray list --json` first. What `--anonymize` strips and what it leaves is under [Privacy](#privacy).
 
@@ -104,13 +104,14 @@ RunRay does not instrument anything and runs no collector. It reads what the age
 |---|---|---|
 | Claude Code | `~/.claude/projects/**/*.jsonl` | Subagent sidechains included. Records a desktop bridge session re-appends are deduplicated. |
 | OpenCode | file storage, `opencode.db` (opened read-only), `opencode export` JSON | OpenCode stores `cost: 0`, so the cost engine prices every call from token counts. |
+| Codex | `~/.codex/sessions/**/rollout-*.jsonl`, also once Codex has compressed them to `.jsonl.zst` | Approval-reviewer threads show as subagents of the turn that consulted them. Codex records no cost, so every call is priced from token counts. |
 | OTLP/JSON | exported OpenTelemetry traces | For custom agents and Claude Code's native traces. Import only, best effort. |
 
 How prices work:
 
 - Prices come from a bundled LiteLLM snapshot. `runray pricing --refresh` fetches a newer one and is the only command that touches the network.
-- A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated.
-- Costs are computed from the transcript, which makes them a lower bound. Utility calls, unlogged retries and web-search fees never reach the log.
+- A model the snapshot does not know is listed as unpriced, never guessed, and the totals say they are understated. Codex's approval reviewer runs on such a model (`codex-auto-review`): no price is published for it.
+- Costs are computed from the transcript, which makes them a lower bound: whatever never reaches the log is not counted. For Claude Code and OpenCode that is utility calls, unlogged retries and web-search fees.
 
 ## Privacy
 
@@ -125,13 +126,13 @@ Offline by default. The local server binds to 127.0.0.1 only and sends zero tele
 
 All of it happens in core before serialization, never as a UI-side filter. `runray export` asks for confirmation before it writes an unredacted file.
 
-Path scrubbing covers the fields that hold a path or a project name: the project, the branch and the transcript files. Span names are kept as the source wrote them. For Claude Code and OpenCode those are tool, model and subagent names, and an MCP tool name carries its server's name. An OTLP emitter can put anything in a span name, a local path included, and that text stays in the report with or without the flags. Read a report built from OTLP traces before you share it.
+Path scrubbing covers the fields that hold a path or a project name: the project, the branch and the transcript files. Span names are kept as the source wrote them. For Claude Code, OpenCode and Codex those are tool, model and subagent names, and an MCP tool name carries its server's name. An OTLP emitter can put anything in a span name, a local path included, and that text stays in the report with or without the flags. Read a report built from OTLP traces before you share it.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
+| `runray view [path]` | Find sessions and open the dashboard. `--source claude\|opencode\|codex\|otlp`, `--since 7d`, `--watch` to follow a live session, `--redact`, `--port`. |
 | `runray list [path] --json` | The same discovery as a machine-readable list. |
 | `runray export [path\|runId] -o report.html` | One self-contained HTML file. Without a run id it holds every discovered run. `--anonymize`, `--metadata-only`, `--redact`, `--scrub-paths`, `--yes` to skip the unredacted confirmation. `--json out.json` also writes the normalized trace. |
 | `runray demo` | The dashboard on a bundled, scrubbed sample. |

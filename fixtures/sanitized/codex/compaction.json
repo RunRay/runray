@@ -1,0 +1,366 @@
+{
+  "id": "run_38fb52e9bb6055f3",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-08T17:58:22.879Z",
+  "endedAt": "2026-09-08T17:58:22.879Z",
+  "durationMs": 0,
+  "spans": [
+    {
+      "id": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 0,
+      "agent": {
+        "name": "guardian",
+        "sessionId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a082b2-9042-7193-9a20-04266b4ab758",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 23
+      }
+    },
+    {
+      "id": "01a082c1-cc7e-7e40-951a-89de8f911109",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 34
+      }
+    },
+    {
+      "id": "01a082c2-dba2-7be2-b07f-436668788aea",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 45
+      }
+    },
+    {
+      "id": "01a082c3-5360-7872-9f86-7082d4062608",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 57
+      }
+    },
+    {
+      "id": "01a082c4-17f2-7740-984e-6de35a033454",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 68
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa06e590b7887d2826d75e772e0277c",
+      "parentId": "rollout-3",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 83153,
+          "output": 83,
+          "cacheRead": 4864,
+          "cacheWrite": 0,
+          "reasoning": 64
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 16
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa06f40cf5487d2ad0f78a77920b32c",
+      "parentId": "01a082b2-9042-7193-9a20-04266b4ab758",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 9229,
+          "output": 58,
+          "cacheRead": 87808,
+          "cacheWrite": 0,
+          "reasoning": 28
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 29
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa07327c6fc87d28943e04839f14cf6",
+      "parentId": "01a082c1-cc7e-7e40-951a-89de8f911109",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 14455,
+          "output": 70,
+          "cacheRead": 96000,
+          "cacheWrite": 0,
+          "reasoning": 137
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 40
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa0736d3a7487d2b18c42c46f59770b",
+      "parentId": "01a082c2-dba2-7be2-b07f-436668788aea",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 13358,
+          "output": 64,
+          "cacheRead": 110336,
+          "cacheWrite": 0,
+          "reasoning": 41
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 51
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa0738c0a6c87d282483126ca2ed292",
+      "parentId": "01a082c3-5360-7872-9f86-7082d4062608",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 14284,
+          "output": 55,
+          "cacheRead": 122624,
+          "cacheWrite": 0,
+          "reasoning": 34
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 63
+      }
+    },
+    {
+      "id": "resp_03f02be6f87bafd9016aa073bda3d087d2948a3efbb2fbe6a9",
+      "parentId": "01a082c4-17f2-7740-984e-6de35a033454",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 12931,
+          "output": 54,
+          "cacheRead": 135936,
+          "cacheWrite": 0,
+          "reasoning": 10
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 74
+      }
+    },
+    {
+      "id": "rollout-3",
+      "parentId": "01a0822b-c830-75c2-bf8e-c2efe8916ffe",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-08T17:58:22.879Z",
+      "endedAt": "2026-09-08T17:58:22.879Z",
+      "durationMs": 0,
+      "depth": 1,
+      "content": {
+        "promptPreview": null
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 6
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 147410,
+      "output": 384,
+      "cacheRead": 557568,
+      "cacheWrite": 0,
+      "reasoning": 314,
+      "total": 705676
+    },
+    "costUSD": {
+      "total": 0,
+      "wastedEstimate": 0,
+      "byModel": {}
+    },
+    "counts": {
+      "llmCalls": 6,
+      "toolCalls": 0,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 2
+    },
+    "cache": {
+      "hitRate": 0.7909
+    }
+  },
+  "insights": []
+}

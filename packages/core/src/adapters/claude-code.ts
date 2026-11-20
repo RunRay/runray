@@ -13,8 +13,10 @@ import type {
 } from '../adapter.js';
 import { NoSessionYet } from '../adapter.js';
 import { CACHE_WRITE_1H_ATTR } from '../pricing/engine.js';
+import { isRolloutFileName } from '../rollout-lines.js';
 import { stripBom } from '../text.js';
 import { errorPreview, exitCodeOf, isUserRejection } from './error-preview.js';
+import { durationBetween, extendContainers } from './span-time.js';
 import { toolTargetAttributes } from './target.js';
 import {
   claudeCommandOutcome,
@@ -110,14 +112,6 @@ function byteLength(content: unknown): number | undefined {
     }
   }
   return total;
-}
-function durationBetween(
-  startedAt: string,
-  endedAt: string | undefined,
-): number | undefined {
-  if (endedAt === undefined) return undefined;
-  const ms = Date.parse(endedAt) - Date.parse(startedAt);
-  return Number.isFinite(ms) ? Math.max(0, ms) : undefined;
 }
 
 /**
@@ -1002,38 +996,6 @@ async function adoptMetaLinkedAgents(ctx: ParseContext): Promise<void> {
   }
 }
 
-/**
- * Containers must cover their children. At the end: an async agent outlives
- * its tool result. At the start: a hook's record is written when the hook
- * ends, so a hook that ran as the session opened began before the
- * transcript's first record, which is where its container starts.
- */
-function extendContainers(spans: RawSpan[]): void {
-  const byId = new Map(spans.map((s) => [s.id, s]));
-  for (const span of spans) {
-    const end = span.endedAt ?? span.startedAt;
-    // only hook spans start from a computed instant; every other child
-    // starts at a record of its own transcript
-    const startMs = span.kind === 'hook' ? Date.parse(span.startedAt) : NaN;
-    let parentId = span.parentId;
-    while (parentId !== null) {
-      const parent = byId.get(parentId);
-      if (!parent) break;
-      if (parent.kind === 'subagent' || parent.kind === 'session') {
-        if (startMs < Date.parse(parent.startedAt)) {
-          parent.startedAt = span.startedAt;
-          parent.durationMs = durationBetween(parent.startedAt, parent.endedAt);
-        }
-        if ((parent.endedAt ?? parent.startedAt) < end) {
-          parent.endedAt = end;
-          parent.durationMs = durationBetween(parent.startedAt, end);
-        }
-      }
-      parentId = parent.parentId;
-    }
-  }
-}
-
 const AGENT_FILE_RE = /^agent-([A-Za-z0-9]+)\.jsonl$/;
 const AGENT_META_RE = /^agent-[A-Za-z0-9]+\.meta\.json$/;
 
@@ -1092,6 +1054,10 @@ export const claudeCodeAdapter: SourceAdapter = {
           if (!entry.isFile() || !entry.name.endsWith('.jsonl')) continue;
           if (AGENT_FILE_RE.test(entry.name) || entry.name === 'journal.jsonl')
             continue;
+          // a Codex rollout is the Codex adapter's file. Taken here it would
+          // be listed twice: once as a run, and once as a skipped file that
+          // "is not a Claude Code session".
+          if (isRolloutFileName(entry.name)) continue;
           const sessionFile = join(dir, entry.name);
           if (looksLikeOtlp(sessionFile)) continue;
 
@@ -1196,7 +1162,13 @@ export const claudeCodeAdapter: SourceAdapter = {
         file: mainFile,
       });
     }
-    extendContainers(ctx.spans);
+    // Containers must cover their children. At the end: an async agent
+    // outlives its tool result. At the start: a hook's record is written
+    // when the hook ends, so a hook that ran as the session opened began
+    // before the transcript's first record, which is where its container
+    // starts. Only hook spans start from a computed instant; every other
+    // child starts at a record of its own transcript.
+    extendContainers(ctx.spans, (span) => span.kind === 'hook');
 
     const title = ctx.redact ? undefined : (main.customTitle ?? main.aiTitle);
     return {

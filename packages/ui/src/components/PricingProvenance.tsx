@@ -1,4 +1,5 @@
 import type { Run } from '@runray/schema';
+import { agentSource } from '../lib/sources';
 import { useAppStore } from '../store';
 
 /**
@@ -27,10 +28,16 @@ export function PricingProvenance({ className = '' }: { className?: string }) {
  * methodological note, not a warning — quiet body register (text-label,
  * sentence case; the sibling provenance line is a micro-label tag), never
  * ember-tinted (ember means "fixable incompleteness", see CoverageNotices).
- * Rendered only for transcript-parsed sources with a pricing payload:
+ * Rendered only for transcript-parsed sources (Claude Code, OpenCode, Codex;
+ * see lib/sources) with a pricing payload:
  * OTLP-ingested runs are not "recorded transcripts" and may carry
  * provider-reported costs the claim would be wrong about, and without the
  * payload the note would float alone with no provenance line above it.
+ *
+ * The list of what is missing from the log predates the Codex adapter and
+ * was never checked against a rollout, so a Codex run gets the bound
+ * without the list: whatever a rollout leaves out is not counted, which
+ * holds whatever that is.
  */
 export function TranscriptCostNote({
   run,
@@ -41,13 +48,14 @@ export function TranscriptCostNote({
 }) {
   const pricing = useAppStore((s) => s.pricing);
   if (pricing === undefined) return null;
-  const tool = run.source.tool;
-  if (tool !== 'claude-code' && tool !== 'opencode') return null;
+  const agent = agentSource(run.source.tool);
+  if (agent === undefined) return null;
   return (
     <span className={`text-label text-text-faint ${className}`}>
-      Computed from the recorded transcript — a lower bound. Utility calls,
-      unlogged retries, and web-search fees never reach the log, so provider
-      billing can read higher.
+      Computed from the recorded transcript — a lower bound.{' '}
+      {agent === 'codex'
+        ? 'Whatever never reaches the log is not counted, so provider billing can read higher.'
+        : 'Utility calls, unlogged retries, and web-search fees never reach the log, so provider billing can read higher.'}
     </span>
   );
 }

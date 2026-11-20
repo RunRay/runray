@@ -214,6 +214,34 @@ describe('harness tools', () => {
     expect(HARNESS_TOOLS.get('Read')?.role).toBeUndefined();
   });
 
+  it('names the Codex tools: the legacy shell call, and each by its kind', () => {
+    // where the call is the command
+    expect(HARNESS_TOOLS.get('shell')?.role).toBe('shell');
+    expect(HARNESS_TOOLS.get('shell_command')?.role).toBe('shell');
+    expect(HARNESS_TOOLS.get('exec_command')?.role).toBe('shell');
+    // the script tool is not a shell: what it ran is spans of their own
+    expect(HARNESS_TOOLS.get('exec')).toEqual({ activity: 'other' });
+    expect(harnessActivity('apply_patch')).toBe('edit');
+    expect(harnessActivity('view_image')).toBe('explore');
+    expect(harnessActivity('web.search')).toBe('web');
+    expect(harnessActivity('update_plan')).toBe('agent');
+    expect(harnessActivity('request_user_input_async')).toBe('human');
+    // Codex's `js` is a tool of an MCP server and is always recorded as an
+    // MCP call; the name alone says nothing in a table every source shares
+    expect(HARNESS_TOOLS.has('js')).toBe(false);
+    expect(HARNESS_TOOLS.has('js_reset')).toBe(false);
+    for (const name of [
+      'wait',
+      'sleep',
+      'clock.sleep',
+      'write_stdin',
+      'imagegen',
+      'image_gen.generation',
+    ]) {
+      expect(HARNESS_TOOLS.get(name), name).toEqual({ activity: 'other' });
+    }
+  });
+
   it('uses only known activities', () => {
     for (const [name, tool] of HARNESS_TOOLS) {
       expect(ACTIVITIES, name).toContain(tool.activity);

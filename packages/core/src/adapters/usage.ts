@@ -27,7 +27,9 @@ import type { ShellDialect } from '../tools/shell.js';
 
 type Source = 'claude-code' | 'opencode';
 
-/** Shell tools per source and the dialect their `command` is written in. */
+/** Shell tools per source and the dialect their `command` is written in.
+ * Codex has no row: there the shell is named by each command's own argv, so
+ * its adapter passes the dialect with the script (`shellScriptAttributes`). */
 const SHELL_TOOLS: Record<Source, Record<string, ShellDialect>> = {
   'claude-code': { Bash: 'posix', PowerShell: 'powershell' },
   opencode: { bash: 'posix' },
@@ -95,13 +97,37 @@ function flagsOf(outcome: CommandOutcome | undefined): ToolFlag[] {
 const CALLBACK_COMMAND = 'callback';
 
 /**
- * The transcript does not say which shell ran a hook. A backslash before a
- * name character is a Windows path separator (`C:\Users\…\format.mjs`): bash
- * would swallow it, so a hook written that way is run by cmd or PowerShell,
- * and reading it as POSIX would glue the directories into the script name.
+ * The dialect of a command whose shell the source does not name (a hook, a
+ * Codex script given as a bare string or handed to `cmd`). A backslash
+ * before a name character is a Windows path separator
+ * (`C:\Users\…\format.mjs`): bash would swallow it, so a command written
+ * that way is run by cmd or PowerShell, and reading it as POSIX would glue
+ * the directories into the script name.
  */
-function hookDialect(command: string): ShellDialect {
+export function guessShellDialect(command: string): ShellDialect {
   return /\\[A-Za-z0-9_.]/.test(command) ? 'powershell' : 'posix';
+}
+
+/**
+ * The tool-usage `attributes` payload for a script whose dialect belongs to
+ * the call, not to the tool's name. `guessed` says the dialect was not
+ * named by the source: cmd may then be what runs the script, and cmd runs a
+ * quoted path that PowerShell would take for a string. The script is
+ * classified and never stored; the redaction rule is the one every shell
+ * tool span follows.
+ */
+export function shellScriptAttributes(
+  script: string,
+  dialect: ShellDialect,
+  guessed: boolean,
+  redact: boolean,
+): Record<string, unknown> {
+  return toolUsageAttributes(
+    script,
+    dialect,
+    redact,
+    guessed ? { quotedWordsRun: true } : {},
+  );
 }
 
 /**
@@ -120,9 +146,7 @@ export function hookCommandAttributes(
   // the dialect is a guess from the text, and cmd runs a quoted path that
   // PowerShell would take for a string. The value of an assignment is still
   // read by its quote, so `$out=docker ps` keeps its command
-  return toolUsageAttributes(text, hookDialect(text), redact, {
-    quotedWordsRun: true,
-  });
+  return shellScriptAttributes(text, guessShellDialect(text), true, redact);
 }
 
 /**
