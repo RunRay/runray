@@ -33,6 +33,7 @@ fixtures/**/raw/
 # Large perf fixture: too big for git history — generated locally per contributor.
 # See fixtures/claude-code/large/README.md
 fixtures/**/large/*.jsonl
+fixtures/**/large/*.jsonl.zst
 
 # Local pricing overrides
 pricing.local.json

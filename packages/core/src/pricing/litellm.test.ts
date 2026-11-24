@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { computeCostUSD, matchModel, type PricingTable } from './engine.js';
 import {
   convertLitellmPricing,
+  keepRetiredModels,
   PriceListTooShortError,
   priceListFromText,
 } from './litellm.js';
@@ -126,6 +128,189 @@ describe('convertLitellmPricing', () => {
     // are upstream copy-paste garbage; the engine derives 2× input instead
     expect('cacheWrite1hPerMTok' in (below ?? {})).toBe(false);
     expect('cacheWrite1hPerMTok' in (absurd ?? {})).toBe(false);
+  });
+});
+
+describe('convertLitellmPricing with responses-mode models', () => {
+  const openai = (mode: string, input: number, output: number) => ({
+    litellm_provider: 'openai',
+    mode,
+    input_cost_per_token: input,
+    output_cost_per_token: output,
+    cache_read_input_token_cost: input / 10,
+  });
+  const raw: Record<string, unknown> = {
+    'gpt-5.1': openai('chat', 1.25e-6, 10e-6),
+    // filed under `responses` upstream, at a fifth of the base model's rates
+    'gpt-5.1-codex-mini': openai('responses', 0.25e-6, 2e-6),
+    // no `gpt-5.3` is published, so only its own entry can price it right
+    'gpt-5': openai('chat', 1.25e-6, 10e-6),
+    'gpt-5.3-codex': openai('responses', 1.75e-6, 14e-6),
+    // the mode is the filter: other responses models come in with it
+    'o3-pro': openai('responses', 20e-6, 80e-6),
+    // a responses model of a provider we do not list stays out
+    'elsewhere/big-model': {
+      ...openai('responses', 1e-6, 2e-6),
+      litellm_provider: 'somewhere-else',
+    },
+    // modes that bill by something other than chat tokens stay out
+    'gpt-image': openai('image_generation', 5e-6, 40e-6),
+    'gpt-realtime': openai('realtime', 4e-6, 16e-6),
+    'text-embedding': openai('embedding', 1e-7, 0),
+    'davinci-old': openai('completion', 2e-6, 2e-6),
+    'no-mode': { ...openai('chat', 1e-6, 2e-6), mode: undefined },
+    'mode-not-a-string': { ...openai('chat', 1e-6, 2e-6), mode: ['chat'] },
+  };
+  const invalid: string[] = [];
+  const table = convertLitellmPricing(
+    { ...raw, 'gpt-5.2-codex': openai('responses', -1, 14e-6) },
+    { snapshotDate: '2026-11-14', onInvalid: (key) => invalid.push(key) },
+  );
+
+  it('keeps responses models of the listed providers next to chat ones', () => {
+    expect(table.entries.map((e) => e.modelPattern)).toEqual([
+      'gpt-5',
+      'gpt-5.1',
+      'gpt-5.1-codex-mini',
+      'gpt-5.3-codex',
+      'o3-pro',
+    ]);
+  });
+
+  it('prices a Codex variant at its own rates, not at its base model’s', () => {
+    const tokens = {
+      input: 2000,
+      output: 200,
+      cacheRead: 8000,
+      cacheWrite: 0,
+      reasoning: 300,
+    };
+    const mini = matchModel(table, 'gpt-5.1-codex-mini');
+    expect(mini?.modelPattern).toBe('gpt-5.1-codex-mini');
+    expect(mini).toMatchObject({
+      inputPerMTok: 0.25,
+      outputPerMTok: 2,
+      cacheReadPerMTok: 0.025,
+    });
+    const base = matchModel(table, 'gpt-5.1');
+    if (mini === undefined || base === undefined)
+      throw new Error('both models must resolve');
+    // 2,000 in + 8,000 cached + 500 out (reasoning at the output rate)
+    expect(computeCostUSD(mini, tokens)).toBe(0.0017);
+    expect(computeCostUSD(base, tokens)).toBe(0.0085);
+  });
+
+  it('resolves a Codex id that has no base model in the list to itself', () => {
+    expect(matchModel(table, 'gpt-5.3-codex')?.modelPattern).toBe(
+      'gpt-5.3-codex',
+    );
+    // a dated or provider-prefixed spelling still lands on the Codex entry
+    expect(matchModel(table, 'openai/gpt-5.3-codex')?.outputPerMTok).toBe(14);
+    expect(matchModel(table, 'gpt-5.3-codex-2026-02-05')?.outputPerMTok).toBe(
+      14,
+    );
+  });
+
+  it('reports a responses model with an unusable rate, like a chat one', () => {
+    expect(invalid).toEqual(['gpt-5.2-codex']);
+    expect(table.entries.some((e) => e.modelPattern === 'gpt-5.2-codex')).toBe(
+      false,
+    );
+  });
+});
+
+describe('keepRetiredModels', () => {
+  const entry = (modelPattern: string, input: number, output: number) => ({
+    modelPattern,
+    inputPerMTok: input,
+    outputPerMTok: output,
+    cacheReadPerMTok: input / 10,
+    cacheWritePerMTok: input,
+  });
+  const tableOf = (
+    snapshotDate: string,
+    ...entries: ReturnType<typeof entry>[]
+  ): PricingTable => ({
+    snapshotDate,
+    source: 'litellm-snapshot',
+    aliases: {},
+    entries,
+  });
+  const previous = tableOf(
+    '2026-08-18',
+    entry('mistral-large', 2, 6),
+    entry('mistral-large-2402', 4, 12),
+    entry('old-opus-4-1', 15, 75),
+    entry('zeta', 1, 2),
+  );
+  // the list dropped two ids and re-priced one it still has
+  const fresh = tableOf(
+    '2026-11-14',
+    entry('mistral-large', 0.5, 1.5),
+    entry('new-model', 3, 9),
+    entry('zeta', 1, 2),
+  );
+  const table = keepRetiredModels(fresh, previous);
+
+  it('keeps the models the list no longer has, at the rates they last had', () => {
+    expect(table.retired).toEqual(['mistral-large-2402', 'old-opus-4-1']);
+    expect(table.entries.map((e) => e.modelPattern)).toEqual([
+      'mistral-large',
+      'mistral-large-2402',
+      'new-model',
+      'old-opus-4-1',
+      'zeta',
+    ]);
+    expect(matchModel(table, 'old-opus-4-1')).toEqual(
+      entry('old-opus-4-1', 15, 75),
+    );
+    expect(table.snapshotDate).toBe('2026-11-14');
+  });
+
+  it('takes a model the list still has from the list', () => {
+    expect(matchModel(table, 'mistral-large')?.inputPerMTok).toBe(0.5);
+  });
+
+  it('prices a retired dated id as itself, not as the current model it starts with', () => {
+    expect(matchModel(fresh, 'mistral-large-2402')?.inputPerMTok).toBe(0.5);
+    expect(matchModel(table, 'mistral-large-2402')?.inputPerMTok).toBe(4);
+  });
+
+  it('lets a retired model price its own id only, never a longer one', () => {
+    // in either spelling of the version separator
+    expect(matchModel(table, 'old-opus-4.1')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+    expect(matchModel(table, 'vendor/old-opus-4-1')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+    // an id the list never held under that name is not that model
+    expect(matchModel(table, 'old-opus-4-1-fast')).toBeUndefined();
+    expect(matchModel(table, 'old-opus-4-1-20260101')).toBeUndefined();
+    // past a retired entry, a listed family still prices its variants
+    expect(matchModel(table, 'mistral-large-2402-v2')?.modelPattern).toBe(
+      'mistral-large',
+    );
+    // the same entries with no retired list: the prefix rule as it was
+    const { retired: _retired, ...plain } = table;
+    expect(matchModel(plain, 'old-opus-4-1-fast')?.modelPattern).toBe(
+      'old-opus-4-1',
+    );
+  });
+
+  it('names the same models again on the next refresh, and none once they are back', () => {
+    const later = tableOf('2027-01-10', entry('zeta', 1, 2));
+    expect(keepRetiredModels(later, table).retired).toEqual([
+      'mistral-large',
+      'mistral-large-2402',
+      'new-model',
+      'old-opus-4-1',
+    ]);
+    const back = tableOf('2027-01-10', ...table.entries);
+    expect(keepRetiredModels(back, table).retired).toBeUndefined();
+    expect(keepRetiredModels(fresh, fresh)).toEqual(fresh);
+    // a list that took a model back does not leave it marked retired
+    expect('retired' in keepRetiredModels(back, table)).toBe(false);
   });
 });
 

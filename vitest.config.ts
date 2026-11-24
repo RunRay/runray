@@ -60,7 +60,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['packages/*/src/**/*.test.{ts,tsx}'],
+    include: ['packages/*/src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
     // hermetic copy of the committed claude-code fixtures (no local perf file)
     globalSetup: ['./vitest.global-setup.ts'],
     environment: 'node',

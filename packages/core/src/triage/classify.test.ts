@@ -471,3 +471,49 @@ describe('classifyError — without text', () => {
     ).toBe('model-error');
   });
 });
+
+describe('classifyError — a failed turn, by the code of the harness', () => {
+  const turn = (statusReason?: string) =>
+    span({
+      kind: 'turn',
+      name: 'turn',
+      tool: undefined,
+      ...(statusReason === undefined ? {} : { statusReason }),
+    });
+
+  it('reads the class from the parts of the code', () => {
+    const cases: [string, string][] = [
+      ['usage_limit_exceeded', 'model-limit'],
+      ['unauthorized', 'model-auth'],
+      ['internal_server_error', 'model-server'],
+      ['server_overloaded', 'model-server'],
+      ['http_connection_failed', 'model-server'],
+      ['response_stream_disconnected', 'model-server'],
+      ['context_window_exceeded', 'model-error'],
+      ['bad_request', 'model-error'],
+    ];
+    for (const [code, classId] of cases) {
+      expect(classifyError(turn(code)).classId, code).toBe(classId);
+    }
+  });
+
+  it('a turn with no code is a model error of no known class', () => {
+    expect(classifyError(turn())).toEqual({
+      classId: 'model-error',
+      owner: 'model',
+    });
+  });
+
+  it('the code of a model call is not read: its class comes from its text', () => {
+    expect(
+      classifyError(
+        span({
+          kind: 'llm_call',
+          name: 'llm',
+          tool: undefined,
+          statusReason: 'usage_limit_exceeded',
+        }),
+      ).classId,
+    ).toBe('model-error');
+  });
+});

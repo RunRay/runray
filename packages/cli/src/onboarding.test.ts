@@ -260,7 +260,7 @@ describe('onboarding unit & wizard tests', () => {
       }) as unknown as Run;
 
     const makeTf = (runs: Run[]): TraceFile => ({
-      schemaVersion: '0.1.0',
+      schemaVersion: '0.2.0',
       generator: { name: 'runray', version: '0.1.0' },
       generatedAt: new Date().toISOString(),
       runs,

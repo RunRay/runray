@@ -1,4 +1,5 @@
 import type { Run, Span } from '@runray/schema';
+import { CODEX_REVIEWER_AGENT } from '../adapters/codex-names.js';
 import {
   cacheWrite1hTokens,
   matchModel,
@@ -7,6 +8,8 @@ import {
   round6,
   suggestedDowngrade,
 } from '../pricing/engine.js';
+import { HARNESS_TOOLS } from '../tools/registry.js';
+import { classifyError } from '../triage/classify.js';
 import { breakShape, contextTokens } from './cache-shape.js';
 import {
   contextExcess,
@@ -43,8 +46,16 @@ import type { Finding, InsightRule, RuleContext, Thresholds } from './index.js';
  * name a lever that person has (a command, a config key, an instructions
  * file), carry the finding's own numbers where they change the decision,
  * and pick the lever by `run.source.tool` — the same problem is fixed in a
- * different place in Claude Code, OpenCode and a custom OTLP agent. Static
- * how-to detail lives in the rule playbooks (`meta.ts`), not here.
+ * different place in Claude Code, OpenCode, Codex and a custom OTLP agent.
+ * Static how-to detail lives in the rule playbooks (`meta.ts`), not here.
+ *
+ * The source picks the WORDS, not whether a rule fires (add-codex-adapter
+ * T12): a rule fires on a Codex run by the same thresholds as on any other.
+ * Codex records no cache writes, so the two rules that need one on the
+ * second call (cache-prefix-break, idle-cache-expiry) stay silent there.
+ * One exception changes a figure: the approval reviewer of a Codex run is
+ * not an agent the person configures, so no cheaper-model saving is
+ * estimated for it, by expensive-subagent or by model-mismatch.
  */
 
 function usd(x: number): string {
@@ -65,6 +76,7 @@ function instructionsFile(run: Run): string {
     case 'claude-code':
       return 'CLAUDE.md';
     case 'opencode':
+    case 'codex':
       return 'AGENTS.md';
     default:
       return "your agent's system prompt";
@@ -93,25 +105,17 @@ function claudeModelAlias(target: string): string | undefined {
 }
 
 type ToolClass = 'shell' | 'edit' | 'mcp' | 'other';
-const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'bash']);
-const EDIT_TOOLS = new Set([
-  'Edit',
-  'MultiEdit',
-  'Write',
-  'NotebookEdit',
-  'edit',
-  'write',
-  'patch',
-  'apply_patch',
-]);
 
 /** What kind of lever a failing tool points at: the environment (shell),
- * the file under the agent (edit), a server (mcp), or the agent itself. */
+ * the file under the agent (edit), a server (mcp), or the agent itself.
+ * Which names are shell and edit tools is read from the harness-tool table
+ * of the tools registry, the one list every source's names are kept in. */
 function toolClassOf(span: Span): ToolClass {
   if (span.kind === 'mcp_call' || span.tool?.mcpServer !== undefined)
     return 'mcp';
-  if (SHELL_TOOLS.has(span.name)) return 'shell';
-  if (EDIT_TOOLS.has(span.name)) return 'edit';
+  const harness = HARNESS_TOOLS.get(span.name);
+  if (harness?.role === 'shell') return 'shell';
+  if (harness?.activity === 'edit') return 'edit';
   return 'other';
 }
 
@@ -281,7 +285,10 @@ const lowCacheHit: InsightRule = {
 
 /** A low hit-rate has a different cause per source: Claude Code caches on
  * its own (so the prefix must be changing), OpenCode inherits whatever the
- * provider does, a custom agent has to mark the prefix itself. */
+ * provider does, a custom agent has to mark the prefix itself. Codex leaves
+ * caching to the provider too, and its copy cannot point at
+ * cache-prefix-break: that rule needs a cache write, which Codex never
+ * records, so the causes are named here instead. */
 function lowCacheHitSuggestion(
   run: Run,
   targetHitRate: number,
@@ -296,6 +303,8 @@ function lowCacheHitSuggestion(
       return `Claude Code caches automatically, so a hit-rate this low means the prefix kept changing — check this run for cache-prefix-break findings first${tail}.`;
     case 'opencode':
       return `Check that your provider and model support prompt caching — OpenCode adds no cache settings of its own${tail}.`;
+    case 'codex':
+      return `Codex leaves caching to the provider, so a hit-rate this low means the front of the prompt kept changing or the cache lapsed between calls — switch model and connect or drop MCP servers at a task boundary, not mid-session; on a custom model provider, check that it caches prompts at all${tail}.`;
     default:
       return `Mark a stable prefix for caching in your agent's requests (system prompt, tool definitions, early turns)${tail}.`;
   }
@@ -422,6 +431,15 @@ function expensiveSubagentSubtrees(
   );
 }
 
+/** The approval reviewer of a Codex run (`approvals_reviewer =
+ * "auto_review"`). Nobody defines that agent in a file, so the levers of a
+ * custom agent do not apply to it. */
+function isCodexReviewer(run: Run, thread: Span): boolean {
+  return (
+    run.source.tool === 'codex' && thread.agent?.name === CODEX_REVIEWER_AGENT
+  );
+}
+
 const expensiveSubagent: InsightRule = {
   id: 'expensive-subagent',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
@@ -431,10 +449,16 @@ const expensiveSubagent: InsightRule = {
       const cost = info.costUSD;
       const share = Math.round((cost / total) * 100);
       const name = info.root.agent?.name ?? info.root.name;
+      // the approval reviewer is the harness's own agent: there is no agent
+      // file to put a cheaper model in, so no cheaper tier is looked up and
+      // no saving is claimed for it (add-codex-adapter T12)
+      const reviewer = isCodexReviewer(run, info.root);
       // quantify via the repricing primitive at the suggested cheaper tier
       const dom = dominantModel(info.llmSpans);
       const sugg =
-        dom === undefined ? undefined : suggestedDowngrade(dom, ctx.pricing);
+        reviewer || dom === undefined
+          ? undefined
+          : suggestedDowngrade(dom, ctx.pricing);
       let saving: number | undefined;
       if (sugg !== undefined) {
         const targets = new Map<string, string>();
@@ -449,8 +473,9 @@ const expensiveSubagent: InsightRule = {
       // "say why" honestly: no-tier-resolves and tier-resolves-but-reprices-
       // no-cheaper are different reasons (unpriced spans, reported costs at
       // or below the target's rates) — the old copy claimed the first in both
-      const noEstimate =
-        sugg === undefined
+      const noEstimate = reviewer
+        ? "It is Codex's automatic approval reviewer, so no cheaper-model saving is estimated."
+        : sugg === undefined
           ? 'No cheaper same-family tier resolves in the pricing table, so no saving estimate is available.'
           : `A cheaper tier (${sugg.target}) resolves, but the subtree's calls could not be repriced cheaper (unpriced or already at/below that rate), so no saving estimate is available.`;
       // where the person sets a subagent's model in this source
@@ -465,6 +490,12 @@ const expensiveSubagent: InsightRule = {
             return target === undefined
               ? `agent.${name}.model in opencode.json`
               : `agent.${name}.model = ${target} in opencode.json`;
+          case 'codex':
+            // the span is named by the kind of subagent, not by the custom
+            // agent's own name, so the file is "its", never `<name>.toml`
+            // nor can the span say where that file is, or whether the
+            // child has one: a built-in role has none
+            return `${target === undefined ? 'model' : `model = "${target}"`} in its agent file (~/.codex/agents, or .codex/agents in the project); agents.default_subagent_model in config.toml when it has no file`;
           default:
             return target === undefined
               ? `a cheaper model for ${name}`
@@ -480,8 +511,9 @@ const expensiveSubagent: InsightRule = {
             : `${base} At ${sugg?.target} rates the same tokens would have cost ~${usd(saving)} less.`,
         spanIds: [info.root.id],
         ...(saving === undefined ? {} : { estimatedWasteUSD: saving }),
-        suggestion:
-          saving === undefined
+        suggestion: reviewer
+          ? `${name} is Codex's automatic approval reviewer, not an agent you define — its subtree is ${share}% of this run; approvals_reviewer = "user" in config.toml hands the approval prompts back to you.`
+          : saving === undefined
             ? sugg === undefined
               ? `Give ${name} a cheaper model (${how}) — its subtree is ${share}% of this run; no priced cheaper tier resolves for it, so the saving is not estimated.`
               : `Give ${name} a cheaper model (${how}) — a cheaper tier (${sugg.target}) exists, but this subtree's calls could not be repriced cheaper (unpriced, or already at or below that rate), so the saving is not estimated.`
@@ -505,9 +537,42 @@ const deadEndRun: InsightRule = {
     const sessionError = run.spans.find(
       (s) => s.kind === 'session' && s.status === 'error',
     );
+    // The turn the run ended in. Spans come in start order, so a turn
+    // stands before everything that happened inside it: where the last
+    // turn failed, the last span is whatever that turn did last, often a
+    // model call that went fine. Codex records a refused or failed request
+    // on the turn, so the turn is asked before its last step.
+    const byId = new Map(run.spans.map((s) => [s.id, s]));
+    let endedIn: Span | undefined;
+    for (let s = last, hops = 0; s !== undefined && hops < 64; hops++) {
+      if (s.kind === 'turn') {
+        endedIn = s;
+        break;
+      }
+      s = s.parentId === null ? undefined : byId.get(s.parentId);
+    }
+    // a turn the person interrupted is where they stopped it, whatever its
+    // last step was
+    if (sessionError === undefined && endedIn?.status === 'cancelled')
+      return [];
     const terminal =
-      sessionError ?? (last?.status === 'error' ? last : undefined);
+      sessionError ??
+      (endedIn?.status === 'error'
+        ? endedIn
+        : last?.status === 'error'
+          ? last
+          : undefined);
     if (terminal === undefined) return [];
+    // a turn the harness stopped at a usage limit is where the session
+    // paused, not a step that failed: what came before it stands, and the
+    // same session goes on after the reset. Codex records a refused request
+    // on the turn, so without this a session that merely ran out of quota
+    // read as burned in full
+    if (
+      terminal.kind === 'turn' &&
+      classifyError(terminal).classId === 'model-limit'
+    )
+      return [];
     const total = run.totals.costUSD.total;
 
     // failed-tail attribution (B3): the productive marker is the last
@@ -582,14 +647,29 @@ const modelMismatch: InsightRule = {
     const excludedRoots = new Set(
       expensiveSubagentSubtrees(run, ctx.thresholds).map((i) => i.root.id),
     );
-    const withinExcluded = (rootId: string | null): boolean => {
+    // the approval reviewer of a Codex run is left out whatever it cost: it
+    // is not an agent the person configures, so its calls are no saving of
+    // this finding (the same reason expensive-subagent estimates none)
+    const reviewerRoots = new Set(
+      run.spans
+        .filter((s) => s.kind === 'subagent' && isCodexReviewer(run, s))
+        .map((s) => s.id),
+    );
+    const within = (
+      roots: ReadonlySet<string>,
+      rootId: string | null,
+    ): boolean => {
       let cur: string | null = rootId;
       while (cur !== null) {
-        if (excludedRoots.has(cur)) return true;
+        if (roots.has(cur)) return true;
         cur = byId.get(cur)?.parentId ?? null;
       }
       return false;
     };
+    const withinReviewer = (rootId: string | null): boolean =>
+      within(reviewerRoots, rootId);
+    const withinExcluded = (rootId: string | null): boolean =>
+      within(excludedRoots, rootId) || withinReviewer(rootId);
 
     const models = [
       ...new Set(
@@ -642,7 +722,13 @@ const modelMismatch: InsightRule = {
           c.flags.length > 0 && !withinExcluded(c.rootId) && c.deltaUSD !== 0,
       ).length;
       const delegated = result.subtrees.filter(
-        (c) => withinExcluded(c.rootId) && c.llmCalls > 0,
+        (c) =>
+          withinExcluded(c.rootId) &&
+          !withinReviewer(c.rootId) &&
+          c.llmCalls > 0,
+      ).length;
+      const reviewed = result.subtrees.filter(
+        (c) => withinReviewer(c.rootId) && c.llmCalls > 0 && c.deltaUSD !== 0,
       ).length;
       const evidence = [...safeSpans]
         .sort(
@@ -660,6 +746,9 @@ const modelMismatch: InsightRule = {
         ...(delegated > 0
           ? [`${delegated} subtree(s) covered by the delegation finding`]
           : []),
+        ...(reviewed > 0
+          ? ['the approval reviewer left out (not an agent you configure)']
+          : []),
       ];
       // where the person switches model in this source
       const alias = claudeModelAlias(sugg.target);
@@ -668,7 +757,9 @@ const modelMismatch: InsightRule = {
           ? ` (/model ${alias} switches mid-session)`
           : run.source.tool === 'opencode'
             ? ' (/models, or the model key in opencode.json)'
-            : '';
+            : run.source.tool === 'codex'
+              ? ' (/model switches mid-session; the model key in config.toml sets the default)'
+              : '';
       findings.push({
         ruleId: 'model-mismatch',
         title: `${modelSpans.length} calls on ${model} could run on ${sugg.target}`,
@@ -869,6 +960,11 @@ const fixedContextOverhead: InsightRule = {
   id: 'fixed-context-overhead',
   evaluate(run: Run, ctx: RuleContext): Finding[] {
     const cfg = ctx.thresholds.fixedContextOverhead;
+    // A Codex reviewer thread read without its parent is a run of its own.
+    // What it opens with is the transcript the harness handed it, not
+    // instructions, skills or servers the person could trim.
+    const session = run.spans.find((s) => s.kind === 'session');
+    if (session !== undefined && isCodexReviewer(run, session)) return [];
     // scope to the main session: a subagent runs its own fresh context, so its
     // calls neither carry nor re-read the session's opening footprint. Counting
     // them inflated both the footprint owner (llms[0]) and the re-read
@@ -887,12 +983,18 @@ const fixedContextOverhead: InsightRule = {
     // the overhead as cached prefix, and a hypothetical write inherits the
     // TTL the session actually caches at (all-1h session → 1h write), even
     // though the blend ratio comes from a smaller real write.
+    // A session that wrote nothing to the cache paid no write premium for
+    // what it opened with: the tokens came in as plain input. Codex records
+    // no cache write at all, and a price entry's write rate can be above
+    // its input rate (`gpt-6-astra`: 12.5 against 10), so the first leg of
+    // such a session is priced at the input rate (add-codex-adapter T12).
+    const wrote = llms.some((l) => (l.llm?.tokens.cacheWrite ?? 0) > 0);
     const waste =
       entry === undefined
         ? undefined
         : round6(
             (overhead *
-              (spanCacheWriteRate(entry, first) +
+              ((wrote ? spanCacheWriteRate(entry, first) : entry.inputPerMTok) +
                 entry.cacheReadPerMTok * (llms.length - 1))) /
               1e6,
           );
@@ -928,6 +1030,8 @@ function fixedContextSuggestion(
       return `Trim what every call carries: CLAUDE.md and its imports, skill and memory listings, and MCP servers this project does not need (${called}) — ${tail}.`;
     case 'opencode':
       return `Trim what every call carries: AGENTS.md and instructions files, and MCP servers this project does not need (${called}; mcp.<name>.enabled: false) — ${tail}.`;
+    case 'codex':
+      return `Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (${called}; enabled = false under [mcp_servers.<name>] in config.toml) — ${tail}.`;
     default:
       return `Trim the fixed part of every request: system prompt, tool definitions, attachments — ${tail}.`;
   }
@@ -1158,7 +1262,7 @@ const oversizedOutput: InsightRule = {
         detail: `${offenders.length} tool call(s) returned ≥${tok(cfg.minOutputBytes)} bytes (largest: ${top?.name} at ${tok(top?.tool?.outputBytes ?? 0)} bytes); ≈${tok(Math.round(totalBytes / 4))} tokens of tool output entered the context. Output utility is unknowable, so this is an opportunity, never burned waste.`,
         spanIds: offenders.slice(0, cfg.topOffenders).map((s) => s.id),
         ...(waste === undefined ? {} : { estimatedWasteUSD: waste }),
-        suggestion: `Ask for less of it — ${top?.name} returned ${tok(top?.tool?.outputBytes ?? 0)} bytes in one go; slice files with offset and limit, filter command output, and page MCP results before they enter the context.`,
+        suggestion: `Ask for less of it — ${top?.name} returned ${tok(top?.tool?.outputBytes ?? 0)} bytes in one go; ${run.source.tool === 'codex' ? 'read a range of a file instead of the whole of it' : 'slice files with offset and limit'}, filter command output, and page MCP results before they enter the context.`,
       },
     ];
   },

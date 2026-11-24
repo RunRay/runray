@@ -24,7 +24,7 @@ describe('server endpoints (profiler depth)', () => {
     const table = bundledPricing();
     const server = await startServer({
       getTraceFile: async () => ({
-        schemaVersion: '0.1.0',
+        schemaVersion: '0.2.0',
         generator: { name: 'test', version: '0' },
         generatedAt: '2026-07-02T13:00:00Z',
         runs: [],
@@ -49,7 +49,7 @@ describe('server endpoints (profiler depth)', () => {
   it('GET /api/viewconfig returns the view config payload', async () => {
     const server = await startServer({
       getTraceFile: async () => ({
-        schemaVersion: '0.1.0',
+        schemaVersion: '0.2.0',
         generator: { name: 'test', version: '0' },
         generatedAt: '2026-07-02T13:00:00Z',
         runs: [],

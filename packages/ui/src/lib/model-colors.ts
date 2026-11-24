@@ -44,18 +44,24 @@ export function assignModelColorVars(
   return map;
 }
 
+const UNKNOWN_SOURCE_COLOR_VAR = 'var(--color-span-hook)';
+
 /**
  * Source-tool → chart color (the "By source" stacked segments + legend).
  * Borrows the muted span-kind hues purely as chart categories; always shown
- * with a labelled legend, never as a bare swatch.
+ * with a labelled legend, never as a bare swatch. Codex has a token of its
+ * own: no span hue is left that means nothing else on the dashboard
+ * (index.css says how it was picked, source-palette.test.ts holds it).
  */
 export const SOURCE_COLOR_VAR: Record<string, string> = {
   'claude-code': 'var(--color-span-llm)',
   opencode: 'var(--color-span-tool)',
+  codex: 'var(--color-source-codex)',
   otlp: 'var(--color-span-mcp)',
-  unknown: 'var(--color-span-hook)',
+  unknown: UNKNOWN_SOURCE_COLOR_VAR,
 };
 
+/** A source this build has no colour for is drawn in the neutral grey. */
 export function sourceColorVar(source: string): string {
-  return SOURCE_COLOR_VAR[source] ?? 'var(--color-span-hook)';
+  return SOURCE_COLOR_VAR[source] ?? UNKNOWN_SOURCE_COLOR_VAR;
 }

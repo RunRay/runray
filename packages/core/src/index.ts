@@ -67,6 +67,7 @@ export type {
   UnpricedCoverage,
 } from './pricing/index.js';
 export {
+  bundledListSize,
   bundledPricing,
   CACHE_WRITE_1H_ATTR,
   cacheWrite1hTokens,
@@ -74,7 +75,9 @@ export {
   DEFAULT_REPRICE_RISK,
   downgradeMap,
   effectiveCacheWriteRate,
+  hasNoPublishedPrice,
   MODEL_TIERS,
+  MODELS_WITHOUT_PUBLISHED_PRICE,
   matchModel,
   priceRun,
   repriceRun,

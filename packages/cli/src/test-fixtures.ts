@@ -4,6 +4,8 @@ declare module 'vitest' {
   export interface ProvidedContext {
     /** Set by vitest.global-setup.ts at the repo root. */
     claudeCodeFixtures: string;
+    /** Set by vitest.global-setup.ts at the repo root. */
+    codexFixtures: string;
   }
 }
 
@@ -15,4 +17,13 @@ declare module 'vitest' {
  */
 export function claudeCodeFixtures(): string {
   return inject('claudeCodeFixtures');
+}
+
+/**
+ * The committed codex fixtures (simple, zstd, guardian, tool-errors, …)
+ * without the machine-local perf fixture, as one directory to scan. Use it
+ * instead of `fixtures/codex` for the same reason as `claudeCodeFixtures()`.
+ */
+export function codexFixtures(): string {
+  return inject('codexFixtures');
 }

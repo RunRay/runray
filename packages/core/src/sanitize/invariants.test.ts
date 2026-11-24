@@ -9,6 +9,7 @@ import {
 } from '@runray/schema';
 import { describe, expect, it } from 'vitest';
 import type { Candidate, SourceAdapter } from '../adapter.js';
+import { codexAdapter } from '../adapters/codex.js';
 import { adapters } from '../adapters/index.js';
 import { applyInsights } from '../insights/index.js';
 import { normalize } from '../normalize.js';
@@ -40,9 +41,20 @@ interface FixtureTarget {
   candidate: Candidate;
 }
 
+/** Every registered adapter. The Codex one is named as well: its fixtures
+ * held these invariants before it entered the registry, and it is listed
+ * once now that it has. */
+function adaptersUnderTest(): SourceAdapter[] {
+  const byId = new Map<string, SourceAdapter>();
+  for (const adapter of [...adapters.all(), codexAdapter]) {
+    if (!byId.has(adapter.id)) byId.set(adapter.id, adapter);
+  }
+  return [...byId.values()];
+}
+
 async function allFixtureTargets(): Promise<FixtureTarget[]> {
   const targets: FixtureTarget[] = [];
-  for (const adapter of adapters.all()) {
+  for (const adapter of adaptersUnderTest()) {
     const sourceDir = join(fixturesDir, adapter.id);
     for (const variant of safeDirs(sourceDir)) {
       if (variant === 'large') continue;

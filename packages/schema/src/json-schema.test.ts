@@ -48,9 +48,43 @@ describe('generated schema validates instances', () => {
     expect(validate(example)).toBe(false);
   });
 
+  it('accepts a run that names Codex as its source', () => {
+    const example = JSON.parse(readFileSync(exampleUrl, 'utf8'));
+    example.runs[0].source = {
+      tool: 'codex',
+      format: 'codex-jsonl',
+      files: ['rollout-2026-10-13T09-00-00-00000000.jsonl'],
+    };
+    const valid = validate(example);
+    expect(validate.errors ?? []).toEqual([]);
+    expect(valid).toBe(true);
+  });
+
+  it('keeps a 0.1.0 document valid apart from its version string', () => {
+    // 0.2.0 added two enum values and nothing else, so the example trace as
+    // it was published under 0.1.0 differs only in `schemaVersion`.
+    const earlier = JSON.parse(readFileSync(exampleUrl, 'utf8'));
+    earlier.schemaVersion = '0.1.0';
+
+    const validateRun = ajv.compile({
+      $ref: `${buildJsonSchema().$id}#/$defs/Run`,
+    });
+    expect(earlier.runs.length).toBeGreaterThan(0);
+    for (const run of earlier.runs) {
+      const valid = validateRun(run);
+      expect(validateRun.errors ?? []).toEqual([]);
+      expect(valid).toBe(true);
+    }
+
+    expect(validate(earlier)).toBe(false);
+    expect((validate.errors ?? []).map((e) => e.instancePath)).toEqual([
+      '/schemaVersion',
+    ]);
+  });
+
   it('validates every golden across full, sanitized, and metadata-only profiles', () => {
     const profileDirs = ['normalized', 'sanitized', 'metadata-only'];
-    let validated = 0;
+    const validated: Record<string, number> = {};
 
     for (const profileDir of profileDirs) {
       const pUrl = new URL(`../../../fixtures/${profileDir}`, import.meta.url);
@@ -67,7 +101,7 @@ describe('generated schema validates instances', () => {
           );
           const run = JSON.parse(readFileSync(fUrl, 'utf8'));
           const traceFile = {
-            schemaVersion: '0.1.0',
+            schemaVersion: '0.2.0',
             generator: { name: 'runray', version: '0.1.0-test' },
             generatedAt: new Date().toISOString(),
             runs: [run],
@@ -78,10 +112,15 @@ describe('generated schema validates instances', () => {
             `Schema validation failed for ${profileDir}/${adapterDir}/${file}`,
           ).toEqual([]);
           expect(valid).toBe(true);
-          validated++;
+          validated[profileDir] = (validated[profileDir] ?? 0) + 1;
         }
       }
     }
-    expect(validated).toBe(33);
+    // Every fixture has a golden in each profile, so the three counts are
+    // one number. It is not written here: a new fixture changes it, in a
+    // commit that holds generated files only.
+    expect(Object.keys(validated).sort()).toEqual([...profileDirs].sort());
+    expect(validated.normalized).toBeGreaterThan(0);
+    expect(new Set(Object.values(validated)).size).toBe(1);
   });
 });

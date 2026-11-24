@@ -1,0 +1,80 @@
+{
+  "id": "run_e331cc1bf0c51be6",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-08-09T19:44:33.361Z",
+  "endedAt": "2026-08-09T20:02:06.899Z",
+  "durationMs": 1053538,
+  "spans": [
+    {
+      "id": "019fe80c-3325-72f0-959c-71169810f351",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-08-09T19:44:33.361Z",
+      "endedAt": "2026-08-09T20:02:06.899Z",
+      "durationMs": 1053538,
+      "depth": 0,
+      "agent": {
+        "sessionId": "019fe80c-3325-72f0-959c-71169810f351"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 71377,
+      "output": 3011,
+      "cacheRead": 372224,
+      "cacheWrite": 0,
+      "reasoning": 2230,
+      "total": 448842
+    },
+    "costUSD": {
+      "total": 0.700227,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-5.5": 0.700227
+      }
+    },
+    "counts": {
+      "llmCalls": 12,
+      "toolCalls": 11,
+      "toolErrors": 1,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8391
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "fixed-context-overhead",
+      "severity": "info",
+      "title": "Session starts with a 22.0k-token context footprint",
+      "detail": "The first model call already carried 22.0k input-class tokens (tool definitions, project instructions, attachments); 2.0k tokens above the 20.0k floor were written once and re-read on each of the 11 later calls.",
+      "spanIds": [
+        "019fe80c-3325-72f0-959c-71169810f351"
+      ],
+      "estimatedWasteUSD": 0.021221,
+      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (no MCP server was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 2.0k tokens above the floor were re-read 11 times."
+    }
+  ]
+}

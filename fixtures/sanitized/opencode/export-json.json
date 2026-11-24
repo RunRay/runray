@@ -56,7 +56,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.013718
+        "costUSD": 0.019205
       },
       "content": {
         "promptPreview": null,
@@ -111,7 +111,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.001822
+        "costUSD": 0.002551
       },
       "content": {
         "promptPreview": null,
@@ -169,7 +169,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.008595
+        "costUSD": 0.012032
       },
       "content": {
         "promptPreview": null,
@@ -245,7 +245,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.003531
+        "costUSD": 0.004943
       },
       "content": {
         "promptPreview": null,
@@ -305,7 +305,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.006415
+        "costUSD": 0.008981
       },
       "content": {
         "promptPreview": null,
@@ -364,7 +364,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.017934
+        "costUSD": 0.025107
       },
       "content": {
         "promptPreview": null,
@@ -419,7 +419,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.019288
+        "costUSD": 0.027003
       },
       "content": {
         "promptPreview": null,
@@ -474,7 +474,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.003318
+        "costUSD": 0.004645
       },
       "content": {
         "promptPreview": null,
@@ -529,7 +529,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.019935
+        "costUSD": 0.027909
       },
       "content": {
         "promptPreview": null,
@@ -588,7 +588,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.002658
+        "costUSD": 0.003722
       },
       "content": {
         "promptPreview": null,
@@ -647,7 +647,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.002848
+        "costUSD": 0.003988
       },
       "content": {
         "promptPreview": null,
@@ -706,7 +706,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.007265
+        "costUSD": 0.010171
       },
       "content": {
         "promptPreview": null,
@@ -761,7 +761,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.018335
+        "costUSD": 0.025668
       },
       "content": {
         "promptPreview": null,
@@ -816,7 +816,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.031407
+        "costUSD": 0.04397
       },
       "content": {
         "promptPreview": null,
@@ -871,7 +871,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.032833
+        "costUSD": 0.045967
       },
       "content": {
         "promptPreview": null,
@@ -926,7 +926,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.019438
+        "costUSD": 0.027213
       },
       "content": {
         "promptPreview": null,
@@ -981,7 +981,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.035606
+        "costUSD": 0.049848
       },
       "content": {
         "promptPreview": null,
@@ -1036,7 +1036,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.065577
+        "costUSD": 0.091807
       },
       "content": {
         "promptPreview": null,
@@ -1091,7 +1091,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.033841
+        "costUSD": 0.047377
       },
       "content": {
         "promptPreview": null,
@@ -1146,7 +1146,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.008853
+        "costUSD": 0.012394
       },
       "content": {
         "promptPreview": null,
@@ -1201,7 +1201,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.00642
+        "costUSD": 0.008988
       },
       "content": {
         "promptPreview": null,
@@ -1256,7 +1256,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.006827
+        "costUSD": 0.009557
       },
       "content": {
         "promptPreview": null,
@@ -1315,7 +1315,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.01005
+        "costUSD": 0.01407
       },
       "content": {
         "promptPreview": null,
@@ -1370,7 +1370,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.005768
+        "costUSD": 0.008075
       },
       "content": {
         "promptPreview": null,
@@ -1429,7 +1429,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.006901
+        "costUSD": 0.009662
       },
       "content": {
         "promptPreview": null,
@@ -1483,7 +1483,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.005471
+        "costUSD": 0.007659
       },
       "content": {
         "promptPreview": null,
@@ -1542,7 +1542,7 @@
         },
         "costSource": "computed",
         "stopReason": "tool-calls",
-        "costUSD": 0.005733
+        "costUSD": 0.008026
       },
       "content": {
         "promptPreview": null,
@@ -1601,7 +1601,7 @@
         },
         "costSource": "computed",
         "stopReason": "stop",
-        "costUSD": 0.01309
+        "costUSD": 0.018326
       },
       "content": {
         "promptPreview": null,
@@ -1624,10 +1624,10 @@
       "total": 687828
     },
     "costUSD": {
-      "total": 0.413477,
+      "total": 0.578864,
       "wastedEstimate": 0,
       "byModel": {
-        "gpt-5.3-codex": 0.413477
+        "gpt-5.3-codex": 0.578864
       }
     },
     "counts": {

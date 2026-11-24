@@ -49,6 +49,21 @@ const MODEL_PATTERNS: readonly Pattern[] = [
   },
 ];
 
+/**
+ * A failed turn names its cause by a code of the harness in `statusReason`
+ * (Codex: `usage_limit_exceeded`), not by text. The code is one word in
+ * snake_case, so the patterns are over the word's parts; a code none of
+ * them reads is a model error of no known class.
+ */
+const TURN_CODE_PATTERNS: readonly Pattern[] = [
+  { id: 'model-limit', re: /limit|quota/i },
+  { id: 'model-auth', re: /unauthori[sz]ed|auth/i },
+  {
+    id: 'model-server',
+    re: /server|overloaded|connection|stream|timeout|too_many_failed/i,
+  },
+];
+
 const TOOL_PATTERNS: readonly Pattern[] = [
   {
     id: 'edit-anchor-miss',
@@ -122,10 +137,16 @@ function withOwner(classId: ErrorClassId): ErrorClassification {
  */
 export function classifyError(span: Span): ErrorClassification {
   const text = textOf(span);
-  if (span.kind === 'llm_call') {
+  // a failed turn is a failed request to the model: the harness gave up on
+  // it, and no call beneath it carries the failure
+  if (span.kind === 'llm_call' || span.kind === 'turn') {
     if (text !== undefined) {
       for (const p of MODEL_PATTERNS)
         if (p.re.test(text)) return withOwner(p.id);
+    }
+    if (span.kind === 'turn' && span.statusReason !== undefined) {
+      for (const p of TURN_CODE_PATTERNS)
+        if (p.re.test(span.statusReason)) return withOwner(p.id);
     }
     return withOwner('model-error');
   }

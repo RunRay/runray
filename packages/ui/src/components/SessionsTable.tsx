@@ -9,7 +9,7 @@ import {
   formatUSD,
 } from '../lib/format';
 import { assignModelColors } from '../lib/model-colors';
-import { anyBranch } from '../lib/overview';
+import { anyBranch, runModels } from '../lib/overview';
 import { DEFAULT_SORT, type SortKey, sortRuns } from '../lib/sort-runs';
 import { tourAttr } from '../lib/tour-attr';
 import { errorPill } from '../lib/triage';
@@ -81,10 +81,7 @@ export function SessionsTable({
   }, [sorted, limit, currentPage, totalPages]);
 
   const modelColor = useMemo(
-    () =>
-      assignModelColors(
-        runs.flatMap((run) => Object.keys(run.totals.costUSD.byModel)),
-      ),
+    () => assignModelColors(runs.flatMap((run) => runModels(run))),
     [runs],
   );
 
@@ -308,7 +305,7 @@ function SessionRow({
   generatedAt: string;
   diffAnchor: string | null;
 }) {
-  const models = Object.keys(run.totals.costUSD.byModel).sort();
+  const models = runModels(run);
   const open = () => {
     useAppStore.getState().navigateTo({ view: 'cost', runId: run.id });
   };

@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { readLines } from './lines.js';
 import { isSqliteUnavailable, loadSqlite } from './sqlite.js';
+import { readCodexSegments } from './transcript-codex.js';
 
 /**
  * Transcript slice reader (add-profiler-depth D4): resolves the raw
@@ -292,6 +293,12 @@ export async function readTranscriptSlice(
       return readClaudeSlice(provenance);
     case 'opencode':
       return readOpencodeSlice(provenance);
+    case 'codex': {
+      const read = await readCodexSegments(provenance);
+      return 'unavailable' in read
+        ? unavailable(read.unavailable)
+        : capSegments(read.segments);
+    }
     default:
       return { status: 'unsupported' };
   }

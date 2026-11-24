@@ -55,6 +55,17 @@
   --color-span-hook: #6b6b80;
   --color-span-error: #ef4444;
 
+  /* Source identity (By source chart). The first three sources borrow span
+     hues: Claude Code the llm violet, OpenCode the tool teal, OTLP the mcp
+     blue. Codex has none left to borrow that carries no meaning on the same
+     page (chartreuse is the subagents badge, the warm hues are waste and
+     severity), so it gets its own: the brand hue turned 40 degrees toward
+     magenta, pale on ink and a deep plum on paper. It keeps at least 12
+     OKLab ΔE from every other source and from the waste strip drawn in the
+     same chart, also under protanopia and deuteranopia, and clears 3:1 on
+     the card ground (source-palette.test.ts). */
+  --color-source-codex: #febeff;
+
   /* Cost heat scale / Severity */
   --color-heat-0: #6b6b80;
   --color-heat-1: #f59e0b;
@@ -312,6 +323,8 @@
     --color-span-mcp: #6b7280;
     --color-span-hook: #9ca3af;
     --color-span-error: #dc2626;
+
+    --color-source-codex: #5b007f;
 
     --color-heat-0: #9ca3af;
     --color-heat-1: #d97706;

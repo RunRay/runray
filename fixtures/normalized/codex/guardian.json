@@ -1,0 +1,5861 @@
+{
+  "id": "run_9a6e411a4c7e89f4",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+      "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+      "fixtures/codex/guardian/2026/10/01/rollout-2026-10-01T18-42-01-01a0f858-25e8-7ef0-b201-68a5044e9422.jsonl"
+    ]
+  },
+  "project": {
+    "name": "sitxsedxaliqu",
+    "path": "/home/user/project/mag/sitxsedxaliqu",
+    "gitBranch": "adip"
+  },
+  "startedAt": "2026-09-30T06:14:49.698Z",
+  "endedAt": "2026-10-01T16:42:01.518Z",
+  "durationMs": 124031820,
+  "spans": [
+    {
+      "id": "01a0f0f3-2c66-7151-960c-cf5b962ab51c",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:14:49.698Z",
+      "endedAt": "2026-10-01T16:42:01.518Z",
+      "durationMs": 124031820,
+      "depth": 0,
+      "agent": {
+        "sessionId": "01a0f0f3-2c66-7151-960c-cf5b962ab51c"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "parentId": "01a0f0f3-2c66-7151-960c-cf5b962ab51c",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:14:49.698Z",
+      "endedAt": "2026-09-30T06:32:38.304Z",
+      "durationMs": 1068606,
+      "depth": 1,
+      "content": {
+        "promptPreview": "labore aliquip elit s\nipsum amet elit elit tempor tempo\naliqua consectetur lorem qu\nsit dolor lorem tempor aliquip minim lore\nnostrud magna lorem veniam lorem adi\nconsectetur ipsum veniam quis tempor "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 3
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca8da603087d2940706c6e140de32",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:14:49.698Z",
+      "endedAt": "2026-09-30T06:14:59.162Z",
+      "durationMs": 9464,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 6440,
+          "output": 202,
+          "cacheRead": 22784,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.097284
+      },
+      "content": {
+        "outputPreview": "minim nostrud lorem sed aliqua tempor sed tempor quis aliqua lorem magna quis veniam quis lorem sed adipiscing magna nostrud ipsum tempor consectetur lorem minim dolor adipiscing consectetur"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 16
+      }
+    },
+    {
+      "id": "exec-c84a082c-812c-4850-b07e-1b79086b723f",
+      "parentId": "resp_0b84fa9ba60d2d12016abca8da603087d2940706c6e140de32",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:03.447Z",
+      "endedAt": "2026-09-30T06:15:04.937Z",
+      "durationMs": 1490,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3480
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 19
+      }
+    },
+    {
+      "id": "exec-dd4086a9-e3a3-4ea3-92a1-afc9195e9ac3",
+      "parentId": "resp_0b84fa9ba60d2d12016abca8da603087d2940706c6e140de32",
+      "kind": "mcp_call",
+      "name": "list_threads",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:04.948Z",
+      "endedAt": "2026-09-30T06:15:06.088Z",
+      "durationMs": 1140,
+      "depth": 3,
+      "tool": {
+        "name": "list_threads",
+        "mcpServer": "codex_app",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 20
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca8e9f92887d2879bc965b9b56fcc",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:06.103Z",
+      "endedAt": "2026-09-30T06:15:14.600Z",
+      "durationMs": 8497,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3665,
+          "output": 198,
+          "cacheRead": 29056,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.075606
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 23
+      }
+    },
+    {
+      "id": "exec-06eb12ba-53b1-485c-8a19-2e6a18c9a236",
+      "parentId": "resp_0b84fa9ba60d2d12016abca8e9f92887d2879bc965b9b56fcc",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:15:16.980Z",
+      "endedAt": "2026-09-30T06:15:17.795Z",
+      "durationMs": 815,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 8940
+      },
+      "content": {
+        "outputPreview": "quis minim no\nveniam sit incididunt tempor quis eni\nelit ipsum \nelit enim incididunt en\nsed ipsum ame\naliquip adipi\nnostrud elit magna ipsum incididunt amet lorem magna sit dolor labore tempor aliqua "
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 25
+      }
+    },
+    {
+      "id": "exec-c0eadee0-3628-45ef-b8fc-22eb675a2ff8",
+      "parentId": "resp_0b84fa9ba60d2d12016abca8e9f92887d2879bc965b9b56fcc",
+      "kind": "mcp_call",
+      "name": "read_thread",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:17.808Z",
+      "endedAt": "2026-09-30T06:15:17.896Z",
+      "durationMs": 88,
+      "depth": 3,
+      "tool": {
+        "name": "read_thread",
+        "mcpServer": "codex_app",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 26
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca8f6115487d2a042a901e5e3e271",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:18.002Z",
+      "endedAt": "2026-09-30T06:15:24.953Z",
+      "durationMs": 6951,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 22425,
+          "output": 137,
+          "cacheRead": 22784,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.253884
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 29
+      }
+    },
+    {
+      "id": "exec-9eab2e70-99cf-48ac-ad7a-c9110bb53cea",
+      "parentId": "resp_0b84fa9ba60d2d12016abca8f6115487d2a042a901e5e3e271",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:30.297Z",
+      "endedAt": "2026-09-30T06:15:31.072Z",
+      "durationMs": 775,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 25695
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 31
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca903068487d29fb24151b5a533ae",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:31.091Z",
+      "endedAt": "2026-09-30T06:15:36.052Z",
+      "durationMs": 4961,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8108,
+          "output": 92,
+          "cacheRead": 45056,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.130736
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 34
+      }
+    },
+    {
+      "id": "exec-1a5f6d3b-2c70-45ff-b408-cadd28cd98f8",
+      "parentId": "resp_0b84fa9ba60d2d12016abca903068487d29fb24151b5a533ae",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:38.529Z",
+      "endedAt": "2026-09-30T06:15:39.133Z",
+      "durationMs": 604,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 21060
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 36
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca90b0b5087d2935ac25ef9bb750c",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:39.146Z",
+      "endedAt": "2026-09-30T06:15:42.415Z",
+      "durationMs": 3269,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 7264,
+          "output": 60,
+          "cacheRead": 52992,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.128632
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 39
+      }
+    },
+    {
+      "id": "exec-1932e2a2-9fb2-4b5c-acd6-6f0b242d6b4c",
+      "parentId": "resp_0b84fa9ba60d2d12016abca90b0b5087d2935ac25ef9bb750c",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:45.856Z",
+      "endedAt": "2026-09-30T06:15:46.806Z",
+      "durationMs": 950,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 32749
+      },
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 41
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca912be7487d2be3bc7a276a1d34f",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:46.831Z",
+      "endedAt": "2026-09-30T06:15:55.457Z",
+      "durationMs": 8626,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 9818,
+          "output": 184,
+          "cacheRead": 60032,
+          "cacheWrite": 0,
+          "reasoning": 18
+        },
+        "costSource": "computed",
+        "costUSD": 0.168312
+      },
+      "content": {
+        "outputPreview": "lorem ipsum amet lorem incididunt dolor lorem tempor incididunt sit minim veniam minim sit tempor tempor incididunt tempor magna sed aliquip labore amet ipsum aliqua tempor sed sit tempor quis minim q"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 47
+      }
+    },
+    {
+      "id": "exec-9461cbd6-7d00-4f87-99f6-a8ee8548d3b3",
+      "parentId": "resp_0b84fa9ba60d2d12016abca912be7487d2be3bc7a276a1d34f",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:58.131Z",
+      "endedAt": "2026-09-30T06:15:58.864Z",
+      "durationMs": 733,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 40105
+      },
+      "attributes": {
+        "runray.targetKey": "0aa376785bf36b65",
+        "runray.targetKind": "command",
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 50
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca91ede8487d283cbb4609f04f22d",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:15:58.883Z",
+      "endedAt": "2026-09-30T06:16:18.538Z",
+      "durationMs": 19655,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 11628,
+          "output": 141,
+          "cacheRead": 69632,
+          "cacheWrite": 0,
+          "reasoning": 325
+        },
+        "costSource": "computed",
+        "costUSD": 0.209212
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 55
+      }
+    },
+    {
+      "id": "exec-7a988b39-da07-44a7-9485-1f6e02456c4a",
+      "parentId": "resp_0b84fa9ba60d2d12016abca91ede8487d283cbb4609f04f22d",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:21.416Z",
+      "endedAt": "2026-09-30T06:16:25.701Z",
+      "durationMs": 4285,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 40105
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 57
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca939a2fc87d2bc4db8758503eba4",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:25.718Z",
+      "endedAt": "2026-09-30T06:16:31.611Z",
+      "durationMs": 5893,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 15263,
+          "output": 130,
+          "cacheRead": 81024,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.240154
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 60
+      }
+    },
+    {
+      "id": "exec-c76d9d06-d009-4da3-9239-fbd2e00bac98",
+      "parentId": "resp_0b84fa9ba60d2d12016abca939a2fc87d2bc4db8758503eba4",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:34.403Z",
+      "endedAt": "2026-09-30T06:16:35.088Z",
+      "durationMs": 685,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 24533
+      },
+      "attributes": {
+        "runray.targetKey": "0e3f84d5b5622bbc",
+        "runray.targetKind": "command",
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 62
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca942fe8c87d2bd325f8d5aca65ab",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:35.105Z",
+      "endedAt": "2026-09-30T06:16:43.897Z",
+      "durationMs": 8792,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 7534,
+          "output": 197,
+          "cacheRead": 96128,
+          "cacheWrite": 0,
+          "reasoning": 24
+        },
+        "costSource": "computed",
+        "costUSD": 0.182518
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 67
+      }
+    },
+    {
+      "id": "exec-d2e34322-4a92-467b-b957-b3d07281196a",
+      "parentId": "resp_0b84fa9ba60d2d12016abca942fe8c87d2bd325f8d5aca65ab",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:47.151Z",
+      "endedAt": "2026-09-30T06:27:19.380Z",
+      "durationMs": 632229,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1231
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 196
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca959397087d2892e5de92415d003",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:16:57.165Z",
+      "endedAt": "2026-09-30T06:17:21.952Z",
+      "durationMs": 24787,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 516,
+          "output": 186,
+          "cacheRead": 103424,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.143684
+      },
+      "content": {
+        "outputPreview": "adipiscing lorem nostrud ipsum aliqua ipsum adipiscing nostrud lorem magna nostrud quis lorem incididunt elit lorem sed tempor dolor sit aliquip enim lorem elit sit quis minim consectetur veniam sed c"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 74
+      }
+    },
+    {
+      "id": "exec-32b4f707-36f5-4061-a27a-5cd37e3262d2",
+      "parentId": "resp_0b84fa9ba60d2d12016abca959397087d2892e5de92415d003",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:17:25.272Z",
+      "endedAt": "2026-09-30T06:17:25.900Z",
+      "durationMs": 628,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 8635
+      },
+      "content": {
+        "outputPreview": "incididunt aliquip incididunt dolor elit lorem elit adipiscing \nadipiscing sed lorem amet dolor incididunt\nnostrud sit incididunt quis quis cons\naliqua sit sit adipiscing ipsum sed enim ipsum tempor s"
+      },
+      "attributes": {
+        "runray.targetKey": "f6e2f31d10ac27e4",
+        "runray.targetKind": "command",
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 77
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca975c6f887d2a28c954be501d2a7",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:17:25.916Z",
+      "endedAt": "2026-09-30T06:18:03.909Z",
+      "durationMs": 37993,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3871,
+          "output": 1111,
+          "cacheRead": 103808,
+          "cacheWrite": 0,
+          "reasoning": 70
+        },
+        "costSource": "computed",
+        "costUSD": 0.201568
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 82
+      }
+    },
+    {
+      "id": "exec-37dd52c8-237e-4a41-83b2-699926d5bdd8",
+      "parentId": "resp_0b84fa9ba60d2d12016abca975c6f887d2a28c954be501d2a7",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:04.259Z",
+      "endedAt": "2026-09-30T06:18:15.982Z",
+      "durationMs": 11723,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 30,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "0588cac3f97530ba",
+        "runray.targetKind": "file-write",
+        "runray.target": "dolorxconsectetu.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 84
+      }
+    },
+    {
+      "id": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "subagent",
+      "name": "subagent:guardian",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:10.002Z",
+      "endedAt": "2026-09-30T07:04:36.413Z",
+      "durationMs": 2786411,
+      "depth": 2,
+      "agent": {
+        "name": "guardian",
+        "sessionId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 2
+      }
+    },
+    {
+      "id": "01a0f0f6-9fcd-7061-8f4f-359582e41b44",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:10.002Z",
+      "endedAt": "2026-09-30T06:18:15.957Z",
+      "durationMs": 5955,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 3
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abca9a3981087d2ad45bc46f5b1746d",
+      "parentId": "01a0f0f6-9fcd-7061-8f4f-359582e41b44",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:10.002Z",
+      "endedAt": "2026-09-30T06:18:15.927Z",
+      "durationMs": 5925,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 15699,
+          "output": 76,
+          "cacheRead": 4864,
+          "cacheWrite": 0,
+          "reasoning": 96
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "adipiscing nostrud amet incididunt dolor aliquip lorem nostrud nostrud aliquip ipsum minim incididunt amet aliqua sed veniam sed adipiscing magna quis enim consectetur incididunt veniam enim elit inci"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 12
+      }
+    },
+    {
+      "id": "exec-1be50f80-8ac7-47aa-89d8-e3ec93d385b3",
+      "parentId": "resp_0b84fa9ba60d2d12016abca975c6f887d2a28c954be501d2a7",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:20.741Z",
+      "endedAt": "2026-09-30T06:18:53.599Z",
+      "durationMs": 32858,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 5608
+      },
+      "attributes": {
+        "runray.targetKey": "0e3f84d5b5622bbc",
+        "runray.targetKind": "command",
+        "runray.target": "minim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "minim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 95
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca9b736dc87d28e3b49940200c1c9",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:30.753Z",
+      "endedAt": "2026-09-30T06:18:40.284Z",
+      "durationMs": 9531,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1399,
+          "output": 194,
+          "cacheRead": 107520,
+          "cacheWrite": 0,
+          "reasoning": 24
+        },
+        "costSource": "computed",
+        "costUSD": 0.13241
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 89
+      }
+    },
+    {
+      "id": "exec-feeaaab5-9d0f-4003-9f2f-f6bb0fa46bbd",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9b736dc87d28e3b49940200c1c9",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:40.499Z",
+      "endedAt": "2026-09-30T06:18:42.009Z",
+      "durationMs": 1510,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 91
+      }
+    },
+    {
+      "id": "exec-aa7237d4-80c3-41b9-9e93-df08164b6424",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9b736dc87d28e3b49940200c1c9",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:46.437Z",
+      "endedAt": "2026-09-30T06:18:47.427Z",
+      "durationMs": 990,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 27336
+      },
+      "attributes": {
+        "runray.targetKey": "c630015fb12b8ae9",
+        "runray.targetKind": "command",
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 92
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca9c7ce6887d2bfd7509169703a6f",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:18:47.453Z",
+      "endedAt": "2026-09-30T06:19:05.677Z",
+      "durationMs": 18224,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 12305,
+          "output": 141,
+          "cacheRead": 108800,
+          "cacheWrite": 0,
+          "reasoning": 70
+        },
+        "costSource": "computed",
+        "costUSD": 0.2424
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 98
+      }
+    },
+    {
+      "id": "exec-7f05590f-62ee-4eb6-be16-547e0991ca9d",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9c7ce6887d2bfd7509169703a6f",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:09.477Z",
+      "endedAt": "2026-09-30T06:19:11.089Z",
+      "durationMs": 1612,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 2112
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 100
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca9df097487d296e28cfea66a14ea",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:11.112Z",
+      "endedAt": "2026-09-30T06:19:26.119Z",
+      "durationMs": 15007,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1163,
+          "output": 198,
+          "cacheRead": 120960,
+          "cacheWrite": 0,
+          "reasoning": 223
+        },
+        "costSource": "computed",
+        "costUSD": 0.15364
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 105
+      }
+    },
+    {
+      "id": "exec-1ee2e456-46f6-4c88-bfee-a6877c168025",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9df097487d296e28cfea66a14ea",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:29.809Z",
+      "endedAt": "2026-09-30T06:19:30.814Z",
+      "durationMs": 1005,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 13344
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 107
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abca9f2bc9887d2b75f036597b84eb6",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:30.836Z",
+      "endedAt": "2026-09-30T06:19:44.819Z",
+      "durationMs": 13983,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 4604,
+          "output": 256,
+          "cacheRead": 121984,
+          "cacheWrite": 0,
+          "reasoning": 123
+        },
+        "costSource": "computed",
+        "costUSD": 0.186974
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 112
+      }
+    },
+    {
+      "id": "exec-d19effe5-2996-48b2-8471-2fdeb49440b4",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9f2bc9887d2b75f036597b84eb6",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:19:49.803Z",
+      "endedAt": "2026-09-30T06:19:50.773Z",
+      "durationMs": 970,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 337
+      },
+      "content": {
+        "outputPreview": "amet labore adipiscing labore aliq\nminim nostrud lorem elit elit ipsum enim minim incididunt quis labore elit quis amet elit dolor amet sit incidi\naliqua adipiscing aliqua consectetur elit adipiscing "
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 114
+      }
+    },
+    {
+      "id": "exec-a1d215d7-42e0-4804-9ea8-d08ff0c9dce0",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9f2bc9887d2b75f036597b84eb6",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:50.806Z",
+      "endedAt": "2026-09-30T06:19:58.079Z",
+      "durationMs": 7273,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 2,
+        "linesRemoved": 1
+      },
+      "attributes": {
+        "runray.targetKey": "0588cac3f97530ba",
+        "runray.targetKind": "file-write",
+        "runray.target": "dolorxconsectetu.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 115
+      }
+    },
+    {
+      "id": "01a0f0f8-324d-75c3-98b9-14b012b6e498",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:52.807Z",
+      "endedAt": "2026-09-30T06:19:58.057Z",
+      "durationMs": 5250,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 18
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaa08c5a887d2bb42131ecc2af5b0",
+      "parentId": "01a0f0f8-324d-75c3-98b9-14b012b6e498",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:19:52.807Z",
+      "endedAt": "2026-09-30T06:19:58.021Z",
+      "durationMs": 5214,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 4798,
+          "output": 67,
+          "cacheRead": 20224,
+          "cacheWrite": 0,
+          "reasoning": 39
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "dolor lorem minim consectetur enim quis magna minim sed labore dolor aliquip tempor magna nostrud sit quis minim adipiscing enim minim consectetur adipiscing minim amet ipsum incididunt lorem adipisci"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 25
+      }
+    },
+    {
+      "id": "exec-f5e1a2f9-f0d1-426d-816b-5a1842fb9fec",
+      "parentId": "resp_0b84fa9ba60d2d12016abca9f2bc9887d2b75f036597b84eb6",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:02.794Z",
+      "endedAt": "2026-09-30T06:20:35.228Z",
+      "durationMs": 32434,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 0
+      },
+      "attributes": {
+        "runray.targetKey": "0aa376785bf36b65",
+        "runray.targetKind": "command",
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 124
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaa1ce86487d285a9380b93e84c7f",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:12.808Z",
+      "endedAt": "2026-09-30T06:20:28.550Z",
+      "durationMs": 15742,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 936,
+          "output": 333,
+          "cacheRead": 126464,
+          "cacheWrite": 0,
+          "reasoning": 41
+        },
+        "costSource": "computed",
+        "costUSD": 0.154524
+      },
+      "content": {
+        "outputPreview": "adipiscing aliqua amet labore ipsum elit dolor elit nostrud incididunt nostrud enim consectetur nostrud minim incididunt aliqua labore ipsum sit quis quis sed elit sit dolor aliqua ipsum enim lorem la"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 121
+      }
+    },
+    {
+      "id": "exec-269cb9a2-afaa-4adb-907e-cda29b4f9634",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa1ce86487d285a9380b93e84c7f",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:35.393Z",
+      "endedAt": "2026-09-30T06:20:36.943Z",
+      "durationMs": 1550,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 11754
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 125
+      }
+    },
+    {
+      "id": "exec-b129814f-5fa3-4cf3-a9b4-172d4129b922",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa1ce86487d285a9380b93e84c7f",
+      "kind": "tool_call",
+      "name": "web.search",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:36.985Z",
+      "endedAt": "2026-09-30T06:20:38.691Z",
+      "durationMs": 1706,
+      "depth": 3,
+      "tool": {
+        "name": "web.search",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 126
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaa36a09887d2bea58c9595c350b1",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:38.724Z",
+      "endedAt": "2026-09-30T06:20:50.683Z",
+      "durationMs": 11959,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8233,
+          "output": 287,
+          "cacheRead": 127232,
+          "cacheWrite": 0,
+          "reasoning": 48
+        },
+        "costSource": "computed",
+        "costUSD": 0.226312
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 131
+      }
+    },
+    {
+      "id": "01a0f0f9-1521-7d50-b314-f72eb39a3958",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:50.875Z",
+      "endedAt": "2026-09-30T06:20:54.818Z",
+      "durationMs": 3943,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 30
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaa42da4087d299f6648f729c7bf1",
+      "parentId": "01a0f0f9-1521-7d50-b314-f72eb39a3958",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:50.875Z",
+      "endedAt": "2026-09-30T06:20:54.777Z",
+      "durationMs": 3902,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 3061,
+          "output": 64,
+          "cacheRead": 24320,
+          "cacheWrite": 0,
+          "reasoning": 52
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "nostrud incididunt labore veniam aliquip nostrud lorem labore minim aliquip aliqua dolor nostrud veniam quis veniam nostrud tempor tempor veniam nostrud incididunt nostrud magna aliquip incididunt lor"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 36
+      }
+    },
+    {
+      "id": "exec-335a6db4-0595-4c5f-9759-e1270e9c9b53",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa36a09887d2bea58c9595c350b1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:20:57.900Z",
+      "endedAt": "2026-09-30T06:20:59.129Z",
+      "durationMs": 1229,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 945
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 133
+      }
+    },
+    {
+      "id": "exec-c1c9514c-e0f4-4b22-bac9-c5589fb54f67",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa36a09887d2bea58c9595c350b1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:07.266Z",
+      "endedAt": "2026-09-30T06:30:39.610Z",
+      "durationMs": 572344,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 899
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 240
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaa5d474887d2a3c42f600bd463b1",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:17.284Z",
+      "endedAt": "2026-09-30T06:21:35.187Z",
+      "durationMs": 17903,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1017,
+          "output": 280,
+          "cacheRead": 135296,
+          "cacheWrite": 0,
+          "reasoning": 153
+        },
+        "costSource": "computed",
+        "costUSD": 0.167116
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 138
+      }
+    },
+    {
+      "id": "01a0f0f9-c35a-77a2-8f11-83a0cb9c4f39",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:35.481Z",
+      "endedAt": "2026-09-30T06:21:39.212Z",
+      "durationMs": 3731,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 41
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaa6fa26087d2997a28a3ff67d32a",
+      "parentId": "01a0f0f9-c35a-77a2-8f11-83a0cb9c4f39",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:35.481Z",
+      "endedAt": "2026-09-30T06:21:39.175Z",
+      "durationMs": 3694,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 2326,
+          "output": 62,
+          "cacheRead": 26368,
+          "cacheWrite": 0,
+          "reasoning": 33
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "nostrud adipiscing incididunt lorem minim adipiscing aliquip minim minim sed amet sed minim sit veniam adipiscing veniam incididunt ipsum tempor lorem consectetur magna veniam amet labore veniam quis "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 48
+      }
+    },
+    {
+      "id": "exec-6f090a15-a642-4de7-8b37-0cbb45bd99dd",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa5d474887d2a3c42f600bd463b1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:21:41.981Z",
+      "endedAt": "2026-09-30T06:21:43.467Z",
+      "durationMs": 1486,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 128
+      },
+      "content": {
+        "outputPreview": "veniam labore adipiscing ipsum dolor aliqu\nelit nostrud quis tempor adi\ntempor enim nostrud lorem consectetur lorem amet enim s\n"
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 140
+      }
+    },
+    {
+      "id": "exec-1be8ab7f-df27-4597-a025-86063bc2d991",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa5d474887d2a3c42f600bd463b1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:48.936Z",
+      "endedAt": "2026-09-30T06:21:50.803Z",
+      "durationMs": 1867,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 13848
+      },
+      "attributes": {
+        "runray.targetKey": "b626edd3511d1cd3",
+        "runray.targetKind": "command",
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 141
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaa7f4ea887d2a355350085834aa5",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:21:51.000Z",
+      "endedAt": "2026-09-30T06:22:07.726Z",
+      "durationMs": 16726,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3950,
+          "output": 225,
+          "cacheRead": 136192,
+          "cacheWrite": 0,
+          "reasoning": 249
+        },
+        "costSource": "computed",
+        "costUSD": 0.199392
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 146
+      }
+    },
+    {
+      "id": "exec-ce487446-a6fd-4737-b803-88b0535e4f89",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa7f4ea887d2a355350085834aa5",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:22:14.722Z",
+      "endedAt": "2026-09-30T06:22:16.530Z",
+      "durationMs": 1808,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 6521
+      },
+      "attributes": {
+        "runray.targetKey": "b626edd3511d1cd3",
+        "runray.targetKind": "command",
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 148
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaa98b87487d287506b977995b758",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:22:16.674Z",
+      "endedAt": "2026-09-30T06:22:40.459Z",
+      "durationMs": 23785,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2785,
+          "output": 183,
+          "cacheRead": 139904,
+          "cacheWrite": 0,
+          "reasoning": 482
+        },
+        "costSource": "computed",
+        "costUSD": 0.201004
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 153
+      }
+    },
+    {
+      "id": "exec-734c2c57-daf7-4eea-a5e8-d0614838d10f",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaa98b87487d287506b977995b758",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:22:47.058Z",
+      "endedAt": "2026-09-30T06:22:48.397Z",
+      "durationMs": 1339,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 5114
+      },
+      "attributes": {
+        "runray.targetKey": "c630015fb12b8ae9",
+        "runray.targetKind": "command",
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 155
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaab8a42487d2a87a3e9c19354e2a",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:22:48.528Z",
+      "endedAt": "2026-09-30T06:23:12.045Z",
+      "durationMs": 23517,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2361,
+          "output": 169,
+          "cacheRead": 142464,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.200324
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 160
+      }
+    },
+    {
+      "id": "exec-24f2faa6-92fd-42ed-9627-849354690f11",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaab8a42487d2a87a3e9c19354e2a",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:23:20.055Z",
+      "endedAt": "2026-09-30T06:23:21.738Z",
+      "durationMs": 1683,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3746
+      },
+      "attributes": {
+        "runray.targetKey": "b1aaca441475334b",
+        "runray.targetKind": "command",
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 162
+      }
+    },
+    {
+      "id": "exec-a1af3a90-5004-4d97-87f5-a14c07686663",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaab8a42487d2a87a3e9c19354e2a",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:23:29.891Z",
+      "endedAt": "2026-09-30T06:24:35.070Z",
+      "durationMs": 65179,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 518
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 176
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaaec8b1887d29dd46a779929e1d1",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:23:39.900Z",
+      "endedAt": "2026-09-30T06:24:06.321Z",
+      "durationMs": 26421,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2061,
+          "output": 248,
+          "cacheRead": 144640,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.20345
+      },
+      "content": {
+        "outputPreview": "aliquip sed magna amet quis aliquip nostrud incididunt dolor elit incididunt enim labore consectetur dolor enim magna aliquip enim minim labore sed dolor sed incididunt sed sed incididunt labore minim"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 168
+      }
+    },
+    {
+      "id": "exec-8c2e78bf-a63f-4cdb-b06f-b8cdbb97b22c",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaaec8b1887d29dd46a779929e1d1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:24:13.456Z",
+      "endedAt": "2026-09-30T06:24:14.877Z",
+      "durationMs": 1421,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 7823
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 171
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcab0f158c87d2919bca23f9503a2f",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:24:14.930Z",
+      "endedAt": "2026-09-30T06:25:51.591Z",
+      "durationMs": 96661,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3228,
+          "output": 2636,
+          "cacheRead": 146560,
+          "cacheWrite": 0,
+          "reasoning": 473
+        },
+        "costSource": "computed",
+        "costUSD": 0.33429
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 177
+      }
+    },
+    {
+      "id": "exec-05ce59e4-a7d2-476c-9ff4-57d8a0172fd5",
+      "parentId": "resp_0b84fa9ba60d2d12016abcab0f158c87d2919bca23f9503a2f",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:25:51.549Z",
+      "endedAt": "2026-09-30T06:26:02.354Z",
+      "durationMs": 10805,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 75,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4ee580a278412018",
+        "runray.targetKind": "file-write",
+        "runray.target": "loremxadi.md"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 179
+      }
+    },
+    {
+      "id": "01a0f0fd-c4d1-7553-9bcd-d68beeff4376",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:25:58.073Z",
+      "endedAt": "2026-09-30T06:26:02.327Z",
+      "durationMs": 4254,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 53
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcab761eb887d2bdb5e1234d6aba5e",
+      "parentId": "01a0f0fd-c4d1-7553-9bcd-d68beeff4376",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:25:58.073Z",
+      "endedAt": "2026-09-30T06:26:02.287Z",
+      "durationMs": 4214,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 11133,
+          "output": 68,
+          "cacheRead": 28416,
+          "cacheWrite": 0,
+          "reasoning": 44
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "aliqua sit aliquip amet sed ipsum quis veniam tempor labore magna lorem dolor incididunt sit adipiscing dolor incididunt elit nostrud nostrud enim ipsum consectetur ipsum ipsum incididunt ipsum aliqui"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 59
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcab7a6f3887d286201cdfa53287d5",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:26:02.376Z",
+      "endedAt": "2026-09-30T06:26:21.026Z",
+      "durationMs": 18650,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3289,
+          "output": 300,
+          "cacheRead": 149632,
+          "cacheWrite": 0,
+          "reasoning": 234
+        },
+        "costSource": "computed",
+        "costUSD": 0.209222
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 184
+      }
+    },
+    {
+      "id": "exec-ae1e4c0c-98d2-45f2-b447-ce537f4d5066",
+      "parentId": "resp_0b84fa9ba60d2d12016abcab7a6f3887d286201cdfa53287d5",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:26:27.981Z",
+      "endedAt": "2026-09-30T06:26:31.846Z",
+      "durationMs": 3865,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1381
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 186
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcab97c57887d2a084ca18e4f84dc6",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:26:31.870Z",
+      "endedAt": "2026-09-30T06:26:55.801Z",
+      "durationMs": 23931,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1242,
+          "output": 99,
+          "cacheRead": 152704,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.195874
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 191
+      }
+    },
+    {
+      "id": "exec-9ef7627a-1235-4f77-a419-f87414dcf394",
+      "parentId": "resp_0b84fa9ba60d2d12016abcab97c57887d2a084ca18e4f84dc6",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:00.731Z",
+      "endedAt": "2026-09-30T06:27:02.300Z",
+      "durationMs": 1569,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 6282
+      },
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 193
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcabb636d887d2bca473e3d892f27b",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:02.326Z",
+      "endedAt": "2026-09-30T06:27:37.548Z",
+      "durationMs": 35222,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2820,
+          "output": 567,
+          "cacheRead": 153728,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.236078
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 199
+      }
+    },
+    {
+      "id": "exec-a6c75733-d00e-429f-b86b-ad59321ea9d3",
+      "parentId": "resp_0b84fa9ba60d2d12016abcabb636d887d2bca473e3d892f27b",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:37.702Z",
+      "endedAt": "2026-09-30T06:27:43.428Z",
+      "durationMs": 5726,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 6,
+        "linesRemoved": 4
+      },
+      "attributes": {
+        "runray.targetKey": "0588cac3f97530ba",
+        "runray.targetKind": "file-write",
+        "runray.target": "dolorxconsectetu.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 201
+      }
+    },
+    {
+      "id": "01a0f0ff-4fc8-7f43-bb4b-e73d64a82cb9",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:39.102Z",
+      "endedAt": "2026-09-30T06:27:43.412Z",
+      "durationMs": 4310,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 64
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcabdb423087d2ac978d6826be5921",
+      "parentId": "01a0f0ff-4fc8-7f43-bb4b-e73d64a82cb9",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:39.102Z",
+      "endedAt": "2026-09-30T06:27:43.388Z",
+      "durationMs": 4286,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 4419,
+          "output": 74,
+          "cacheRead": 38656,
+          "cacheWrite": 0,
+          "reasoning": 26
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "aliqua lorem elit adipiscing consectetur lorem sed sed elit sit lorem sit aliquip aliqua amet enim tempor aliqua aliqua incididunt enim sit enim ipsum amet nostrud quis adipiscing aliqua incididunt te"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 71
+      }
+    },
+    {
+      "id": "exec-8728c9b0-082c-43b8-87a6-70e16f128132",
+      "parentId": "resp_0b84fa9ba60d2d12016abcabb636d887d2bca473e3d892f27b",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:47.046Z",
+      "endedAt": "2026-09-30T06:27:53.101Z",
+      "durationMs": 6055,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3796
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 202
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcabe90b6c87d29ef1dcfe31ca66c0",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:27:53.115Z",
+      "endedAt": "2026-09-30T06:28:04.208Z",
+      "durationMs": 11093,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2465,
+          "output": 149,
+          "cacheRead": 156416,
+          "cacheWrite": 0,
+          "reasoning": 75
+        },
+        "costSource": "computed",
+        "costUSD": 0.192266
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 207
+      }
+    },
+    {
+      "id": "exec-367dc544-5881-4986-86c8-7ec269e86f3c",
+      "parentId": "resp_0b84fa9ba60d2d12016abcabe90b6c87d29ef1dcfe31ca66c0",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:28:07.820Z",
+      "endedAt": "2026-09-30T06:28:08.486Z",
+      "durationMs": 666,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 548
+      },
+      "attributes": {
+        "runray.targetKey": "0aa376785bf36b65",
+        "runray.targetKind": "command",
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 209
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcabf89c5087d28c3913fe8e4dde4e",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:28:08.615Z",
+      "endedAt": "2026-09-30T06:28:22.001Z",
+      "durationMs": 13386,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1352,
+          "output": 230,
+          "cacheRead": 158720,
+          "cacheWrite": 0,
+          "reasoning": 82
+        },
+        "costSource": "computed",
+        "costUSD": 0.18784
+      },
+      "content": {
+        "outputPreview": "magna minim aliquip lorem sed dolor nostrud adipiscing sit amet incididunt sit consectetur aliquip dolor labore aliquip labore dolor lorem tempor dolor aliqua magna adipiscing aliquip enim nostrud inc"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 215
+      }
+    },
+    {
+      "id": "exec-321f0094-90a8-4af1-808a-752fd7ea12a3",
+      "parentId": "resp_0b84fa9ba60d2d12016abcabf89c5087d28c3913fe8e4dde4e",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:28:25.889Z",
+      "endedAt": "2026-09-30T06:28:26.700Z",
+      "durationMs": 811,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 4043
+      },
+      "attributes": {
+        "runray.targetKey": "0606febe907fe10e",
+        "runray.targetKind": "command",
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 218
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcac0a9c0087d2917a4f42c39204b3",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:28:26.717Z",
+      "endedAt": "2026-09-30T06:29:43.697Z",
+      "durationMs": 76980,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2163,
+          "output": 1896,
+          "cacheRead": 159872,
+          "cacheWrite": 0,
+          "reasoning": 473
+        },
+        "costSource": "computed",
+        "costUSD": 0.299952
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 223
+      }
+    },
+    {
+      "id": "exec-d5b533ac-0f27-4cab-8017-7507176ad95c",
+      "parentId": "resp_0b84fa9ba60d2d12016abcac0a9c0087d2917a4f42c39204b3",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:29:43.943Z",
+      "endedAt": "2026-09-30T06:29:51.932Z",
+      "durationMs": 7989,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 37,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "c4baae72a547a343",
+        "runray.targetKind": "file-write",
+        "runray.target": "dolorxaliquipxve.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 225
+      }
+    },
+    {
+      "id": "01a0f101-4011-7022-820b-24777f9362dd",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:29:46.156Z",
+      "endedAt": "2026-09-30T06:29:51.905Z",
+      "durationMs": 5749,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 76
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcac5a117c87d2a2eabae458c1cfae",
+      "parentId": "01a0f101-4011-7022-820b-24777f9362dd",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:29:46.156Z",
+      "endedAt": "2026-09-30T06:29:51.869Z",
+      "durationMs": 5713,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 7659,
+          "output": 70,
+          "cacheRead": 42752,
+          "cacheWrite": 0,
+          "reasoning": 154
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "tempor amet incididunt enim nostrud minim nostrud ipsum sit lorem tempor amet enim quis incididunt elit labore quis lorem sed labore aliqua enim quis dolor aliquip incididunt amet quis lorem nostrud e"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 82
+      }
+    },
+    {
+      "id": "exec-e704dc65-e154-48d1-b4a0-ac919f18709a",
+      "parentId": "resp_0b84fa9ba60d2d12016abcac0a9c0087d2917a4f42c39204b3",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:29:56.403Z",
+      "endedAt": "2026-09-30T06:29:57.522Z",
+      "durationMs": 1119,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 80
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 226
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcac66098c87d29a26b01250cf9017",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:29:57.770Z",
+      "endedAt": "2026-09-30T06:30:08.087Z",
+      "durationMs": 10317,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2570,
+          "output": 166,
+          "cacheRead": 161920,
+          "cacheWrite": 0,
+          "reasoning": 73
+        },
+        "costSource": "computed",
+        "costUSD": 0.19957
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 231
+      }
+    },
+    {
+      "id": "exec-6766df0b-c734-4af5-87bb-d250b1eaba5e",
+      "parentId": "resp_0b84fa9ba60d2d12016abcac66098c87d29a26b01250cf9017",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:30:14.326Z",
+      "endedAt": "2026-09-30T06:30:15.479Z",
+      "durationMs": 1153,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 2057
+      },
+      "attributes": {
+        "runray.targetKey": "2a628374f92f1df7",
+        "runray.targetKind": "command",
+        "runray.target": "incididunt",
+        "runray.toolActivity": "other",
+        "runray.toolName": "incididunt"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 233
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcac777f5887d2b3b386d406ebe483",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:30:15.502Z",
+      "endedAt": "2026-09-30T06:30:37.288Z",
+      "durationMs": 21786,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1208,
+          "output": 212,
+          "cacheRead": 164352,
+          "cacheWrite": 0,
+          "reasoning": 399
+        },
+        "costSource": "computed",
+        "costUSD": 0.206982
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 238
+      }
+    },
+    {
+      "id": "exec-8ba697d0-d263-4b15-851a-cc450cf36b1b",
+      "parentId": "resp_0b84fa9ba60d2d12016abcac777f5887d2b3b386d406ebe483",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:30:45.375Z",
+      "endedAt": "2026-09-30T06:30:46.538Z",
+      "durationMs": 1163,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 115
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 241
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcac97b29c87d2bcdf3ccd796b55c0",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:30:46.900Z",
+      "endedAt": "2026-09-30T06:30:55.936Z",
+      "durationMs": 9036,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1178,
+          "output": 95,
+          "cacheRead": 165376,
+          "cacheWrite": 0,
+          "reasoning": 25
+        },
+        "costSource": "computed",
+        "costUSD": 0.183156
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 246
+      }
+    },
+    {
+      "id": "exec-98d63ba1-274d-4b09-8921-9e435c3f90f4",
+      "parentId": "resp_0b84fa9ba60d2d12016abcac97b29c87d2bcdf3ccd796b55c0",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:31:02.298Z",
+      "endedAt": "2026-09-30T06:31:05.022Z",
+      "durationMs": 2724,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 453
+      },
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 248
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaca8fa1887d2b298e9256d471296",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:31:05.043Z",
+      "endedAt": "2026-09-30T06:31:55.650Z",
+      "durationMs": 50607,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 471,
+          "output": 1290,
+          "cacheRead": 166400,
+          "cacheWrite": 0,
+          "reasoning": 192
+        },
+        "costSource": "computed",
+        "costUSD": 0.24521
+      },
+      "content": {
+        "outputPreview": "dolor adipiscing nostrud ipsum dolor nostrud magna tempor aliqua enim adipiscing aliquip magna magna enim lorem tempor magna veniam consectetur adipiscing veniam lorem sed dolor nostrud aliqua sed lab"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 254
+      }
+    },
+    {
+      "id": "exec-f69fdea5-cd85-4c94-98c6-9954339d4242",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaca8fa1887d2b298e9256d471296",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:31:55.625Z",
+      "endedAt": "2026-09-30T06:32:02.389Z",
+      "durationMs": 6764,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 15,
+        "linesRemoved": 2
+      },
+      "attributes": {
+        "runray.targetKey": "4ee580a278412018",
+        "runray.targetKind": "file-write",
+        "runray.target": "loremxadi.md"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 257
+      }
+    },
+    {
+      "id": "01a0f103-3fa6-76f2-a12c-1609f8e27b3e",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:31:57.112Z",
+      "endedAt": "2026-09-30T06:32:02.367Z",
+      "durationMs": 5255,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 87
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcacdd1c9087d28de246ee17b5703a",
+      "parentId": "01a0f103-3fa6-76f2-a12c-1609f8e27b3e",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:31:57.112Z",
+      "endedAt": "2026-09-30T06:32:02.297Z",
+      "durationMs": 5185,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 5450,
+          "output": 69,
+          "cacheRead": 49920,
+          "cacheWrite": 0,
+          "reasoning": 25
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis tempor incididunt sed aliqua enim veniam adipiscing magna minim lorem amet quis adipiscing aliqua ipsum veniam adipiscing lorem magna labore tempor adipiscing incididunt sed veniam sed lorem magn"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 93
+      }
+    },
+    {
+      "id": "exec-4e4dc218-ec99-4ff6-be65-9b63863dffc0",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaca8fa1887d2b298e9256d471296",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:32:05.968Z",
+      "endedAt": "2026-09-30T06:32:07.182Z",
+      "durationMs": 1214,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 312
+      },
+      "attributes": {
+        "runray.targetKey": "0aa376785bf36b65",
+        "runray.targetKind": "command",
+        "runray.target": "aliquip",
+        "runray.toolActivity": "other",
+        "runray.toolName": "aliquip"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 258
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcace7c14887d2afd42a1a2d877e1d",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:32:07.219Z",
+      "endedAt": "2026-09-30T06:32:23.844Z",
+      "durationMs": 16625,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1831,
+          "output": 51,
+          "cacheRead": 166656,
+          "cacheWrite": 0,
+          "reasoning": 295
+        },
+        "costSource": "computed",
+        "costUSD": 0.202266
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 263
+      }
+    },
+    {
+      "id": "exec-0b670d2a-65c4-4189-86e4-8fada37e1df0",
+      "parentId": "resp_0b84fa9ba60d2d12016abcace7c14887d2afd42a1a2d877e1d",
+      "kind": "mcp_call",
+      "name": "open_in_codex",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:32:23.794Z",
+      "endedAt": "2026-09-30T06:32:23.988Z",
+      "durationMs": 194,
+      "depth": 3,
+      "tool": {
+        "name": "open_in_codex",
+        "mcpServer": "codex_app",
+        "isError": false
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 265
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcacf8489c87d286a813beefaf397f",
+      "parentId": "01a0f0f3-91c0-7d03-a92d-303d794a2804",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:32:24.046Z",
+      "endedAt": "2026-09-30T06:32:38.068Z",
+      "durationMs": 14022,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 588,
+          "output": 366,
+          "cacheRead": 168320,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.1925
+      },
+      "content": {
+        "outputPreview": "nostrud quis amet veniam aliquip incididunt sit enim lorem labo\n\nadipiscing minim incididunt labore elit quis adipiscing enim \nveniam elit ipsum labore sit aliqua consectetur sed sed labore veniam\ncon"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 269
+      }
+    },
+    {
+      "id": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "parentId": "01a0f0f3-2c66-7151-960c-cf5b962ab51c",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:37:49.128Z",
+      "endedAt": "2026-09-30T07:06:18.844Z",
+      "durationMs": 1709716,
+      "depth": 1,
+      "content": {
+        "promptPreview": "aliquip sit amet lorem sed nostrud ips"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 274
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcae3d53e087d2be6a90c804d5029a",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:37:49.128Z",
+      "endedAt": "2026-09-30T06:37:55.561Z",
+      "durationMs": 6433,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 588,
+          "output": 116,
+          "cacheRead": 168704,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.180384
+      },
+      "content": {
+        "outputPreview": "dolor incididunt aliqua aliqua magna lorem dolor tempor labore sed aliquip labore aliqua tempor magna tempor dolor minim amet labore dolor magna a"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 279
+      }
+    },
+    {
+      "id": "exec-c0c0d755-8c66-4737-9a1e-5b6b285006c8",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae3d53e087d2be6a90c804d5029a",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:37:59.519Z",
+      "endedAt": "2026-09-30T06:38:00.458Z",
+      "durationMs": 939,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 28402
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 282
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcae486ba887d2a47f39e3b663b623",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:38:00.478Z",
+      "endedAt": "2026-09-30T06:38:22.674Z",
+      "durationMs": 22196,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8546,
+          "output": 127,
+          "cacheRead": 169088,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.286698
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 287
+      }
+    },
+    {
+      "id": "exec-307dc6b3-ac56-4c50-b52e-5201bffa45fc",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae486ba887d2a47f39e3b663b623",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:38:30.631Z",
+      "endedAt": "2026-09-30T06:38:34.743Z",
+      "durationMs": 4112,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 31674
+      },
+      "attributes": {
+        "runray.targetKey": "a127bddc834d93a2",
+        "runray.targetKind": "command",
+        "runray.target": "enim",
+        "runray.toolActivity": "other",
+        "runray.toolName": "enim"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 289
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcae6c4bb087d29cd21e6f5d526a19",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:38:35.884Z",
+      "endedAt": "2026-09-30T06:39:03.259Z",
+      "durationMs": 27375,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 11214,
+          "output": 282,
+          "cacheRead": 177408,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.329448
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 294
+      }
+    },
+    {
+      "id": "exec-489df455-65bc-4851-b51d-f34d72391247",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae6c4bb087d29cd21e6f5d526a19",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:39:11.782Z",
+      "endedAt": "2026-09-30T06:39:13.055Z",
+      "durationMs": 1273,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 369
+      },
+      "content": {
+        "outputPreview": "tempor dolor sit lorem quis tempor \nlabore tempor tempor elit enim\nconsec\ni\nipsum minim dolor labore ips\nadipiscing incididunt dolor aliqua sed quis enim a\ndolor adipiscing consectetur dolor quis quis"
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 296
+      }
+    },
+    {
+      "id": "exec-cc8ee93d-415f-4c88-a456-4f4bdedcc5d9",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae6c4bb087d29cd21e6f5d526a19",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:39:18.543Z",
+      "endedAt": "2026-09-30T06:39:25.664Z",
+      "durationMs": 7121,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3551
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 297
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcae9dfd4887d29a07d7ce05410335",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:39:25.857Z",
+      "endedAt": "2026-09-30T06:40:37.669Z",
+      "durationMs": 71812,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2296,
+          "output": 2215,
+          "cacheRead": 188416,
+          "cacheWrite": 0,
+          "reasoning": 11
+        },
+        "costSource": "computed",
+        "costUSD": 0.322676
+      },
+      "content": {
+        "outputPreview": "amet sed lorem sit sed enim incididunt elit sit sed quis ipsum aliqua tempor sed dolor tempor aliquip ipsum adipiscing aliqua enim dolor enim tempor nostrud enim veniam nostrud labore sit sit adipisci"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 303
+      }
+    },
+    {
+      "id": "01a0f10b-311d-7af1-a31e-bbf6031ac246",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:37.685Z",
+      "endedAt": "2026-09-30T06:40:42.184Z",
+      "durationMs": 4499,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 98
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaee5adc087d2bb5d6bcd2531a455",
+      "parentId": "01a0f10b-311d-7af1-a31e-bbf6031ac246",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:37.685Z",
+      "endedAt": "2026-09-30T06:40:42.146Z",
+      "durationMs": 4461,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 7486,
+          "output": 72,
+          "cacheRead": 55040,
+          "cacheWrite": 0,
+          "reasoning": 73
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "labore nostrud quis ipsum consectetur elit magna consectetur dolor nostrud incididunt veniam nostrud labore amet quis incididunt elit magna nostrud adipiscing enim aliquip tempor aliqua nostrud minim "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 104
+      }
+    },
+    {
+      "id": "exec-7b015122-4cf5-40d6-a37c-f969dab5781d",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae9dfd4887d29a07d7ce05410335",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:44.116Z",
+      "endedAt": "2026-09-30T06:40:45.120Z",
+      "durationMs": 1004,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 170
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 306
+      }
+    },
+    {
+      "id": "exec-101e1cc8-cefa-4a23-a077-06cd6d24eb34",
+      "parentId": "resp_0b84fa9ba60d2d12016abcae9dfd4887d29a07d7ce05410335",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:45.144Z",
+      "endedAt": "2026-09-30T06:40:53.210Z",
+      "durationMs": 8066,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 71,
+        "linesRemoved": 25
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 307
+      }
+    },
+    {
+      "id": "01a0f10b-5baf-7e00-9e26-697349153bdd",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:48.586Z",
+      "endedAt": "2026-09-30T06:40:53.185Z",
+      "durationMs": 4599,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 109
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaef0810487d2b760ab46efd9ec7e",
+      "parentId": "01a0f10b-5baf-7e00-9e26-697349153bdd",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:48.586Z",
+      "endedAt": "2026-09-30T06:40:53.159Z",
+      "durationMs": 4573,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 2817,
+          "output": 78,
+          "cacheRead": 62208,
+          "cacheWrite": 0,
+          "reasoning": 71
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "consectetur sed elit enim elit veniam incididunt nostrud lorem tempor amet amet sed consectetur magna aliqua aliquip labore elit veniam minim nostrud ipsum quis sit labore lorem labore amet veniam qui"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 115
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaef5240887d2827669c82d7dc810",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:40:53.236Z",
+      "endedAt": "2026-09-30T06:42:39.379Z",
+      "durationMs": 106143,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2484,
+          "output": 2784,
+          "cacheRead": 190592,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.380432
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 312
+      }
+    },
+    {
+      "id": "exec-a00569c4-a9df-435a-ae77-df4001a9b34a",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaef5240887d2827669c82d7dc810",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:42:39.527Z",
+      "endedAt": "2026-09-30T06:42:46.100Z",
+      "durationMs": 6573,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 10,
+        "linesRemoved": 7
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 314
+      }
+    },
+    {
+      "id": "01a0f10d-12d0-7ca2-a672-34c5d99e99b2",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:42:40.999Z",
+      "endedAt": "2026-09-30T06:42:46.058Z",
+      "durationMs": 5059,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 120
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaf610c6087d285a556a7340efd31",
+      "parentId": "01a0f10d-12d0-7ca2-a672-34c5d99e99b2",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:42:40.999Z",
+      "endedAt": "2026-09-30T06:42:45.982Z",
+      "durationMs": 4983,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 3118,
+          "output": 70,
+          "cacheRead": 64256,
+          "cacheWrite": 0,
+          "reasoning": 37
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "tempor magna sed veniam tempor consectetur incididunt amet tempor consectetur tempor enim quis incididunt magna magna amet consectetur labore elit nostrud enim incididunt veniam amet quis ipsum consec"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 126
+      }
+    },
+    {
+      "id": "exec-3425e938-c458-4d6a-9a24-f5ed9bc4dbe8",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaef5240887d2827669c82d7dc810",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:42:49.480Z",
+      "endedAt": "2026-09-30T06:42:50.268Z",
+      "durationMs": 788,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 315
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaf6a883487d2807327ce1e40f516",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:42:50.392Z",
+      "endedAt": "2026-09-30T06:43:23.718Z",
+      "durationMs": 33326,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3538,
+          "output": 874,
+          "cacheRead": 192896,
+          "cacheWrite": 0,
+          "reasoning": 151
+        },
+        "costSource": "computed",
+        "costUSD": 0.279526
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 320
+      }
+    },
+    {
+      "id": "exec-5599ab73-c9c0-4340-a260-1be1e9cc0ce6",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaf6a883487d2807327ce1e40f516",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:43:23.839Z",
+      "endedAt": "2026-09-30T06:43:30.546Z",
+      "durationMs": 6707,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 1,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "8796edf66a90258d",
+        "runray.targetKind": "file-write",
+        "runray.target": "laborexno.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 322
+      }
+    },
+    {
+      "id": "01a0f10d-bea7-7d80-9796-9dff3b15daaa",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:43:24.986Z",
+      "endedAt": "2026-09-30T06:43:30.526Z",
+      "durationMs": 5540,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 131
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcaf8d2f5887d2acb439c8696d65c0",
+      "parentId": "01a0f10d-bea7-7d80-9796-9dff3b15daaa",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:43:24.986Z",
+      "endedAt": "2026-09-30T06:43:30.501Z",
+      "durationMs": 5515,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 2528,
+          "output": 62,
+          "cacheRead": 66304,
+          "cacheWrite": 0,
+          "reasoning": 48
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "lorem sit tempor sed magna consectetur nostrud consectetur enim aliquip aliqua aliquip adipiscing sed ipsum sed dolor ipsum enim adipiscing magna amet sit sit nostrud lorem magna ipsum aliquip lorem a"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 137
+      }
+    },
+    {
+      "id": "exec-f08d90c6-7149-41f7-b5b7-ca7fd89d4c54",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaf6a883487d2807327ce1e40f516",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:43:34.027Z",
+      "endedAt": "2026-09-30T06:43:39.159Z",
+      "durationMs": 5132,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 362
+      },
+      "attributes": {
+        "runray.targetKey": "4024f1534066e3d0",
+        "runray.targetKind": "command",
+        "runray.target": "am",
+        "runray.toolActivity": "other",
+        "runray.toolName": "am"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 323
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaf9b787487d29aefe532bf8eab18",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:43:39.339Z",
+      "endedAt": "2026-09-30T06:44:02.261Z",
+      "durationMs": 22922,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1411,
+          "output": 394,
+          "cacheRead": 196224,
+          "cacheWrite": 0,
+          "reasoning": 292
+        },
+        "costSource": "computed",
+        "costUSD": 0.244634
+      },
+      "content": {
+        "outputPreview": "minim aliquip quis enim elit veniam amet sed ipsum magna ipsum ipsum tempor sit ipsum tempor magna sed quis sit elit incididunt lorem sed amet enim nostrud sed aliqua veniam aliqua magna sed tempor do"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 329
+      }
+    },
+    {
+      "id": "exec-fc26b923-288d-4d41-933e-c8f3d748ea2f",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaf9b787487d29aefe532bf8eab18",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:05.723Z",
+      "endedAt": "2026-09-30T06:47:05.042Z",
+      "durationMs": 179319,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 2427
+      },
+      "attributes": {
+        "runray.targetKey": "f6e2f31d10ac27e4",
+        "runray.targetKind": "command",
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 363
+      }
+    },
+    {
+      "id": "01a0f10e-851e-7cf2-b78a-4ee65c8adb5a",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:15.796Z",
+      "endedAt": "2026-09-30T06:44:20.425Z",
+      "durationMs": 4629,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 142
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcafbff5fc87d2a4ca7c63ccbd25f1",
+      "parentId": "01a0f10e-851e-7cf2-b78a-4ee65c8adb5a",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:15.796Z",
+      "endedAt": "2026-09-30T06:44:20.394Z",
+      "durationMs": 4598,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 1720,
+          "output": 63,
+          "cacheRead": 68352,
+          "cacheWrite": 0,
+          "reasoning": 17
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "tempor consectetur aliqua dolor sit consectetur lorem veniam incididunt aliquip enim minim incididunt adipiscing veniam adipiscing labore dolor lorem tempor sed sed sed minim aliquip aliqua magna sed "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 148
+      }
+    },
+    {
+      "id": "exec-74b1b7f6-0f6b-46ec-bf8e-dc6a1790270d",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaf9b787487d29aefe532bf8eab18",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:23.356Z",
+      "endedAt": "2026-09-30T06:44:24.665Z",
+      "durationMs": 1309,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 140
+      },
+      "attributes": {
+        "runray.targetKey": "0606febe907fe10e",
+        "runray.targetKind": "command",
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 332
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcafc90e4c87d2818edab162fe6d38",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:24.848Z",
+      "endedAt": "2026-09-30T06:44:56.220Z",
+      "durationMs": 31372,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 965,
+          "output": 665,
+          "cacheRead": 197504,
+          "cacheWrite": 0,
+          "reasoning": 290
+        },
+        "costSource": "computed",
+        "costUSD": 0.254904
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 337
+      }
+    },
+    {
+      "id": "exec-86e43233-e1e6-40da-bdcc-f44633b70cf3",
+      "parentId": "resp_0b84fa9ba60d2d12016abcafc90e4c87d2818edab162fe6d38",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:56.358Z",
+      "endedAt": "2026-09-30T06:45:03.720Z",
+      "durationMs": 7362,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 16,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4390188caa9b6510",
+        "runray.targetKind": "file-write",
+        "runray.target": "minimxelitxquis.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 339
+      }
+    },
+    {
+      "id": "01a0f10f-2a02-7091-b918-cf67287cec9d",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:58.009Z",
+      "endedAt": "2026-09-30T06:45:03.698Z",
+      "durationMs": 5689,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 153
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcafeab31487d29f59c0e056bd78a2",
+      "parentId": "01a0f10f-2a02-7091-b918-cf67287cec9d",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:44:58.009Z",
+      "endedAt": "2026-09-30T06:45:03.654Z",
+      "durationMs": 5645,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 2330,
+          "output": 71,
+          "cacheRead": 69376,
+          "cacheWrite": 0,
+          "reasoning": 47
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis lorem minim amet sit consectetur sit nostrud consectetur magna sit dolor dolor tempor consectetur incididunt aliquip veniam elit incididunt consectetur magna ipsum enim elit aliqua magna enim qui"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 159
+      }
+    },
+    {
+      "id": "01a0f10f-4149-7160-9400-af4f4f7d7b34",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:03.974Z",
+      "endedAt": "2026-09-30T06:45:07.861Z",
+      "durationMs": 3887,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 164
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcafeff40c87d28ff701dcc85edd42",
+      "parentId": "01a0f10f-4149-7160-9400-af4f4f7d7b34",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:03.974Z",
+      "endedAt": "2026-09-30T06:45:07.826Z",
+      "durationMs": 3852,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 946,
+          "output": 70,
+          "cacheRead": 71424,
+          "cacheWrite": 0,
+          "reasoning": 7
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis quis consectetur ipsum amet nostrud enim labore consectetur minim amet elit lorem consectetur dolor quis ipsum sed minim lorem ipsum minim aliquip quis elit adipiscing tempor ipsum aliquip nostru"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 170
+      }
+    },
+    {
+      "id": "exec-ec32206a-f2fa-4959-881b-7e04b21ac19f",
+      "parentId": "resp_0b84fa9ba60d2d12016abcafc90e4c87d2818edab162fe6d38",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:10.599Z",
+      "endedAt": "2026-09-30T06:45:13.066Z",
+      "durationMs": 2467,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 223
+      },
+      "attributes": {
+        "runray.targetKey": "f0d4bb326b8f2209",
+        "runray.targetKind": "command",
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 340
+      }
+    },
+    {
+      "id": "exec-de9c7895-556b-4073-90fe-3c74b45f0744",
+      "parentId": "resp_0b84fa9ba60d2d12016abcafc90e4c87d2818edab162fe6d38",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:16.951Z",
+      "endedAt": "2026-09-30T06:45:17.717Z",
+      "durationMs": 766,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 7100
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 341
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcaffdd45c87d2be73d5adbb3b8028",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:17.872Z",
+      "endedAt": "2026-09-30T06:45:40.179Z",
+      "durationMs": 22307,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3544,
+          "output": 124,
+          "cacheRead": 198272,
+          "cacheWrite": 0,
+          "reasoning": 475
+        },
+        "costSource": "computed",
+        "costUSD": 0.263662
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 346
+      }
+    },
+    {
+      "id": "exec-2f6b29af-101f-4e1e-bc71-a005a600ff42",
+      "parentId": "resp_0b84fa9ba60d2d12016abcaffdd45c87d2be73d5adbb3b8028",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:44.112Z",
+      "endedAt": "2026-09-30T06:45:45.258Z",
+      "durationMs": 1146,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 7005
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 348
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb019889c87d29c7b35f92b8f0424",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:45.406Z",
+      "endedAt": "2026-09-30T06:45:52.715Z",
+      "durationMs": 7309,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3009,
+          "output": 81,
+          "cacheRead": 201600,
+          "cacheWrite": 0,
+          "reasoning": 83
+        },
+        "costSource": "computed",
+        "costUSD": 0.23989
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 353
+      }
+    },
+    {
+      "id": "exec-ec8001ec-526e-4d92-b4a0-273416a9d49c",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb019889c87d29c7b35f92b8f0424",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:57.249Z",
+      "endedAt": "2026-09-30T06:45:57.863Z",
+      "durationMs": 614,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 6314
+      },
+      "attributes": {
+        "runray.targetKey": "f6e2f31d10ac27e4",
+        "runray.targetKind": "command",
+        "runray.target": "magna",
+        "runray.toolActivity": "other",
+        "runray.toolName": "magna"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 355
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb026123487d2884c997122c93963",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:45:58.020Z",
+      "endedAt": "2026-09-30T06:46:51.047Z",
+      "durationMs": 53027,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2297,
+          "output": 1368,
+          "cacheRead": 204416,
+          "cacheWrite": 0,
+          "reasoning": 56
+        },
+        "costSource": "computed",
+        "costUSD": 0.298586
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 360
+      }
+    },
+    {
+      "id": "exec-61962361-4ac5-4689-b9f1-76265b891dc0",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb026123487d2884c997122c93963",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:46:51.287Z",
+      "endedAt": "2026-09-30T06:47:01.301Z",
+      "durationMs": 10014,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 61,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "09ad663f32336d10",
+        "runray.targetKind": "file-write",
+        "runray.target": "sitxloremxsitxsedx.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 362
+      }
+    },
+    {
+      "id": "01a0f110-ece1-77d2-a981-8125cd5c4f36",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:46:53.446Z",
+      "endedAt": "2026-09-30T06:47:01.274Z",
+      "durationMs": 7828,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 175
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcb05dc65487d2975d93489322c0c2",
+      "parentId": "01a0f110-ece1-77d2-a981-8125cd5c4f36",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:46:53.446Z",
+      "endedAt": "2026-09-30T06:47:01.225Z",
+      "durationMs": 7779,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 7565,
+          "output": 76,
+          "cacheRead": 71424,
+          "cacheWrite": 0,
+          "reasoning": 35
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "dolor aliquip nostrud adipiscing dolor minim consectetur labore aliquip quis incididunt dolor lorem magna sed amet sit enim aliqua lorem lorem minim lorem enim tempor enim ipsum sit lorem nostrud amet"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 181
+      }
+    },
+    {
+      "id": "exec-af196ab1-b839-46ec-90d8-197f251fdd3f",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb026123487d2884c997122c93963",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:47:06.360Z",
+      "endedAt": "2026-09-30T06:47:08.177Z",
+      "durationMs": 1817,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1047
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 364
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb06e0ab887d2bc7a72a435ea8eb0",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:47:08.395Z",
+      "endedAt": "2026-09-30T06:48:16.587Z",
+      "durationMs": 68192,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1914,
+          "output": 1595,
+          "cacheRead": 206592,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.331282
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 369
+      }
+    },
+    {
+      "id": "exec-c10eb4e0-3e33-49d1-bb60-c3275739ef76",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb06e0ab887d2bc7a72a435ea8eb0",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:48:16.772Z",
+      "endedAt": "2026-09-30T06:48:22.521Z",
+      "durationMs": 5749,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 9,
+        "linesRemoved": 1
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 371
+      }
+    },
+    {
+      "id": "01a0f112-37be-7670-a61e-e22fede6e7f6",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:48:18.134Z",
+      "endedAt": "2026-09-30T06:48:22.495Z",
+      "durationMs": 4361,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 186
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcb0b220f087d297576b5276a67b6e",
+      "parentId": "01a0f112-37be-7670-a61e-e22fede6e7f6",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:48:18.134Z",
+      "endedAt": "2026-09-30T06:48:22.456Z",
+      "durationMs": 4322,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 3781,
+          "output": 62,
+          "cacheRead": 78592,
+          "cacheWrite": 0,
+          "reasoning": 14
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "quis labore incididunt sit magna aliqua veniam lorem enim amet amet amet elit veniam incididunt aliquip tempor ipsum tempor amet quis nostrud dolor minim ipsum amet tempor dolor minim incididunt enim "
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 192
+      }
+    },
+    {
+      "id": "exec-6c43d550-a408-4989-91ed-5919c9854568",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb06e0ab887d2bc7a72a435ea8eb0",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:48:28.239Z",
+      "endedAt": "2026-09-30T07:03:13.492Z",
+      "durationMs": 885253,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1305
+      },
+      "attributes": {
+        "runray.targetKey": "ea2a7304668fca5d",
+        "runray.targetKind": "command",
+        "runray.target": "labore",
+        "runray.toolActivity": "other",
+        "runray.toolName": "labore"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 535
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb0c6402487d2be3c234b8bbba127",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:48:38.254Z",
+      "endedAt": "2026-09-30T06:48:57.095Z",
+      "durationMs": 18841,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2318,
+          "output": 370,
+          "cacheRead": 208384,
+          "cacheWrite": 0,
+          "reasoning": 92
+        },
+        "costSource": "computed",
+        "costUSD": 0.254664
+      },
+      "content": {
+        "outputPreview": "aliquip adipiscing veniam quis consectetur dolor consectetur ipsum veniam minim enim minim enim adipiscing lorem ipsum tempor sed magna sed minim incididunt magna amet labore enim sit ipsum sed veniam"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 377
+      }
+    },
+    {
+      "id": "exec-7146b38a-81ac-4be4-9609-f24d1ad50eff",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb0c6402487d2be3c234b8bbba127",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:49:06.016Z",
+      "endedAt": "2026-09-30T07:02:34.945Z",
+      "durationMs": 808929,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 1007
+      },
+      "attributes": {
+        "runray.targetKey": "68dcd9239087779c",
+        "runray.targetKind": "command",
+        "runray.target": "veniam",
+        "runray.toolActivity": "other",
+        "runray.toolName": "veniam"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 531
+      }
+    },
+    {
+      "id": "exec-c0932ec8-b599-48ed-8249-d1909965e134",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb0c6402487d2be3c234b8bbba127",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:49:25.237Z",
+      "endedAt": "2026-09-30T06:49:28.816Z",
+      "durationMs": 3579,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 10154
+      },
+      "attributes": {
+        "runray.targetKey": "c630015fb12b8ae9",
+        "runray.targetKind": "command",
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 382
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb0f8cad487d2b6322e15123db618",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:49:28.137Z",
+      "endedAt": "2026-09-30T06:49:35.379Z",
+      "durationMs": 7242,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 665,
+          "output": 33,
+          "cacheRead": 210560,
+          "cacheWrite": 0,
+          "reasoning": 20
+        },
+        "costSource": "computed",
+        "costUSD": 0.21986
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 385
+      }
+    },
+    {
+      "id": "call_TsYKPSXoXFJhOJXU9iBk1rLj",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb0f8cad487d2b6322e15123db618",
+      "kind": "tool_call",
+      "name": "wait",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:49:35.241Z",
+      "endedAt": "2026-09-30T06:49:35.402Z",
+      "durationMs": 161,
+      "depth": 3,
+      "tool": {
+        "name": "wait",
+        "isError": false,
+        "outputBytes": 10736
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 385
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb0ffa78487d28e232382470a10e9",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:49:35.402Z",
+      "endedAt": "2026-09-30T06:49:59.000Z",
+      "durationMs": 23598,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 3370,
+          "output": 97,
+          "cacheRead": 211072,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.275422
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 391
+      }
+    },
+    {
+      "id": "exec-f7f095ae-8fff-475f-82e8-f256ff468e98",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb0ffa78487d28e232382470a10e9",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:50:10.456Z",
+      "endedAt": "2026-09-30T06:50:12.075Z",
+      "durationMs": 1619,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 5543
+      },
+      "attributes": {
+        "runray.targetKey": "b626edd3511d1cd3",
+        "runray.targetKind": "command",
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 393
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb12432d487d2b477f480165344b1",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:50:12.108Z",
+      "endedAt": "2026-09-30T06:51:04.565Z",
+      "durationMs": 52457,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2546,
+          "output": 117,
+          "cacheRead": 214272,
+          "cacheWrite": 0,
+          "reasoning": 1552
+        },
+        "costSource": "computed",
+        "costUSD": 0.323182
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 402
+      }
+    },
+    {
+      "id": "exec-ab634cd8-0185-49e3-9cee-1cf5f553d835",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb12432d487d2b477f480165344b1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:51:14.614Z",
+      "endedAt": "2026-09-30T06:51:17.796Z",
+      "durationMs": 3182,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 684
+      },
+      "content": {
+        "outputPreview": "sed sit adipiscing quis aliqua quis amet veniam consectetur incididunt tempor lorem\ndolor nostrud veniam tempor sed amet tempor enim sed lore\nconsectetur lorem lorem quis sed elit sit amet ipsum adipi"
+      },
+      "attributes": {
+        "runray.targetKey": "b1aaca441475334b",
+        "runray.targetKind": "command",
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 404
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb166323887d2adc8b46b738c1760",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:51:18.148Z",
+      "endedAt": "2026-09-30T06:52:08.079Z",
+      "durationMs": 49931,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2750,
+          "output": 1109,
+          "cacheRead": 216576,
+          "cacheWrite": 0,
+          "reasoning": 450
+        },
+        "costSource": "computed",
+        "costUSD": 0.322026
+      },
+      "content": {
+        "outputPreview": "quis magna elit quis lorem ipsum sed aliquip adipiscing amet incididunt sed consectetur magna sed enim amet enim enim labore amet magna aliqua elit adipiscing nostrud incididunt adipiscing minim nostr"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 410
+      }
+    },
+    {
+      "id": "exec-55625ad9-90e4-4a84-aeba-18528c646b39",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb166323887d2adc8b46b738c1760",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:08.390Z",
+      "endedAt": "2026-09-30T06:52:16.941Z",
+      "durationMs": 8551,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 16,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "4ee580a278412018",
+        "runray.targetKind": "file-write",
+        "runray.target": "loremxadi.md"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 413
+      }
+    },
+    {
+      "id": "01a0f115-cf6a-7b50-b0c4-66295eab23e0",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:13.590Z",
+      "endedAt": "2026-09-30T06:52:16.897Z",
+      "durationMs": 3307,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 197
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcb19da5b487d2bef470c76463634a",
+      "parentId": "01a0f115-cf6a-7b50-b0c4-66295eab23e0",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:13.590Z",
+      "endedAt": "2026-09-30T06:52:16.831Z",
+      "durationMs": 3241,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 7285,
+          "output": 62,
+          "cacheRead": 81664,
+          "cacheWrite": 0,
+          "reasoning": 9
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "amet ipsum magna elit ipsum consectetur lorem lorem magna dolor adipiscing sit elit aliquip enim incididunt dolor ipsum sed sit enim enim tempor labore aliqua elit sed ipsum dolor magna elit tempor en"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 203
+      }
+    },
+    {
+      "id": "exec-84bd273c-7cd7-43ea-aa4b-fd9c2e014b21",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb166323887d2adc8b46b738c1760",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:25.500Z",
+      "endedAt": "2026-09-30T06:52:27.791Z",
+      "durationMs": 2291,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 597
+      },
+      "attributes": {
+        "runray.targetKey": "de3876a0ed57ee18",
+        "runray.targetKind": "command",
+        "runray.target": "lorem",
+        "runray.toolActivity": "other",
+        "runray.toolName": "lorem"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 414
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb1ac711c87d2b0c7edb9ecbdde27",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:28.111Z",
+      "endedAt": "2026-09-30T06:52:50.241Z",
+      "durationMs": 22130,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1977,
+          "output": 136,
+          "cacheRead": 219136,
+          "cacheWrite": 0,
+          "reasoning": 392
+        },
+        "costSource": "computed",
+        "costUSD": 0.265306
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 419
+      }
+    },
+    {
+      "id": "exec-037fe92f-9e2a-4577-9011-f8e5d5d97cbf",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb1ac711c87d2b0c7edb9ecbdde27",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:52:58.950Z",
+      "endedAt": "2026-09-30T06:53:47.435Z",
+      "durationMs": 48485,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 518
+      },
+      "attributes": {
+        "runray.targetKey": "f0d4bb326b8f2209",
+        "runray.targetKind": "command",
+        "runray.target": "consectetur",
+        "runray.toolActivity": "other",
+        "runray.toolName": "consectetur"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 426
+      }
+    },
+    {
+      "id": "exec-d3d44bfe-39e1-4c40-8a2f-c05fa96ee53f",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb1ac711c87d2b0c7edb9ecbdde27",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:53:15.918Z",
+      "endedAt": "2026-09-30T06:53:17.789Z",
+      "durationMs": 1871,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 866
+      },
+      "attributes": {
+        "runray.targetKey": "b626edd3511d1cd3",
+        "runray.targetKind": "command",
+        "runray.target": "sed",
+        "runray.toolActivity": "explore",
+        "runray.tool": "sed"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 421
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb1de759c87d2a7a9d0f558357479",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:53:18.073Z",
+      "endedAt": "2026-09-30T06:54:21.501Z",
+      "durationMs": 63428,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1071,
+          "output": 1305,
+          "cacheRead": 220928,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.322688
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 427
+      }
+    },
+    {
+      "id": "exec-f596399e-33ff-487a-8ce7-1adcbe67726b",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb1de759c87d2a7a9d0f558357479",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:54:21.795Z",
+      "endedAt": "2026-09-30T06:54:35.420Z",
+      "durationMs": 13625,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 29,
+        "linesRemoved": 0
+      },
+      "attributes": {
+        "runray.targetKey": "44d603ec5b330fc7",
+        "runray.targetKind": "file-write",
+        "runray.target": "temporxelitxaliq.mjs"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 429
+      }
+    },
+    {
+      "id": "01a0f117-e5ab-79d2-a1fa-5231980ac236",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:54:30.358Z",
+      "endedAt": "2026-09-30T06:54:35.383Z",
+      "durationMs": 5025,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 208
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcb2267bd887d2b64ab53546e1e42f",
+      "parentId": "01a0f117-e5ab-79d2-a1fa-5231980ac236",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:54:30.358Z",
+      "endedAt": "2026-09-30T06:54:35.315Z",
+      "durationMs": 4957,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 3648,
+          "output": 66,
+          "cacheRead": 88832,
+          "cacheWrite": 0,
+          "reasoning": 23
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "labore quis consectetur elit sit minim dolor incididunt enim veniam amet aliquip ipsum tempor adipiscing dolor magna consectetur enim nostrud amet labore aliqua veniam labore enim amet labore lorem al"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 214
+      }
+    },
+    {
+      "id": "exec-16cb5ce5-acd1-492f-a1ef-c72f81210114",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb1de759c87d2a7a9d0f558357479",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:54:43.478Z",
+      "endedAt": "2026-09-30T06:54:45.072Z",
+      "durationMs": 1594,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 797
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 430
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb235706487d2be19c1cd4e41646c",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:54:45.396Z",
+      "endedAt": "2026-09-30T06:55:04.573Z",
+      "durationMs": 19177,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 2316,
+          "output": 199,
+          "cacheRead": 221824,
+          "cacheWrite": 0,
+          "reasoning": 329
+        },
+        "costSource": "computed",
+        "costUSD": 0.271384
+      },
+      "content": {
+        "outputPreview": "nostrud quis amet enim magna veniam incididunt incididunt amet sed amet veniam quis consectetur ipsum enim dolor incididunt enim sed minim elit aliquip adipiscing adipiscing ipsum magna sit aliquip no"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 436
+      }
+    },
+    {
+      "id": "exec-e3a3b91e-24ac-4d3c-928c-fb5b2a143e5c",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb235706487d2be19c1cd4e41646c",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:55:12.487Z",
+      "endedAt": "2026-09-30T06:55:14.564Z",
+      "durationMs": 2077,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 3474
+      },
+      "attributes": {
+        "runray.targetKey": "17bf76f2ec5787e7",
+        "runray.targetKind": "command",
+        "runray.target": "adipiscing",
+        "runray.toolActivity": "other",
+        "runray.toolName": "adipiscing"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 439
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb2528c5087d2b22039258f8dab1c",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:55:14.595Z",
+      "endedAt": "2026-09-30T06:55:37.297Z",
+      "durationMs": 22702,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1981,
+          "output": 128,
+          "cacheRead": 224000,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.27601
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 444
+      }
+    },
+    {
+      "id": "exec-dfe1221f-8daa-4001-97e6-94f128eeb9c1",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb2528c5087d2b22039258f8dab1c",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:55:44.895Z",
+      "endedAt": "2026-09-30T06:55:46.923Z",
+      "durationMs": 2028,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 476
+      },
+      "attributes": {
+        "runray.targetKey": "448761c297738ea3",
+        "runray.targetKind": "command",
+        "runray.target": "amet",
+        "runray.toolActivity": "other",
+        "runray.toolName": "amet"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 446
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb273ac0087d2b106ceadd4c3818b",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:55:47.177Z",
+      "endedAt": "2026-09-30T06:55:53.003Z",
+      "durationMs": 5826,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1076,
+          "output": 21,
+          "cacheRead": 225792,
+          "cacheWrite": 0,
+          "reasoning": 77
+        },
+        "costSource": "computed",
+        "costUSD": 0.241452
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 451
+      }
+    },
+    {
+      "id": "call_Bcg0wygiu9lPgofMYwuIwVbc",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb273ac0087d2b106ceadd4c3818b",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:55:52.959Z",
+      "endedAt": "2026-09-30T06:56:37.967Z",
+      "durationMs": 45008,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 453
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb2a5fea087d283c7d8dc54720bfb",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:56:38.020Z",
+      "endedAt": "2026-09-30T06:56:45.266Z",
+      "durationMs": 7246,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 301,
+          "output": 168,
+          "cacheRead": 226688,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.238098
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 456
+      }
+    },
+    {
+      "id": "exec-63e50571-c1f0-4e28-8478-18c733289fa1",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb2a5fea087d283c7d8dc54720bfb",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:56:51.357Z",
+      "endedAt": "2026-09-30T06:56:52.490Z",
+      "durationMs": 1133,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 620
+      },
+      "attributes": {
+        "runray.targetKey": "4a878befb30ac9b0",
+        "runray.targetKind": "command",
+        "runray.target": "quis",
+        "runray.toolActivity": "other",
+        "runray.toolName": "quis"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 458
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb2b51e6487d284ba603fded70304",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:56:52.796Z",
+      "endedAt": "2026-09-30T06:57:14.008Z",
+      "durationMs": 21212,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 610,
+          "output": 90,
+          "cacheRead": 226816,
+          "cacheWrite": 0,
+          "reasoning": 530
+        },
+        "costSource": "computed",
+        "costUSD": 0.263916
+      },
+      "content": {
+        "outputPreview": "labore consectetur aliquip minim aliquip lorem aliquip amet minim enim ipsum enim minim sit tempor incididunt sit labore dolor aliquip enim lorem tempor nostrud nostrud enim aliquip enim aliqua sit"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 464
+      }
+    },
+    {
+      "id": "call_OLazOgwU6INHnZiiZv0huzbb",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb2b51e6487d284ba603fded70304",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:57:13.959Z",
+      "endedAt": "2026-09-30T06:57:58.962Z",
+      "durationMs": 45003,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 469
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb2f6fef887d289a4f8d1915da9df",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:57:58.984Z",
+      "endedAt": "2026-09-30T06:58:04.699Z",
+      "durationMs": 5715,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 869,
+          "output": 87,
+          "cacheRead": 227200,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.24024
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 472
+      }
+    },
+    {
+      "id": "exec-21240a4e-e112-4d2a-93ef-fb092f226c04",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb2f6fef887d289a4f8d1915da9df",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "error",
+      "startedAt": "2026-09-30T06:58:12.916Z",
+      "endedAt": "2026-09-30T06:58:14.526Z",
+      "durationMs": 1610,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": true,
+        "exitCode": 1,
+        "outputBytes": 643
+      },
+      "content": {
+        "outputPreview": "nostrud incididunt labore enim veniam incididunt amet elit en\ntempor magna labore adipiscing enim ipsum quis sit sed ali\nsed dolor amet labore nostrud lorem veniam incididunt aliqu\nsed dolor aliqua no"
+      },
+      "attributes": {
+        "runray.targetKey": "b2a5b2b92f9d1fb2",
+        "runray.targetKind": "command",
+        "runray.target": "elit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "elit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 474
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb306f22487d28342ef05f5bf8688",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:58:14.771Z",
+      "endedAt": "2026-09-30T06:58:38.810Z",
+      "durationMs": 24039,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 568,
+          "output": 100,
+          "cacheRead": 227840,
+          "cacheWrite": 0,
+          "reasoning": 516
+        },
+        "costSource": "computed",
+        "costUSD": 0.26432
+      },
+      "content": {
+        "outputPreview": "veniam sit sed adipiscing adipiscing nostrud dolor sit consectetur labore sed nostrud sit veniam consectetur elit enim magna quis magna dolor quis aliquip lorem magna quis nostrud labore aliqua consec"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 480
+      }
+    },
+    {
+      "id": "call_H7V2WQPdNMNroRs6w4lf7OHy",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb306f22487d28342ef05f5bf8688",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:58:38.708Z",
+      "endedAt": "2026-09-30T06:59:23.716Z",
+      "durationMs": 45008,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 483
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb34bcdb887d285628a5c9d19ff8b",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:59:23.740Z",
+      "endedAt": "2026-09-30T06:59:30.560Z",
+      "durationMs": 6820,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 823,
+          "output": 57,
+          "cacheRead": 228224,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.239304
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 486
+      }
+    },
+    {
+      "id": "exec-9528c704-d3d2-40d5-b067-63b763743929",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb34bcdb887d285628a5c9d19ff8b",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:59:38.350Z",
+      "endedAt": "2026-09-30T06:59:39.725Z",
+      "durationMs": 1375,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 905
+      },
+      "attributes": {
+        "runray.targetKey": "b1aaca441475334b",
+        "runray.targetKind": "command",
+        "runray.target": "nostrud",
+        "runray.toolActivity": "other",
+        "runray.toolName": "nostrud"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 488
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb35c00f887d2b4a78f1a9c206711",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:59:39.966Z",
+      "endedAt": "2026-09-30T06:59:49.817Z",
+      "durationMs": 9851,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 543,
+          "output": 21,
+          "cacheRead": 228864,
+          "cacheWrite": 0,
+          "reasoning": 172
+        },
+        "costSource": "computed",
+        "costUSD": 0.243944
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 493
+      }
+    },
+    {
+      "id": "call_KXEFDG9bFCfGCkJwA02H4tdv",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb35c00f887d2b4a78f1a9c206711",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T06:59:49.775Z",
+      "endedAt": "2026-09-30T07:00:24.779Z",
+      "durationMs": 35004,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 495
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb388d94887d2b504f3111f2a1a36",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:00:24.809Z",
+      "endedAt": "2026-09-30T07:00:30.085Z",
+      "durationMs": 5276,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 375,
+          "output": 96,
+          "cacheRead": 229248,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.237798
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 498
+      }
+    },
+    {
+      "id": "exec-28f97e9c-45a0-4463-bee9-cb5166280256",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb388d94887d2b504f3111f2a1a36",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:00:38.180Z",
+      "endedAt": "2026-09-30T07:00:39.622Z",
+      "durationMs": 1442,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 800
+      },
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 500
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb399988487d2bfce88ddcfd810a7",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:00:39.917Z",
+      "endedAt": "2026-09-30T07:00:52.684Z",
+      "durationMs": 12767,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 486,
+          "output": 142,
+          "cacheRead": 229504,
+          "cacheWrite": 0,
+          "reasoning": 98
+        },
+        "costSource": "computed",
+        "costUSD": 0.246364
+      },
+      "content": {
+        "outputPreview": "incididunt incididunt tempor elit amet nostrud consectetur ipsum aliqua nostrud adipiscing incididunt sit incididunt magna labore amet labore aliqua elit ipsum adipiscing lorem nostrud minim aliquip v"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 506
+      }
+    },
+    {
+      "id": "call_9ttF7CG25JEqhZShhEGYHjSj",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb399988487d2bfce88ddcfd810a7",
+      "kind": "tool_call",
+      "name": "exec",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:00:52.633Z",
+      "endedAt": "2026-09-30T07:01:02.692Z",
+      "durationMs": 10059,
+      "depth": 3,
+      "tool": {
+        "name": "exec",
+        "isError": false,
+        "outputBytes": 262
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 509
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb3aeea5087d2ac6130defc53dcf3",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:01:02.692Z",
+      "endedAt": "2026-09-30T07:01:07.991Z",
+      "durationMs": 5299,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 561,
+          "output": 21,
+          "cacheRead": 229760,
+          "cacheWrite": 0,
+          "reasoning": 21
+        },
+        "costSource": "computed",
+        "costUSD": 0.23747
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 515
+      }
+    },
+    {
+      "id": "call_QT3FWCU6RhzYLOL6LmPAH6sC",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb3aeea5087d2ac6130defc53dcf3",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:01:07.957Z",
+      "endedAt": "2026-09-30T07:01:47.967Z",
+      "durationMs": 40010,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 517
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb3dc2ecc87d29a7ae4a44137cea1",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:01:48.000Z",
+      "endedAt": "2026-09-30T07:01:55.384Z",
+      "durationMs": 7384,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 242,
+          "output": 57,
+          "cacheRead": 230144,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.235414
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 520
+      }
+    },
+    {
+      "id": "exec-d9bc5ae6-8f81-4e10-8f81-a23e2b3d6d4b",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb3dc2ecc87d29a7ae4a44137cea1",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:02:04.488Z",
+      "endedAt": "2026-09-30T07:02:05.984Z",
+      "durationMs": 1496,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 884
+      },
+      "attributes": {
+        "runray.targetKey": "0606febe907fe10e",
+        "runray.targetKind": "command",
+        "runray.target": "tempor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "tempor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 522
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb3ee64ec87d2896fbd8b5973b1dc",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:02:06.284Z",
+      "endedAt": "2026-09-30T07:02:27.948Z",
+      "durationMs": 21664,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 601,
+          "output": 80,
+          "cacheRead": 230144,
+          "cacheWrite": 0,
+          "reasoning": 475
+        },
+        "costSource": "computed",
+        "costUSD": 0.263904
+      },
+      "content": {
+        "outputPreview": "incididunt adipiscing sit tempor lorem veniam aliqua labore quis tempor ipsum incididunt magna dolor magna elit sed sed nostrud adipiscing minim labore tempor labore quis magna magna amet tempo"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 528
+      }
+    },
+    {
+      "id": "call_7OOqQfHUklwCE0PZb4ShNIvb",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb3ee64ec87d2896fbd8b5973b1dc",
+      "kind": "tool_call",
+      "name": "clock.sleep",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:02:27.895Z",
+      "endedAt": "2026-09-30T07:03:12.908Z",
+      "durationMs": 45013,
+      "depth": 3,
+      "tool": {
+        "name": "clock.sleep",
+        "isError": false,
+        "outputBytes": 43
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 532
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb4310c3887d2b86e222b44459f0a",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:03:13.090Z",
+      "endedAt": "2026-09-30T07:03:18.114Z",
+      "durationMs": 5024,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 795,
+          "output": 63,
+          "cacheRead": 230528,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.241628
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 536
+      }
+    },
+    {
+      "id": "exec-7e1c0a87-4e95-418c-be12-8c8b5edc7d6a",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb4310c3887d2b86e222b44459f0a",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:03:22.948Z",
+      "endedAt": "2026-09-30T07:03:23.687Z",
+      "durationMs": 739,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 482
+      },
+      "attributes": {
+        "runray.targetKey": "1847f92ff65b2482",
+        "runray.targetKind": "command",
+        "runray.target": "ipsum",
+        "runray.toolActivity": "other",
+        "runray.toolName": "ipsum"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 538
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb43c5ec887d2b4ee97f52a5c4cfe",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:03:23.877Z",
+      "endedAt": "2026-09-30T07:03:33.625Z",
+      "durationMs": 9748,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 467,
+          "output": 197,
+          "cacheRead": 231168,
+          "cacheWrite": 0,
+          "reasoning": 28
+        },
+        "costSource": "computed",
+        "costUSD": 0.247088
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 543
+      }
+    },
+    {
+      "id": "exec-588f7ded-ed0d-4a5d-802f-dd9c2383805d",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb43c5ec887d2b4ee97f52a5c4cfe",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:03:39.535Z",
+      "endedAt": "2026-09-30T07:03:41.849Z",
+      "durationMs": 2314,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 321
+      },
+      "attributes": {
+        "runray.targetKey": "c630015fb12b8ae9",
+        "runray.targetKind": "command",
+        "runray.target": "sit",
+        "runray.toolActivity": "other",
+        "runray.toolName": "sit"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 545
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb44e443c87d28834d527553fc95f",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:03:42.089Z",
+      "endedAt": "2026-09-30T07:04:26.371Z",
+      "durationMs": 44282,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1378,
+          "output": 1123,
+          "cacheRead": 231424,
+          "cacheWrite": 0,
+          "reasoning": 269
+        },
+        "costSource": "computed",
+        "costUSD": 0.314804
+      },
+      "content": {
+        "outputPreview": "sit magna enim aliqua nostrud dolor aliqua tempor magna magna consectetur labore veniam tempor veniam adipiscing sed incididunt adipiscing ipsum aliquip aliqua enim enim dolor aliquip veniam elit lore"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 551
+      }
+    },
+    {
+      "id": "exec-3551dfd2-4c50-4306-83dc-7c4b5155dada",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb44e443c87d28834d527553fc95f",
+      "kind": "tool_call",
+      "name": "apply_patch",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:04:26.331Z",
+      "endedAt": "2026-09-30T07:04:36.442Z",
+      "durationMs": 10111,
+      "depth": 3,
+      "tool": {
+        "name": "apply_patch",
+        "isError": false,
+        "linesAdded": 5,
+        "linesRemoved": 1
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 554
+      }
+    },
+    {
+      "id": "01a0f121-0c5a-7bc3-a09e-b4fe9ef20709",
+      "parentId": "01a0f0f6-9e8a-7852-8a51-f5ffa473ace1",
+      "kind": "turn",
+      "name": "turn",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:04:30.067Z",
+      "endedAt": "2026-09-30T07:04:36.413Z",
+      "durationMs": 6346,
+      "depth": 3,
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 219
+      }
+    },
+    {
+      "id": "resp_0b72cf747c9d9193016abcb47e1d9c87d290555d332e2b0927",
+      "parentId": "01a0f121-0c5a-7bc3-a09e-b4fe9ef20709",
+      "kind": "llm_call",
+      "name": "codex-auto-review",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:04:30.067Z",
+      "endedAt": "2026-09-30T07:04:36.376Z",
+      "durationMs": 6309,
+      "depth": 4,
+      "llm": {
+        "provider": "openai",
+        "model": "codex-auto-review",
+        "tokens": {
+          "input": 9480,
+          "output": 63,
+          "cacheRead": 91904,
+          "cacheWrite": 0,
+          "reasoning": 11
+        },
+        "costSource": "unknown"
+      },
+      "content": {
+        "outputPreview": "amet aliquip aliqua tempor adipiscing quis minim ipsum adipiscing sit consectetur consectetur quis amet amet nostrud amet aliquip enim elit nostrud tempor enim tempor lorem ipsum incididunt enim conse"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-18-09-01a0f0f6-9e8a-7852-8a51-f5ffa473ace1.jsonl",
+        "line": 225
+      }
+    },
+    {
+      "id": "exec-2cf7118a-e43b-4e6e-9633-0080c7064edd",
+      "parentId": "resp_0b84fa9ba60d2d12016abcb44e443c87d28834d527553fc95f",
+      "kind": "tool_call",
+      "name": "exec_command",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:04:41.997Z",
+      "endedAt": "2026-09-30T07:04:45.361Z",
+      "durationMs": 3364,
+      "depth": 3,
+      "tool": {
+        "name": "exec_command",
+        "isError": false,
+        "exitCode": 0,
+        "outputBytes": 543
+      },
+      "attributes": {
+        "runray.targetKey": "80afa4d5dce61b88",
+        "runray.targetKind": "command",
+        "runray.target": "dolor",
+        "runray.toolActivity": "other",
+        "runray.toolName": "dolor"
+      },
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 555
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb48d694087d2ac0bad810db58794",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:04:45.379Z",
+      "endedAt": "2026-09-30T07:06:08.602Z",
+      "durationMs": 83223,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 1859,
+          "output": 2653,
+          "cacheRead": 232576,
+          "cacheWrite": 0
+        },
+        "costSource": "computed",
+        "costUSD": 0.383816
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 558
+      }
+    },
+    {
+      "id": "resp_0b84fa9ba60d2d12016abcb4e1255c87d29504a1096a8985bc",
+      "parentId": "01a0f108-9e6d-7932-a93b-b259d7f1b477",
+      "kind": "llm_call",
+      "name": "gpt-6-astra",
+      "status": "ok",
+      "startedAt": "2026-09-30T07:06:08.602Z",
+      "endedAt": "2026-09-30T07:06:18.581Z",
+      "durationMs": 9979,
+      "depth": 2,
+      "llm": {
+        "provider": "openai",
+        "model": "gpt-6-astra",
+        "tokens": {
+          "input": 8916,
+          "output": 187,
+          "cacheRead": 22784,
+          "cacheWrite": 0,
+          "reasoning": 57
+        },
+        "costSource": "computed",
+        "costUSD": 0.124144
+      },
+      "content": {
+        "outputPreview": "minim quis aliqua lorem ipsum sed veniam nostrud aliqua amet enim adipiscing dol\n\nsed amet lorem aliqua sit minim a\nsed aliquip aliqua amet tempor incididunt sed q\nsit dolor elit nostrud quis lorem am"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "fixtures/codex/guardian/2026/09/30/rollout-2026-09-30T08-14-23-01a0f0f3-2c66-7151-960c-cf5b962ab51c.jsonl",
+        "line": 568
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 350270,
+      "output": 33856,
+      "cacheRead": 13200896,
+      "cacheWrite": 0,
+      "reasoning": 17660,
+      "total": 13602682
+    },
+    "costUSD": {
+      "total": 16.99071,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-6-astra": 16.99071
+      }
+    },
+    "counts": {
+      "llmCalls": 93,
+      "toolCalls": 97,
+      "toolErrors": 7,
+      "subagents": 1,
+      "maxDepth": 4
+    },
+    "cache": {
+      "hitRate": 0.9742
+    },
+    "codeChanges": {
+      "linesAdded": 383,
+      "linesRemoved": 41
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 32.7k to 232.8k tokens",
+      "detail": "The median context of the last three model calls (232.8k) is over 2× the median of the first three (32.7k); ~9.9M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "resp_0b84fa9ba60d2d12016abcb44e443c87d28834d527553fc95f",
+        "resp_0b84fa9ba60d2d12016abcb48d694087d2ac0bad810db58794",
+        "resp_0b84fa9ba60d2d12016abcb4e1255c87d29504a1096a8985bc",
+        "exec-7a988b39-da07-44a7-9485-1f6e02456c4a",
+        "exec-9461cbd6-7d00-4f87-99f6-a8ee8548d3b3",
+        "exec-1932e2a2-9fb2-4b5c-acd6-6f0b242d6b4c"
+      ],
+      "estimatedWasteUSD": 11.270071,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~9.9M tokens in total."
+    },
+    {
+      "id": "i2",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 29.2k-token context footprint",
+      "detail": "The first model call already carried 29.2k input-class tokens (tool definitions, project instructions, attachments); 9.2k tokens above the 20.0k floor were written once and re-read on each of the 72 later calls.",
+      "spanIds": [
+        "resp_0b84fa9ba60d2d12016abca8da603087d2940706c6e140de32"
+      ],
+      "estimatedWasteUSD": 0.756368,
+      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (only codex_app was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 9.2k tokens above the floor were re-read 72 times."
+    }
+  ]
+}

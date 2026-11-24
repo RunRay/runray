@@ -1,5 +1,6 @@
 import type { Run, SourceTool } from '@runray/schema';
 import { type ReactNode, useMemo, useState } from 'react';
+import { costHeadline } from '../lib/coverage';
 import {
   NO_BRANCH,
   periodLabel,
@@ -142,8 +143,7 @@ export function Overview({
     : priciest > 0
       ? `priciest single call ${formatUSD(priciest)}`
       : sessionsNote;
-  const totalUSD =
-    totals.costUSD > 0 ? formatUSD(totals.costUSD) : 'Local / $0.00';
+  const totalUSD = costHeadline(totals.costUSD, runs);
   const parseWarnings = useMemo(
     () => runs.reduce((n, r) => n + (r.warnings?.length ?? 0), 0),
     [runs],

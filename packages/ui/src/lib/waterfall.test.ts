@@ -259,6 +259,43 @@ describe('subtreeRollups (D3)', () => {
     expect(rollups.get('root')?.costUSD).toBeCloseTo(0.75, 6);
     expect(rollups.get('root')?.llmCalls).toBe(3);
   });
+
+  it('counts a child that stands before its parent in the list', () => {
+    // The normalizer orders spans that start together by id, so the first
+    // model call of a Codex turn can come before the turn, and a tool before
+    // the call that made it. Every total above them must still hold them.
+    const spans = [
+      stubSpan({ id: 'root', parentId: null, kind: 'session' }),
+      llmStub('a-call', 'turn', { input: 100, output: 10, cacheRead: 0 }, 0.4),
+      stubSpan({ id: 'a-tool', parentId: 'z-call', kind: 'tool_call' }),
+      stubSpan({ id: 'turn', parentId: 'root', kind: 'turn' }),
+      llmStub('z-call', 'turn', { input: 50, output: 5, cacheRead: 0 }, 0.1),
+      stubSpan({ id: 'child', parentId: 'turn', kind: 'subagent' }),
+      llmStub('sub-call', 'child', { input: 10, output: 0, cacheRead: 0 }),
+    ];
+    const whole = { costUSD: 0.5, unpricedCalls: 1, tokens: 175, llmCalls: 3 };
+    const rollups = subtreeRollups(spans);
+    expect(rollups.get('turn')).toEqual(whole);
+    expect(rollups.get('root')).toEqual(whole);
+    expect(rollups.get('a-tool')).toEqual({
+      costUSD: 0,
+      unpricedCalls: 0,
+      tokens: 0,
+      llmCalls: 0,
+    });
+    // the same totals whatever order the spans come in
+    expect(subtreeRollups([...spans].reverse())).toEqual(rollups);
+  });
+
+  it('leaves a span whose parent is not in the run a root of its own', () => {
+    const spans = [
+      llmStub('orphan', 'gone', { input: 10, output: 1, cacheRead: 0 }, 0.2),
+      stubSpan({ id: 'root', parentId: null, kind: 'session' }),
+    ];
+    const rollups = subtreeRollups(spans);
+    expect(rollups.get('orphan')?.costUSD).toBe(0.2);
+    expect(rollups.get('root')?.costUSD).toBe(0);
+  });
 });
 
 describe('collapsedAncestorsOf', () => {

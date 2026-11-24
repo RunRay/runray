@@ -4,9 +4,10 @@
  *
  *   pnpm bench
  *
- * Runs on the machine-local `large` fixture; when it is absent (CI, fresh
- * checkout) a synthetic one is generated first (`scripts/synth-large.ts`,
- * Option B in the fixture README). Always exits 0 — CI treats the step as
+ * Runs on the machine-local `large` fixtures, one of Claude Code and one of
+ * Codex; when one is absent (CI, fresh checkout) a synthetic one is
+ * generated first (`scripts/synth-large.ts`, Option B in the fixture
+ * READMEs). Always exits 0 — CI treats the step as
  * informational (`continue-on-error`), failing builds only on 2× regressions
  * is a later, baseline-driven stage.
  *
@@ -23,16 +24,19 @@ import {
   normalize,
   priceRun,
 } from '../packages/core/src/index.js';
+import { readRolloutLines } from '../packages/core/src/rollout-lines.js';
 import { classifyCommand } from '../packages/core/src/tools/index.js';
-import { ensureLargeFixture } from './synth-large.js';
+import { ensureLargeCodexFixture, ensureLargeFixture } from './synth-large.js';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 const claudeCode = adapters.all().find((a) => a.id === 'claude-code');
 if (claudeCode === undefined) throw new Error('claude-code adapter missing');
+const codex = adapters.all().find((a) => a.id === 'codex');
+if (codex === undefined) throw new Error('codex adapter missing');
 
-async function candidateIn(dir: string) {
-  const candidates = (await claudeCode.detect([dir])).filter(
+async function candidateIn(dir: string, adapter = claudeCode) {
+  const candidates = (await adapter.detect([dir])).filter(
     (c) => !/[\\/]raw[\\/]/.test(c.runRef),
   );
   const candidate = candidates[0];
@@ -71,6 +75,24 @@ console.log(
   `large fixture: ${largePath} (${largeMb.toFixed(1)} MB${synthesized ? ', synthesized from tool-errors' : ', local'})`,
 );
 
+/** The size of a rollout's text: of the file, or of what a compressed one
+ * unpacks to, so MB/s means the same for both. */
+async function rolloutTextMb(file: string): Promise<number> {
+  if (!file.toLowerCase().endsWith('.zst'))
+    return statSync(file).size / (1024 * 1024);
+  let bytes = 0;
+  for await (const { text } of readRolloutLines(file))
+    bytes += Buffer.byteLength(text, 'utf8') + 1;
+  return bytes / (1024 * 1024);
+}
+
+const codexLarge = ensureLargeCodexFixture(32 * 1024 * 1024);
+const codexLargeMb = await rolloutTextMb(codexLarge.path);
+console.log(
+  `large Codex rollout: ${codexLarge.path} (${codexLargeMb.toFixed(1)} MB of text${codexLarge.synthesized ? ', synthesized from tool-errors' : ', local'})`,
+);
+const codexLargeCandidate = await candidateIn(dirname(codexLarge.path), codex);
+
 const largeCandidate = await candidateIn(dirname(largePath));
 const subagentsCandidate = await candidateIn(
   join(repoRoot, 'fixtures', 'claude-code', 'subagents'),
@@ -82,6 +104,9 @@ bench.add('parse large.jsonl (streaming)', async () => {
 });
 bench.add('full pipeline large (parse→price→normalize→insights)', async () => {
   await fullPipeline(largeCandidate);
+});
+bench.add('parse large Codex rollout (streaming)', async () => {
+  await codex.parse(codexLargeCandidate, { redact: false });
 });
 bench.add('full pipeline subagents (committed, ~1.4k spans)', async () => {
   await fullPipeline(subagentsCandidate);
@@ -137,6 +162,8 @@ const pipelineLargeMs = meanMs(
 );
 const subagentsMs = meanMs('full pipeline subagents (committed, ~1.4k spans)');
 const mbPerSec = largeMb / (parseMs / 1000);
+const codexParseMs = meanMs('parse large Codex rollout (streaming)');
+const codexMbPerSec = codexLargeMb / (codexParseMs / 1000);
 // The classification entries are short CPU-bound loops measured three times:
 // one collector pause in one iteration moves their mean by a third. The
 // median says what the code costs.
@@ -167,6 +194,12 @@ const rows: [string, string, string, boolean][] = [
     `${(parseMs / 1000).toFixed(2)} s (${mbPerSec.toFixed(1)} MB/s)`,
     '< 5 s / 100 MB (≥ 20 MB/s)',
     mbPerSec >= 20,
+  ],
+  [
+    'parse large Codex rollout',
+    `${(codexParseMs / 1000).toFixed(2)} s (${codexMbPerSec.toFixed(1)} MB/s)`,
+    '< 5 s / 100 MB (≥ 20 MB/s)',
+    codexMbPerSec >= 20,
   ],
   [
     'full pipeline large',

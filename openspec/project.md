@@ -1,6 +1,6 @@
 # Project: RunRay
 
-Zero-config, local-first observability and token audit for local coding agents (Claude Code, OpenCode, custom agents via OTLP). Reads logs already on disk, normalizes them into one schema, and renders actionable insights — never just raw telemetry. 100% local; no telemetry of its own.
+Zero-config, local-first observability and token audit for local coding agents (Claude Code, OpenCode, Codex, custom agents via OTLP). Reads logs already on disk, normalizes them into one schema, and renders actionable insights — never just raw telemetry. 100% local; no telemetry of its own.
 
 ## Tech stack
 - TypeScript, Node.js ≥ 20, ESM only. pnpm workspaces monorepo.

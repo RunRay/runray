@@ -58,7 +58,7 @@ Estimates marked ≈ rely on the four-bytes-per-token heuristic and say so in th
 
 ## How to fix, rule by rule
 
-Every finding's **suggestion** is one sentence addressed to you, the person running the agent, never to the model: it names a lever you have and carries the finding's own numbers where they change the decision. The playbook behind it is below, one per rule: why the finding happens, what you can do about it in Claude Code, in OpenCode or in a custom agent reporting over OTLP, and what is out of your hands. The Inspector shows the part for the session's own source under *How to fix*. Every command, key and file named here is checked against the tool's current documentation before it is added.
+Every finding's **suggestion** is one sentence addressed to you, the person running the agent, never to the model: it names a lever you have and carries the finding's own numbers where they change the decision. The playbook behind it is below, one per rule: why the finding happens, what you can do about it in Claude Code, in OpenCode, in Codex or in a custom agent reporting over OTLP, and what is out of your hands. The Inspector shows the part for the session's own source under *How to fix*. Every command, key and file named here is checked against the tool's current documentation before it is added.
 
 <!-- playbooks:start -->
 <!-- Generated from RULE_META in packages/core/src/insights/meta.ts by `pnpm docs:playbooks`. Edit the registry, not this block. -->
@@ -88,6 +88,13 @@ The same tool failed several times in a row — every retry re-billed the full c
 - Write the missing fact into `AGENTS.md` so the next session starts with it.
 - For a failing MCP server, set `mcp.<name>.enabled: false` in `opencode.json` until it is fixed.
 
+*Codex*
+
+- Interrupt the turn as soon as the same call fails twice; every further attempt re-bills the whole context.
+- Write the missing fact into `AGENTS.md`, for example `Shell is PowerShell 5.1: no && chaining`, so the next session starts with it.
+- For an MCP server that keeps failing, set `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` until it is fixed; `/mcp` lists what is connected.
+- For a command that must never run, a `prefix_rule` with `decision = "forbidden"` in a `.rules` file under `~/.codex/rules/` blocks it without a prompt (rules are marked experimental).
+
 *Custom agent (OTLP)*
 
 - Stop retrying the same call after two failures and surface the error to the person instead.
@@ -116,6 +123,12 @@ Most input tokens were paid at the full rate instead of being served from the pr
 *OpenCode*
 
 - Check that the provider you use supports prompt caching for the model; OpenCode adds no cache options of its own.
+
+*Codex*
+
+- Change the model (`/model`) and the set of MCP servers at a task boundary, not in the middle of one: caching is on the provider side, both sit at the front of the prompt, and a change there leaves nothing to serve from cache.
+- Continue a session with `codex resume` instead of pasting its history into a new one.
+- With a `model_provider` other than `openai`, check that the provider caches prompts for the model at all.
 
 *Custom agent (OTLP)*
 
@@ -148,6 +161,12 @@ The context grew steadily across the session, so every later call re-paid an eve
 - Run `/compact` (alias `/summarize`) at a checkpoint; start a new task with `/new`.
 - Set `compaction.prune: true` in `opencode.json` so old tool outputs are dropped automatically.
 
+*Codex*
+
+- Run `/compact` at a natural checkpoint; start the next task with `/new`.
+- `model_auto_compact_token_limit` in `~/.codex/config.toml` sets the context size at which Codex compacts on its own.
+- `tool_output_token_limit` caps how much of each tool output stays in the history.
+
 *Custom agent (OTLP)*
 
 - Summarize or drop tool results once the step that needed them is done; keep only the conclusion in the history.
@@ -178,6 +197,13 @@ One delegated subtree dominated the run's spend.
 - Set `agent.<name>.model` in `opencode.json`, or `model:` in the agent's markdown frontmatter.
 - Use `small_model` for lightweight work such as titles and summaries.
 
+*Codex*
+
+- Set `model` in the agent's file under `~/.codex/agents/`, or `.codex/agents/` for a project agent.
+- `agents.default_subagent_model` in `~/.codex/config.toml` sets the model of every spawned agent that names none.
+- Give the subagent a narrower task, or point it at the files it needs, so it does not explore the whole repository.
+- A subagent called `guardian` is the automatic approval reviewer, not an agent you define: `approvals_reviewer = "user"` hands the approval prompts back to you.
+
 *Custom agent (OTLP)*
 
 - Route delegated, low-risk work to a cheaper model and keep the strong model for planning and review.
@@ -193,7 +219,7 @@ The session terminated on a failure — spend after the last productive step bou
 **Why it happens**
 
 - The last thing the agent did failed and nothing recovered from it: a command that errored, a session closed right after.
-- In headless runs (`claude -p`, CI) an error at the end means the whole run produced nothing.
+- In headless runs (`claude -p`, `codex exec`, CI) an error at the end means the whole run produced nothing.
 
 **What you can do**
 
@@ -205,6 +231,11 @@ The session terminated on a failure — spend after the last productive step bou
 *OpenCode*
 
 - Resume with `opencode -c` (or `--session <id>`) and deal with the failing step first.
+
+*Codex*
+
+- Continue with `codex resume --last` and deal with the failing step first; everything up to the last completed change is intact.
+- For a `codex exec` run in CI, surface the failing step in the job log and rerun the job after fixing it.
 
 *Custom agent (OTLP)*
 
@@ -232,6 +263,12 @@ These calls would cost less on a cheaper same-family model; risky subtrees are e
 *OpenCode*
 
 - Switch with `/models` in the TUI, or set `model` in `opencode.json`; `opencode run --model <provider/model>` for one-off runs.
+
+*Codex*
+
+- Switch mid-session with `/model` for mechanical stretches, and back for design and debugging.
+- Set `model` in `~/.codex/config.toml` for the default, or start one session on a cheaper model with `codex --model <id>`.
+- `model_reasoning_effort` is a second lever on the same model: a lower effort spends fewer reasoning tokens. The estimate does not cover it.
 
 *Custom agent (OTLP)*
 
@@ -264,6 +301,11 @@ The cached prompt prefix was invalidated mid-session, so already-cached content 
 - Enable the MCP servers you need before starting; toggling `mcp.<name>.enabled` re-writes the prefix.
 - `/compact` at a checkpoint and `/new` per task; `compaction.prune: true` keeps the history small.
 
+*Codex*
+
+- RunRay does not report this finding on Codex sessions: the rule needs a cache write on the second call, and a rollout records none.
+- The habit holds all the same: connect MCP servers and pick the model before the long part of the work, and `/compact` at a checkpoint.
+
 *Custom agent (OTLP)*
 
 - Order every request as system prompt, tools, history, and never change the earlier parts once the session runs.
@@ -294,6 +336,11 @@ A long pause let the prompt cache expire — the next call re-wrote the whole pr
 - Before a long break, `/compact` (alias `/summarize`); start the next task with `/new` instead of resuming a large session.
 - There is no cache TTL setting in OpenCode; the provider's default applies.
 
+*Codex*
+
+- RunRay does not report this finding on Codex sessions: the rule needs a cache write after the pause, and a rollout records none.
+- Before a long break, `/compact`; start the next task with `/new` instead of resuming a large session.
+
 *Custom agent (OTLP)*
 
 - Use the 1-hour cache TTL for sessions that pause, and compact the history before an expected idle period.
@@ -308,7 +355,7 @@ The session starts with a large fixed context (tool definitions, project instruc
 
 **Why it happens**
 
-- Everything the first call already carries is paid on every call: the system prompt, `CLAUDE.md` and imported files, skill and memory listings, MCP tool definitions, attachments.
+- Everything the first call already carries is paid on every call: the system prompt, the instructions file (`CLAUDE.md`, `AGENTS.md`) and what it imports, skill and memory listings, MCP tool definitions, attachments.
 
 **What you can do**
 
@@ -322,6 +369,12 @@ The session starts with a large fixed context (tool definitions, project instruc
 
 - Keep `AGENTS.md` and the files under `instructions` short.
 - Set `mcp.<name>.enabled: false` for servers a project does not use, or restrict tools per agent with the `tools` map.
+
+*Codex*
+
+- Keep the `AGENTS.md` files short: Codex joins the global one with every one on the path from the project root to the working directory, up to `project_doc_max_bytes` (32 KiB by default).
+- Set `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` for servers a project does not use, or narrow a server with `enabled_tools` and `disabled_tools`.
+- Switch off a skill you do not use with a `skills.config` entry that sets `enabled = false`.
 
 *Custom agent (OTLP)*
 
@@ -350,6 +403,10 @@ The same file was read repeatedly with no edit in between; each redundant read r
 
 - Nothing to configure; keep files the agent needs repeatedly short.
 
+*Codex*
+
+- Nothing to configure; keep files the agent needs repeatedly short, or split them so each read costs less.
+
 *Custom agent (OTLP)*
 
 - Cache tool results by file and content hash so an unchanged file is served from memory.
@@ -376,6 +433,11 @@ Many isolated tool failures forced extra model calls to react and recover.
 *OpenCode*
 
 - Put the fixes into `AGENTS.md`; use the `permission` block per agent to deny calls that should never run.
+
+*Codex*
+
+- Start with the tool that failed most and put the fix into `AGENTS.md`: the right path, the right command, the tools that are not available.
+- If the failures are the sandbox refusing a command, `/permissions` changes what Codex may do without asking; `sandbox_workspace_write.network_access = true` in `~/.codex/config.toml` lets commands reach the network.
 
 *Custom agent (OTLP)*
 
@@ -405,6 +467,11 @@ Very large tool outputs entered the context; their usefulness is unknowable, so 
 
 - Keep outputs small at the source: filtered commands, targeted reads; `compaction.prune: true` drops old outputs later.
 
+*Codex*
+
+- `tool_output_token_limit` in `~/.codex/config.toml` caps how much of each tool output Codex keeps in the history.
+- Put a rule in `AGENTS.md` for the command that produced it, for example `never print whole files; pipe long output through head`.
+
 *Custom agent (OTLP)*
 
 - Truncate or paginate tool results before they enter the context and keep the full result on disk for the agent to page through.
@@ -427,7 +494,7 @@ A failed call is not one thing. On real sessions a third of the "errors" are the
 
 #### `model-limit` · Usage limit reached
 
-The model call was refused because a plan or session limit was hit; the message names the reset time.
+The model call was refused because a plan or session limit was hit.
 
 **Why it happens**
 
@@ -444,13 +511,18 @@ The model call was refused because a plan or session limit was hit; the message 
 
 - Switch models with `/models` (or the `model` key in `opencode.json`); provider limits are per model.
 
+*Codex*
+
+- Wait for the limit to reset, or switch with `/model`; `/usage` shows the account's token usage.
+- Continue where you were with `codex resume --last`; the rollout is intact.
+
 *Custom agent (OTLP)*
 
 - Surface provider limit responses to the person instead of retrying blindly.
 
 **Out of your hands**
 
-- RunRay reads the harness message; it cannot see the limit or how much of it is left.
+- RunRay reads what the harness recorded of the refusal; it cannot see the limit or how much of it is left.
 
 #### `model-auth` · Not authenticated
 
@@ -469,6 +541,10 @@ The model call was refused because the session is not logged in or the credentia
 *OpenCode*
 
 - Re-authenticate the provider with `opencode auth login` and resume with `opencode -c`.
+
+*Codex*
+
+- Run `codex login` (`codex login status` shows the current state), then continue with `codex resume --last`.
 
 *Custom agent (OTLP)*
 
@@ -497,6 +573,11 @@ The shell could not parse the command: a quoting mistake, a heredoc that never c
 
 - Put the shell fact into `AGENTS.md`; the `permission` block can deny a command pattern outright.
 
+*Codex*
+
+- Put the shell fact into `AGENTS.md`, for example `Shell is PowerShell 5.1: no && chaining`.
+- For a pattern you never want run, a `prefix_rule` with `decision = "forbidden"` in a `.rules` file under `~/.codex/rules/` blocks it without a prompt (rules are marked experimental).
+
 *Custom agent (OTLP)*
 
 - State the shell and its limits in the system prompt.
@@ -524,6 +605,11 @@ A command or module the agent relied on is not installed, not on PATH, or not pe
 
 - Install it, or note in `AGENTS.md` what is not available.
 
+*Codex*
+
+- Install it, or write into `AGENTS.md` that it is not available and what to use instead.
+- If the sandbox is what refuses the command, `/permissions` sets what Codex may do without asking; `sandbox_mode` in `~/.codex/config.toml` is the default for new sessions.
+
 *Custom agent (OTLP)*
 
 - List the available tools in the system prompt.
@@ -538,7 +624,7 @@ The agent reached for a tool, skill or launch configuration that does not exist 
 
 **Why it happens**
 
-- A skill or plugin is not installed, a tool is disabled in this context, or `.claude/launch.json` is missing.
+- A skill or plugin is not installed, a tool is disabled in this context, or the launch configuration the agent looked for is missing.
 
 **What you can do**
 
@@ -550,6 +636,10 @@ The agent reached for a tool, skill or launch configuration that does not exist 
 *OpenCode*
 
 - Enable the tool in the `tools` map or the MCP server with `mcp.<name>.enabled` in `opencode.json`.
+
+*Codex*
+
+- Check what is connected with `/mcp`; a server with `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` offers no tools.
 
 *Custom agent (OTLP)*
 
@@ -574,6 +664,10 @@ A preview or dev server could not start because its port is taken.
 - Stop the process the message names, or change the `port` in `.claude/launch.json`.
 
 *OpenCode*
+
+- Free the port or change it in the project config.
+
+*Codex*
 
 - Free the port or change it in the project config.
 
@@ -602,6 +696,11 @@ A fetch failed: a 404, a refused connection, a DNS miss.
 *OpenCode*
 
 - Check the address or the service.
+
+*Codex*
+
+- Check the address or the service.
+- A command that cannot reach the network at all is usually the sandbox: `sandbox_workspace_write.network_access = true` in `~/.codex/config.toml` allows outbound access.
 
 *Custom agent (OTLP)*
 
@@ -635,6 +734,10 @@ A screenshot, click or navigation in the Browser or Preview pane timed out; the 
 
 - Restart the browser tool or the MCP server behind it.
 
+*Codex*
+
+- Restart the browser tool or the MCP server behind it.
+
 *Custom agent (OTLP)*
 
 - Cap retries on timeouts and surface them.
@@ -659,6 +762,10 @@ The Browser pane refused to open the address: a `file://` page, a blocked origin
 - Tell the agent in `CLAUDE.md` to publish local HTML as an artifact rather than open it in the pane.
 
 *OpenCode*
+
+- Serve local files; check the origin allowlist of the browser tool.
+
+*Codex*
 
 - Serve local files; check the origin allowlist of the browser tool.
 
@@ -687,6 +794,10 @@ An MCP server returned an error RunRay does not recognize; the server, not the p
 *OpenCode*
 
 - Set `mcp.<name>.enabled: false` in `opencode.json` until the server is fixed.
+
+*Codex*
+
+- Check the server with `/mcp`; set `enabled = false` under `[mcp_servers.<name>]` in `~/.codex/config.toml` until it is fixed.
 
 *Custom agent (OTLP)*
 
@@ -719,6 +830,10 @@ An edit could not find the text it meant to replace, so nothing was written.
 
 - Pause format-on-save while the agent edits; keep line endings stable.
 
+*Codex*
+
+- Once is the model; several times on one file is the file changing under it. Pause format-on-save or the watcher while the agent works, so `apply_patch` finds the lines it expects.
+
 *Custom agent (OTLP)*
 
 - Re-read before editing when the previous edit missed.
@@ -742,6 +857,10 @@ The harness refused a write because the agent had not read the file first.
 - Nothing to configure; the agent corrects this itself.
 
 *OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Codex*
 
 - Nothing to configure; the agent corrects this itself.
 
@@ -771,6 +890,10 @@ The tool rejected the arguments the model sent: a missing field, a wrong type, u
 
 - Nothing per event; a correct example in `AGENTS.md` if one tool keeps rejecting.
 
+*Codex*
+
+- Nothing per event; a correct example in `AGENTS.md` if one tool keeps rejecting.
+
 *Custom agent (OTLP)*
 
 - Return the validation message verbatim; the model uses it.
@@ -794,6 +917,10 @@ The tool refused because a precondition was missing: no page open, no screenshot
 - Nothing to configure; the agent corrects this itself.
 
 *OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Codex*
 
 - Nothing to configure; the agent corrects this itself.
 
@@ -823,6 +950,10 @@ A file or directory the agent named does not exist: a guessed name, a drifted wo
 
 - Nothing per event; a repo map in `AGENTS.md` if the same path keeps failing.
 
+*Codex*
+
+- Nothing per event; a short repo map in `AGENTS.md` if the same path keeps failing across sessions.
+
 *Custom agent (OTLP)*
 
 - Give the agent a file listing before it guesses.
@@ -846,6 +977,10 @@ A script the agent wrote raised an exception when it ran it.
 - Nothing to configure; the agent corrects this itself.
 
 *OpenCode*
+
+- Nothing to configure; the agent corrects this itself.
+
+*Codex*
 
 - Nothing to configure; the agent corrects this itself.
 
@@ -879,6 +1014,10 @@ The provider answered with a server-side error (500, 529, overloaded, timeout); 
 
 - Nothing on your side beyond a retry; check the provider status page if it keeps happening.
 
+*Codex*
+
+- Nothing on your side beyond a retry; check the provider status page if it keeps happening.
+
 *Custom agent (OTLP)*
 
 - Retry with backoff and log the status code.
@@ -902,6 +1041,10 @@ The provider refused the request itself: a safeguard flag or an image it could n
 - Rephrase or drop the flagged content; for an image, re-read the file another way or at a smaller size.
 
 *OpenCode*
+
+- Rephrase or drop the content the provider refused.
+
+*Codex*
 
 - Rephrase or drop the content the provider refused.
 
@@ -930,6 +1073,10 @@ The model call failed for a reason RunRay does not recognize.
 *OpenCode*
 
 - Read the message in the Inspector.
+
+*Codex*
+
+- Read the message in the Inspector; the rollout keeps it.
 
 *Custom agent (OTLP)*
 
@@ -961,6 +1108,10 @@ A test, lint, type or build run reported failures; the agent asked for exactly t
 
 - Nothing. This is the agent working.
 
+*Codex*
+
+- Nothing. This is the agent working.
+
 *Custom agent (OTLP)*
 
 - Nothing; do not count it as a failure of the run.
@@ -986,6 +1137,10 @@ A command exited with a non-zero code without naming a failure RunRay recognizes
 *OpenCode*
 
 - Nothing per event.
+
+*Codex*
+
+- Nothing per event. Read the text if the same command keeps failing.
 
 *Custom agent (OTLP)*
 
@@ -1014,6 +1169,10 @@ The failure text did not match any known class.
 - Read the text in the Inspector.
 
 *OpenCode*
+
+- Read the text in the Inspector.
+
+*Codex*
 
 - Read the text in the Inspector.
 

@@ -1,0 +1,96 @@
+{
+  "id": "run_89d1f49d814dcc16",
+  "source": {
+    "tool": "codex",
+    "format": "codex-jsonl",
+    "files": [
+      "transcript-1"
+    ]
+  },
+  "project": {
+    "name": "project-1",
+    "path": "project-1",
+    "gitBranch": "branch-1"
+  },
+  "startedAt": "2026-09-17T17:11:18.124Z",
+  "endedAt": "2026-10-05T17:18:35.293Z",
+  "durationMs": 1555637169,
+  "spans": [
+    {
+      "id": "01a0b059-e3b9-7a20-87cc-da1f5e28e984",
+      "parentId": null,
+      "kind": "session",
+      "name": "session",
+      "status": "ok",
+      "startedAt": "2026-09-17T17:11:18.124Z",
+      "endedAt": "2026-10-05T17:18:35.293Z",
+      "durationMs": 1555637169,
+      "depth": 0,
+      "agent": {
+        "sessionId": "01a0b059-e3b9-7a20-87cc-da1f5e28e984"
+      },
+      "attributes": {},
+      "provenance": {
+        "file": "transcript-1",
+        "line": 2
+      }
+    }
+  ],
+  "totals": {
+    "tokens": {
+      "input": 310763,
+      "output": 19941,
+      "cacheRead": 2027264,
+      "cacheWrite": 0,
+      "reasoning": 1707,
+      "total": 2359675
+    },
+    "costUSD": {
+      "total": 6.217294,
+      "wastedEstimate": 0,
+      "byModel": {
+        "gpt-6-astra": 6.217294
+      }
+    },
+    "counts": {
+      "llmCalls": 20,
+      "toolCalls": 34,
+      "toolErrors": 0,
+      "subagents": 0,
+      "maxDepth": 3
+    },
+    "cache": {
+      "hitRate": 0.8671
+    },
+    "codeChanges": {
+      "linesAdded": 310,
+      "linesRemoved": 0
+    }
+  },
+  "insights": [
+    {
+      "id": "i1",
+      "ruleId": "context-bloat",
+      "severity": "critical",
+      "title": "Context grew from 34.1k to 180.4k tokens",
+      "detail": "The median context of the last three model calls (180.4k) is over 2× the median of the first three (34.1k); ~1.7M cumulative excess input-class tokens were re-paid beyond the opening baseline, at the rates those calls actually paid (cache reads where the context was served from cache). The estimate is an upper bound: it assumes the work could have continued from a compacted context. The largest tool outputs listed in evidence are the likely culprits.",
+      "spanIds": [
+        "01a0b059-e3b9-7a20-87cc-da1f5e28e984"
+      ],
+      "estimatedWasteUSD": 3.549179,
+      "suggestion": "Run /compact at a natural checkpoint, or start a fresh session for the next task — the context grown since the start was re-paid on every later call, ~1.7M tokens in total."
+    },
+    {
+      "id": "i2",
+      "ruleId": "fixed-context-overhead",
+      "severity": "warning",
+      "title": "Session starts with a 27.6k-token context footprint",
+      "detail": "The first model call already carried 27.6k input-class tokens (tool definitions, project instructions, attachments); 7.6k tokens above the 20.0k floor were written once and re-read on each of the 19 later calls.",
+      "spanIds": [
+        "01a0b059-e3b9-7a20-87cc-da1f5e28e984"
+      ],
+      "estimatedWasteUSD": 0.219037,
+      "suggestion": "Trim what every call carries: the AGENTS.md files on the path to your working directory, skills, and MCP servers this project does not need (only codex_app was called in this session; enabled = false under [mcp_servers.<name>] in config.toml) — 7.6k tokens above the floor were re-read 19 times."
+    }
+  ]
+}

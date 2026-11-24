@@ -1,16 +1,18 @@
-# RunRay — Data Model (v0.1.0)
+# RunRay — Data Model (v0.2.0)
 
 The internal schema is **the contract** between Track A (CLI/parsers) and Track B (UI). It is authored as zod types in `packages/schema`, from which `schema/runray.schema.json` is generated. The UI never sees raw agent logs — only this format.
 
 ## Design principles
 
-1. **Superset-normalize.** Every source (Claude Code JSONL, OpenCode storage/SQLite, OTLP JSON) maps into one span tree. Source-specific extras go into `attributes` (using OTel GenAI `gen_ai.*` attribute names where a match exists) — we align with the emerging standard without hard-depending on it (GenAI semconv is still Development-stability).
+1. **Superset-normalize.** Every source (Claude Code JSONL, OpenCode storage/SQLite, Codex rollout JSONL, OTLP JSON) maps into one span tree. Source-specific extras go into `attributes` (using OTel GenAI `gen_ai.*` attribute names where a match exists) — we align with the emerging standard without hard-depending on it (GenAI semconv is still Development-stability).
 2. **Derived data is computed, never trusted.** `totals` and `insights` are outputs of the normalizer/insight engine, recomputed from spans. OpenCode stores `cost: 0` in message files, so cost always flows through our pricing engine; `costSource` records whether a number was reported by the source or computed by us.
 3. **Provenance everywhere.** Each span points back to its source file/record. The UI's "show raw" affordance and all debugging depend on it.
 4. **Forward compatibility.** Unknown attributes pass through; `schemaVersion` is SemVer'd independently of the app. Breaking schema changes require a major bump + migration note.
 5. **Privacy-aware.** Prompt/output text lives only in optional `content` fields that `--redact` nulls out while preserving counts and structure.
 
 > **Versioning note (2026-07):** `content.delegationReason`, `tool.linesAdded`/`linesRemoved` and `totals.codeChanges` were added additively before any code exists, so they fold into v0.1.0 without a bump. Once `packages/schema` lands and v0.1 is frozen (task 1.2), any such addition requires a minor version bump.
+
+> **Versioning note (2026-11), v0.2.0:** `source.tool` gained `codex` and `source.format` gained `codex-jsonl`, for the Codex adapter (change `add-codex-adapter`, design D1). Nothing else in the contract changed: no field, no other enum value and no meaning. A v0.1.0 TraceFile is a valid v0.2.0 document apart from its `schemaVersion` string, and every run in it validates unchanged against the v0.2.0 run schema. No reader checks `schemaVersion` today, so files written by an earlier RunRay still load.
 
 ## Entity overview
 
@@ -33,10 +35,10 @@ TraceFile
 | Field | Type | Notes |
 |---|---|---|
 | `id` | string | Stable hash of source session id(s). |
-| `source.tool` | enum | `claude-code` \| `opencode` \| `otlp` \| `unknown` |
-| `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `otlp-json` |
+| `source.tool` | enum | `claude-code` \| `opencode` \| `codex` \| `otlp` \| `unknown`. `codex` since v0.2.0. |
+| `source.format` | enum | `claude-jsonl` \| `opencode-storage` \| `opencode-sqlite` \| `opencode-export` \| `codex-jsonl` \| `otlp-json`. `codex-jsonl` since v0.2.0; it covers plain and zstd-compressed rollouts, because compression is a property of the file and not of the record format. |
 | `source.files[]` | string | Absolute paths read. |
-| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
+| `project` | object | `{ name?, path?, gitBranch? }` — from cwd/session metadata when available. `gitBranch` is the branch the session started on: the first non-empty `gitBranch` of a Claude Code transcript, `git.branch` of a Codex rollout's first record, or an OTLP `vcs.ref.head.name` / `vcs.repository.ref.name` / `git.branch` attribute. OpenCode records none, and no adapter reads `.git`. |
 | `title?` | string | Session title if the source provides one. |
 | `startedAt` / `endedAt` | ISO 8601 | UTC. |
 | `spans[]` | Span | Ordered by `startedAt`. |
@@ -75,7 +77,7 @@ TraceFile
 | `runray.targetKind` | `file-read` \| `file-write` \| `command` | same | closed |
 | `runray.target` | basename or first command token, at most 80 chars | same | free-form |
 | `runray.mcpDetection` | `name-heuristic` | OpenCode MCP calls classified by name | closed |
-| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`), and every Claude Code hook span whose record names a command. A stop-hook summary carries it only when it lists a command for every hook it counts and those commands ran the same tool | closed |
+| `runray.toolActivity` | one of `explore`, `edit`, `run`, `check`, `build`, `test`, `vcs`, `deps`, `infra`, `cloud`, `data`, `web`, `system`, `devices`, `agent`, `human`, `integration`, `other` | every shell tool span (`Bash`, `PowerShell`, OpenCode `bash`, a Codex command), and every Claude Code hook span whose record names a command. A stop-hook summary carries it only when it lists a command for every hook it counts and those commands ran the same tool | closed |
 | `runray.tool` | registry id of the program that did the work (`docker`, `vitest`) | shell and hook spans whose command resolved | closed |
 | `runray.toolSub` | a subcommand from that tool's table (`compose up`, `diff`), or `run` / `script` / `inline` | when present | closed |
 | `runray.toolVia` | the runner the tool was launched through (`npx`, `pnpm exec`, `bash -c`) | when a runner was unwrapped | closed |
@@ -157,6 +159,24 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 ### PricingTable (bundled asset, not part of TraceFile)
 `{ modelPattern, inputPerMTok, outputPerMTok, cacheReadPerMTok, cacheWritePerMTok }[]` + `snapshotDate`, `source: "litellm-snapshot"`. Shipped inside the package for offline use; `runray pricing --refresh` is explicit and opt-in.
 
+The table is built from the LiteLLM entries of mode `chat` and `responses` for six providers (Anthropic, OpenAI, Gemini, xAI, DeepSeek, Mistral). `responses` is where LiteLLM files the OpenAI models served only by the Responses API: the Codex family, the `-pro` models and deep research. A model is matched by its exact id first and by the longest listed prefix second, so an id missing from the table is priced as the shorter id it starts with. Two kinds of pattern do not match by prefix freely: a retired one (below) never does, and a pattern that is one bare word (`chat`, from the list's `chat-latest`) does only before a digit, so `codestral-2601` is priced as `codestral` and `chat-bison-001` is not priced as `chat`.
+
+**Snapshot of 2026-11-14 (price change).** Until this snapshot the table held `chat` entries only, and Codex-family ids were priced by prefix. They now have entries of their own (per million tokens, input / output):
+
+| id | priced before as | priced now | effect on a run's cost |
+|---|---|---|---|
+| `gpt-5.3-codex` | `gpt-5`, 1.25 / 10 | 1.75 / 14 | 40% higher |
+| `gpt-5.1-codex-mini` | `gpt-5.1`, 1.25 / 10 | 0.25 / 2 | five times lower |
+| `gpt-5-codex`, `gpt-5.1-codex`, `gpt-5.1-codex-max`, `gpt-5.2-codex` | their base model | the same rates | none |
+| `claude-fable-5-1` | `claude-fable-5`, cache read 1 | cache read 0.25 | lower, by its cache-read share |
+| `gpt-6-astra` | unpriced | 10 / 50 | now priced |
+
+The same refresh brought in the other `responses` ids (`gpt-5-pro`, `gpt-5.2-pro`, `gpt-5.4-pro`, `gpt-5.5-pro`, `o1-pro`, `o3-pro`, the deep-research models), which the prefix rule had priced as their far cheaper base models. A run parsed again after an upgrade is priced with the new table, so its totals can differ from an earlier report of the same session.
+
+**Retired models.** LiteLLM drops a model from its list once the provider retires it; 76 ids left between the snapshots of 2026-08-18 and 2026-11-14, `claude-opus-4-1`, `claude-sonnet-4-20250514` and `grok-4` among them. Sessions run on them are still on disk, so the bundled table keeps each such entry at the rates the list last published for it and names the ids in the table's optional `retired` list. A retired entry prices its own id only: it matches exactly (in either spelling of the version separator) and never by prefix, so an id the list never held, such as `grok-4-fast` next to the retired `grok-4`, is unpriced instead of taking a retired model's rates. A model the list still holds always takes the list's rates. A table written by `runray pricing --refresh` holds only what the list holds that day, so retired models are unpriced under a user override.
+
+**Ids with no published price.** `codex-auto-review`, the model of the Codex approval reviewer, has no rates in any price list. Its calls keep `costSource: "unknown"`, their tokens count in the run totals, and the coverage warning names the model. It is never priced as another model. The list is `MODELS_WITHOUT_PUBLISHED_PRICE` in `packages/core/src/pricing/engine.ts`; the coverage warning uses it to name such a model and to leave out the advice to refresh prices when no refresh could help.
+
 ## Source → schema mapping cheatsheet
 
 | Concept | Claude Code JSONL | OpenCode | OTLP (Claude Code traces beta) |
@@ -167,6 +187,18 @@ Semantics: `wastedEstimate` sums only **waste-class** findings (money already bu
 | Hook | `attachment` records `hook_non_blocking_error` and `hook_cancelled`, `system` record `stop_hook_summary`; a successful hook leaves none (see "Hook spans") | no hook spans | `claude_code.hook` span |
 | Subagent | CC ≥ 2.1: `Agent` tool_use (`input: {subagent_type, description, prompt}`); child transcript is a **separate** `agent-<agentId>.jsonl` under `<session-uuid>/subagents/` (workflow agents under `subagents/workflows/wf_*/`). Joins, in precedence order (CC ≥ 2.2): (1) `toolUseResult.agentId` on ANY tool's result — sync `Agent` calls and forked skills (`Skill` result with `status:'forked'`, name from `commandName`); (2) the `agent-<agentId>.meta.json` sidecar (`{agentType, name?, description?, toolUseId?, parentAgentId?, spawnDepth}`) — background agents leave no agentId on any result, `toolUseId` names the spawning tool_use, `parentAgentId` the enclosing agent for nested spawns. Mapping: `subagent_type`/`commandName`/sidecar `name`→`agentType` → `agent.name`, `description` → `content.delegationReason`. Legacy: inline records with `isSidechain: true` in the MAIN transcript linked to a `Task` tool_use (agent transcripts carry `isSidechain: true` routinely in CC ≥ 2.2 — NOT a legacy marker) | child session with `parentID` | spans nested under parent's tool span |
 | Provenance | file + line offset | file path or `(db, table, rowid)` | span id |
+
+Codex, kept apart so the table above stays readable (details: `docs/05-ARCHITECTURE.md` §2.1 and `openspec/changes/add-codex-adapter/design.md`):
+
+| Concept | Codex rollout (`rollout-*.jsonl`, `.jsonl.zst`) |
+|---|---|
+| Run | the root thread's rollout plus the rollouts of its child threads (`session_meta.parent_thread_id`), found among the scanned files |
+| Turn | `event_msg` `task_started` … `task_complete` / `turn_aborted`, a `turn` span |
+| LLM call | one `token_usage_record` per API response; in rollouts older than that record, one per change of the running `token_count` |
+| Tool call | `event_msg` `item_completed` (a command, a file change, an MCP call, an extension), else the model's `function_call` / `custom_tool_call` paired with its `*_output` by `call_id` |
+| Hook | no hook spans |
+| Subagent | a child thread, one `subagent` span under the parent turn it names (`turn_attribution.parent_turn_id`, else `root_turn_id`) |
+| Provenance | file + line of the record |
 
 Adapter interface (Track A): `SourceAdapter { id; detect(paths): Candidate[]; parse(candidate): RawRun; }` → shared `normalize(RawRun): Run`. Golden tests: every fixture in `fixtures/<source>/<variant>` must produce a byte-stable normalized output in `fixtures/normalized/`.
 

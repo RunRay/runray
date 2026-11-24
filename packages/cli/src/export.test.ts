@@ -29,7 +29,7 @@ const TEMPLATE =
 // Hostile strings a prompt could contain: script breakout, comment breakout,
 // `$&`-style replacement patterns, and U+2028/U+2029 line terminators.
 const hostile: TraceFile = {
-  schemaVersion: '0.1.0',
+  schemaVersion: '0.2.0',
   generator: {
     name: "</script><!--<script>$&$'\u2028\u2029",
     version: '0.0.0-test',
@@ -668,7 +668,7 @@ describe('injectGlobal (X4)', () => {
 
   it('stacks multiple globals in one head (data + pricing + view config)', () => {
     const withData = injectTraceData(template, {
-      schemaVersion: '0.1.0',
+      schemaVersion: '0.2.0',
       generator: { name: 'runray', version: 't' },
       generatedAt: '2026-07-02T14:00:00Z',
       runs: [],

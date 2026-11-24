@@ -4,6 +4,7 @@
  * large session is available (CI, fresh contributors).
  *
  *   pnpm synth-large [targetMB]        # default 32, refuses to overwrite
+ *   pnpm synth-large [targetMB] codex  # the same for a Codex rollout
  *
  * Naive concatenation would duplicate record ids and break tree
  * reconstruction, tool pairing, and assistant-record merging, so every copy
@@ -14,7 +15,13 @@
  * survive; no new text is invented.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -67,6 +74,112 @@ export function synthesize(sourceText: string, targetBytes: number): string {
   return `${chunks.join('\n')}\n`;
 }
 
+// --- Codex -----------------------------------------------------------------
+
+/** Ids that say whose thread a record belongs to, and values that are not
+ * ids at all: every copy keeps them, so the file stays one thread. */
+const CODEX_KEPT_IDS: ReadonlySet<string> = new Set([
+  'session_id',
+  'thread_id',
+  'parent_thread_id',
+  'creator_user_id',
+  'creator_account_id',
+  'client_id',
+  'message_id',
+]);
+const CODEX_ID_KEY = /(?:^|_)id$/;
+const CODEX_MS_KEYS: ReadonlySet<string> = new Set([
+  'started_at_ms',
+  'completed_at_ms',
+]);
+const CODEX_SECONDS_KEYS: ReadonlySet<string> = new Set([
+  'started_at',
+  'completed_at',
+]);
+
+/** One record of a later copy: its ids made the copy's own and its times
+ * moved by the copy's shift. Cross-references move with the ids they name,
+ * since one id always becomes the same new id within a copy. */
+function codexCopy(value: unknown, copy: number, shiftMs: number): unknown {
+  if (Array.isArray(value))
+    return value.map((entry) => codexCopy(entry, copy, shiftMs));
+  if (typeof value !== 'object' || value === null) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === 'string') {
+      if (CODEX_ID_KEY.test(key) && !CODEX_KEPT_IDS.has(key)) {
+        out[key] = `${entry}-copy${copy}`;
+      } else if (key === 'timestamp' && !Number.isNaN(Date.parse(entry))) {
+        out[key] = new Date(Date.parse(entry) + shiftMs).toISOString();
+      } else out[key] = entry;
+    } else if (typeof entry === 'number' && CODEX_MS_KEYS.has(key)) {
+      out[key] = entry + shiftMs;
+    } else if (typeof entry === 'number' && CODEX_SECONDS_KEYS.has(key)) {
+      out[key] = entry + Math.round(shiftMs / 1000);
+    } else out[key] = codexCopy(entry, copy, shiftMs);
+  }
+  return out;
+}
+
+/**
+ * The Codex counterpart of `synthesize`: one rollout repeated until it is
+ * `targetBytes` long, still one thread. Copy 0 is the source as it is, with
+ * its `SCRUBBED` marker and its session record. A later copy is every other
+ * record again with the ids of that copy (turns, calls, responses, items),
+ * its times after the copy before it, and its `ordinal` counted on, so the
+ * adapter reads new turns and new calls, not the first ones a second time.
+ * It is done on the parsed records: Codex ids come in a dozen spellings, and
+ * a rule by key covers the ones a later CLI adds.
+ */
+export function synthesizeCodex(
+  sourceText: string,
+  targetBytes: number,
+): string {
+  const lines = sourceText.split('\n').filter((line) => line.trim() !== '');
+  const records = lines.map(
+    (line) => JSON.parse(line) as Record<string, unknown>,
+  );
+  let minTs = Number.POSITIVE_INFINITY;
+  let maxTs = Number.NEGATIVE_INFINITY;
+  let maxOrdinal = -1;
+  for (const record of records) {
+    const ts =
+      typeof record.timestamp === 'string'
+        ? Date.parse(record.timestamp)
+        : Number.NaN;
+    if (!Number.isNaN(ts)) {
+      minTs = Math.min(minTs, ts);
+      maxTs = Math.max(maxTs, ts);
+    }
+    if (typeof record.ordinal === 'number')
+      maxOrdinal = Math.max(maxOrdinal, record.ordinal);
+  }
+  const shiftPer = maxTs > minTs ? maxTs - minTs + 60_000 : 3_600_000;
+  // the marker and the session record open a file once
+  const repeated = records.filter(
+    (record) =>
+      record.type !== 'session_meta' &&
+      !(typeof record.type === 'string' && record.type.startsWith('x-')),
+  );
+
+  const copies = Math.max(1, Math.ceil(targetBytes / sourceText.length));
+  const chunks: string[] = [lines.join('\n')];
+  for (let copy = 1; copy < copies; copy++) {
+    const out: string[] = [];
+    for (const record of repeated) {
+      const next = codexCopy(record, copy, copy * shiftPer) as Record<
+        string,
+        unknown
+      >;
+      if (typeof next.ordinal === 'number')
+        next.ordinal += copy * (maxOrdinal + 1);
+      out.push(JSON.stringify(next));
+    }
+    chunks.push(out.join('\n'));
+  }
+  return `${chunks.join('\n')}\n`;
+}
+
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 
 /** Single-file source fixture the synth inflates: tool-errors' transcript. */
@@ -95,7 +208,43 @@ export function ensureLargeFixture(targetBytes: number): {
   return { path: out, synthesized: true };
 }
 
-// CLI entry: pnpm synth-large [targetMB]
+/** The rollout the Codex synth inflates: the larger one of tool-errors. */
+export function codexSynthSourcePath(): string {
+  const dir = join(repoRoot, 'fixtures', 'codex', 'tool-errors');
+  const [largest] = readdirSync(dir)
+    .filter((name) => /^rollout-.*\.jsonl$/.test(name))
+    .map((name) => join(dir, name))
+    .sort((a, b) => statSync(b).size - statSync(a).size);
+  if (largest === undefined) throw new Error(`no rollout found in ${dir}`);
+  return largest;
+}
+
+export function codexLargeDir(): string {
+  return join(repoRoot, 'fixtures', 'codex', 'large');
+}
+
+/**
+ * The machine-local Codex perf fixture: a rollout someone scrubbed into
+ * `fixtures/codex/large` (plain or compressed), else a synthetic one written
+ * there now. Never overwrites what it finds.
+ */
+export function ensureLargeCodexFixture(targetBytes: number): {
+  path: string;
+  synthesized: boolean;
+} {
+  const dir = codexLargeDir();
+  const existing = readdirSync(dir)
+    .filter((name) => /^rollout-.*\.jsonl(\.zst)?$/i.test(name))
+    .sort()[0];
+  if (existing !== undefined)
+    return { path: join(dir, existing), synthesized: false };
+  const out = join(dir, 'rollout-large.jsonl');
+  const source = readFileSync(codexSynthSourcePath(), 'utf8');
+  writeFileSync(out, synthesizeCodex(source, targetBytes), 'utf8');
+  return { path: out, synthesized: true };
+}
+
+// CLI entry: pnpm synth-large [targetMB] [codex]
 if (
   process.argv[1] !== undefined &&
   import.meta.url === pathToFileURL(process.argv[1]).href
@@ -103,11 +252,14 @@ if (
   const targetMb = Number(process.argv[2] ?? 32);
   if (!Number.isFinite(targetMb) || targetMb <= 0) {
     console.error(
-      `usage: pnpm synth-large [targetMB] — got '${process.argv[2]}'`,
+      `usage: pnpm synth-large [targetMB] [codex] — got '${process.argv[2]}'`,
     );
     process.exit(1);
   }
-  const result = ensureLargeFixture(targetMb * 1024 * 1024);
+  const result =
+    process.argv[3] === 'codex'
+      ? ensureLargeCodexFixture(targetMb * 1024 * 1024)
+      : ensureLargeFixture(targetMb * 1024 * 1024);
   console.log(
     result.synthesized
       ? `wrote ${result.path} (~${targetMb} MB, synth-multiplied from tool-errors)`

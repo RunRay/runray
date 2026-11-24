@@ -1,12 +1,13 @@
 import type { SourceAdapter } from '../adapter.js';
 import { claudeCodeAdapter } from './claude-code.js';
+import { codexAdapter } from './codex.js';
 import { opencodeAdapter } from './opencode.js';
 import { otlpAdapter } from './otlp.js';
 
 /**
  * Adapter registry (05-ARCHITECTURE §2.1): adding a source = one new adapter
  * file + a registration below — CLI and UI stay untouched. Registration order
- * is the discovery priority order (claude-code → opencode → otlp) and must
+ * is the discovery priority order (claude-code → opencode → codex → otlp) and must
  * stay deterministic; consumers never sort it themselves.
  */
 export interface AdapterRegistry {
@@ -40,4 +41,5 @@ export const adapters: AdapterRegistry = createAdapterRegistry();
 // Concrete adapters register here as they land (priority order):
 adapters.register(claudeCodeAdapter);
 adapters.register(opencodeAdapter);
+adapters.register(codexAdapter);
 adapters.register(otlpAdapter);
