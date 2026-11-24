@@ -153,6 +153,7 @@ export type {
 export { readTranscriptSlice } from './transcript.js';
 export type {
   ClusterOutcome,
+  ClusterProgram,
   ErrorClassId,
   ErrorClassification,
   ErrorClassMeta,

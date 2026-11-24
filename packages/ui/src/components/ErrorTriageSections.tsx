@@ -6,7 +6,12 @@ import { ERROR_CLASS_META, ERROR_OWNER_META } from '@runray/core/triage';
 import type { Run, Span } from '@runray/schema';
 import type { ReactNode } from 'react';
 import { formatDuration, formatUSD } from '../lib/format';
-import { OWNER_FILL, OWNER_TEXT, runTriage } from '../lib/triage';
+import {
+  clusterToolText,
+  OWNER_FILL,
+  OWNER_TEXT,
+  runTriage,
+} from '../lib/triage';
 import { useAppStore } from '../store';
 import { InlineCode, PlaybookList, PlaybookSteps } from './PlaybookSteps';
 
@@ -55,8 +60,12 @@ export function ErrorTriageSections({ span, run }: { span: Span; run: Run }) {
   const outcome: string[] = [];
   if (occurrence !== undefined) {
     const r = occurrence.recovery;
+    // a shell failure names the program it ran: the next `ls` is not the
+    // next `pnpm run · test`
     const what =
-      span.kind === 'llm_call' ? 'model call' : `${cluster.tool} call`;
+      span.kind === 'llm_call'
+        ? 'model call'
+        : `${cluster.program === undefined ? cluster.tool : clusterToolText(cluster)} call`;
     if (r.kind === 'ok') {
       outcome.push(
         `The next ${what} succeeded${r.afterMs === undefined ? '' : ` ${formatDuration(r.afterMs)} later`}.`,

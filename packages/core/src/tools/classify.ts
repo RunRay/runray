@@ -20,6 +20,7 @@ import {
   PACKAGE_ALIASES,
   scriptActivity,
   type ToolDef,
+  toolById,
 } from './registry.js';
 import {
   PROGRAM_NAME,
@@ -380,6 +381,47 @@ function resolveTool(
   return resolveSubs(def, args, dialect, trail, via, 0, base);
 }
 
+/**
+ * What a script of the tool does when its name says nothing: the tool's own
+ * activity, except that a package manager's own default (dependencies) says
+ * nothing about what its scripts do.
+ */
+function scriptFallback(def: ToolDef): Activity {
+  return def.activity === 'deps' ? 'run' : def.activity;
+}
+
+/**
+ * The activity a call of a registry tool and subcommand gets when nothing
+ * after them tells more: what the label alone (`pnpm run`, `git push`,
+ * `node`, `project script`) says. A classified call with another activity
+ * was told more by a script name or a flag (`pnpm run test`, `./test.sh`,
+ * `node --test`), so a reader that names calls by their label must show
+ * that activity beside it, or two different kinds of work read the same.
+ * Mirrors the fallbacks `classifyCommand` uses; undefined for an id outside
+ * the registry.
+ */
+export function labelActivity(
+  toolId: string,
+  sub?: string,
+): Activity | undefined {
+  const def = toolById(toolId);
+  if (def === undefined) return undefined;
+  if (sub === undefined || sub === 'script' || sub === 'inline') {
+    return def.activity;
+  }
+  // a script name follows the subcommand, or stands where a subcommand
+  // would (`make <target>` is stamped `run`)
+  if (
+    def.scriptNext?.includes(sub) === true ||
+    (sub === 'run' && def.scripts === true)
+  ) {
+    return scriptFallback(def);
+  }
+  return (
+    (def.subs === undefined ? undefined : own(def.subs, sub)) ?? def.activity
+  );
+}
+
 /** Subcommand table, runner subcommands and user-defined scripts. */
 function resolveSubs(
   def: ToolDef,
@@ -391,9 +433,7 @@ function resolveSubs(
   base: (extra?: Partial<Candidate>) => Candidate,
 ): Candidate[] {
   const table = def.subs ?? {};
-  // a script's default follows the tool, except that a package manager's
-  // own default (dependencies) says nothing about what its scripts do
-  const fallback: Activity = def.activity === 'deps' ? 'run' : def.activity;
+  const fallback = scriptFallback(def);
   /** `other` is never a pattern result, so it marks "no pattern matched". */
   const named = (word: string): boolean =>
     scriptActivity(stem(word), 'other') !== 'other';

@@ -15,6 +15,7 @@ export {
 export {
   type Classification,
   classifyCommand,
+  labelActivity,
   toolUsageAttributes,
 } from './classify.js';
 export {
